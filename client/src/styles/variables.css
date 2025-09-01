@@ -1,0 +1,49 @@
+:root {
+  /* Color palette - Passerelle CAP */
+  --color-primary: hsl(215, 25%, 32%); /* #3B4B61 */
+  --color-primary-foreground: hsl(0, 0%, 100%);
+  --color-background: hsl(210, 15%, 97%); /* #F5F6F7 */
+  --color-foreground: hsl(210, 15%, 15%);
+  --color-card: hsl(0, 0%, 100%);
+  --color-success: hsl(125, 20%, 52%); /* #6A8B74 */
+  --color-warning: hsl(35, 45%, 62%); /* #D9A066 */
+  --color-destructive: hsl(355, 35%, 42%); /* #8C4A4A */
+  --color-muted: hsl(210, 15%, 95%);
+  --color-border: hsl(210, 15%, 88%);
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+  --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+  --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1);
+
+  /* Typography */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+}
