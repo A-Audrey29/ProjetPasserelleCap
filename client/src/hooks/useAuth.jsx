@@ -13,6 +13,22 @@ export function AuthProvider({ children }) {
     queryKey: ['/api/auth/me'],
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        });
+        if (response.status === 401) {
+          return null; // User not authenticated
+        }
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        return null; // Return null on any error
+      }
+    },
     onSettled: () => {
       setIsInitialized(true);
     }
@@ -62,7 +78,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const isAuthenticated = !isLoading && !error && !!user;
+  const isAuthenticated = !isLoading && !!user;
 
   const hasRole = (role) => {
     return user?.role === role;
@@ -73,9 +89,9 @@ export function AuthProvider({ children }) {
   };
 
   const value = {
-    user: error ? null : user,
+    user: user,
     isAuthenticated,
-    isLoading: !isInitialized || isLoading,
+    isLoading: isLoading,
     login,
     logout,
     hasRole,

@@ -19,12 +19,6 @@ export default function Dashboard() {
     assignedOrgId: ''
   });
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      setLocation('/login');
-    }
-  }, [isAuthenticated, authLoading, setLocation]);
 
   // Queries for dashboard data
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
@@ -59,20 +53,6 @@ export default function Dashboard() {
     setLocation('/fiches/new');
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null; // Will redirect to login
-  }
 
   return (
     <div className="min-h-screen bg-background">

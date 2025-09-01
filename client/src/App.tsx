@@ -14,42 +14,43 @@ import Reports from "@/pages/Reports";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.jsx";
 
 function Router() {
-  function AuthenticatedRoute({ component: Component, ...props }) {
-    const { isAuthenticated, isLoading } = useAuth();
-    const [, setLocation] = useLocation();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [location, setLocation] = useLocation();
 
-    useEffect(() => {
-      if (!isLoading && !isAuthenticated) {
+  // Handle authentication redirection
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated && location !== '/login') {
         setLocation('/login');
+      } else if (isAuthenticated && location === '/login') {
+        setLocation('/');
       }
-    }, [isAuthenticated, isLoading, setLocation]);
+    }
+  }, [isAuthenticated, isLoading, location, setLocation]);
 
-    if (isLoading) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Chargement...</p>
-          </div>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement...</p>
         </div>
-      );
-    }
-
-    if (!isAuthenticated) {
-      return null;
-    }
-
-    return <Component {...props} />;
+      </div>
+    );
   }
 
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      <Route path="/" component={(props) => <AuthenticatedRoute component={Dashboard} {...props} />} />
-      <Route path="/fiches/new" component={(props) => <AuthenticatedRoute component={FicheCreation} {...props} />} />
-      <Route path="/fiches/:id" component={(props) => <AuthenticatedRoute component={FicheDetail} {...props} />} />
-      <Route path="/admin" component={(props) => <AuthenticatedRoute component={Admin} {...props} />} />
-      <Route path="/reports" component={(props) => <AuthenticatedRoute component={Reports} {...props} />} />
+      {isAuthenticated && (
+        <>
+          <Route path="/" component={Dashboard} />
+          <Route path="/fiches/new" component={FicheCreation} />
+          <Route path="/fiches/:id" component={FicheDetail} />
+          <Route path="/admin" component={Admin} />
+          <Route path="/reports" component={Reports} />
+        </>
+      )}
       <Route component={NotFound} />
     </Switch>
   );
