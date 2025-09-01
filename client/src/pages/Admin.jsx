@@ -34,7 +34,7 @@ export default function Admin() {
     <div className="min-h-screen bg-background">
       <Sidebar />
       
-      <main className="main-content">
+      <main className="md:ml-64 p-6">
         <AdminDashboard />
       </main>
     </div>

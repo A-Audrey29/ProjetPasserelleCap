@@ -81,7 +81,7 @@ export default function FicheCreation() {
     <div className="min-h-screen bg-background">
       <Sidebar />
       
-      <main className="main-content">
+      <main className="md:ml-64 p-6">
         <div className="mb-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <button 

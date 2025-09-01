@@ -24,7 +24,7 @@ export default function FicheDetailPage() {
     return (
       <div className="min-h-screen bg-background">
         <Sidebar />
-        <main className="main-content">
+        <main className="md:ml-64 p-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -44,7 +44,7 @@ export default function FicheDetailPage() {
     return (
       <div className="min-h-screen bg-background">
         <Sidebar />
-        <main className="main-content">
+        <main className="md:ml-64 p-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <p className="text-destructive font-medium mb-2">

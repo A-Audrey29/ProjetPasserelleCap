@@ -89,7 +89,7 @@ export default function Reports() {
     <div className="min-h-screen bg-background">
       <Sidebar />
       
-      <main className="main-content">
+      <main className="md:ml-64 p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground" data-testid="text-reports-title">
             Rapports et analyses

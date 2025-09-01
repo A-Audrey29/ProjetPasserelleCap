@@ -58,7 +58,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <Sidebar />
       
-      <main className="main-content">
+      <main className="md:ml-64 p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
