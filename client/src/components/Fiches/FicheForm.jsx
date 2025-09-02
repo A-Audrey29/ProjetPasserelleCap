@@ -524,6 +524,14 @@ export default function FicheForm({
           </button>
           <button
             type="button"
+            onClick={handleSaveDraft}
+            className={`${styles.button} ${styles.buttonDraft}`}
+            data-testid="button-save-draft"
+          >
+            Enregistrer brouillon
+          </button>
+          <button
+            type="button"
             onClick={() => {
               if (validateBesoinStep()) {
                 setCurrentStep(4);
@@ -630,6 +638,14 @@ export default function FicheForm({
             data-testid="button-previous-step"
           >
             Précédent
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveDraft}
+            className={`${styles.button} ${styles.buttonDraft}`}
+            data-testid="button-save-draft"
+          >
+            Enregistrer brouillon
           </button>
           <button
             type="button"
@@ -817,6 +833,14 @@ export default function FicheForm({
             data-testid="button-previous-step"
           >
             Précédent
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveDraft}
+            className={`${styles.button} ${styles.buttonDraft}`}
+            data-testid="button-save-draft"
+          >
+            Enregistrer brouillon
           </button>
           <button
             type="button"
@@ -1026,6 +1050,14 @@ export default function FicheForm({
           </button>
           <button
             type="button"
+            onClick={handleSaveDraft}
+            className={`${styles.button} ${styles.buttonDraft}`}
+            data-testid="button-save-draft"
+          >
+            Enregistrer brouillon
+          </button>
+          <button
+            type="button"
             onClick={() => {
               if (validateFamilyStep()) {
                 setCurrentStep(2);
@@ -1170,6 +1202,14 @@ export default function FicheForm({
               </button>
               <button
                 type="button"
+                onClick={handleSaveDraft}
+                className={`${styles.button} ${styles.buttonDraft}`}
+                data-testid="button-save-draft"
+              >
+                Enregistrer brouillon
+              </button>
+              <button
+                type="button"
                 onClick={handleValidateReferent}
                 className={`${styles.button} ${styles.buttonPrimary}`}
                 data-testid="button-validate-referent"
@@ -1179,15 +1219,25 @@ export default function FicheForm({
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={() => setIsReferentEditable(false)}
-              className={`${styles.button} ${styles.buttonPrimary}`}
-              data-testid="button-save-referent"
-            >
-              <Check className={styles.buttonIcon} />
-              Enregistrer les modifications
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={handleSaveDraft}
+                className={`${styles.button} ${styles.buttonDraft}`}
+                data-testid="button-save-draft"
+              >
+                Enregistrer brouillon
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsReferentEditable(false)}
+                className={`${styles.button} ${styles.buttonPrimary}`}
+                data-testid="button-save-referent"
+              >
+                <Check className={styles.buttonIcon} />
+                Enregistrer les modifications
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -1204,6 +1254,60 @@ export default function FicheForm({
   const handleModify = () => {
     // Go back to first step with all data preserved
     setCurrentStep(0);
+  };
+
+  const handleSaveDraft = async () => {
+    try {
+      // Create form data for draft with current step data
+      const draftData = {
+        referent: formData.referent,
+        family: formData.family,
+        children: formData.children,
+        descriptionSituation: formData.descriptionSituation,
+        objectives: formData.objectives,
+        workshopPropositions: formData.workshopPropositions,
+        familyConsent: formData.familyConsent,
+        state: 'DRAFT'
+      };
+
+      // Transform data same way as transmission but for draft
+      if (formData.family && !formData.familyId) {
+        const ficheData = {
+          description: draftData.descriptionSituation || draftData.description || '',
+          state: 'DRAFT',
+          workshops: Object.entries(draftData.workshopPropositions || {}).map(([workshopId, _]) => ({
+            workshopId,
+            qty: 1
+          })),
+          epsiId: epsiList?.[0]?.id || '',
+          objectiveIds: (draftData.objectives || []).map(obj => obj.id),
+          family: {
+            lastName: draftData.family.lastName || '',
+            firstName: draftData.family.firstName || '',
+            birthDate: draftData.family.birthDate || '',
+            birthPlace: draftData.family.birthPlace || '',
+            nationality: draftData.family.nationality || '',
+            lienAvecEnfants: draftData.family.lienAvecEnfants || '',
+            autoriteParentale: draftData.family.autoriteParentale || '',
+            situationFamiliale: draftData.family.situationFamiliale || '',
+            situationSocioProfessionnelle: draftData.family.situationSocioProfessionnelle || '',
+            telephonePortable: draftData.family.telephonePortable || '',
+            telephoneFixe: draftData.family.telephoneFixe || '',
+            email: draftData.family.email || '',
+            address: draftData.family.adresse || ''
+          }
+        };
+
+        await onSaveDraft(ficheData);
+      }
+    } catch (error) {
+      console.error('Draft save error:', error);
+      toast({
+        title: "Erreur de sauvegarde",
+        description: error.message || "Une erreur est survenue lors de la sauvegarde du brouillon.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleTransmit = async () => {

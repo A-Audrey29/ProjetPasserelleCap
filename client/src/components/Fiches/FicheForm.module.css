@@ -235,6 +235,15 @@
   color: #3B4B61;
 }
 
+.buttonDraft {
+  background-color: #D9A066;
+  color: #FFFFFF;
+}
+
+.buttonDraft:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
 .buttonIcon {
   width: 1rem;
   height: 1rem;
