@@ -70,7 +70,6 @@ export default function FicheDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -89,7 +88,7 @@ export default function FicheDetailPage() {
               <h1 className="text-2xl font-bold text-foreground" data-testid="text-fiche-title">
                 Fiche navette {fiche.ref}
               </h1>
-              <p className="text-muted-foreground" data-testid="text-family-info">
+              <p className="text-[#3b4b61]" data-testid="text-family-info">
                 Famille {fiche.family?.code}
               </p>
             </div>
