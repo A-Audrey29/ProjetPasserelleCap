@@ -420,6 +420,26 @@
   cursor: not-allowed;
 }
 
+.editButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #D9A066;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton:hover {
+  background: #C5935A;
+}
+
 .buttonIcon {
   width: 1rem;
   height: 1rem;

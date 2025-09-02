@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useEffect, useState } from 'react';
+import { useLocation, useParams } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiches } from '@/hooks/useFiches';
@@ -10,9 +11,19 @@ import styles from './FicheCreation.module.css';
 
 export default function FicheCreation() {
   const [, setLocation] = useLocation();
+  const params = useParams();
+  const ficheId = params.id; // Will be undefined for new fiches
+  const isEditMode = !!ficheId;
+  
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { createFiche } = useFiches();
+  const { createFiche, updateFiche } = useFiches();
   const { toast } = useToast();
+  
+  // Query for existing fiche data if in edit mode
+  const { data: existingFiche, isLoading: ficheLoading } = useQuery({
+    queryKey: ['/api/fiches', ficheId],
+    enabled: isEditMode,
+  });
 
   // Redirect if not authenticated or not authorized
   useEffect(() => {
@@ -24,31 +35,47 @@ export default function FicheCreation() {
 
   const handleSubmit = async (formData) => {
     try {
-      const fiche = await createFiche(formData);
-      
-      toast({
-        title: "Fiche créée avec succès",
-        description: `La fiche ${fiche.ref} a été envoyée à FEVES`,
-        variant: "default"
-      });
+      let fiche;
+      if (isEditMode) {
+        fiche = await updateFiche({ id: ficheId, data: formData });
+        toast({
+          title: "Fiche modifiée avec succès",
+          description: `La fiche ${fiche.ref} a été mise à jour et envoyée`,
+          variant: "default"
+        });
+      } else {
+        fiche = await createFiche(formData);
+        toast({
+          title: "Fiche créée avec succès",
+          description: `La fiche ${fiche.ref} a été envoyée à FEVES`,
+          variant: "default"
+        });
+      }
 
       setLocation(`/fiches/${fiche.id}`);
-      return fiche; // Return the created fiche
+      return fiche;
     } catch (error) {
       toast({
-        title: "Erreur lors de la création",
+        title: isEditMode ? "Erreur lors de la modification" : "Erreur lors de la création",
         description: error.message || "Une erreur est survenue",
         variant: "destructive"
       });
-      throw error; // Re-throw the error so it can be caught by the caller
+      throw error;
     }
   };
 
   const handleSaveDraft = async (formData) => {
     try {
-      // Save as draft by setting state to DRAFT
-      const ficheData = { ...formData, state: 'DRAFT' };
-      const fiche = await createFiche(ficheData);
+      let fiche;
+      if (isEditMode) {
+        // Update existing fiche as draft
+        const ficheData = { ...formData, state: 'DRAFT' };
+        fiche = await updateFiche({ id: ficheId, data: ficheData });
+      } else {
+        // Save as draft by setting state to DRAFT
+        const ficheData = { ...formData, state: 'DRAFT' };
+        fiche = await createFiche(ficheData);
+      }
       
       toast({
         title: "Brouillon sauvegardé",
@@ -66,7 +93,7 @@ export default function FicheCreation() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || (isEditMode && ficheLoading)) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingContent}>
@@ -96,16 +123,18 @@ export default function FicheCreation() {
               Tableau de bord
             </span>
             <ChevronRight className={styles.icon} />
-            <span className={styles.breadcrumbCurrent}>Nouvelle fiche navette</span>
+            <span className={styles.breadcrumbCurrent}>{isEditMode ? 'Modifier fiche navette' : 'Nouvelle fiche navette'}</span>
           </div>
           <h1 className={styles.pageTitle} data-testid="text-page-title">
-            Créer une fiche navette
+            {isEditMode ? 'Modifier la fiche navette' : 'Créer une fiche navette'}
           </h1>
         </div>
 
         <FicheForm
           onSubmit={handleSubmit}
           onSaveDraft={handleSaveDraft}
+          initialData={isEditMode ? existingFiche : null}
+          isEditing={isEditMode}
         />
       </main>
     </div>

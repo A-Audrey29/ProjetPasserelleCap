@@ -11,7 +11,8 @@ import {
   FileText,
   CheckCircle,
   XCircle,
-  ArrowLeft
+  ArrowLeft,
+  Edit
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
@@ -164,6 +165,8 @@ export default function FicheDetail({ ficheId }) {
         return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
       case 'cd_reject':
         return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
+      case 'edit':
+        return user.role === 'ADMIN' || (fiche.state === 'DRAFT' && fiche.emitterId === user.id);
       default:
         return false;
     }
@@ -245,6 +248,17 @@ export default function FicheDetail({ ficheId }) {
                   <UserPlus className={styles.buttonIcon} />
                   Affecter
                 </button>
+              )}
+              
+              {canPerformAction('edit') && (
+                <Link 
+                  href={`/fiches/${ficheId}/edit`}
+                  className={styles.editButton}
+                  data-testid="button-edit-fiche"
+                >
+                  <Edit className={styles.buttonIcon} />
+                  Modifier la fiche
+                </Link>
               )}
               
               <button 

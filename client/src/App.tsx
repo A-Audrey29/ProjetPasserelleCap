@@ -64,6 +64,7 @@ function Router() {
         <>
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/fiches/new" component={FicheCreation} />
+          <Route path="/fiches/:id/edit" component={FicheCreation} />
           <Route path="/fiches/:id" component={FicheDetail} />
           <Route path="/admin" component={Admin} />
           <Route path="/administration" component={Administration} />
