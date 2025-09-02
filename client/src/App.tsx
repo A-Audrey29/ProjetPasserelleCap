@@ -11,6 +11,7 @@ import FicheCreation from "@/pages/FicheCreation";
 import FicheDetail from "@/pages/FicheDetail";
 import Admin from "@/pages/Admin";
 import Reports from "@/pages/Reports";
+import Contact from "@/pages/Contact";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.jsx";
 
 function Router() {
@@ -49,6 +50,8 @@ function Router() {
           <Route path="/fiches/:id" component={FicheDetail} />
           <Route path="/admin" component={Admin} />
           <Route path="/reports" component={Reports} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/fiches" component={Dashboard} />
         </>
       )}
       <Route component={NotFound} />

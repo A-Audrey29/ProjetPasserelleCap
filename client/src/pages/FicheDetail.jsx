@@ -3,7 +3,7 @@ import { useLocation, useParams } from 'wouter';
 import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiche } from '@/hooks/useFiches';
-import Sidebar from '@/components/Layout/Sidebar';
+import Header from '@/components/Layout/Header';
 import FicheDetail from '@/components/Fiches/FicheDetail';
 import StatusBadge from '@/components/Common/StatusBadge';
 
@@ -23,8 +23,8 @@ export default function FicheDetailPage() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Sidebar />
-        <main className="md:ml-64 p-6">
+        <Header />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -43,8 +43,8 @@ export default function FicheDetailPage() {
   if (error || !fiche) {
     return (
       <div className="min-h-screen bg-background">
-        <Sidebar />
-        <main className="md:ml-64 p-6">
+        <Header />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <p className="text-destructive font-medium mb-2">
@@ -69,9 +69,9 @@ export default function FicheDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Header />
       
-      <main className="main-content">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <button 

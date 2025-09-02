@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus, Download } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiches, useDashboardStats } from '@/hooks/useFiches';
-import Sidebar from '@/components/Layout/Sidebar';
+import Header from '@/components/Layout/Header';
 import KPICards from '@/components/Dashboard/KPICards';
 import FilterBar from '@/components/Dashboard/FilterBar';
 import FichesList from '@/components/Fiches/FichesList';
@@ -56,9 +56,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Header />
       
-      <main className="md:ml-64 p-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>

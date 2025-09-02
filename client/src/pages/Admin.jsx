@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
-import Sidebar from '@/components/Layout/Sidebar';
+import Header from '@/components/Layout/Header';
 import AdminDashboard from '@/components/Admin/AdminDashboard';
 
 export default function Admin() {
@@ -32,9 +32,9 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Header />
       
-      <main className="md:ml-64 p-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AdminDashboard />
       </main>
     </div>

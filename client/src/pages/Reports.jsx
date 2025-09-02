@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { Download, Calendar, Filter, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
-import Sidebar from '@/components/Layout/Sidebar';
+import Header from '@/components/Layout/Header';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 
 export default function Reports() {
@@ -87,9 +87,9 @@ export default function Reports() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Header />
       
-      <main className="md:ml-64 p-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground" data-testid="text-reports-title">
             Rapports et analyses
