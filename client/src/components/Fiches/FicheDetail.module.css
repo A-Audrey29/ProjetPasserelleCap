@@ -215,6 +215,23 @@
   margin: 0;
 }
 
+/* Validation messages styles */
+.validationMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.validationMessage {
+  background-color: #F5F6F7;
+  border-left: 4px solid #6A8B74;
+  padding: 0.75rem 1rem;
+  margin: 0;
+  font-style: italic;
+  color: #3B4B61;
+  border-radius: 0 4px 4px 0;
+}
+
 .commentsList {
   display: flex;
   flex-direction: column;

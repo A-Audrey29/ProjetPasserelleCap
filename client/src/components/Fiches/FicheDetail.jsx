@@ -483,6 +483,23 @@ export default function FicheDetail({ ficheId }) {
               </div>
             )}
           </div>
+
+          {/* Validation messages for SUBMITTED_TO_CD status */}
+          {fiche.state === 'SUBMITTED_TO_CD' && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Validation
+              </h2>
+              <div className={styles.validationMessages}>
+                <p className={styles.validationMessage} data-testid="text-family-acknowledgment">
+                  La famille a connaissance du contenu de cette fiche et adhère à cet accompagnement
+                </p>
+                <p className={styles.validationMessage} data-testid="text-referent-validation">
+                  {fiche.referentData?.firstName} {fiche.referentData?.lastName} ({fiche.emitter?.id}) a validé et transmis cette fiche
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
