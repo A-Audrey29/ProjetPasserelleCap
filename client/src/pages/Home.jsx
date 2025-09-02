@@ -1,6 +1,7 @@
 import { Link } from 'wouter';
-import { FileText, Users, CheckCircle, ArrowRight, Plus, Eye, BarChart3, Settings } from 'lucide-react';
+import { FileText, Users, CheckCircle, ArrowRight, Plus, Eye, BarChart3, Settings, Edit } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { getRoleActionSuggestions } from '@/utils/permissions';
 import Header from '@/components/Layout/Header';
 import styles from './Home.module.css';
 
@@ -19,134 +20,25 @@ export default function Home() {
            user.role === 'RELATIONS_EVS' ? 'Relations EVS' : 'Utilisateur';
   };
 
-  // Define role-specific actions
+  // Get role-specific actions using the permissions system
   const getRoleActions = () => {
-    if (!user) return [];
+    if (!user || !user.role) return [];
+    return getRoleActionSuggestions(user.role);
+  };
 
-    // Debug: log the user role
-    console.log('User role:', user.role);
-
-    const roleSpecificActions = {
-      'ADMIN': [
-        {
-          icon: Eye,
-          title: 'Consulter les fiches navettes',
-          description: 'Visualiser et suivre l\'état de toutes les fiches',
-          href: '/dashboard',
-          color: 'primary'
-        },
-        {
-          icon: Settings,
-          title: 'Administration',
-          description: 'Gérer les utilisateurs et paramètres système',
-          href: '/admin',
-          color: 'warning'
-        },
-        {
-          icon: BarChart3,
-          title: 'Rapports et statistiques',
-          description: 'Analyser les données et générer des rapports',
-          href: '/reports',
-          color: 'success'
-        }
-      ],
-      'EMETTEUR': [
-        {
-          icon: Plus,
-          title: 'Émettre une nouvelle fiche navette',
-          description: 'Créer une nouvelle demande d\'accompagnement',
-          href: '/fiches/new',
-          color: 'primary'
-        },
-        {
-          icon: Eye,
-          title: 'Mes fiches navettes',
-          description: 'Consulter et gérer mes fiches en cours',
-          href: '/dashboard',
-          color: 'success'
-        }
-      ],
-      'SUIVI_PROJETS': [
-        {
-          icon: Eye,
-          title: 'Consulter les fiches navettes',
-          description: 'Visualiser et suivre l\'état de toutes les fiches',
-          href: '/dashboard',
-          color: 'primary'
-        },
-        {
-          icon: BarChart3,
-          title: 'Suivi des projets',
-          description: 'Monitorer l\'avancement des accompagnements',
-          href: '/reports',
-          color: 'success'
-        }
-      ],
-      'RELATIONS_EVS': [
-        {
-          icon: Eye,
-          title: 'Consulter les fiches navettes',
-          description: 'Visualiser et gérer toutes les fiches',
-          href: '/dashboard',
-          color: 'primary'
-        },
-        {
-          icon: Users,
-          title: 'Gestion des affectations',
-          description: 'Affecter les fiches aux organismes EVS/CS',
-          href: '/dashboard',
-          color: 'warning'
-        },
-        {
-          icon: FileText,
-          title: 'Gestion des contrats',
-          description: 'Suivre les contrats et paiements',
-          href: '/dashboard',
-          color: 'success'
-        }
-      ],
-      'EVS_CS': [
-        {
-          icon: Eye,
-          title: 'Mes fiches affectées',
-          description: 'Consulter les fiches de mon organisation',
-          href: '/dashboard',
-          color: 'primary'
-        },
-        {
-          icon: CheckCircle,
-          title: 'Validation des accompagnements',
-          description: 'Accepter/refuser et suivre les activités',
-          href: '/dashboard',
-          color: 'success'
-        },
-        {
-          icon: FileText,
-          title: 'Rapports finaux',
-          description: 'Soumettre les rapports d\'activité',
-          href: '/dashboard',
-          color: 'warning'
-        }
-      ]
+  // Map icon names to actual icon components
+  const getIconComponent = (iconName) => {
+    const icons = {
+      Eye,
+      Plus,
+      Edit,
+      Settings,
+      BarChart3,
+      Users,
+      CheckCircle,
+      FileText
     };
-
-    const actions = roleSpecificActions[user.role] || [];
-    console.log('Actions for role', user.role, ':', actions);
-    
-    // Fallback: if no specific actions found, provide basic actions
-    if (actions.length === 0) {
-      return [
-        {
-          icon: Eye,
-          title: 'Consulter les fiches navettes',
-          description: 'Visualiser et suivre l\'état des fiches',
-          href: '/dashboard',
-          color: 'primary'
-        }
-      ];
-    }
-    
-    return actions;
+    return icons[iconName] || Eye;
   };
 
   return (
@@ -174,18 +66,21 @@ export default function Home() {
               <div className={styles.container}>
                 <h2 className={styles.sectionTitle}>Vos actions disponibles</h2>
                 <div className={styles.actionsGrid}>
-                  {getRoleActions().map((action, index) => (
-                    <Link key={index} href={action.href} className={styles.actionCard}>
-                      <div className={`${styles.actionIcon} ${styles['icon' + action.color.charAt(0).toUpperCase() + action.color.slice(1)]}`}>
-                        <action.icon className="w-6 h-6" />
-                      </div>
-                      <div className={styles.actionContent}>
-                        <h3 className={styles.actionTitle}>{action.title}</h3>
-                        <p className={styles.actionDescription}>{action.description}</p>
-                      </div>
-                      <ArrowRight className={`w-5 h-5 ${styles.actionArrow}`} />
-                    </Link>
-                  ))}
+                  {getRoleActions().map((action, index) => {
+                    const IconComponent = getIconComponent(action.icon);
+                    return (
+                      <Link key={index} href={action.href} className={styles.actionCard}>
+                        <div className={`${styles.actionIcon} ${styles['icon' + action.color.charAt(0).toUpperCase() + action.color.slice(1)]}`}>
+                          <IconComponent className="w-6 h-6" />
+                        </div>
+                        <div className={styles.actionContent}>
+                          <h3 className={styles.actionTitle}>{action.title}</h3>
+                          <p className={styles.actionDescription}>{action.description}</p>
+                        </div>
+                        <ArrowRight className={`w-5 h-5 ${styles.actionArrow}`} />
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             </section>
