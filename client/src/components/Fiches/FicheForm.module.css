@@ -245,3 +245,69 @@
   color: #6B7280;
   font-style: italic;
 }
+
+/* Children section styles */
+.childSection {
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: #FFFFFF;
+}
+
+.childHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #D1D5DB;
+}
+
+.childTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin: 0;
+}
+
+.removeChildButton {
+  background: none;
+  border: none;
+  color: #8C4A4A;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.removeChildButton:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.addChildButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: none;
+  border: 2px dashed #6A8B74;
+  color: #6A8B74;
+  padding: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.addChildButton:hover {
+  background-color: #f0f9ff;
+  border-color: #3B4B61;
+  color: #3B4B61;
+}

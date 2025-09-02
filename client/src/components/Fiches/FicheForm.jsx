@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check } from 'lucide-react';
+import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import styles from './FicheForm.module.css';
@@ -50,7 +50,13 @@ export default function FicheForm({
       telephonePortable: '',
       telephoneFixe: ''
     },
-    children: [],
+    children: [
+      {
+        name: '',
+        dateNaissance: '',
+        niveauScolaire: ''
+      }
+    ],
     workshops: [],
     attachments: []
   });
@@ -382,6 +388,182 @@ export default function FicheForm({
 
     return true;
   };
+
+  const updateChildField = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      children: prev.children.map((child, i) => 
+        i === index ? { ...child, [field]: value } : child
+      )
+    }));
+  };
+
+  const addChild = () => {
+    setFormData(prev => ({
+      ...prev,
+      children: [
+        ...prev.children,
+        {
+          name: '',
+          dateNaissance: '',
+          niveauScolaire: ''
+        }
+      ]
+    }));
+  };
+
+  const removeChild = (index) => {
+    if (formData.children.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        children: prev.children.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const validateChildrenStep = () => {
+    for (let i = 0; i < formData.children.length; i++) {
+      const child = formData.children[i];
+      
+      if (!child.name.trim()) {
+        toast({
+          title: "Erreur de validation",
+          description: `Le nom de l'enfant ${i + 1} est obligatoire`,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (!child.dateNaissance) {
+        toast({
+          title: "Erreur de validation",
+          description: `La date de naissance de l'enfant ${i + 1} est obligatoire`,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (!child.niveauScolaire.trim()) {
+        toast({
+          title: "Erreur de validation",
+          description: `Le niveau scolaire de l'enfant ${i + 1} est obligatoire`,
+          variant: "destructive"
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const renderChildrenStep = () => (
+    <div className={styles.card}>
+      <h2 className={styles.cardTitle}>
+        <Baby className={styles.cardTitleIcon} />
+        Enfants concernés
+      </h2>
+      
+      <div className={styles.formSection}>
+        {formData.children.map((child, index) => (
+          <div key={index} className={styles.childSection}>
+            <div className={styles.childHeader}>
+              <h3 className={styles.childTitle}>
+                Enfant {index + 1}
+              </h3>
+              {formData.children.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeChild(index)}
+                  className={styles.removeChildButton}
+                  data-testid={`button-remove-child-${index}`}
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+
+            <div className={styles.formField}>
+              <label className={styles.fieldLabel} htmlFor={`child-name-${index}`}>
+                Nom et prénom *
+              </label>
+              <input
+                id={`child-name-${index}`}
+                type="text"
+                className={styles.fieldInput}
+                value={child.name}
+                onChange={(e) => updateChildField(index, 'name', e.target.value)}
+                placeholder="Nom et prénom de l'enfant"
+                data-testid={`input-child-name-${index}`}
+              />
+            </div>
+
+            <div className={styles.formGrid}>
+              <div className={styles.formField}>
+                <label className={styles.fieldLabel} htmlFor={`child-birth-${index}`}>
+                  Date de naissance *
+                </label>
+                <input
+                  id={`child-birth-${index}`}
+                  type="date"
+                  className={styles.fieldInput}
+                  value={child.dateNaissance}
+                  onChange={(e) => updateChildField(index, 'dateNaissance', e.target.value)}
+                  data-testid={`input-child-birth-${index}`}
+                />
+              </div>
+              <div className={styles.formField}>
+                <label className={styles.fieldLabel} htmlFor={`child-level-${index}`}>
+                  Niveau scolaire *
+                </label>
+                <input
+                  id={`child-level-${index}`}
+                  type="text"
+                  className={styles.fieldInput}
+                  value={child.niveauScolaire}
+                  onChange={(e) => updateChildField(index, 'niveauScolaire', e.target.value)}
+                  placeholder="Ex: CP, CE1, 6ème, Maternelle..."
+                  data-testid={`input-child-level-${index}`}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={addChild}
+          className={styles.addChildButton}
+          data-testid="button-add-child"
+        >
+          <Plus size={16} />
+          Ajouter un enfant
+        </button>
+
+        <div className={styles.buttonContainer}>
+          <button
+            type="button"
+            onClick={() => setCurrentStep(1)}
+            className={`${styles.button} ${styles.buttonSecondary}`}
+            data-testid="button-previous-step"
+          >
+            Précédent
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (validateChildrenStep()) {
+                setCurrentStep(3);
+              }
+            }}
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            data-testid="button-next-step"
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderFamilyStep = () => (
     <div className={styles.card}>
@@ -749,10 +931,7 @@ export default function FicheForm({
       case 1:
         return renderFamilyStep();
       case 2:
-        return <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Enfants concernés</h2>
-          <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
-        </div>;
+        return renderChildrenStep();
       case 3:
         return <div className={styles.card}>
           <h2 className={styles.cardTitle}>Ateliers et objectifs</h2>
