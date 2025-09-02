@@ -161,7 +161,6 @@ export default function FicheDetail({ ficheId }) {
   const canPerformAction = (action) => {
     if (!fiche || !user) return false;
     
-    
     switch (action) {
       case 'assign':
         return user.role === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
@@ -171,11 +170,14 @@ export default function FicheDetail({ ficheId }) {
       case 'sign_contract':
         return user.role === 'EVS_CS' && fiche.state === 'CONTRACT_SENT' && fiche.assignedOrgId === user.orgId;
       case 'cd_validate':
-        return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
+        const userRoleForCD = user.user?.role || user.role;
+        return userRoleForCD === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
       case 'cd_reject':
-        return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
+        const userRoleForCDReject = user.user?.role || user.role;
+        return userRoleForCDReject === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
       case 'cd_return':
-        return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
+        const userRoleForCDReturn = user.user?.role || user.role;
+        return userRoleForCDReturn === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
       case 'edit':
         const userRole = user.user?.role || user.role;
         const userId = user.user?.id || user.id;
