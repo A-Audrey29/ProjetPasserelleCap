@@ -1257,9 +1257,11 @@ export default function FicheForm({
 
         // Create the fiche as DRAFT
         const newFiche = await onSubmit(ficheData);
+        console.log('Fiche created:', newFiche);
         
         // Then transition it to SUBMITTED_TO_CD
-        await transitionFiche({
+        console.log('Starting transition to SUBMITTED_TO_CD for fiche:', newFiche.id);
+        const transitionResult = await transitionFiche({
           id: newFiche.id,
           newState: 'SUBMITTED_TO_CD',
           metadata: {
@@ -1267,6 +1269,7 @@ export default function FicheForm({
             transmissionDate: new Date().toISOString()
           }
         });
+        console.log('Transition result:', transitionResult);
       }
       
       toast({
