@@ -128,7 +128,6 @@ export default function Administration() {
   return (
     <div className={styles.administrationContainer}>
       <Header />
-      
       <main className={styles.mainContent}>
         <div className={styles.headerSection}>
           <div className={styles.headerContent}>
@@ -143,7 +142,7 @@ export default function Administration() {
           
           <div className={styles.headerActions}>
             <Button 
-              className={styles.createButton}
+              className="_button_1c1gx_3 _buttonPrimary_1c1gx_24 _buttonDefault_1c1gx_44 _createButton_riwoj_82 text-[#3b4b61]"
               onClick={() => setShowCreateForm(true)}
               data-testid="button-create-user"
             >
