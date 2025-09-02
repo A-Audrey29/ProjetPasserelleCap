@@ -17,13 +17,13 @@
   --muted-foreground: 64 64 64; /* Darker grey for better contrast */
 
   --accent: 245 246 247;
-  --accent-foreground: 59 75 97;
+  --accent-foreground: 64 64 64; /* Dark grey instead of blue */
 
   --success: 106 139 116; /* #6A8B74 - Vert doux */
   --success-foreground: 255 255 255;
 
   --warning: 217 160 102; /* #D9A066 - Orange sable */
-  --warning-foreground: 255 255 255;
+  --warning-foreground: 64 64 64; /* Dark grey text instead of white */
 
   --destructive: 140 74 74; /* #8C4A4A - Rouge bordeaux discret */
   --destructive-foreground: 255 255 255;
@@ -560,7 +560,7 @@ table td {
 /* Special emphasis colors for specific use cases */
 .text-obj1 { color: hsl(var(--primary)); }
 .text-obj2 { color: hsl(var(--success)); }
-.text-obj3 { color: hsl(var(--warning)); }
+.text-obj3 { color: hsl(64 64 64); /* Dark grey instead of warning yellow */ }
 
 .bg-obj1 { background-color: hsl(var(--primary)); }
 .bg-obj2 { background-color: hsl(var(--success)); }
