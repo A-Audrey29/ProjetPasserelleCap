@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { X, Save, User, Mail, Building, Shield, Key } from 'lucide-react';
+import { X, Save, User, Mail, Shield, Key } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
@@ -25,8 +25,6 @@ export default function UserForm({ user, onClose, onSuccess }) {
     firstName: '',
     lastName: '',
     role: 'EMETTEUR',
-    epsiId: '',
-    orgId: '',
     password: '',
     confirmPassword: '',
     isActive: true
@@ -34,9 +32,7 @@ export default function UserForm({ user, onClose, onSuccess }) {
 
   const [errors, setErrors] = useState({});
 
-  // Fetch EPSIs and Organizations for selects
-  const { data: epsis = [] } = useQuery({ queryKey: ['/api/epsi'] });
-  const { data: organizations = [] } = useQuery({ queryKey: ['/api/organizations'] });
+  
 
   useEffect(() => {
     if (user) {
@@ -45,8 +41,6 @@ export default function UserForm({ user, onClose, onSuccess }) {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         role: user.role || 'EMETTEUR',
-        epsiId: user.epsiId || '',
-        orgId: user.orgId || '',
         password: '',
         confirmPassword: '',
         isActive: user.isActive !== undefined ? user.isActive : true
@@ -141,8 +135,6 @@ export default function UserForm({ user, onClose, onSuccess }) {
       firstName: formData.firstName.trim(),
       lastName: formData.lastName.trim(),
       role: formData.role,
-      epsiId: formData.epsiId || null,
-      orgId: formData.orgId || null,
       isActive: formData.isActive
     };
 
@@ -253,42 +245,9 @@ export default function UserForm({ user, onClose, onSuccess }) {
               {errors.role && <span className={styles.error}>{errors.role}</span>}
             </div>
 
-            {/* EPSI */}
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                EPSI
-              </label>
-              <select
-                value={formData.epsiId}
-                onChange={(e) => handleInputChange('epsiId', e.target.value)}
-                className={styles.select}
-                data-testid="select-user-epsi"
-              >
-                <option value="">Sélectionner un EPSI</option>
-                {epsis.map((epsi) => (
-                  <option key={epsi.id} value={epsi.id}>{epsi.name}</option>
-                ))}
-              </select>
-            </div>
+            
 
-            {/* Organization */}
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                <Building className={styles.labelIcon} />
-                Organisation
-              </label>
-              <select
-                value={formData.orgId}
-                onChange={(e) => handleInputChange('orgId', e.target.value)}
-                className={styles.select}
-                data-testid="select-user-organization"
-              >
-                <option value="">Sélectionner une organisation</option>
-                {organizations.map((org) => (
-                  <option key={org.id} value={org.id}>{org.name}</option>
-                ))}
-              </select>
-            </div>
+            
 
             {/* Password */}
             <div className={styles.formGroup}>
