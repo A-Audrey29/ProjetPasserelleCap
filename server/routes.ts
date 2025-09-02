@@ -68,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
-          epsiId: user.epsiId,
+
           orgId: user.orgId
         }
       });
@@ -97,7 +97,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
-          epsiId: user.epsiId,
+
           orgId: user.orgId
         }
       });
@@ -110,11 +110,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Fiches routes
   app.get('/api/fiches', requireAuth, requireFicheAccess, async (req, res) => {
     try {
-      const { state, epsiId, assignedOrgId, search } = req.query;
+      const { state, assignedOrgId, search } = req.query;
       
       let filters = {
         state: state as string,
-        epsiId: epsiId as string,
         assignedOrgId: assignedOrgId as string,
         search: search as string
       };
@@ -131,11 +130,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get related data for each fiche
       const fichesWithDetails = await Promise.all(
         fiches.map(async (fiche) => {
-          const [emitter, family, assignedOrg, epsiData, selections] = await Promise.all([
+          const [emitter, family, assignedOrg, selections] = await Promise.all([
             storage.getUser(fiche.emitterId),
             storage.getFamily(fiche.familyId),
             fiche.assignedOrgId ? storage.getOrganization(fiche.assignedOrgId) : null,
-            fiche.epsiId ? storage.getEpsi(fiche.epsiId) : null,
             storage.getFicheSelections(fiche.id)
           ]);
 
@@ -155,7 +153,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             emitter,
             family,
             assignedOrg,
-            epsi: epsiData,
             totalAmount
           };
         })
@@ -187,11 +184,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get related data
-      const [emitter, family, assignedOrg, epsiData, selections, attachments, contract, payments, verification, finalReport, comments] = await Promise.all([
+      const [emitter, family, assignedOrg, selections, attachments, contract, payments, verification, finalReport, comments] = await Promise.all([
         storage.getUser(fiche.emitterId),
         storage.getFamily(fiche.familyId),
         fiche.assignedOrgId ? storage.getOrganization(fiche.assignedOrgId) : null,
-        fiche.epsiId ? storage.getEpsi(fiche.epsiId) : null,
         storage.getFicheSelections(fiche.id),
         storage.getAttachments(fiche.id),
         storage.getContract(fiche.id),
@@ -232,7 +228,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         emitter,
         family,
         assignedOrg,
-        epsi: epsiData,
         selections: selectionsWithWorkshops,
         attachments,
         contract,
@@ -443,26 +438,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reference data routes
-  app.get('/api/epsi', requireAuth, async (req, res) => {
-    try {
-      const epsiList = await storage.getAllEpsi();
-      res.json(epsiList);
-    } catch (error) {
-      console.error('Get EPSI error:', error);
-      res.status(500).json({ message: 'Erreur interne du serveur' });
-    }
-  });
 
   app.get('/api/organizations', requireAuth, async (req, res) => {
     try {
-      const { epsiId } = req.query;
-      let organizations;
-      
-      if (epsiId) {
-        organizations = await storage.getOrganizationsByEpsi(epsiId as string);
-      } else {
-        organizations = await storage.getAllOrganizations();
-      }
+      const organizations = await storage.getAllOrganizations();
 
       res.json(organizations);
     } catch (error) {

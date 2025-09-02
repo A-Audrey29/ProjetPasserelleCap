@@ -23,7 +23,6 @@ export const users = pgTable("users", {
   role: roleEnum("role").notNull(),
   structure: text("structure"),
   phone: text("phone"),
-  epsiId: varchar("epsi_id"),
   orgId: varchar("org_id"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -33,11 +32,6 @@ export const users = pgTable("users", {
   roleIdx: index("users_role_idx").on(table.role),
 }));
 
-export const epsi = pgTable("epsi", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
 export const organizations = pgTable("organizations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -47,10 +41,8 @@ export const organizations = pgTable("organizations", {
   contact: text("contact"),
   email: text("email"),
   phone: text("phone"),
-  epsiId: varchar("epsi_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
-  epsiIdx: index("organizations_epsi_idx").on(table.epsiId),
   typeIdx: index("organizations_type_idx").on(table.type),
 }));
 
@@ -108,7 +100,6 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   emitterId: varchar("emitter_id").notNull(),
   familyId: varchar("family_id").notNull(),
   assignedOrgId: varchar("assigned_org_id"),
-  epsiId: varchar("epsi_id"),
   description: text("description"),
   
   // Referent information
@@ -232,21 +223,14 @@ export const comments = pgTable("comments", {
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
-  epsi: one(epsi, { fields: [users.epsiId], references: [epsi.id] }),
   organization: one(organizations, { fields: [users.orgId], references: [organizations.id] }),
   emittedFiches: many(ficheNavettes),
   auditLogs: many(auditLogs),
   comments: many(comments),
 }));
 
-export const epsiRelations = relations(epsi, ({ many }) => ({
-  organizations: many(organizations),
-  users: many(users),
-  fiches: many(ficheNavettes),
-}));
 
 export const organizationsRelations = relations(organizations, ({ one, many }) => ({
-  epsi: one(epsi, { fields: [organizations.epsiId], references: [epsi.id] }),
   users: many(users),
   workshops: many(workshops),
   assignedFiches: many(ficheNavettes),
@@ -275,7 +259,6 @@ export const ficheNavettesRelations = relations(ficheNavettes, ({ one, many }) =
   emitter: one(users, { fields: [ficheNavettes.emitterId], references: [users.id] }),
   family: one(families, { fields: [ficheNavettes.familyId], references: [families.id] }),
   assignedOrg: one(organizations, { fields: [ficheNavettes.assignedOrgId], references: [organizations.id] }),
-  epsi: one(epsi, { fields: [ficheNavettes.epsiId], references: [epsi.id] }),
   selections: many(ficheWorkshopSelections),
   attachments: many(attachments),
   contract: one(contracts),
@@ -327,10 +310,6 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
-export const insertEpsiSchema = createInsertSchema(epsi).omit({
-  id: true,
-  createdAt: true,
-});
 
 export const insertOrganizationSchema = createInsertSchema(organizations).omit({
   id: true,
@@ -406,8 +385,6 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type EPSI = typeof epsi.$inferSelect;
-export type InsertEPSI = z.infer<typeof insertEpsiSchema>;
 export type Organization = typeof organizations.$inferSelect;
 export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
 export type Family = typeof families.$inferSelect;

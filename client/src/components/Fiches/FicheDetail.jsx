@@ -306,12 +306,6 @@ export default function FicheDetail({ ficheId }) {
                 </p>
               </div>
               <div className={styles.infoItem}>
-                <label className={styles.infoLabel}>EPSI</label>
-                <p className={styles.infoValue} data-testid="text-epsi">
-                  {fiche.epsi?.name || 'N/A'}
-                </p>
-              </div>
-              <div className={styles.infoItem}>
                 <label className={styles.infoLabel}>Créé le</label>
                 <p className={styles.infoValue} data-testid="text-created-date">
                   {formatDate(fiche.createdAt)}
@@ -512,7 +506,6 @@ export default function FicheDetail({ ficheId }) {
             <div className={styles.organizationsList}>
               <h3 className={styles.cardTitle}>Organisations disponibles</h3>
               {organizations
-                .filter(org => org.epsiId === fiche.epsiId)
                 .map((org) => (
                   <div 
                     key={org.id}

@@ -1,8 +1,8 @@
 import {
-  users, epsi, organizations, families, children, workshopObjectives, workshops,
+  users, organizations, families, children, workshopObjectives, workshops,
   ficheNavettes, ficheWorkshopSelections, contracts, payments, fieldVerifications,
   finalReports, attachments, auditLogs, comments,
-  type User, type InsertUser, type EPSI, type InsertEPSI, type Organization,
+  type User, type InsertUser, type Organization,
   type InsertOrganization, type Family, type InsertFamily, type Child, type InsertChild,
   type WorkshopObjective, type InsertWorkshopObjective, type Workshop, type InsertWorkshop,
   type FicheNavette, type InsertFicheNavette, type FicheWorkshopSelection,
@@ -23,17 +23,10 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   deleteUser(id: string): Promise<void>;
 
-  // EPSI
-  getAllEpsi(): Promise<EPSI[]>;
-  getEpsi(id: string): Promise<EPSI | undefined>;
-  createEpsi(epsi: InsertEPSI): Promise<EPSI>;
-  updateEpsi(id: string, epsi: Partial<InsertEPSI>): Promise<EPSI>;
-  deleteEpsi(id: string): Promise<void>;
 
   // Organizations
   getAllOrganizations(): Promise<Organization[]>;
   getOrganization(id: string): Promise<Organization | undefined>;
-  getOrganizationsByEpsi(epsiId: string): Promise<Organization[]>;
   createOrganization(org: InsertOrganization): Promise<Organization>;
   updateOrganization(id: string, org: Partial<InsertOrganization>): Promise<Organization>;
   deleteOrganization(id: string): Promise<void>;
@@ -71,7 +64,6 @@ export interface IStorage {
   // Fiche Navettes
   getAllFiches(filters?: {
     state?: string;
-    epsiId?: string;
     assignedOrgId?: string;
     emitterId?: string;
     search?: string;
@@ -151,29 +143,6 @@ export class DatabaseStorage implements IStorage {
     await db.delete(users).where(eq(users.id, id));
   }
 
-  // EPSI
-  async getAllEpsi(): Promise<EPSI[]> {
-    return await db.select().from(epsi).orderBy(asc(epsi.name));
-  }
-
-  async getEpsi(id: string): Promise<EPSI | undefined> {
-    const [result] = await db.select().from(epsi).where(eq(epsi.id, id));
-    return result || undefined;
-  }
-
-  async createEpsi(insertEpsi: InsertEPSI): Promise<EPSI> {
-    const [result] = await db.insert(epsi).values(insertEpsi).returning();
-    return result;
-  }
-
-  async updateEpsi(id: string, insertEpsi: Partial<InsertEPSI>): Promise<EPSI> {
-    const [result] = await db.update(epsi).set(insertEpsi).where(eq(epsi.id, id)).returning();
-    return result;
-  }
-
-  async deleteEpsi(id: string): Promise<void> {
-    await db.delete(epsi).where(eq(epsi.id, id));
-  }
 
   // Organizations
   async getAllOrganizations(): Promise<Organization[]> {
@@ -185,9 +154,6 @@ export class DatabaseStorage implements IStorage {
     return org || undefined;
   }
 
-  async getOrganizationsByEpsi(epsiId: string): Promise<Organization[]> {
-    return await db.select().from(organizations).where(eq(organizations.epsiId, epsiId));
-  }
 
   async createOrganization(insertOrg: InsertOrganization): Promise<Organization> {
     const [org] = await db.insert(organizations).values(insertOrg).returning();
@@ -310,7 +276,6 @@ export class DatabaseStorage implements IStorage {
   // Fiche Navettes
   async getAllFiches(filters?: {
     state?: string;
-    epsiId?: string;
     assignedOrgId?: string;
     emitterId?: string;
     search?: string;
@@ -319,7 +284,6 @@ export class DatabaseStorage implements IStorage {
     
     const conditions = [];
     if (filters?.state) conditions.push(eq(ficheNavettes.state, filters.state as any));
-    if (filters?.epsiId) conditions.push(eq(ficheNavettes.epsiId, filters.epsiId));
     if (filters?.assignedOrgId) conditions.push(eq(ficheNavettes.assignedOrgId, filters.assignedOrgId));
     if (filters?.emitterId) conditions.push(eq(ficheNavettes.emitterId, filters.emitterId));
     if (filters?.search) {
