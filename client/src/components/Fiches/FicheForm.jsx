@@ -293,8 +293,8 @@ export default function FicheForm({
     },
     {
       id: 5,
-      title: "Pièces justificatives",
-      icon: Paperclip,
+      title: "Revoir et transmettre la fiche à la FEVES",
+      icon: Send,
       allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
     }
   ];
@@ -1179,6 +1179,206 @@ export default function FicheForm({
     </div>
   );
 
+  const handleCancel = () => {
+    if (window.confirm('Êtes-vous sûr de vouloir annuler ? Toutes les données saisies seront perdues.')) {
+      // Reset form and go back to dashboard
+      window.location.href = '/dashboard';
+    }
+  };
+
+  const handleModify = () => {
+    // Go back to first step with all data preserved
+    setCurrentStep(0);
+  };
+
+  const handleTransmit = async () => {
+    if (!validateAllSteps()) {
+      toast({
+        title: "Erreur de validation",
+        description: "Veuillez vérifier tous les champs obligatoires.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const ficheData = {
+        familyId: formData.familyId,
+        epsiId: formData.epsiId,
+        description: formData.description,
+        family: formData.family,
+        children: formData.children,
+        workshopPropositions: formData.workshopPropositions,
+        referent: formData.referent,
+        status: 'SUBMITTED'
+      };
+
+      const result = await onSubmit(ficheData);
+      
+      toast({
+        title: "Fiche transmise",
+        description: "La fiche a été transmise avec succès à la FEVES.",
+        variant: "success"
+      });
+
+      // Redirect to dashboard after successful submission
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 2000);
+
+    } catch (error) {
+      toast({
+        title: "Erreur de transmission",
+        description: "Une erreur est survenue lors de la transmission de la fiche.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const validateAllSteps = () => {
+    return validateReferentStep() && 
+           validateFamilyStep() && 
+           validateChildrenStep() && 
+           validateBesoinStep() && 
+           validateObjectivesStep();
+  };
+
+  const renderReviewStep = () => (
+    <div className={styles.card}>
+      <h2 className={styles.cardTitle}>
+        <Send className={styles.cardTitleIcon} />
+        Revoir et transmettre la fiche à la FEVES
+      </h2>
+      
+      <div className={styles.formSection}>
+        {/* Référent Information */}
+        <div className={styles.reviewSection}>
+          <h3 className={styles.reviewSectionTitle}>
+            <UserCheck className={styles.reviewSectionIcon} />
+            Référent à l'origine de la demande
+          </h3>
+          <div className={styles.reviewContent}>
+            <p><strong>Nom :</strong> {formData.referent.lastName}</p>
+            <p><strong>Prénom :</strong> {formData.referent.firstName}</p>
+            <p><strong>Structure :</strong> {formData.referent.structure}</p>
+            <p><strong>Fonction :</strong> {formData.referent.role}</p>
+            <p><strong>Téléphone :</strong> {formData.referent.phone}</p>
+            <p><strong>Email :</strong> {formData.referent.email}</p>
+            <p><strong>Date de la demande :</strong> {formData.referent.requestDate}</p>
+          </div>
+        </div>
+
+        {/* Family Information */}
+        <div className={styles.reviewSection}>
+          <h3 className={styles.reviewSectionTitle}>
+            <Users className={styles.reviewSectionIcon} />
+            Informations famille
+          </h3>
+          <div className={styles.reviewContent}>
+            <p><strong>Nom :</strong> {formData.family.lastName}</p>
+            <p><strong>Prénom :</strong> {formData.family.firstName}</p>
+            <p><strong>Date de naissance :</strong> {formData.family.birthDate}</p>
+            <p><strong>Lieu de naissance :</strong> {formData.family.birthPlace}</p>
+            <p><strong>Nationalité :</strong> {formData.family.nationality}</p>
+            <p><strong>Lien avec les enfants :</strong> {formData.family.lienAvecEnfants}</p>
+            <p><strong>Autorité parentale :</strong> {formData.family.autoriteParentale}</p>
+            <p><strong>Situation familiale :</strong> {formData.family.situationFamiliale}</p>
+            <p><strong>Situation socio-professionnelle :</strong> {formData.family.situationSocioProfessionnelle}</p>
+            {formData.family.adresse && <p><strong>Adresse :</strong> {formData.family.adresse}</p>}
+            <p><strong>Téléphone portable :</strong> {formData.family.telephonePortable}</p>
+            {formData.family.telephoneFixe && <p><strong>Téléphone fixe :</strong> {formData.family.telephoneFixe}</p>}
+            {formData.family.email && <p><strong>Email :</strong> {formData.family.email}</p>}
+          </div>
+        </div>
+
+        {/* Children Information */}
+        <div className={styles.reviewSection}>
+          <h3 className={styles.reviewSectionTitle}>
+            <Baby className={styles.reviewSectionIcon} />
+            Enfants concernés ({formData.children.length})
+          </h3>
+          <div className={styles.reviewContent}>
+            {formData.children.map((child, index) => (
+              <div key={index} className={styles.childReview}>
+                <h4>Enfant {index + 1}</h4>
+                <p><strong>Prénom :</strong> {child.firstName}</p>
+                <p><strong>Date de naissance :</strong> {child.birthDate}</p>
+                <p><strong>Niveau scolaire :</strong> {child.level}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Needs Description */}
+        <div className={styles.reviewSection}>
+          <h3 className={styles.reviewSectionTitle}>
+            <PenTool className={styles.reviewSectionIcon} />
+            Identification des besoins de la famille
+          </h3>
+          <div className={styles.reviewContent}>
+            <p>{formData.description || 'Aucune description fournie'}</p>
+          </div>
+        </div>
+
+        {/* Workshop Propositions */}
+        <div className={styles.reviewSection}>
+          <h3 className={styles.reviewSectionTitle}>
+            <Target className={styles.reviewSectionIcon} />
+            Propositions d'ateliers
+          </h3>
+          <div className={styles.reviewContent}>
+            {Object.entries(formData.workshopPropositions || {}).filter(([_, value]) => value?.trim()).length > 0 ? (
+              Object.entries(formData.workshopPropositions || {}).map(([workshopId, proposition]) => {
+                if (!proposition?.trim()) return null;
+                return (
+                  <div key={workshopId} className={styles.propositionReview}>
+                    <h4>{workshopId.replace('workshop_', 'Atelier ')}</h4>
+                    <p>{proposition}</p>
+                  </div>
+                );
+              })
+            ) : (
+              <p>Aucune proposition d'atelier</p>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className={styles.reviewActions}>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className={`${styles.button} ${styles.buttonDanger}`}
+            data-testid="button-cancel"
+          >
+            Annuler
+          </button>
+          
+          <div className={styles.reviewActionsRight}>
+            <button
+              type="button"
+              onClick={handleModify}
+              className={`${styles.button} ${styles.buttonSecondary}`}
+              data-testid="button-modify"
+            >
+              <Edit className={styles.buttonIcon} />
+              Modifier
+            </button>
+            <button
+              type="button"
+              onClick={handleTransmit}
+              className={`${styles.button} ${styles.buttonPrimary}`}
+              data-testid="button-transmit"
+            >
+              <Send className={styles.buttonIcon} />
+              Transmettre à la FEVES
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
@@ -1192,10 +1392,7 @@ export default function FicheForm({
       case 4:
         return renderObjectivesStep();
       case 5:
-        return <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Pièces justificatives</h2>
-          <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
-        </div>;
+        return renderReviewStep();
       default:
         return renderReferentStep();
     }
