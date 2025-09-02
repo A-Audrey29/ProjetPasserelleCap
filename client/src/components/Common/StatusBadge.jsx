@@ -1,18 +1,19 @@
 import { STATE_LABELS } from '@/utils/constants';
+import styles from './StatusBadge.module.css';
 
 export default function StatusBadge({ state, className = '' }) {
   const getStatusClass = (state) => {
-    const baseClass = 'status-badge';
+    const baseClass = styles.statusBadge;
     
     switch (state) {
       case 'DRAFT':
-        return `${baseClass} status-draft`;
+        return `${baseClass} ${styles.statusDraft}`;
       case 'SUBMITTED_TO_FEVES':
       case 'NEEDS_INFO':
-        return `${baseClass} status-submitted`;
+        return `${baseClass} ${styles.statusSubmitted}`;
       case 'ASSIGNED_TO_EVS':
       case 'CONTRACT_SENT':
-        return `${baseClass} status-assigned`;
+        return `${baseClass} ${styles.statusAssigned}`;
       case 'EVS_ACCEPTED':
       case 'CONTRACT_SIGNED':
       case 'ADVANCE_70_PAID':
@@ -21,14 +22,14 @@ export default function StatusBadge({ state, className = '' }) {
       case 'FIELD_CHECK_DONE':
       case 'FINAL_REPORT_RECEIVED':
       case 'REMAINING_30_PAID':
-        return `${baseClass} status-accepted`;
+        return `${baseClass} ${styles.statusAccepted}`;
       case 'EVS_REJECTED':
-        return `${baseClass} status-rejected`;
+        return `${baseClass} ${styles.statusRejected}`;
       case 'CLOSED':
       case 'ARCHIVED':
-        return `${baseClass} status-closed`;
+        return `${baseClass} ${styles.statusClosed}`;
       default:
-        return `${baseClass} status-draft`;
+        return `${baseClass} ${styles.statusDraft}`;
     }
   };
 
@@ -36,7 +37,7 @@ export default function StatusBadge({ state, className = '' }) {
 
   return (
     <span 
-      className="status-badge status-draft bg-[#3b4b61] text-[#fdfdf2]"
+      className={`${getStatusClass(state)} ${className}`}
       data-testid={`status-badge-${state}`}
     >
       {statusText}

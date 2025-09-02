@@ -1,0 +1,42 @@
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.statusDraft {
+  background-color: #F5F6F7;
+  color: #3B4B61;
+}
+
+.statusSubmitted {
+  background-color: #D9A066;
+  color: #FFFFFF;
+}
+
+.statusAssigned {
+  background-color: #8C9DB8;
+  color: #FFFFFF;
+}
+
+.statusAccepted {
+  background-color: #6A8B74;
+  color: #FFFFFF;
+}
+
+.statusRejected {
+  background-color: #8C4A4A;
+  color: #FFFFFF;
+}
+
+.statusClosed {
+  background-color: #3B4B61;
+  color: #FFFFFF;
+}
