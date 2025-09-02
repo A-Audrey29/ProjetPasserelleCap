@@ -9,6 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import FicheCreation from "@/pages/FicheCreation";
 import FicheDetail from "@/pages/FicheDetail";
 import Admin from "@/pages/Admin";
+import Administration from "@/pages/Administration";
 import Reports from "@/pages/Reports";
 import Contact from "@/pages/Contact";
 import Home from "@/pages/Home";
@@ -65,6 +66,7 @@ function Router() {
           <Route path="/fiches/new" component={FicheCreation} />
           <Route path="/fiches/:id" component={FicheDetail} />
           <Route path="/admin" component={Admin} />
+          <Route path="/administration" component={Administration} />
           <Route path="/reports" component={Reports} />
           <Route path="/contact" component={Contact} />
           <Route path="/fiches" component={Fiches} />

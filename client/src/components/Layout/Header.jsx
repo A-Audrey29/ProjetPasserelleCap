@@ -21,6 +21,11 @@ export default function Header() {
       roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS']
     },
     {
+      href: '/administration',
+      label: 'Administration',
+      roles: ['ADMIN']
+    },
+    {
       href: '/contact',
       label: 'Nous contacter',
       roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS']

@@ -557,6 +557,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user
+  app.put('/api/admin/users/:id', requireAuth, requireRole('ADMIN'), auditMiddleware('update', 'User'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      // If password is provided, hash it
+      if (updateData.password) {
+        updateData.passwordHash = await hashPassword(updateData.password);
+        delete updateData.password;
+      }
+      
+      const user = await storage.updateUser(id, updateData);
+      if (!user) {
+        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error('Update user error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Toggle user activation
+  app.patch('/api/admin/users/:id/activate', requireAuth, requireRole('ADMIN'), auditMiddleware('activate', 'User'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+      
+      const user = await storage.updateUser(id, { isActive });
+      if (!user) {
+        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      }
+
+      res.json({ message: `Utilisateur ${isActive ? 'activé' : 'désactivé'} avec succès`, user });
+    } catch (error) {
+      console.error('Toggle user activation error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Get user by ID
+  app.get('/api/admin/users/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error('Get user error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Reset user password
+  app.post('/api/admin/users/:id/reset-password', requireAuth, requireRole('ADMIN'), auditMiddleware('reset_password', 'User'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { newPassword } = req.body;
+      
+      if (!newPassword) {
+        return res.status(400).json({ message: 'Nouveau mot de passe requis' });
+      }
+      
+      const passwordHash = await hashPassword(newPassword);
+      const user = await storage.updateUser(id, { passwordHash });
+      
+      if (!user) {
+        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      }
+
+      res.json({ message: 'Mot de passe réinitialisé avec succès' });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
   // Audit logs
   app.get('/api/audit', requireAuth, requireRole('ADMIN', 'SUIVI_PROJETS'), async (req, res) => {
     try {
