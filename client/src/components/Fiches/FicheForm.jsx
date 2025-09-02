@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check, Trash2 } from 'lucide-react';
+import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import styles from './FicheForm.module.css';
@@ -58,6 +58,7 @@ export default function FicheForm({
       }
     ],
     workshops: [],
+    workshopPropositions: {},
     attachments: [],
     descriptionSituation: ''
   });
@@ -474,6 +475,193 @@ export default function FicheForm({
     }
     return true;
   };
+
+  // Static objectives and workshops data based on user requirements
+  const objectivesData = [
+    {
+      id: 1,
+      title: "Développement des compétences parentales pour favoriser la réussite scolaire des enfants",
+      workshops: [
+        {
+          id: "workshop_1_1",
+          name: "Gestion du temps et de l'organisation familiale",
+          objective: "Aider les familles à organiser le temps entre les activités scolaires, les loisirs et la vie familiale."
+        },
+        {
+          id: "workshop_1_2", 
+          name: "Communication entre parents et enfants",
+          objective: "Renforcer la communication au sein de la famille pour créer un environnement propice à l'apprentissage."
+        },
+        {
+          id: "workshop_1_3",
+          name: "Atelier sur les méthodes d'apprentissage à la maison",
+          objective: "Fournir aux parents des outils pratiques pour soutenir l'apprentissage des enfants à la maison."
+        },
+        {
+          id: "workshop_1_4",
+          name: "Soutien émotionnel et la motivation scolaire",
+          objective: "Apprendre aux parents à soutenir la motivation de leurs enfants et à gérer les émotions liées à l'école (stress, anxiété, etc.)."
+        }
+      ]
+    },
+    {
+      id: 2,
+      title: "Renforcement des liens familiaux par la communication intergénérationnelle pour favoriser la réussite scolaire des enfants",
+      workshops: [
+        {
+          id: "workshop_2_1",
+          name: "La parole des aînés : une richesse pour l'éducation",
+          objective: "Aider les parents à mieux accompagner leurs enfants dans leur parcours scolaire."
+        },
+        {
+          id: "workshop_2_2",
+          name: "Mieux se comprendre pour mieux s'entraider",
+          objective: "Gérer les émotions liées à l'école."
+        },
+        {
+          id: "workshop_2_3",
+          name: "Soutien scolaire et méthodes familiales d'apprentissage",
+          objective: "Soutenir les enfants dans leur parcours."
+        },
+        {
+          id: "workshop_2_4",
+          name: "Renforcer la motivation scolaire par le dialogue",
+          objective: "Encourager la projection positive."
+        }
+      ]
+    },
+    {
+      id: 3,
+      title: "Renforcement des dynamiques familiales positives par le sport",
+      workshops: [
+        {
+          id: "workshop_3_1",
+          name: "Pratique d'activité physique",
+          objective: "Renforcer les liens familiaux par le bien-être physique et mental."
+        },
+        {
+          id: "workshop_3_2",
+          name: "Atelier découverte Sport/Étude",
+          objective: "Comprendre l'impact du sport sur la motivation scolaire."
+        },
+        {
+          id: "workshop_3_3",
+          name: "Atelier challenge famille",
+          objective: "Créer un événement sportif ludique inter-familles."
+        }
+      ]
+    }
+  ];
+
+  const [expandedObjectives, setExpandedObjectives] = useState({});
+
+  const toggleObjective = (objectiveId) => {
+    setExpandedObjectives(prev => ({
+      ...prev,
+      [objectiveId]: !prev[objectiveId]
+    }));
+  };
+
+  const updateWorkshopProposition = (workshopId, value) => {
+    setFormData(prev => ({
+      ...prev,
+      workshopPropositions: {
+        ...prev.workshopPropositions,
+        [workshopId]: value
+      }
+    }));
+  };
+
+  const validateObjectivesStep = () => {
+    // This step doesn't require validation as propositions are optional
+    return true;
+  };
+
+  const renderObjectivesStep = () => (
+    <div className={styles.card}>
+      <h2 className={styles.cardTitle}>
+        <Target className={styles.cardTitleIcon} />
+        Ateliers et objectifs
+      </h2>
+      
+      <div className={styles.formSection}>
+        {objectivesData.map((objective) => (
+          <div key={objective.id} className={styles.objectiveSection}>
+            <button
+              type="button"
+              onClick={() => toggleObjective(objective.id)}
+              className={styles.objectiveHeader}
+              data-testid={`button-objective-${objective.id}`}
+            >
+              <div className={styles.objectiveTitle}>
+                {expandedObjectives[objective.id] ? (
+                  <ChevronDown size={20} />
+                ) : (
+                  <ChevronRight size={20} />
+                )}
+                <span>OBJECTIF {objective.id} : {objective.title}</span>
+              </div>
+            </button>
+
+            {expandedObjectives[objective.id] && (
+              <div className={styles.workshopsContainer}>
+                <h4 className={styles.workshopsSubtitle}>Ateliers proposés</h4>
+                
+                {objective.workshops.map((workshop) => (
+                  <div key={workshop.id} className={styles.workshopItem}>
+                    <div className={styles.workshopInfo}>
+                      <h5 className={styles.workshopName}>{workshop.name}</h5>
+                      <p className={styles.workshopObjective}>
+                        <strong>Objectif :</strong> {workshop.objective}
+                      </p>
+                    </div>
+                    
+                    <div className={styles.workshopProposition}>
+                      <label className={styles.fieldLabel} htmlFor={`proposition-${workshop.id}`}>
+                        Proposition du référent
+                      </label>
+                      <textarea
+                        id={`proposition-${workshop.id}`}
+                        className={styles.fieldTextarea}
+                        value={formData.workshopPropositions[workshop.id] || ''}
+                        onChange={(e) => updateWorkshopProposition(workshop.id, e.target.value)}
+                        placeholder="Décrivez votre proposition pour cet atelier..."
+                        rows={3}
+                        data-testid={`textarea-proposition-${workshop.id}`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        <div className={styles.buttonContainer}>
+          <button
+            type="button"
+            onClick={() => setCurrentStep(3)}
+            className={`${styles.button} ${styles.buttonSecondary}`}
+            data-testid="button-previous-step"
+          >
+            Précédent
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (validateObjectivesStep()) {
+                setCurrentStep(5);
+              }
+            }}
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            data-testid="button-next-step"
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderBesoinStep = () => (
     <div className={styles.card}>
@@ -1003,10 +1191,7 @@ export default function FicheForm({
       case 3:
         return renderBesoinStep();
       case 4:
-        return <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Ateliers et objectifs</h2>
-          <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
-        </div>;
+        return renderObjectivesStep();
       case 5:
         return <div className={styles.card}>
           <h2 className={styles.cardTitle}>Pièces justificatives</h2>
