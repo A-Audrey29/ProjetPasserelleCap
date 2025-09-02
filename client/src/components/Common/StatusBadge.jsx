@@ -36,7 +36,7 @@ export default function StatusBadge({ state, className = '' }) {
 
   return (
     <span 
-      className="status-badge status-draft text-[#3b4b61] bg-[#3b4b61]"
+      className="status-badge status-draft bg-[#3b4b61] text-[#fdfdf2]"
       data-testid={`status-badge-${state}`}
     >
       {statusText}
