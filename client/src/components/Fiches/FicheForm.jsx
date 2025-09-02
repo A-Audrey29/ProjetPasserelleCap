@@ -1376,14 +1376,14 @@ export default function FicheForm({
       }
       
       toast({
-        title: "Fiche transmise",
+        title: "Fiche Validée!",
         description: "La fiche a été transmise avec succès au Conseil Départemental pour validation.",
         variant: "success"
       });
 
-      // Redirect to dashboard after successful submission
+      // Redirect to home page after successful submission
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = '/';
       }, 2000);
 
     } catch (error) {
