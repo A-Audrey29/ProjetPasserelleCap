@@ -5,13 +5,13 @@
   --primary: 59 75 97; /* #3B4B61 - Bleu-gris dominant */
   --primary-foreground: 255 255 255; /* #FFFFFF - White */
   --background: 245 246 247; /* #F5F6F7 - Gris clair fond */
-  --foreground: 38 38 38; /* Dark text */
+  --foreground: 59 75 97; /* #3B4B61 - Using primary color for text */
   
   --card: 255 255 255; /* #FFFFFF - White */
-  --card-foreground: 38 38 38;
+  --card-foreground: 59 75 97; /* #3B4B61 - Using primary color for text */
   
   --secondary: 245 246 247; /* #F5F6F7 - Gris clair */
-  --secondary-foreground: 38 38 38; /* Changed from light blue to dark for better contrast */
+  --secondary-foreground: 59 75 97; /* #3B4B61 - Using primary color for text */
   
   --muted: 245 246 247;
   --muted-foreground: 64 64 64; /* Darker grey for better contrast */
