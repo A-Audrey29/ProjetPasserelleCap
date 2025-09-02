@@ -11,24 +11,30 @@ export default function Home() {
   // Get user's first name from email or use role
   const getUserDisplayName = () => {
     if (!user) return '';
-    if (user.username) {
-      return user.username.charAt(0).toUpperCase() + user.username.slice(1);
+    const userData = user.user || user;
+    if (userData.username) {
+      return userData.username.charAt(0).toUpperCase() + userData.username.slice(1);
     }
-    return user.role === 'ADMIN' ? 'Administrateur' : 
-           user.role === 'EMETTEUR' ? 'Émetteur' :
-           user.role === 'SUIVI_PROJETS' ? 'Responsable Suivi' :
-           user.role === 'RELATIONS_EVS' ? 'Relations EVS' : 'Utilisateur';
+    if (userData.firstName) {
+      return userData.firstName;
+    }
+    const userRole = userData.role;
+    return userRole === 'ADMIN' ? 'Administrateur' : 
+           userRole === 'EMETTEUR' ? 'Émetteur' :
+           userRole === 'SUIVI_PROJETS' ? 'Responsable Suivi' :
+           userRole === 'RELATIONS_EVS' ? 'Relations EVS' : 'Utilisateur';
   };
 
   // Get role-specific actions using the permissions system
   const getRoleActions = () => {
     console.log('Home: user object:', user);
-    if (!user || !user.role) {
+    const userRole = user?.user?.role || user?.role;
+    if (!user || !userRole) {
       console.log('Home: No user or role found');
       return [];
     }
-    console.log('Home: Getting actions for user role:', user.role);
-    const actions = getRoleActionSuggestions(user.role);
+    console.log('Home: Getting actions for user role:', userRole);
+    const actions = getRoleActionSuggestions(userRole);
     console.log('Home: Received actions:', actions);
     return actions;
   };
