@@ -300,13 +300,7 @@ export const getRoleActionSuggestions = (role) => {
       color: 'primary'
     });
   } else if (role === ROLES.CD) {
-    actionSuggestions.push({
-      icon: 'Eye',
-      title: 'Fiches à valider',
-      description: 'Consulter les fiches soumises au Conseil Départemental',
-      href: '/fiches',
-      color: 'primary'
-    });
+    // CD actions are handled separately below - no default action here
   } else if (role === ROLES.RELATIONS_EVS) {
     actionSuggestions.push({
       icon: 'Eye', 
