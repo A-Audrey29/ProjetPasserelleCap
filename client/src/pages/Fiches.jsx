@@ -6,7 +6,6 @@ import { hasPermission, ROLES, ACTIONS } from '@/utils/permissions';
 import Header from '@/components/Layout/Header';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/Select';
 import { Badge } from '@/components/common/Badge';
 import { Card, CardContent } from '@/components/common/Card';
 import styles from './Fiches.module.css';
@@ -153,17 +152,18 @@ export default function Fiches() {
 
           <div className={styles.filterSection}>
             <Filter className={styles.filterIcon} />
-            <Select value={stateFilter} onValueChange={setStateFilter}>
-              <SelectTrigger className={styles.stateFilter} data-testid="select-state-filter">
-                <SelectValue placeholder="Filtrer par état" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les états</SelectItem>
-                {Object.entries(STATE_LABELS).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select 
+              className={styles.stateFilter}
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+              data-testid="select-state-filter"
+            >
+              <option value="">Filtrer par état</option>
+              <option value="all">Tous les états</option>
+              {Object.entries(STATE_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
           </div>
         </div>
 
