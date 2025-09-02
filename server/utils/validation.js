@@ -7,7 +7,6 @@ export const loginSchema = z.object({
 
 export const ficheCreationSchema = z.object({
   familyId: z.string().min(1, 'Famille requise'),
-  epsiId: z.string().min(1, 'EPSI requise'),
   description: z.string().optional(),
   workshops: z.array(z.object({
     workshopId: z.string(),

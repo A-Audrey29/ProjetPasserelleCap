@@ -252,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/fiches', requireAuth, requireRole('ADMIN', 'EMETTEUR', 'RELATIONS_EVS'), validateRequest(ficheCreationSchema), auditMiddleware('create', 'FicheNavette'), async (req, res) => {
     try {
-      const { familyId, epsiId, description, workshops } = req.validatedData;
+      const { familyId, description, workshops } = req.validatedData;
 
       // Generate reference number
       const year = new Date().getFullYear();
@@ -265,7 +265,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ref,
         emitterId: req.user.userId,
         familyId,
-        epsiId,
         description,
         state: 'DRAFT'
       });

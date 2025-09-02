@@ -29,15 +29,6 @@ export default function AdminDashboard() {
       testId: 'card-users'
     },
     {
-      title: 'EPSI',
-      description: 'Configuration des Espaces Partenariaux de Sécurité et d\'Insertion',
-      icon: Building,
-      href: '/admin/epsi',
-      stat: `${stats.totalEPSI || 0} EPSI configurées`,
-      color: 'success',
-      testId: 'card-epsi'
-    },
-    {
       title: 'EVS/CS',
       description: 'Gestion des Espaces de Vie Sociale et Centres Sociaux',
       icon: Building2,

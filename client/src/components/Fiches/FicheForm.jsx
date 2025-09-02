@@ -35,7 +35,6 @@ export default function FicheForm({
       requestDate: new Date().toISOString().split('T')[0]
     },
     familyId: '',
-    epsiId: '',
     description: '',
     family: {
       code: '',
@@ -68,10 +67,6 @@ export default function FicheForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Queries for reference data
-  const { data: epsiList = [] } = useQuery({
-    queryKey: ['/api/epsi'],
-    enabled: true
-  });
 
   const { data: objectives = [] } = useQuery({
     queryKey: ['/api/objectives'],
@@ -99,7 +94,6 @@ export default function FicheForm({
     if (initialData) {
       setFormData({
         familyId: initialData.familyId || '',
-        epsiId: initialData.epsiId || '',
         description: initialData.description || '',
         family: initialData.family || formData.family,
         children: initialData.children || [],
@@ -1290,7 +1284,6 @@ export default function FicheForm({
         description: formData.descriptionSituation || '',
         state: 'DRAFT',
         workshops: workshops,
-        epsiId: epsiList?.[0]?.id || '',
         objectiveIds: (formData.objectives || []).map(obj => obj.id || obj),
         family: familyData
       };
@@ -1347,12 +1340,8 @@ export default function FicheForm({
             qty: parseInt(qty) || 1
           })) : [];
 
-        // Use the first EPSI available if none selected
-        const selectedEpsiId = formData.epsiId || (epsiList.length > 0 ? epsiList[0].id : null);
-        
         const ficheData = {
           familyId: formData.familyId,
-          epsiId: selectedEpsiId,
           description: formData.description || formData.descriptionSituation || '',
           workshops: workshops,
           // Include family data for dynamic creation

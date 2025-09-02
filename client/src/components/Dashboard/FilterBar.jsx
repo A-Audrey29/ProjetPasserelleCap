@@ -4,7 +4,6 @@ import styles from './FilterBar.module.css';
 export default function FilterBar({ 
   filters, 
   onFiltersChange, 
-  epsiList = [], 
   organizations = [],
   objectives = []
 }) {
@@ -57,25 +56,6 @@ export default function FilterBar({
             <option value="EVS_ACCEPTED">Accepté EVS</option>
             <option value="CONTRACT_SIGNED">Contrat signé</option>
             <option value="CLOSED">Clôturé</option>
-          </select>
-        </div>
-        
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel}>
-            EPSI
-          </label>
-          <select 
-            className={styles.selectInput}
-            value={filters.epsiId || ''}
-            onChange={(e) => handleFilterChange('epsiId', e.target.value)}
-            data-testid="select-epsi"
-          >
-            <option value="">Toutes les EPSI</option>
-            {epsiList.map((epsi) => (
-              <option key={epsi.id} value={epsi.id}>
-                {epsi.name}
-              </option>
-            ))}
           </select>
         </div>
         
