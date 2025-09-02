@@ -250,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/fiches', requireAuth, requireRole('EMETTEUR'), validateRequest(ficheCreationSchema), auditMiddleware('create', 'FicheNavette'), async (req, res) => {
+  app.post('/api/fiches', requireAuth, requireRole(['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']), validateRequest(ficheCreationSchema), auditMiddleware('create', 'FicheNavette'), async (req, res) => {
     try {
       const { familyId, epsiId, description, workshops } = req.validatedData;
 

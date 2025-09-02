@@ -1258,48 +1258,47 @@ export default function FicheForm({
 
   const handleSaveDraft = async () => {
     try {
-      // Create form data for draft with current step data
-      const draftData = {
-        referent: formData.referent,
-        family: formData.family,
-        children: formData.children,
-        descriptionSituation: formData.descriptionSituation,
-        objectives: formData.objectives,
-        workshopPropositions: formData.workshopPropositions,
-        familyConsent: formData.familyConsent,
-        state: 'DRAFT'
+      // Create minimal family data for draft (even if incomplete)
+      const familyData = {
+        lastName: formData.family?.lastName || '',
+        firstName: formData.family?.firstName || '',
+        birthDate: formData.family?.birthDate || '',
+        birthPlace: formData.family?.birthPlace || '',
+        nationality: formData.family?.nationality || '',
+        lienAvecEnfants: formData.family?.lienAvecEnfants || '',
+        autoriteParentale: formData.family?.autoriteParentale || '',
+        situationFamiliale: formData.family?.situationFamiliale || '',
+        situationSocioProfessionnelle: formData.family?.situationSocioProfessionnelle || '',
+        telephonePortable: formData.family?.telephonePortable || '',
+        telephoneFixe: formData.family?.telephoneFixe || '',
+        email: formData.family?.email || '',
+        address: formData.family?.adresse || ''
       };
 
-      // Transform data same way as transmission but for draft
-      if (formData.family && !formData.familyId) {
-        const ficheData = {
-          description: draftData.descriptionSituation || draftData.description || '',
-          state: 'DRAFT',
-          workshops: Object.entries(draftData.workshopPropositions || {}).map(([workshopId, _]) => ({
-            workshopId,
-            qty: 1
-          })),
-          epsiId: epsiList?.[0]?.id || '',
-          objectiveIds: (draftData.objectives || []).map(obj => obj.id),
-          family: {
-            lastName: draftData.family.lastName || '',
-            firstName: draftData.family.firstName || '',
-            birthDate: draftData.family.birthDate || '',
-            birthPlace: draftData.family.birthPlace || '',
-            nationality: draftData.family.nationality || '',
-            lienAvecEnfants: draftData.family.lienAvecEnfants || '',
-            autoriteParentale: draftData.family.autoriteParentale || '',
-            situationFamiliale: draftData.family.situationFamiliale || '',
-            situationSocioProfessionnelle: draftData.family.situationSocioProfessionnelle || '',
-            telephonePortable: draftData.family.telephonePortable || '',
-            telephoneFixe: draftData.family.telephoneFixe || '',
-            email: draftData.family.email || '',
-            address: draftData.family.adresse || ''
-          }
-        };
+      // Transform workshop propositions for draft (can be empty)
+      const workshops = formData.workshopPropositions ? 
+        Object.entries(formData.workshopPropositions).map(([workshopId, _]) => ({
+          workshopId,
+          qty: 1
+        })) : [];
 
-        await onSaveDraft(ficheData);
-      }
+      const ficheData = {
+        description: formData.descriptionSituation || '',
+        state: 'DRAFT',
+        workshops: workshops,
+        epsiId: epsiList?.[0]?.id || '',
+        objectiveIds: (formData.objectives || []).map(obj => obj.id || obj),
+        family: familyData
+      };
+
+      const result = await onSaveDraft(ficheData);
+
+      toast({
+        title: "Brouillon sauvegardé",
+        description: "Votre fiche a été sauvegardée en brouillon avec succès.",
+        variant: "default"
+      });
+
     } catch (error) {
       console.error('Draft save error:', error);
       toast({
@@ -1361,14 +1360,12 @@ export default function FicheForm({
 
         // Create the fiche as DRAFT
         const newFiche = await onSubmit(ficheData);
-        console.log('Fiche created:', newFiche);
         
         if (!newFiche || !newFiche.id) {
           throw new Error('Fiche creation failed - no ID returned');
         }
         
         // Then transition it to SUBMITTED_TO_CD
-        console.log('Starting transition to SUBMITTED_TO_CD for fiche:', newFiche.id);
         const transitionResult = await transitionFiche({
           id: newFiche.id,
           newState: 'SUBMITTED_TO_CD',
@@ -1377,7 +1374,6 @@ export default function FicheForm({
             transmissionDate: new Date().toISOString()
           }
         });
-        console.log('Transition result:', transitionResult);
       }
       
       toast({
