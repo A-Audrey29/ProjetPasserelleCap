@@ -780,7 +780,7 @@ export default function FicheForm({
                       <textarea
                         id={`proposition-${workshop.id}`}
                         className={styles.fieldTextarea}
-                        value={formData.workshopPropositions[workshop.id] || ''}
+                        value={formData.workshopPropositions?.[workshop.id] || ''}
                         onChange={(e) => updateWorkshopProposition(workshop.id, e.target.value)}
                         placeholder="Décrivez votre proposition pour cet atelier..."
                         rows={3}
