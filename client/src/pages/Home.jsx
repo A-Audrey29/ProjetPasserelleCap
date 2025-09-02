@@ -23,18 +23,15 @@ export default function Home() {
   const getRoleActions = () => {
     if (!user) return [];
 
-    const baseActions = [
-      {
-        icon: Eye,
-        title: 'Consulter les fiches navettes',
-        description: 'Visualiser et suivre l\'état des fiches en cours',
-        href: '/fiches',
-        color: 'primary'
-      }
-    ];
-
     const roleSpecificActions = {
       'ADMIN': [
+        {
+          icon: Eye,
+          title: 'Consulter les fiches navettes',
+          description: 'Visualiser et suivre l\'état de toutes les fiches',
+          href: '/dashboard',
+          color: 'primary'
+        },
         {
           icon: Settings,
           title: 'Administration',
@@ -57,9 +54,23 @@ export default function Home() {
           description: 'Créer une nouvelle demande d\'accompagnement',
           href: '/fiches/new',
           color: 'primary'
+        },
+        {
+          icon: Eye,
+          title: 'Mes fiches navettes',
+          description: 'Consulter et gérer mes fiches en cours',
+          href: '/dashboard',
+          color: 'success'
         }
       ],
       'SUIVI_PROJETS': [
+        {
+          icon: Eye,
+          title: 'Consulter les fiches navettes',
+          description: 'Visualiser et suivre l\'état de toutes les fiches',
+          href: '/dashboard',
+          color: 'primary'
+        },
         {
           icon: BarChart3,
           title: 'Suivi des projets',
@@ -70,25 +81,53 @@ export default function Home() {
       ],
       'RELATIONS_EVS': [
         {
+          icon: Eye,
+          title: 'Consulter les fiches navettes',
+          description: 'Visualiser et gérer toutes les fiches',
+          href: '/dashboard',
+          color: 'primary'
+        },
+        {
           icon: Users,
-          title: 'Gestion des relations EVS',
-          description: 'Coordonner avec les organismes partenaires',
-          href: '/fiches',
+          title: 'Gestion des affectations',
+          description: 'Affecter les fiches aux organismes EVS/CS',
+          href: '/dashboard',
           color: 'warning'
+        },
+        {
+          icon: FileText,
+          title: 'Gestion des contrats',
+          description: 'Suivre les contrats et paiements',
+          href: '/dashboard',
+          color: 'success'
         }
       ],
       'EVS_CS': [
         {
+          icon: Eye,
+          title: 'Mes fiches affectées',
+          description: 'Consulter les fiches de mon organisation',
+          href: '/dashboard',
+          color: 'primary'
+        },
+        {
           icon: CheckCircle,
           title: 'Validation des accompagnements',
-          description: 'Approuver et valider les fiches d\'accompagnement',
-          href: '/fiches',
+          description: 'Accepter/refuser et suivre les activités',
+          href: '/dashboard',
           color: 'success'
+        },
+        {
+          icon: FileText,
+          title: 'Rapports finaux',
+          description: 'Soumettre les rapports d\'activité',
+          href: '/dashboard',
+          color: 'warning'
         }
       ]
     };
 
-    return [...baseActions, ...(roleSpecificActions[user.role] || [])];
+    return roleSpecificActions[user.role] || [];
   };
 
   return (
