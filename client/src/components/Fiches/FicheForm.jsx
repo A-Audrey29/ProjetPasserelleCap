@@ -1003,10 +1003,7 @@ export default function FicheForm({
       case 3:
         return renderBesoinStep();
       case 4:
-        return <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Ateliers et objectifs</h2>
-          <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
-        </div>;
+        return renderObjectivesStep();
       case 5:
         return <div className={styles.card}>
           <h2 className={styles.cardTitle}>Pièces justificatives</h2>
