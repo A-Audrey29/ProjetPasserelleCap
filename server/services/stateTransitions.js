@@ -27,6 +27,11 @@ const STATE_TRANSITIONS = {
 };
 
 export function canTransition(userRole, currentState, newState) {
+  // ADMIN can perform any transition
+  if (userRole === 'ADMIN') {
+    return true;
+  }
+  
   const allowedTransitions = STATE_TRANSITIONS[userRole];
   if (!allowedTransitions) return false;
   
