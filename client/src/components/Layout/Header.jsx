@@ -110,7 +110,7 @@ export default function Header() {
               onClick={toggleMobileMenu}
               data-testid="button-mobile-menu"
             >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isMobileMenuOpen ? <X className={styles.icon} /> : <Menu className={styles.icon} />}
             </button>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { Eye, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import { formatDate, formatCurrency } from '@/utils/formatters';
+import styles from './FichesList.module.css';
 
 export default function FichesList({ 
   fiches = [], 
@@ -26,11 +27,11 @@ export default function FichesList({
 
   if (isLoading) {
     return (
-      <div className="card">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground mx-auto mb-2" />
-            <p className="text-muted-foreground">Chargement des fiches...</p>
+      <div className={styles.listContainer}>
+        <div className={styles.loadingContainer}>
+          <div className={styles.loadingContent}>
+            <RefreshCw className={styles.loadingSpinner} />
+            <p className={styles.loadingText}>Chargement des fiches...</p>
           </div>
         </div>
       </div>
@@ -39,11 +40,11 @@ export default function FichesList({
 
   if (fiches.length === 0) {
     return (
-      <div className="card">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <p className="text-foreground font-medium mb-2">Aucune fiche trouvée</p>
-            <p className="text-muted-foreground">
+      <div className={styles.listContainer}>
+        <div className={styles.emptyContainer}>
+          <div className={styles.emptyContent}>
+            <p className={styles.emptyTitle}>Aucune fiche trouvée</p>
+            <p className={styles.emptyDescription}>
               Essayez de modifier vos critères de recherche
             </p>
           </div>
@@ -53,93 +54,93 @@ export default function FichesList({
   }
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-foreground" data-testid="text-fiches-title">
+    <div className={styles.listContainer}>
+      <div className={styles.listHeader}>
+        <h2 className={styles.listTitle} data-testid="text-fiches-title">
           Fiches navettes
         </h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground" data-testid="text-fiches-count">
+        <div className={styles.headerActions}>
+          <span className={styles.itemCount} data-testid="text-fiches-count">
             {pagination.totalItems} fiche{pagination.totalItems > 1 ? 's' : ''}
           </span>
           <button 
-            className="btn btn-secondary" 
+            className={styles.refreshButton} 
             onClick={handleRefresh}
             disabled={isLoading}
             data-testid="button-refresh"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`${styles.icon} ${isLoading ? styles.loadingSpinner : ''}`} />
           </button>
         </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left p-3 font-medium text-foreground">Référence</th>
-              <th className="text-left p-3 font-medium text-foreground">Famille</th>
-              <th className="text-left p-3 font-medium text-foreground">État</th>
-              <th className="text-left p-3 font-medium text-foreground">EVS/CS</th>
-              <th className="text-left p-3 font-medium text-foreground">EPSI</th>
-              <th className="text-left p-3 font-medium text-foreground">Montant</th>
-              <th className="text-left p-3 font-medium text-foreground">Créé le</th>
-              <th className="text-left p-3 font-medium text-foreground">Actions</th>
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
+          <thead className={styles.tableHeader}>
+            <tr>
+              <th className={styles.tableHeaderCell}>Référence</th>
+              <th className={styles.tableHeaderCell}>Famille</th>
+              <th className={styles.tableHeaderCell}>État</th>
+              <th className={styles.tableHeaderCell}>EVS/CS</th>
+              <th className={styles.tableHeaderCell}>EPSI</th>
+              <th className={styles.tableHeaderCell}>Montant</th>
+              <th className={styles.tableHeaderCell}>Créé le</th>
+              <th className={styles.tableHeaderCell}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {fiches.map((fiche) => (
               <tr 
                 key={fiche.id} 
-                className="border-b border-border hover:bg-muted/50 transition-colors"
+                className={styles.tableRow}
                 data-testid={`row-fiche-${fiche.id}`}
               >
-                <td className="p-3">
-                  <span className="font-mono text-sm" data-testid={`text-ref-${fiche.id}`}>
+                <td className={styles.tableCell}>
+                  <span className={styles.refCode} data-testid={`text-ref-${fiche.id}`}>
                     {fiche.ref}
                   </span>
                 </td>
-                <td className="p-3">
+                <td className={styles.tableCell}>
                   <span data-testid={`text-family-${fiche.id}`}>
                     {fiche.family?.code || 'N/A'}
                   </span>
                 </td>
-                <td className="p-3">
+                <td className={styles.tableCell}>
                   <StatusBadge 
                     state={fiche.state} 
                     data-testid={`badge-state-${fiche.id}`}
                   />
                 </td>
-                <td className="p-3">
+                <td className={styles.tableCell}>
                   <span 
-                    className={fiche.assignedOrg ? 'text-foreground' : 'text-muted-foreground'}
+                    className={fiche.assignedOrg ? styles.orgName : styles.orgNameUnassigned}
                     data-testid={`text-org-${fiche.id}`}
                   >
                     {fiche.assignedOrg?.name || 'Non affecté'}
                   </span>
                 </td>
-                <td className="p-3">
+                <td className={styles.tableCell}>
                   <span data-testid={`text-epsi-${fiche.id}`}>
                     {fiche.epsi?.name || 'N/A'}
                   </span>
                 </td>
-                <td className="p-3">
+                <td className={styles.tableCell}>
                   <span data-testid={`text-amount-${fiche.id}`}>
                     {formatCurrency(fiche.totalAmount || 0)}
                   </span>
                 </td>
-                <td className="p-3">
-                  <span className="text-muted-foreground" data-testid={`text-date-${fiche.id}`}>
+                <td className={styles.tableCell}>
+                  <span className={styles.dateText} data-testid={`text-date-${fiche.id}`}>
                     {formatDate(fiche.createdAt)}
                   </span>
                 </td>
-                <td className="p-3">
+                <td className={styles.tableCell}>
                   <Link href={`/fiches/${fiche.id}`}>
                     <button 
-                      className="btn btn-secondary"
+                      className={styles.actionButton}
                       data-testid={`button-view-${fiche.id}`}
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className={styles.icon} />
                     </button>
                   </Link>
                 </td>
@@ -150,29 +151,29 @@ export default function FichesList({
       </div>
       
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-          <span className="text-sm text-muted-foreground">
+        <div className={styles.pagination}>
+          <span className={styles.paginationInfo}>
             Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, pagination.totalItems)} sur {pagination.totalItems} fiches
           </span>
-          <div className="flex gap-2">
+          <div className={styles.paginationControls}>
             <button 
-              className="btn btn-secondary"
+              className={styles.paginationButton}
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
               data-testid="button-previous-page"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className={styles.icon} />
             </button>
-            <span className="px-3 py-1 text-sm text-foreground">
+            <span className={styles.paginationText}>
               {currentPage} / {pagination.totalPages}
             </span>
             <button 
-              className="btn btn-secondary"
+              className={styles.paginationButton}
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= pagination.totalPages}
               data-testid="button-next-page"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className={styles.icon} />
             </button>
           </div>
         </div>

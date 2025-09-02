@@ -256,3 +256,9 @@
     display: none;
   }
 }
+
+/* Icon styles */
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}

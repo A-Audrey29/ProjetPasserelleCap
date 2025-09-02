@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import Header from '@/components/Layout/Header';
 import { formatDate, formatCurrency } from '@/utils/formatters';
+import styles from './Reports.module.css';
 
 export default function Reports() {
   const [, setLocation] = useLocation();
@@ -72,10 +73,10 @@ export default function Reports() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement...</p>
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingContent}>
+          <div className={styles.loadingSpinner}></div>
+          <p className={styles.loadingText}>Chargement...</p>
         </div>
       </div>
     );
@@ -86,28 +87,30 @@ export default function Reports() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={styles.reportsContainer}>
       <Header />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground" data-testid="text-reports-title">
-            Rapports et analyses
-          </h1>
-          <p className="text-muted-foreground">
-            Consultation et export des données de la plateforme
-          </p>
+      <main className={styles.mainContent}>
+        <div className={styles.headerSection}>
+          <div className={styles.headerContent}>
+            <h1 className={styles.pageTitle} data-testid="text-reports-title">
+              Rapports et analyses
+            </h1>
+            <p className={styles.pageDescription}>
+              Consultation et export des données de la plateforme
+            </p>
+          </div>
         </div>
 
         {/* Controls */}
-        <div className="card mb-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+        <div className={styles.filtersContainer}>
+          <div className={styles.filtersGrid}>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>
                 Type de rapport
               </label>
               <select 
-                className="input-field"
+                className={styles.filterSelect}
                 value={selectedReport}
                 onChange={(e) => setSelectedReport(e.target.value)}
                 data-testid="select-report-type"
@@ -120,47 +123,47 @@ export default function Reports() {
               </select>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>
                 Du
               </label>
               <input 
                 type="date"
-                className="input-field"
+                className={styles.filterInput}
                 value={dateRange.from}
                 onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
                 data-testid="input-date-from"
               />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>
                 Au
               </label>
               <input 
                 type="date"
-                className="input-field"
+                className={styles.filterInput}
                 value={dateRange.to}
                 onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
                 data-testid="input-date-to"
               />
             </div>
 
-            <div className="flex gap-2 mt-6">
+            <div className={styles.headerActions}>
               <button 
-                className="btn btn-primary"
+                className={styles.button}
                 onClick={() => handleExport('pdf')}
                 data-testid="button-export-pdf"
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className={styles.icon} />
                 PDF
               </button>
               <button 
-                className="btn btn-secondary"
+                className={`${styles.button} ${styles.buttonSecondary}`}
                 onClick={() => handleExport('csv')}
                 data-testid="button-export-csv"
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className={styles.icon} />
                 CSV
               </button>
             </div>
@@ -169,37 +172,35 @@ export default function Reports() {
 
         {/* Report Content */}
         {reportsLoading ? (
-          <div className="card">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Génération du rapport...</p>
-              </div>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loadingContent}>
+              <div className={styles.loadingSpinner}></div>
+              <p className={styles.loadingText}>Génération du rapport...</p>
             </div>
           </div>
         ) : selectedReport === 'summary' && reportData ? (
-          <div className="space-y-6">
+          <div>
             {/* Summary KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="card text-center">
-                <div className="text-2xl font-bold text-primary">{reportData.summary.totalFiches}</div>
-                <div className="text-sm text-muted-foreground">Fiches traitées</div>
+            <div className={styles.summaryGrid}>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryValue}>{reportData.summary.totalFiches}</div>
+                <div className={styles.summaryLabel}>Fiches traitées</div>
               </div>
-              <div className="card text-center">
-                <div className="text-2xl font-bold text-success">{reportData.summary.familiesHelped}</div>
-                <div className="text-sm text-muted-foreground">Familles aidées</div>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryValue}>{reportData.summary.familiesHelped}</div>
+                <div className={styles.summaryLabel}>Familles aidées</div>
               </div>
-              <div className="card text-center">
-                <div className="text-2xl font-bold text-primary">{formatCurrency(reportData.summary.totalBudget * 100)}</div>
-                <div className="text-sm text-muted-foreground">Budget total</div>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryValue}>{formatCurrency(reportData.summary.totalBudget * 100)}</div>
+                <div className={styles.summaryLabel}>Budget total</div>
               </div>
-              <div className="card text-center">
-                <div className="text-2xl font-bold text-warning">{reportData.summary.averageProcessingTime}j</div>
-                <div className="text-sm text-muted-foreground">Délai moyen</div>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryValue}>{reportData.summary.averageProcessingTime}j</div>
+                <div className={styles.summaryLabel}>Délai moyen</div>
               </div>
-              <div className="card text-center">
-                <div className="text-2xl font-bold text-success">{reportData.summary.completionRate}%</div>
-                <div className="text-sm text-muted-foreground">Taux de réussite</div>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryValue}>{reportData.summary.completionRate}%</div>
+                <div className={styles.summaryLabel}>Taux de réussite</div>
               </div>
             </div>
 

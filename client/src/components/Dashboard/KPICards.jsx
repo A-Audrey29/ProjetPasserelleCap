@@ -1,4 +1,5 @@
 import { FileText, Clock, Users, Euro } from 'lucide-react';
+import styles from './KPICards.module.css';
 
 export default function KPICards({ stats = {} }) {
   const kpis = [
@@ -33,26 +34,24 @@ export default function KPICards({ stats = {} }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className={styles.kpiGrid}>
       {kpis.map((kpi) => {
         const Icon = kpi.icon;
-        const colorClass = `text-${kpi.color}`;
-        const bgColorClass = `bg-${kpi.color}/10`;
         
         return (
-          <div key={kpi.title} className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{kpi.title}</p>
+          <div key={kpi.title} className={styles.kpiCard}>
+            <div className={styles.kpiContent}>
+              <div className={styles.kpiData}>
+                <p className={styles.kpiTitle}>{kpi.title}</p>
                 <p 
-                  className={`text-2xl font-bold ${colorClass}`}
+                  className={`${styles.kpiValue} ${styles[kpi.color]}`}
                   data-testid={kpi.testId}
                 >
                   {kpi.value}
                 </p>
               </div>
-              <div className={`kpi-icon ${bgColorClass} rounded`}>
-                <Icon className={`w-6 h-6 ${colorClass}`} />
+              <div className={`${styles.kpiIconContainer} ${styles[kpi.color]}`}>
+                <Icon className={`${styles.kpiIcon} ${styles[kpi.color]}`} />
               </div>
             </div>
           </div>

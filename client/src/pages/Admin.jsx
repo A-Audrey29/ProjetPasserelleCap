@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Layout/Header';
 import AdminDashboard from '@/components/Admin/AdminDashboard';
+import styles from './Admin.module.css';
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -17,10 +18,10 @@ export default function Admin() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement...</p>
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingContent}>
+          <div className={styles.loadingSpinner}></div>
+          <p className={styles.loadingText}>Chargement...</p>
         </div>
       </div>
     );
@@ -31,10 +32,10 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={styles.adminContainer}>
       <Header />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={styles.mainContent}>
         <AdminDashboard />
       </main>
     </div>

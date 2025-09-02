@@ -1,0 +1,100 @@
+/* KPICards component styles */
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .kpiGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.kpiCard {
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.kpiContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kpiData {
+  flex: 1;
+}
+
+.kpiTitle {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+  margin-bottom: 0.25rem;
+}
+
+.kpiValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.kpiValue.primary {
+  color: rgb(var(--primary));
+}
+
+.kpiValue.warning {
+  color: #D9A066;
+}
+
+.kpiValue.success {
+  color: #6A8B74;
+}
+
+.kpiIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 8px;
+  margin-left: 1rem;
+}
+
+.kpiIconContainer.primary {
+  background-color: rgba(var(--primary), 0.1);
+}
+
+.kpiIconContainer.warning {
+  background-color: rgba(217, 160, 102, 0.1);
+}
+
+.kpiIconContainer.success {
+  background-color: rgba(106, 139, 116, 0.1);
+}
+
+.kpiIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.kpiIcon.primary {
+  color: rgb(var(--primary));
+}
+
+.kpiIcon.warning {
+  color: #D9A066;
+}
+
+.kpiIcon.success {
+  color: #6A8B74;
+}

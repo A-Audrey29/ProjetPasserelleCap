@@ -1,0 +1,105 @@
+/* StateTimeline component styles */
+
+.timelineContainer {
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.timelineTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #3b4b61;
+}
+
+.timelineContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.timelineItem {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.timelineItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  border: 2px solid rgb(var(--border));
+  background-color: rgb(var(--background));
+}
+
+.timelineItem::after {
+  content: '';
+  position: absolute;
+  left: 0.375rem;
+  top: 1.25rem;
+  width: 2px;
+  height: calc(100% + 0.5rem);
+  background-color: rgb(var(--border));
+}
+
+.timelineItem.timelineLast::after {
+  display: none;
+}
+
+.timelineItem.timelineCurrent::before {
+  border-color: rgb(var(--primary));
+  background-color: rgb(var(--primary));
+}
+
+.timelineItem.timelineCompleted::before {
+  border-color: #6A8B74;
+  background-color: #6A8B74;
+}
+
+.timelineItem.timelineCompleted::after {
+  background-color: #6A8B74;
+}
+
+.timelineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.timelineState {
+  font-weight: 500;
+}
+
+.timelineState.current {
+  color: rgb(var(--primary));
+}
+
+.timelineState.completed {
+  color: #6A8B74;
+}
+
+.timelineState.pending {
+  color: rgb(var(--muted-foreground));
+}
+
+.timelineTimestamp {
+  font-size: 0.75rem;
+  color: rgb(var(--muted-foreground));
+}
+
+.timelineActor {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+}
+
+.timelineComment {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+  font-style: italic;
+}

@@ -1,4 +1,5 @@
 import { Search, Filter } from 'lucide-react';
+import styles from './FilterBar.module.css';
 
 export default function FilterBar({ 
   filters, 
@@ -15,22 +16,22 @@ export default function FilterBar({
   };
 
   return (
-    <div className="card mb-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Filter className="w-5 h-5 text-muted-foreground" />
-        <h2 className="text-lg font-semibold text-foreground">Filtres</h2>
+    <div className={styles.filterContainer}>
+      <div className={styles.filterHeader}>
+        <Filter className={styles.icon} />
+        <h2 className={styles.filterTitle}>Filtres</h2>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-2">
-          <label className="block text-sm font-medium text-foreground mb-1">
+      <div className={styles.filterGrid}>
+        <div className={styles.searchContainer}>
+          <label className={styles.fieldLabel}>
             Recherche
           </label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className={styles.inputContainer}>
+            <Search className={styles.searchIcon} />
             <input 
               type="text" 
-              className="input-field pl-10" 
+              className={styles.searchInput} 
               placeholder="Référence ou famille..."
               value={filters.search || ''}
               onChange={(e) => handleFilterChange('search', e.target.value)}
@@ -39,12 +40,12 @@ export default function FilterBar({
           </div>
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
+        <div className={styles.fieldGroup}>
+          <label className={styles.fieldLabel}>
             État
           </label>
           <select 
-            className="input-field"
+            className={styles.selectInput}
             value={filters.state || ''}
             onChange={(e) => handleFilterChange('state', e.target.value)}
             data-testid="select-state"
@@ -59,12 +60,12 @@ export default function FilterBar({
           </select>
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
+        <div className={styles.fieldGroup}>
+          <label className={styles.fieldLabel}>
             EPSI
           </label>
           <select 
-            className="input-field"
+            className={styles.selectInput}
             value={filters.epsiId || ''}
             onChange={(e) => handleFilterChange('epsiId', e.target.value)}
             data-testid="select-epsi"
@@ -78,12 +79,12 @@ export default function FilterBar({
           </select>
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
+        <div className={styles.fieldGroup}>
+          <label className={styles.fieldLabel}>
             EVS/CS
           </label>
           <select 
-            className="input-field"
+            className={styles.selectInput}
             value={filters.assignedOrgId || ''}
             onChange={(e) => handleFilterChange('assignedOrgId', e.target.value)}
             data-testid="select-organization"

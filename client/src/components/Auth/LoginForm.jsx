@@ -99,7 +99,7 @@ export default function LoginForm() {
                 onClick={() => setShowPassword(!showPassword)}
                 data-testid="button-toggle-password"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className={styles.icon} /> : <Eye className={styles.icon} />}
               </button>
             </div>
           </div>

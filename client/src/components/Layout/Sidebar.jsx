@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth.jsx';
+import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
   const [location] = useLocation();
@@ -65,49 +66,49 @@ export default function Sidebar() {
     <>
       {/* Mobile menu button */}
       <button 
-        className="md:hidden fixed top-4 left-4 z-50 btn btn-secondary"
+        className={styles.mobileMenuButton}
         onClick={toggleMobileMenu}
         data-testid="button-mobile-menu"
       >
-        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {isMobileMenuOpen ? <X className={styles.icon} /> : <Menu className={styles.icon} />}
       </button>
 
       {/* Sidebar */}
-      <nav className={`fixed left-0 top-0 h-full w-64 bg-card border-r border-border transition-transform duration-300 ease-in-out z-40 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} md:translate-x-0`}>
-        <div className="p-6 border-b border-border">
-          <h1 className="text-xl font-semibold text-primary mb-1" data-testid="text-app-title">
+      <nav className={`${styles.sidebar} ${isMobileMenuOpen ? styles.open : ''}`}>
+        <div className={styles.sidebarHeader}>
+          <h1 className={styles.appTitle} data-testid="text-app-title">
             Passerelle CAP
           </h1>
-          <p className="text-sm text-muted-foreground" data-testid="text-user-role">
+          <p className={styles.userRole} data-testid="text-user-role">
             {user?.role}
           </p>
         </div>
         
-        <div className="py-4">
+        <div className={styles.navigation}>
           {visibleItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 mx-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${isActive(item.href) ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                className={`${styles.navItem} ${isActive(item.href) ? styles.active : ''}`}
                 onClick={() => setIsMobileMenuOpen(false)}
                 data-testid={`link-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className={styles.icon} />
                 {item.label}
               </Link>
             );
           })}
         </div>
         
-        <div className="absolute bottom-6 left-4 right-4">
+        <div className={styles.sidebarFooter}>
           <button 
-            className="btn btn-secondary w-full" 
+            className={styles.logoutButton} 
             onClick={handleLogout}
             data-testid="button-logout"
           >
-            <LogOut className="w-4 h-4 mr-2" />
+            <LogOut className={styles.iconSmall} />
             Déconnexion
           </button>
         </div>
@@ -116,7 +117,7 @@ export default function Sidebar() {
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          className={styles.mobileOverlay}
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}

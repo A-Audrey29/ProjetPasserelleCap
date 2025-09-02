@@ -196,3 +196,8 @@
 .demoButton:hover:not(:disabled) {
   background-color: rgb(var(--accent));
 }
+
+.icon {
+  width: 1rem;
+  height: 1rem;
+}

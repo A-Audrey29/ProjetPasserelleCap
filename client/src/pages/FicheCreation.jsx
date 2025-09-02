@@ -6,6 +6,7 @@ import { useFiches } from '@/hooks/useFiches';
 import Header from '@/components/Layout/Header';
 import FicheForm from '@/components/Fiches/FicheForm';
 import { useToast } from '@/hooks/use-toast';
+import styles from './FicheCreation.module.css';
 
 export default function FicheCreation() {
   const [, setLocation] = useLocation();
@@ -65,10 +66,10 @@ export default function FicheCreation() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement...</p>
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingContent}>
+          <div className={styles.loadingSpinner}></div>
+          <p className={styles.loadingText}>Chargement...</p>
         </div>
       </div>
     );
@@ -80,22 +81,22 @@ export default function FicheCreation() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={styles.ficheCreationContainer}>
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-sm mb-2">
+      <main className={styles.mainContent}>
+        <div className={styles.headerSection}>
+          <div className={styles.breadcrumb}>
             <span 
               onClick={() => setLocation('/')}
-              className="hover:text-foreground transition-colors text-[#404040] cursor-pointer"
+              className={styles.breadcrumbLink}
               data-testid="link-dashboard"
             >
               Tableau de bord
             </span>
-            <ChevronRight className="w-4 h-4 text-[#404040]" />
-            <span className="text-[#404040]">Nouvelle fiche navette</span>
+            <ChevronRight className={styles.icon} />
+            <span className={styles.breadcrumbCurrent}>Nouvelle fiche navette</span>
           </div>
-          <h1 className="text-2xl font-bold text-[#404040]" data-testid="text-page-title">
+          <h1 className={styles.pageTitle} data-testid="text-page-title">
             Créer une fiche navette
           </h1>
         </div>

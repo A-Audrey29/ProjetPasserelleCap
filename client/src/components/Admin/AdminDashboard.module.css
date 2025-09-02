@@ -1,0 +1,250 @@
+/* AdminDashboard component styles */
+
+.dashboardContainer {
+  padding: 0;
+}
+
+.dashboardHeader {
+  margin-bottom: 1.5rem;
+}
+
+.dashboardTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(var(--foreground));
+  margin-bottom: 0.25rem;
+}
+
+.dashboardDescription {
+  color: rgb(var(--muted-foreground));
+}
+
+/* Quick Actions */
+.quickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.actionButton {
+  background-color: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.actionButton:hover {
+  opacity: 0.9;
+  text-decoration: none;
+}
+
+.actionButtonSecondary {
+  background-color: rgb(var(--secondary));
+  color: rgb(var(--secondary-foreground));
+  border: 1px solid rgb(var(--border));
+}
+
+.actionButtonSecondary:hover {
+  background-color: rgb(var(--accent));
+}
+
+/* Admin Modules Grid */
+.modulesGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .modulesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .modulesGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.moduleCard {
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+}
+
+.moduleCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+}
+
+.moduleHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.moduleIcon {
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin-right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.moduleIcon.primary {
+  background-color: rgba(var(--primary), 0.1);
+  color: rgb(var(--primary));
+}
+
+.moduleIcon.success {
+  background-color: rgba(106, 139, 116, 0.1);
+  color: #6A8B74;
+}
+
+.moduleIcon.warning {
+  background-color: rgba(217, 160, 102, 0.1);
+  color: #D9A066;
+}
+
+.moduleIcon.accent {
+  background-color: rgb(var(--accent));
+  color: rgb(var(--accent-foreground));
+}
+
+.moduleIcon.muted {
+  background-color: rgb(var(--muted));
+  color: rgb(var(--muted-foreground));
+}
+
+.moduleIcon.destructive {
+  background-color: rgba(140, 74, 74, 0.1);
+  color: #8C4A4A;
+}
+
+.moduleTitle {
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin: 0;
+}
+
+.moduleDescription {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+  margin-bottom: 0.75rem;
+  flex: 1;
+}
+
+.moduleStat {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.moduleStat.primary {
+  color: rgb(var(--primary));
+}
+
+.moduleStat.success {
+  color: #6A8B74;
+}
+
+.moduleStat.warning {
+  color: #D9A066;
+}
+
+.moduleStat.accent {
+  color: rgb(var(--accent-foreground));
+}
+
+.moduleStat.muted {
+  color: rgb(var(--muted-foreground));
+}
+
+.moduleStat.destructive {
+  color: #8C4A4A;
+}
+
+/* Recent Activity */
+.recentActivity {
+  margin-top: 2rem;
+}
+
+.activityCard {
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.activityTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 1rem;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activityItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: rgb(var(--muted));
+  border-radius: 6px;
+}
+
+.activityContent {
+  flex: 1;
+}
+
+.activityAction {
+  font-weight: 500;
+  color: rgb(var(--foreground));
+  margin-bottom: 0.125rem;
+}
+
+.activityDetails {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+}
+
+.activityTime {
+  font-size: 0.75rem;
+  color: rgb(var(--muted-foreground));
+  margin-left: 1rem;
+}
+
+/* Icon styles */
+.icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+}
+
+.iconLarge {
+  width: 1.5rem;
+  height: 1.5rem;
+}

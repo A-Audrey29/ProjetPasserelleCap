@@ -1,5 +1,6 @@
 import { formatDate } from '@/utils/formatters';
 import { STATE_LABELS } from '@/utils/constants';
+import styles from './StateTimeline.module.css';
 
 export default function StateTimeline({ currentState, stateHistory = [] }) {
   // Define the complete workflow states in order
@@ -49,26 +50,24 @@ export default function StateTimeline({ currentState, stateHistory = [] }) {
 
   const getStateClass = (state) => {
     if (isStateCurrent(state)) {
-      return 'text-primary font-medium';
+      return `${styles.timelineState} ${styles.current}`;
     } else if (isStateCompleted(state)) {
-      return 'text-success';
+      return `${styles.timelineState} ${styles.completed}`;
     } else {
-      return 'text-muted-foreground';
+      return `${styles.timelineState} ${styles.pending}`;
     }
   };
 
   const getTimelineItemClass = (state) => {
-    let baseClass = 'timeline-item';
+    let classes = [styles.timelineItem];
     
     if (isStateCurrent(state)) {
-      baseClass += ' timeline-current';
+      classes.push(styles.timelineCurrent);
     } else if (isStateCompleted(state)) {
-      baseClass += ' timeline-completed';
-    } else {
-      baseClass += ' timeline-pending';
+      classes.push(styles.timelineCompleted);
     }
     
-    return baseClass;
+    return classes.join(' ');
   };
 
   // Filter states to show based on current workflow
@@ -103,11 +102,11 @@ export default function StateTimeline({ currentState, stateHistory = [] }) {
   const visibleStates = getVisibleStates();
 
   return (
-    <div className="card">
-      <h2 className="text-lg font-semibold mb-4 text-[#3b4b61]">
+    <div className={styles.timelineContainer}>
+      <h2 className={styles.timelineTitle}>
         Suivi de la fiche
       </h2>
-      <div className="space-y-4">
+      <div className={styles.timelineContent}>
         {visibleStates.map((state, index) => {
           const historyEntry = getStateFromHistory(state);
           const isLast = index === visibleStates.length - 1;
@@ -115,25 +114,25 @@ export default function StateTimeline({ currentState, stateHistory = [] }) {
           return (
             <div 
               key={state} 
-              className={`${getTimelineItemClass(state)} ${isLast ? 'timeline-last' : ''}`}
+              className={`${getTimelineItemClass(state)} ${isLast ? styles.timelineLast : ''}`}
               data-testid={`timeline-item-${state}`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className={`font-medium ${getStateClass(state)}`}>
+              <div className={styles.timelineHeader}>
+                <span className={getStateClass(state)}>
                   {STATE_LABELS[state] || state}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className={styles.timelineTimestamp}>
                   {historyEntry ? formatDate(historyEntry.timestamp || historyEntry.createdAt) : 
                    isStateCurrent(state) ? 'En cours' : '-'}
                 </span>
               </div>
               {historyEntry?.actor && (
-                <p className="text-sm text-muted-foreground">
+                <p className={styles.timelineActor}>
                   par {historyEntry.actor.firstName} {historyEntry.actor.lastName}
                 </p>
               )}
               {historyEntry?.metadata?.comment && (
-                <p className="text-sm text-muted-foreground italic">
+                <p className={styles.timelineComment}>
                   {historyEntry.metadata.comment}
                 </p>
               )}
@@ -144,11 +143,11 @@ export default function StateTimeline({ currentState, stateHistory = [] }) {
         {/* Show rejected/needs info states if applicable */}
         {alternativeStates.includes(currentState) && (
           <div className={getTimelineItemClass(currentState)} data-testid={`timeline-item-${currentState}`}>
-            <div className="flex items-center justify-between mb-1">
-              <span className={`font-medium ${getStateClass(currentState)}`}>
+            <div className={styles.timelineHeader}>
+              <span className={getStateClass(currentState)}>
                 {STATE_LABELS[currentState] || currentState}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className={styles.timelineTimestamp}>
                 En cours
               </span>
             </div>

@@ -1,0 +1,228 @@
+/* FichesList component styles */
+
+.listContainer {
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.listTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.itemCount {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+}
+
+.refreshButton {
+  background-color: rgb(var(--secondary));
+  color: rgb(var(--secondary-foreground));
+  border: 1px solid rgb(var(--border));
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background-color: rgb(var(--accent));
+}
+
+.refreshButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading and empty states */
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16rem;
+}
+
+.loadingContent {
+  text-align: center;
+}
+
+.loadingSpinner {
+  width: 2rem;
+  height: 2rem;
+  color: rgb(var(--muted-foreground));
+  margin: 0 auto 0.5rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  color: rgb(var(--muted-foreground));
+}
+
+.emptyContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16rem;
+}
+
+.emptyContent {
+  text-align: center;
+}
+
+.emptyTitle {
+  color: rgb(var(--foreground));
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.emptyDescription {
+  color: rgb(var(--muted-foreground));
+}
+
+/* Table styles */
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHeader {
+  border-bottom: 1px solid rgb(var(--border));
+}
+
+.tableHeaderCell {
+  text-align: left;
+  padding: 0.75rem;
+  font-weight: 500;
+  color: rgb(var(--foreground));
+}
+
+.tableRow {
+  border-bottom: 1px solid rgb(var(--border));
+  transition: background-color 0.15s ease;
+}
+
+.tableRow:hover {
+  background-color: rgba(var(--muted), 0.5);
+}
+
+.tableCell {
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+.refCode {
+  font-family: ui-monospace, SFMono-Regular, 'Cascadia Code', 'Roboto Mono', monospace;
+  font-size: 0.875rem;
+}
+
+.orgName {
+  color: rgb(var(--foreground));
+}
+
+.orgNameUnassigned {
+  color: rgb(var(--muted-foreground));
+}
+
+.dateText {
+  color: rgb(var(--muted-foreground));
+}
+
+.actionButton {
+  background-color: rgb(var(--secondary));
+  color: rgb(var(--secondary-foreground));
+  border: 1px solid rgb(var(--border));
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionButton:hover {
+  background-color: rgb(var(--accent));
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgb(var(--border));
+}
+
+.paginationInfo {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+}
+
+.paginationControls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.paginationButton {
+  background-color: rgb(var(--secondary));
+  color: rgb(var(--secondary-foreground));
+  border: 1px solid rgb(var(--border));
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background-color: rgb(var(--accent));
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationText {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  color: rgb(var(--foreground));
+}
+
+/* Icon styles */
+.icon {
+  width: 1rem;
+  height: 1rem;
+}
