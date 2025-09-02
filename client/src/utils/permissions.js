@@ -296,6 +296,17 @@ export const getRoleActionSuggestions = (role) => {
     });
   }
 
+  // Creation actions - Only ADMIN and EMETTEUR can create fiches
+  if (role === ROLES.ADMIN || role === ROLES.EMETTEUR) {
+    actionSuggestions.push({
+      icon: 'Plus',
+      title: 'Émettre une nouvelle fiche navette',
+      description: 'Créer une nouvelle demande d\'accompagnement CAP',
+      href: '/fiches/new',
+      color: 'success'
+    });
+  }
+
   // Role-specific actions
   if (role === ROLES.ADMIN) {
     actionSuggestions.push({
