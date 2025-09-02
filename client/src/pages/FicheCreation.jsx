@@ -82,7 +82,6 @@ export default function FicheCreation() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -94,7 +93,7 @@ export default function FicheCreation() {
               Tableau de bord
             </button>
             <ChevronRight className="w-4 h-4" />
-            <span>Nouvelle fiche navette</span>
+            <span className="text-[#404040]">Nouvelle fiche navette</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground" data-testid="text-page-title">
             Créer une fiche navette
