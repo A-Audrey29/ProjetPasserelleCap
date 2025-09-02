@@ -89,11 +89,7 @@ export default function UserForm({ user, onClose, onSuccess }) {
 
   const createUserMutation = useMutation({
     mutationFn: async (userData) => {
-      return apiRequest('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
+      return apiRequest('POST', '/api/admin/users', userData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['/api/admin/users']);
@@ -107,11 +103,7 @@ export default function UserForm({ user, onClose, onSuccess }) {
 
   const updateUserMutation = useMutation({
     mutationFn: async (userData) => {
-      return apiRequest(`/api/admin/users/${user.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
+      return apiRequest('PUT', `/api/admin/users/${user.id}`, userData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['/api/admin/users']);
