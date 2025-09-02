@@ -426,17 +426,17 @@ export const getRoleActionSuggestions = (role) => {
   if (role === ROLES.CD) {
     actionSuggestions.push({
       icon: 'CheckCircle',
-      title: 'Valider les fiches',
+      title: 'Fiches en attente de validations',
       description: 'Valider les fiches soumises pour transmission à FEVES',
       href: '/fiches?state=SUBMITTED_TO_CD',
       color: 'success'
     });
     actionSuggestions.push({
-      icon: 'XCircle',
-      title: 'Fiches refusées',
-      description: 'Consulter les fiches refusées et archivées',
-      href: '/fiches?state=ARCHIVED',
-      color: 'destructive'
+      icon: 'FileText',
+      title: 'Consulter les Fiches',
+      description: 'Consulter toutes les fiches du système',
+      href: '/fiches',
+      color: 'primary'
     });
   }
 
