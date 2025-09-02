@@ -50,7 +50,7 @@ export default function Fiches() {
         setLoading(true);
         const params = new URLSearchParams();
         if (searchTerm) params.append('search', searchTerm);
-        if (stateFilter) params.append('state', stateFilter);
+        if (stateFilter && stateFilter !== 'all') params.append('state', stateFilter);
 
         const response = await fetch(`/api/fiches?${params}`);
         if (response.ok) {
@@ -148,7 +148,7 @@ export default function Fiches() {
                 <SelectValue placeholder="Filtrer par état" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les états</SelectItem>
+                <SelectItem value="all">Tous les états</SelectItem>
                 {Object.entries(STATE_LABELS).map(([key, label]) => (
                   <SelectItem key={key} value={key}>{label}</SelectItem>
                 ))}
@@ -227,12 +227,12 @@ export default function Fiches() {
                 <FileText className={styles.emptyIcon} />
                 <h3>Aucune fiche trouvée</h3>
                 <p>
-                  {searchTerm || stateFilter 
+                  {searchTerm || (stateFilter && stateFilter !== 'all') 
                     ? 'Aucune fiche ne correspond aux critères de recherche.'
                     : 'Aucune fiche navette n\'est disponible pour le moment.'
                   }
                 </p>
-                {hasPermission(userRole, ACTIONS.CREATE_FICHE) && !searchTerm && !stateFilter && (
+                {hasPermission(userRole, ACTIONS.CREATE_FICHE) && !searchTerm && (!stateFilter || stateFilter === 'all') && (
                   <Link href="/fiches/new">
                     <Button className={styles.createFirstButton}>
                       <Plus className={styles.buttonIcon} />
