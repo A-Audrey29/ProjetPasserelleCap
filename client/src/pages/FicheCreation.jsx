@@ -74,7 +74,8 @@ export default function FicheCreation() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== 'EMETTEUR') {
+  const userRole = user?.user?.role || user?.role;
+  if (!isAuthenticated || !['ADMIN', 'EMETTEUR', 'RELATIONS_EVS'].includes(userRole)) {
     return null; // Will redirect
   }
 
