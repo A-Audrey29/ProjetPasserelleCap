@@ -85,7 +85,7 @@ export default function FicheDetailPage() {
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground" data-testid="text-fiche-title">
+              <h1 className="text-2xl font-bold text-[#3b4b61]" data-testid="text-fiche-title">
                 Fiche navette {fiche.ref}
               </h1>
               <p className="text-[#3b4b61]" data-testid="text-family-info">
