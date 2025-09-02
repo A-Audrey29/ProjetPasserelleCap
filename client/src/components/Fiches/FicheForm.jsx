@@ -1259,6 +1259,10 @@ export default function FicheForm({
         const newFiche = await onSubmit(ficheData);
         console.log('Fiche created:', newFiche);
         
+        if (!newFiche || !newFiche.id) {
+          throw new Error('Fiche creation failed - no ID returned');
+        }
+        
         // Then transition it to SUBMITTED_TO_CD
         console.log('Starting transition to SUBMITTED_TO_CD for fiche:', newFiche.id);
         const transitionResult = await transitionFiche({

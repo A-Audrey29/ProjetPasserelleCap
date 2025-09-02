@@ -33,12 +33,14 @@ export default function FicheCreation() {
       });
 
       setLocation(`/fiches/${fiche.id}`);
+      return fiche; // Return the created fiche
     } catch (error) {
       toast({
         title: "Erreur lors de la création",
         description: error.message || "Une erreur est survenue",
         variant: "destructive"
       });
+      throw error; // Re-throw the error so it can be caught by the caller
     }
   };
 
