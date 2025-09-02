@@ -12,7 +12,8 @@ import {
   CheckCircle,
   XCircle,
   ArrowLeft,
-  Edit
+  Edit,
+  RotateCcw
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
@@ -140,6 +141,13 @@ export default function FicheDetail({ ficheId }) {
           description: "La fiche a été refusée et archivée",
           variant: "default"
         });
+      } else if (action === 'return') {
+        await transitionMutation.mutateAsync({ newState: 'DRAFT' });
+        toast({
+          title: "Fiche renvoyée",
+          description: "La fiche a été renvoyée à l'émetteur pour modification",
+          variant: "default"
+        });
       }
     } catch (error) {
       toast({
@@ -165,6 +173,8 @@ export default function FicheDetail({ ficheId }) {
       case 'cd_validate':
         return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
       case 'cd_reject':
+        return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
+      case 'cd_return':
         return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
       case 'edit':
         const userRole = user.user?.role || user.role;
@@ -229,6 +239,15 @@ export default function FicheDetail({ ficheId }) {
                   >
                     <CheckCircle className={styles.buttonIcon} />
                     Valider
+                  </button>
+                  <button 
+                    onClick={() => handleCDValidation('return')}
+                    disabled={transitionMutation.isPending}
+                    className={styles.returnButton}
+                    data-testid="button-cd-return"
+                  >
+                    <RotateCcw className={styles.buttonIcon} />
+                    Renvoyer
                   </button>
                   <button 
                     onClick={() => handleCDValidation('reject')}

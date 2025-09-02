@@ -113,6 +113,30 @@
   cursor: not-allowed;
 }
 
+.returnButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #D9A066;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.returnButton:hover {
+  background: #C8935C;
+}
+
+.returnButton:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+}
+
 .auditButton {
   display: inline-flex;
   align-items: center;
