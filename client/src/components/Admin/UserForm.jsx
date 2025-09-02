@@ -360,6 +360,7 @@ export default function UserForm({ user, onClose, onSuccess }) {
               type="submit"
               disabled={isPending}
               data-testid="button-save-user"
+              className="text-[#3b4b61]"
             >
               <Save className={styles.saveIcon} />
               {isPending ? 'Sauvegarde...' : isEditing ? 'Mettre à jour' : 'Créer'}
