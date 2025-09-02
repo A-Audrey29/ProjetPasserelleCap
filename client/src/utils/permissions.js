@@ -257,8 +257,15 @@ export const hasAllPermissions = (userRole, actions) => {
 export const getRoleActionSuggestions = (role) => {
   const actionSuggestions = [];
   
-  // Base action: View fiches (all roles have some level of access)
-  if (hasPermission(role, ACTIONS.VIEW_ALL_FICHES)) {
+  // Debug logging
+  console.log('Getting actions for role:', role);
+  console.log('Role permissions:', PERMISSIONS[role]);
+  
+  // Simplified approach: provide actions based on role regardless of specific permissions
+  // This ensures all roles get basic actions displayed
+  
+  // All roles get a view fiches action with appropriate scope
+  if (role === ROLES.ADMIN || role === ROLES.SUIVI_PROJETS) {
     actionSuggestions.push({
       icon: 'Eye',
       title: 'Consulter toutes les fiches navettes',
@@ -266,15 +273,15 @@ export const getRoleActionSuggestions = (role) => {
       href: '/fiches',
       color: 'primary'
     });
-  } else if (hasPermission(role, ACTIONS.VIEW_FILTERED_FICHES)) {
+  } else if (role === ROLES.RELATIONS_EVS) {
     actionSuggestions.push({
-      icon: 'Eye',
+      icon: 'Eye', 
       title: 'Consulter les fiches de votre territoire',
       description: 'Visualiser les fiches de votre périmètre géographique',
       href: '/fiches',
       color: 'primary'
     });
-  } else if (hasPermission(role, ACTIONS.VIEW_ASSIGNED_FICHES)) {
+  } else if (role === ROLES.EVS_CS) {
     actionSuggestions.push({
       icon: 'Eye',
       title: 'Consulter vos fiches attribuées',
@@ -282,10 +289,10 @@ export const getRoleActionSuggestions = (role) => {
       href: '/fiches',
       color: 'primary'
     });
-  } else if (hasPermission(role, ACTIONS.VIEW_OWN_FICHES)) {
+  } else if (role === ROLES.EMETTEUR) {
     actionSuggestions.push({
       icon: 'Eye',
-      title: 'Consulter vos fiches navettes',
+      title: 'Consulter vos fiches navettes', 
       description: 'Visualiser et suivre vos fiches créées',
       href: '/fiches',
       color: 'primary'
@@ -378,5 +385,6 @@ export const getRoleActionSuggestions = (role) => {
     });
   }
 
+  console.log('Final action suggestions:', actionSuggestions);
   return actionSuggestions;
 };
