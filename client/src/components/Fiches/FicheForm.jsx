@@ -1207,21 +1207,15 @@ export default function FicheForm({
   };
 
   const handleTransmit = async () => {
-    console.log('handleTransmit called');
-    console.log('formData:', formData);
-    console.log('initialData:', initialData);
-    
     if (!validateAllSteps()) {
-      console.log('Validation failed');
       toast({
         title: "Erreur de validation",
-        description: "Veuillez vérifier tous les champs obligatoires.",
+        description: "Veuillez remplir tous les champs obligatoires. Vérifiez particulièrement les champs Structure et Téléphone dans l'étape Référent.",
         variant: "destructive"
       });
       return;
     }
 
-    console.log('Validation passed, starting transmission...');
     try {
       // If we have an existing fiche (initialData with id), transition its state
       if (initialData && initialData.id) {
@@ -1278,29 +1272,14 @@ export default function FicheForm({
   };
 
   const validateAllSteps = () => {
-    console.log('Validating all steps...');
-    console.log('familyConsent:', formData.familyConsent);
-    
     if (!formData.familyConsent) {
-      console.log('Family consent missing');
       return false;
     }
-    
-    const referentValid = validateReferentStep();
-    const familyValid = validateFamilyStep();
-    const childrenValid = validateChildrenStep();
-    const besoinValid = validateBesoinStep();
-    const objectivesValid = validateObjectivesStep();
-    
-    console.log('Validation results:', {
-      referentValid,
-      familyValid,
-      childrenValid,
-      besoinValid,
-      objectivesValid
-    });
-    
-    return referentValid && familyValid && childrenValid && besoinValid && objectivesValid;
+    return validateReferentStep() && 
+           validateFamilyStep() && 
+           validateChildrenStep() && 
+           validateBesoinStep() && 
+           validateObjectivesStep();
   };
 
   const renderReviewStep = () => (
