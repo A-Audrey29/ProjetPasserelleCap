@@ -40,7 +40,12 @@ export default function FicheForm({
       phone: '',
       email: '',
       mother: '',
-      father: ''
+      father: '',
+      tiers: '',
+      lienAvecEnfants: '',
+      autoriteParentale: '',
+      situationFamiliale: '',
+      situationSocioProfessionnelle: ''
     },
     children: [],
     workshops: [],
@@ -301,6 +306,216 @@ export default function FicheForm({
     }));
   };
 
+  const updateFamilyField = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      family: {
+        ...prev.family,
+        [field]: value
+      }
+    }));
+  };
+
+  const validateFamilyStep = () => {
+    const { mother, father, tiers, lienAvecEnfants, autoriteParentale, situationFamiliale, situationSocioProfessionnelle } = formData.family;
+    
+    // Au moins un des trois (mère, père, tiers) doit être rempli
+    const hasParentInfo = mother.trim() || father.trim() || tiers.trim();
+    if (!hasParentInfo) {
+      toast({
+        title: "Erreur de validation",
+        description: "Veuillez renseigner au moins l'un des champs : Mère, Père ou Tiers",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Si tiers est rempli, le lien avec les enfants est obligatoire
+    if (tiers.trim() && !lienAvecEnfants.trim()) {
+      toast({
+        title: "Erreur de validation", 
+        description: "Le champ 'Lien avec l'enfant (les enfants)' est obligatoire lorsque 'Tiers' est renseigné",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Champs obligatoires
+    if (!autoriteParentale) {
+      toast({
+        title: "Erreur de validation",
+        description: "Veuillez sélectionner l'autorité parentale",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (!situationFamiliale.trim()) {
+      toast({
+        title: "Erreur de validation",
+        description: "Le champ 'Situation familiale' est obligatoire",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (!situationSocioProfessionnelle.trim()) {
+      toast({
+        title: "Erreur de validation",
+        description: "Le champ 'Situation socio-professionnelle' est obligatoire",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const renderFamilyStep = () => (
+    <div className={styles.card}>
+      <h2 className={styles.cardTitle}>
+        <Users className={styles.cardTitleIcon} />
+        Informations famille
+      </h2>
+      
+      <div className={styles.formSection}>
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel} htmlFor="family-mother">
+              Mère
+            </label>
+            <input
+              id="family-mother"
+              type="text"
+              className={styles.fieldInput}
+              value={formData.family.mother}
+              onChange={(e) => updateFamilyField('mother', e.target.value)}
+              placeholder="Nom et prénom de la mère"
+              data-testid="input-family-mother"
+            />
+          </div>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel} htmlFor="family-father">
+              Père
+            </label>
+            <input
+              id="family-father"
+              type="text"
+              className={styles.fieldInput}
+              value={formData.family.father}
+              onChange={(e) => updateFamilyField('father', e.target.value)}
+              placeholder="Nom et prénom du père"
+              data-testid="input-family-father"
+            />
+          </div>
+        </div>
+
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="family-tiers">
+            Tiers
+          </label>
+          <input
+            id="family-tiers"
+            type="text"
+            className={styles.fieldInput}
+            value={formData.family.tiers}
+            onChange={(e) => updateFamilyField('tiers', e.target.value)}
+            placeholder="Nom et prénom du tiers"
+            data-testid="input-family-tiers"
+          />
+        </div>
+
+        {formData.family.tiers && (
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel} htmlFor="family-lien">
+              Lien avec l'enfant (les enfants) *
+            </label>
+            <input
+              id="family-lien"
+              type="text"
+              className={styles.fieldInput}
+              value={formData.family.lienAvecEnfants}
+              onChange={(e) => updateFamilyField('lienAvecEnfants', e.target.value)}
+              placeholder="Ex: Grand-mère, Oncle, Tuteur légal..."
+              data-testid="input-family-lien"
+            />
+          </div>
+        )}
+
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="family-autorite">
+            Autorité parentale *
+          </label>
+          <select
+            id="family-autorite"
+            className={styles.fieldSelect}
+            value={formData.family.autoriteParentale}
+            onChange={(e) => updateFamilyField('autoriteParentale', e.target.value)}
+            data-testid="select-family-autorite"
+          >
+            <option value="">Sélectionner...</option>
+            <option value="mere">Mère</option>
+            <option value="pere">Père</option>
+            <option value="tiers">Tiers</option>
+          </select>
+        </div>
+
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="family-situation">
+            Situation familiale *
+          </label>
+          <input
+            id="family-situation"
+            type="text"
+            className={styles.fieldInput}
+            value={formData.family.situationFamiliale}
+            onChange={(e) => updateFamilyField('situationFamiliale', e.target.value)}
+            placeholder="Ex: Famille monoparentale, Couple, Séparés..."
+            data-testid="input-family-situation"
+          />
+        </div>
+
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="family-socio">
+            Situation socio-professionnelle *
+          </label>
+          <input
+            id="family-socio"
+            type="text"
+            className={styles.fieldInput}
+            value={formData.family.situationSocioProfessionnelle}
+            onChange={(e) => updateFamilyField('situationSocioProfessionnelle', e.target.value)}
+            placeholder="Ex: Demandeur d'emploi, Salarié, RSA..."
+            data-testid="input-family-socio"
+          />
+        </div>
+
+        <div className={styles.buttonContainer}>
+          <button
+            type="button"
+            onClick={() => setCurrentStep(0)}
+            className={`${styles.button} ${styles.buttonSecondary}`}
+            data-testid="button-previous-step"
+          >
+            Précédent
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (validateFamilyStep()) {
+                setCurrentStep(2);
+              }
+            }}
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            data-testid="button-next-step"
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderReferentStep = () => (
     <div className={styles.card}>
       <h2 className={styles.cardTitle}>
@@ -459,10 +674,7 @@ export default function FicheForm({
       case 0:
         return renderReferentStep();
       case 1:
-        return <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Informations famille</h2>
-          <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
-        </div>;
+        return renderFamilyStep();
       case 2:
         return <div className={styles.card}>
           <h2 className={styles.cardTitle}>Enfants concernés</h2>
