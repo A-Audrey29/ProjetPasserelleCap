@@ -104,7 +104,7 @@ export default function StateTimeline({ currentState, stateHistory = [] }) {
 
   return (
     <div className="card">
-      <h2 className="text-lg font-semibold text-foreground mb-4">
+      <h2 className="text-lg font-semibold mb-4 text-[#3b4b61]">
         Suivi de la fiche
       </h2>
       <div className="space-y-4">
