@@ -344,13 +344,6 @@ export const getRoleActionSuggestions = (role) => {
   
   if (role === ROLES.EMETTEUR) {
     actionSuggestions.push({
-      icon: 'Plus',
-      title: 'Émettre une nouvelle fiche navette',
-      description: 'Créer une nouvelle demande d\'accompagnement',
-      href: '/fiches/new',
-      color: 'primary'
-    });
-    actionSuggestions.push({
       icon: 'Edit',
       title: 'Modifier vos fiches en cours',
       description: 'Compléter vos fiches avant validation',
