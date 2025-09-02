@@ -1229,11 +1229,30 @@ export default function FicheForm({
         });
       } else {
         // If it's a new fiche, create it as draft first, then transition it
+        // Transform workshopPropositions to workshops array format
+        const workshops = formData.workshopPropositions ? 
+          Object.entries(formData.workshopPropositions).map(([workshopId, qty]) => ({
+            workshopId: workshopId,
+            qty: parseInt(qty) || 1
+          })) : [];
+
+        // Use the first EPSI available if none selected
+        const selectedEpsiId = formData.epsiId || (epsiList.length > 0 ? epsiList[0].id : null);
+        
         const ficheData = {
           familyId: formData.familyId,
-          epsiId: formData.epsiId,
-          description: formData.description,
-          workshops: formData.workshopPropositions || []
+          epsiId: selectedEpsiId,
+          description: formData.description || formData.descriptionSituation || '',
+          workshops: workshops,
+          // Include family data for dynamic creation
+          family: formData.familyId ? undefined : {
+            code: `FAM_${Date.now()}`, // Generate a unique family code
+            mother: formData.family.mother,
+            father: formData.family.father,
+            phone: formData.family.telephonePortable,
+            email: formData.family.email,
+            address: formData.family.adresse
+          }
         };
 
         // Create the fiche as DRAFT
