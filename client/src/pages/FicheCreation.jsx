@@ -15,7 +15,8 @@ export default function FicheCreation() {
 
   // Redirect if not authenticated or not authorized
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || user?.role !== 'EMETTEUR')) {
+    const userRole = user?.user?.role || user?.role;
+    if (!authLoading && (!isAuthenticated || !['ADMIN', 'EMETTEUR', 'RELATIONS_EVS'].includes(userRole))) {
       setLocation('/');
     }
   }, [isAuthenticated, authLoading, user, setLocation]);

@@ -296,8 +296,8 @@ export const getRoleActionSuggestions = (role) => {
     });
   }
 
-  // Creation actions - Only ADMIN and EMETTEUR can create fiches
-  if (role === ROLES.ADMIN || role === ROLES.EMETTEUR) {
+  // Creation actions - ADMIN, EMETTEUR, and RELATIONS_EVS can create fiches
+  if (role === ROLES.ADMIN || role === ROLES.EMETTEUR || role === ROLES.RELATIONS_EVS) {
     actionSuggestions.push({
       icon: 'Plus',
       title: 'Émettre une nouvelle fiche navette',
