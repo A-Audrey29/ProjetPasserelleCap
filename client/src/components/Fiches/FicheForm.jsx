@@ -45,7 +45,10 @@ export default function FicheForm({
       lienAvecEnfants: '',
       autoriteParentale: '',
       situationFamiliale: '',
-      situationSocioProfessionnelle: ''
+      situationSocioProfessionnelle: '',
+      adresse: '',
+      telephonePortable: '',
+      telephoneFixe: ''
     },
     children: [],
     workshops: [],
@@ -317,7 +320,7 @@ export default function FicheForm({
   };
 
   const validateFamilyStep = () => {
-    const { mother, father, tiers, lienAvecEnfants, autoriteParentale, situationFamiliale, situationSocioProfessionnelle } = formData.family;
+    const { mother, father, tiers, lienAvecEnfants, autoriteParentale, situationFamiliale, situationSocioProfessionnelle, telephonePortable } = formData.family;
     
     // Au moins un des trois (mère, père, tiers) doit être rempli
     const hasParentInfo = mother.trim() || father.trim() || tiers.trim();
@@ -363,6 +366,15 @@ export default function FicheForm({
       toast({
         title: "Erreur de validation",
         description: "Le champ 'Situation socio-professionnelle' est obligatoire",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (!telephonePortable.trim()) {
+      toast({
+        title: "Erreur de validation",
+        description: "Le champ 'Téléphone portable' est obligatoire",
         variant: "destructive"
       });
       return false;
@@ -487,6 +499,67 @@ export default function FicheForm({
             onChange={(e) => updateFamilyField('situationSocioProfessionnelle', e.target.value)}
             placeholder="Ex: Demandeur d'emploi, Salarié, RSA..."
             data-testid="input-family-socio"
+          />
+        </div>
+
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="family-address">
+            Adresse
+          </label>
+          <input
+            id="family-address"
+            type="text"
+            className={styles.fieldInput}
+            value={formData.family.adresse}
+            onChange={(e) => updateFamilyField('adresse', e.target.value)}
+            placeholder="Adresse complète de la famille"
+            data-testid="input-family-address"
+          />
+        </div>
+
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel} htmlFor="family-mobile">
+              Téléphone portable *
+            </label>
+            <input
+              id="family-mobile"
+              type="tel"
+              className={styles.fieldInput}
+              value={formData.family.telephonePortable}
+              onChange={(e) => updateFamilyField('telephonePortable', e.target.value)}
+              placeholder="06 12 34 56 78"
+              data-testid="input-family-mobile"
+            />
+          </div>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel} htmlFor="family-landline">
+              Téléphone fixe
+            </label>
+            <input
+              id="family-landline"
+              type="tel"
+              className={styles.fieldInput}
+              value={formData.family.telephoneFixe}
+              onChange={(e) => updateFamilyField('telephoneFixe', e.target.value)}
+              placeholder="01 23 45 67 89"
+              data-testid="input-family-landline"
+            />
+          </div>
+        </div>
+
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="family-email">
+            Email
+          </label>
+          <input
+            id="family-email"
+            type="email"
+            className={styles.fieldInput}
+            value={formData.family.email}
+            onChange={(e) => updateFamilyField('email', e.target.value)}
+            placeholder="exemple@email.com"
+            data-testid="input-family-email"
           />
         </div>
 
