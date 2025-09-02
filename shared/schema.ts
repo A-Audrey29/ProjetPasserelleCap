@@ -107,6 +107,22 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   assignedOrgId: varchar("assigned_org_id"),
   epsiId: varchar("epsi_id"),
   description: text("description"),
+  
+  // Referent information
+  referentData: json("referent_data"), // Store complete referent information
+  
+  // Family detailed information (extending beyond basic family table)
+  familyDetailedData: json("family_detailed_data"), // Store complete family form data
+  
+  // Children information
+  childrenData: json("children_data"), // Store children details from form
+  
+  // Workshop propositions from referent
+  workshopPropositions: json("workshop_propositions"), // Store referent propositions for each workshop
+  
+  // Family consent
+  familyConsent: boolean("family_consent").notNull().default(false),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
