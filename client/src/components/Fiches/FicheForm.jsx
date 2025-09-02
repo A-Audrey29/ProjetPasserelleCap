@@ -58,7 +58,8 @@ export default function FicheForm({
       }
     ],
     workshops: [],
-    attachments: []
+    attachments: [],
+    descriptionSituation: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -280,12 +281,18 @@ export default function FicheForm({
     },
     {
       id: 3,
-      title: "Ateliers et objectifs",
+      title: "Identification des besoins",
       icon: Target,
       allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
     },
     {
       id: 4,
+      title: "Ateliers et objectifs",
+      icon: Target,
+      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+    },
+    {
+      id: 5,
       title: "Pièces justificatives",
       icon: Paperclip,
       allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
@@ -455,6 +462,67 @@ export default function FicheForm({
 
     return true;
   };
+
+  const validateBesoinStep = () => {
+    if (!formData.descriptionSituation.trim()) {
+      toast({
+        title: "Erreur de validation",
+        description: "La description de la situation est obligatoire",
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const renderBesoinStep = () => (
+    <div className={styles.card}>
+      <h2 className={styles.cardTitle}>
+        <Target className={styles.cardTitleIcon} />
+        Identification des besoins de la famille
+      </h2>
+      
+      <div className={styles.formSection}>
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="description-situation">
+            Description de la situation *
+          </label>
+          <textarea
+            id="description-situation"
+            className={styles.fieldTextarea}
+            value={formData.descriptionSituation}
+            onChange={(e) => setFormData(prev => ({ ...prev, descriptionSituation: e.target.value }))}
+            placeholder="Décrivez la situation familiale, les difficultés rencontrées, les besoins identifiés..."
+            rows={8}
+            data-testid="textarea-description-situation"
+          />
+        </div>
+
+        <div className={styles.buttonContainer}>
+          <button
+            type="button"
+            onClick={() => setCurrentStep(2)}
+            className={`${styles.button} ${styles.buttonSecondary}`}
+            data-testid="button-previous-step"
+          >
+            Précédent
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (validateBesoinStep()) {
+                setCurrentStep(4);
+              }
+            }}
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            data-testid="button-next-step"
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderChildrenStep = () => (
     <div className={styles.card}>
@@ -933,11 +1001,13 @@ export default function FicheForm({
       case 2:
         return renderChildrenStep();
       case 3:
+        return renderBesoinStep();
+      case 4:
         return <div className={styles.card}>
           <h2 className={styles.cardTitle}>Ateliers et objectifs</h2>
           <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
         </div>;
-      case 4:
+      case 5:
         return <div className={styles.card}>
           <h2 className={styles.cardTitle}>Pièces justificatives</h2>
           <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>

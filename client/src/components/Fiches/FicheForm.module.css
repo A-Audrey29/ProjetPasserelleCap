@@ -311,3 +311,28 @@
   border-color: #3B4B61;
   color: #3B4B61;
 }
+
+/* Textarea styles */
+.fieldTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #404040;
+  background-color: #FFFFFF;
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.fieldTextarea:focus {
+  outline: none;
+  border-color: #3B4B61;
+  box-shadow: 0 0 0 1px #3B4B61;
+}
+
+.fieldTextarea::placeholder {
+  color: #9CA3AF;
+}
