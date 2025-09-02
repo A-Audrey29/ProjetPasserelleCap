@@ -619,7 +619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Audit logs
-  app.get('/api/audit', requireAuth, requireRole('ADMIN', 'SUIVI_PROJETS'), async (req, res) => {
+  app.get('/api/audit', requireAuth, async (req, res) => {
     try {
       const { entity, entityId } = req.query;
       const logs = await storage.getAuditLogs(entityId as string, entity as string);

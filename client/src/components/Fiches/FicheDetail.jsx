@@ -30,6 +30,7 @@ export default function FicheDetail({ ficheId }) {
   const [newComment, setNewComment] = useState('');
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState('');
+  const [showAuditModal, setShowAuditModal] = useState(false);
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
@@ -41,6 +42,13 @@ export default function FicheDetail({ ficheId }) {
   const { data: organizations = [] } = useQuery({
     queryKey: ['/api/organizations'],
     enabled: showAssignModal
+  });
+
+  // Query for audit logs
+  const { data: auditLogs = [], isLoading: auditLoading } = useQuery({
+    queryKey: ['/api/audit', { entityId: ficheId, entity: 'FicheNavette' }],
+    enabled: showAuditModal,
+    retry: false
   });
 
   // Comment mutation
@@ -287,6 +295,7 @@ export default function FicheDetail({ ficheId }) {
               
               <button 
                 className={styles.auditButton}
+                onClick={() => setShowAuditModal(true)}
                 data-testid="button-audit-log"
               >
                 <History className={styles.buttonIcon} />
@@ -566,6 +575,74 @@ export default function FicheDetail({ ficheId }) {
               <UserPlus className={styles.buttonIcon} />
               Affecter
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Audit Log Modal */}
+      {showAuditModal && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>
+                Journal d'audit
+              </h2>
+              <button 
+                className={styles.modalClose}
+                onClick={() => setShowAuditModal(false)}
+                data-testid="button-close-audit-modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.auditLogsList}>
+              {auditLoading ? (
+                <div className={styles.loadingMessage}>
+                  <p>Chargement des logs d'audit...</p>
+                </div>
+              ) : auditLogs.length === 0 ? (
+                <div className={styles.emptyMessage}>
+                  <p>Aucun événement d'audit disponible pour cette fiche.</p>
+                </div>
+              ) : (
+                <div className={styles.auditEntries}>
+                  {auditLogs.map((log) => (
+                    <div key={log.id} className={styles.auditEntry} data-testid={`audit-entry-${log.id}`}>
+                      <div className={styles.auditHeader}>
+                        <div className={styles.auditAction}>
+                          <span className={styles.actionBadge}>{log.action}</span>
+                          <span className={styles.entityBadge}>{log.entity}</span>
+                        </div>
+                        <span className={styles.auditDate}>
+                          {formatDate(log.createdAt)}
+                        </span>
+                      </div>
+                      <div className={styles.auditDetails}>
+                        <p className={styles.auditActor}>
+                          {log.actor ? `${log.actor.firstName} ${log.actor.lastName}` : 'Utilisateur inconnu'}
+                          {log.actor?.role && ` (${log.actor.role})`}
+                        </p>
+                        {log.meta && (
+                          <div className={styles.auditMeta}>
+                            {log.meta.oldState && log.meta.newState && (
+                              <p className={styles.stateTransition}>
+                                État: {log.meta.oldState} → {log.meta.newState}
+                              </p>
+                            )}
+                            {log.meta.method && log.meta.path && (
+                              <p className={styles.requestInfo}>
+                                {log.meta.method} {log.meta.path}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
