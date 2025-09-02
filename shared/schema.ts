@@ -4,10 +4,10 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
-export const roleEnum = pgEnum("role", ["ADMIN", "SUIVI_PROJETS", "EMETTEUR", "RELATIONS_EVS", "EVS_CS"]);
+export const roleEnum = pgEnum("role", ["ADMIN", "SUIVI_PROJETS", "EMETTEUR", "RELATIONS_EVS", "EVS_CS", "CD"]);
 export const orgTypeEnum = pgEnum("org_type", ["EVS", "CS"]);
 export const ficheStateEnum = pgEnum("fiche_state", [
-  "DRAFT", "SUBMITTED_TO_FEVES", "ASSIGNED_TO_EVS", "EVS_ACCEPTED", "EVS_REJECTED", "NEEDS_INFO",
+  "DRAFT", "SUBMITTED_TO_CD", "SUBMITTED_TO_FEVES", "ASSIGNED_TO_EVS", "EVS_ACCEPTED", "EVS_REJECTED", "NEEDS_INFO",
   "CONTRACT_SENT", "CONTRACT_SIGNED", "ADVANCE_70_PAID", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
   "FIELD_CHECK_DONE", "FINAL_REPORT_RECEIVED", "REMAINING_30_PAID", "CLOSED", "ARCHIVED"
 ]);

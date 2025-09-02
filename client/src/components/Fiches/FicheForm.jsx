@@ -293,7 +293,7 @@ export default function FicheForm({
     },
     {
       id: 5,
-      title: "Revoir et transmettre la fiche à la FEVES",
+      title: "Revoir et transmettre au Conseil Départemental",
       icon: Send,
       allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
     }
@@ -1223,14 +1223,14 @@ export default function FicheForm({
         children: formData.children,
         workshopPropositions: formData.workshopPropositions,
         referent: formData.referent,
-        status: 'SUBMITTED'
+        status: 'SUBMITTED_TO_CD'
       };
 
       const result = await onSubmit(ficheData);
       
       toast({
         title: "Fiche transmise",
-        description: "La fiche a été transmise avec succès à la FEVES.",
+        description: "La fiche a été transmise avec succès au Conseil Départemental pour validation.",
         variant: "success"
       });
 
@@ -1263,7 +1263,7 @@ export default function FicheForm({
     <div className={styles.card}>
       <h2 className={styles.cardTitle}>
         <Send className={styles.cardTitleIcon} />
-        Revoir et transmettre la fiche à la FEVES
+        Revoir et transmettre au Conseil Départemental
       </h2>
       
       <div className={styles.formSection}>
