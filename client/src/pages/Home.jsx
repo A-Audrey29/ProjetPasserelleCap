@@ -2,47 +2,46 @@ import { Link } from 'wouter';
 import { FileText, Users, CheckCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Layout/Header';
+import styles from './Home.module.css';
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={styles.homeContainer}>
       <Header />
       
       <main>
         {/* Hero Section */}
-        <section className="bg-white border-b border-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-            <div className="text-center">
-              <h1 className="h1 text-foreground mb-6">
-                Bienvenue sur Passerelle CAP
-              </h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-                La plateforme numérique dédiée à l'accompagnement personnalisé des familles. 
-                Simplifiez la gestion de vos fiches navettes CAP et optimisez vos parcours d'accompagnement.
-              </p>
-              {!isAuthenticated && (
-                <Link href="/login" className="btn btn-primary inline-flex items-center gap-2">
-                  Accéder à la plateforme
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              )}
-            </div>
+        <section className={styles.heroSection}>
+          <div className={styles.heroContent}>
+            <h1 className={styles.heroTitle}>
+              Bienvenue sur Passerelle CAP
+            </h1>
+            <p className={styles.heroSubtitle}>
+              La plateforme numérique dédiée à l'accompagnement personnalisé des familles. 
+              Simplifiez la gestion de vos fiches navettes CAP et optimisez vos parcours d'accompagnement.
+            </p>
+            {!isAuthenticated && (
+              <Link href="/login" className={styles.ctaButton}>
+                Accéder à la plateforme
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
           </div>
         </section>
 
         {/* What is CAP */}
-        <section className="py-16 lg:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              <div>
-                <h2 className="h2 text-foreground mb-6">
+        <section className={styles.section}>
+          <div className={styles.container}>
+            <div className={styles.capGrid}>
+              <div className={styles.capContent}>
+                <h2 className={styles.sectionTitle}>
                   Qu'est-ce que le CAP ?
                 </h2>
-                <div className="space-y-4 text-muted-foreground leading-relaxed">
+                <div className={styles.textContent}>
                   <p>
-                    Le <strong className="text-foreground">Contrat d'Accompagnement Personnalisé</strong> (CAP) est un dispositif d'aide aux familles 
+                    Le <strong>Contrat d'Accompagnement Personnalisé</strong> (CAP) est un dispositif d'aide aux familles 
                     qui facilite l'accès aux services et prestations nécessaires à l'épanouissement familial.
                   </p>
                   <p>
@@ -51,20 +50,20 @@ export default function Home() {
                     des différents acteurs sociaux.
                   </p>
                   <p>
-                    Il s'inscrit dans une démarche de <strong className="text-foreground">prévention</strong> et de 
-                    <strong className="text-foreground"> soutien à la parentalité</strong>, visant à renforcer 
+                    Il s'inscrit dans une démarche de <strong>prévention</strong> et de 
+                    <strong> soutien à la parentalité</strong>, visant à renforcer 
                     les compétences parentales et le bien-être familial.
                   </p>
                 </div>
               </div>
-              <div className="bg-card border border-border rounded-lg p-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Users className="w-6 h-6 text-primary" />
+              <div className={styles.capCard}>
+                <div className={styles.capCardHeader}>
+                  <div className={styles.iconContainer}>
+                    <Users className={`w-6 h-6 ${styles.iconPrimary}`} />
                   </div>
-                  <h3 className="h3 text-foreground">Accompagnement personnalisé</h3>
+                  <h3 className={styles.cardTitle}>Accompagnement personnalisé</h3>
                 </div>
-                <p className="text-muted-foreground">
+                <p className={styles.cardText}>
                   Chaque famille bénéficie d'un accompagnement adapté à ses besoins, 
                   avec un suivi régulier et des objectifs personnalisés.
                 </p>
@@ -74,47 +73,47 @@ export default function Home() {
         </section>
 
         {/* Why Fiches Navettes */}
-        <section className="bg-card py-16 lg:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="h2 text-foreground mb-4">
+        <section className={styles.sectionCard}>
+          <div className={styles.container}>
+            <div className={styles.fichesHeader}>
+              <h2 className={styles.sectionTitle}>
                 Pourquoi les fiches navettes ?
               </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <p className={styles.fichesSubtitle}>
                 Les fiches navettes sont au cœur du processus CAP. Elles garantissent une coordination 
                 efficace entre tous les acteurs de l'accompagnement familial.
               </p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-success/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-8 h-8 text-success" />
+            <div className={styles.featuresGrid}>
+              <div className={styles.featureCard}>
+                <div className={`${styles.featureIcon} ${styles.iconSuccess}`}>
+                  <FileText className={`w-8 h-8 ${styles.iconSuccessColor}`} />
                 </div>
-                <h3 className="h3 text-foreground mb-3">Traçabilité</h3>
-                <p className="text-muted-foreground">
+                <h3 className={styles.featureTitle}>Traçabilité</h3>
+                <p className={styles.featureDescription}>
                   Chaque étape de l'accompagnement est documentée, permettant un suivi précis 
                   et une continuité des interventions.
                 </p>
               </div>
               
-              <div className="text-center">
-                <div className="w-16 h-16 bg-warning/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-warning" />
+              <div className={styles.featureCard}>
+                <div className={`${styles.featureIcon} ${styles.iconWarning}`}>
+                  <Users className={`w-8 h-8 ${styles.iconWarningColor}`} />
                 </div>
-                <h3 className="h3 text-foreground mb-3">Coordination</h3>
-                <p className="text-muted-foreground">
+                <h3 className={styles.featureTitle}>Coordination</h3>
+                <p className={styles.featureDescription}>
                   Facilite la communication entre EPSI, EVS, CS et autres partenaires 
                   pour un accompagnement cohérent.
                 </p>
               </div>
               
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-primary" />
+              <div className={styles.featureCard}>
+                <div className={`${styles.featureIcon} ${styles.iconContainer}`}>
+                  <CheckCircle className={`w-8 h-8 ${styles.iconPrimary}`} />
                 </div>
-                <h3 className="h3 text-foreground mb-3">Efficacité</h3>
-                <p className="text-muted-foreground">
+                <h3 className={styles.featureTitle}>Efficacité</h3>
+                <p className={styles.featureDescription}>
                   Optimise les délais de traitement et améliore la qualité 
                   de l'accompagnement grâce à une gestion structurée.
                 </p>
@@ -124,36 +123,36 @@ export default function Home() {
         </section>
 
         {/* Purpose of the Platform */}
-        <section className="py-16 lg:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-primary text-primary-foreground rounded-xl p-8 lg:p-12">
-              <div className="max-w-4xl mx-auto text-center">
-                <h2 className="h2 mb-6">
+        <section className={styles.section}>
+          <div className={styles.container}>
+            <div className={styles.missionCard}>
+              <div className={styles.missionContent}>
+                <h2 className={styles.missionTitle}>
                   Notre mission
                 </h2>
-                <p className="text-xl leading-relaxed mb-8 opacity-95">
+                <p className={styles.missionDescription}>
                   Passerelle CAP digitalise et simplifie la gestion des contrats d'accompagnement personnalisé. 
                   Notre plateforme permet aux professionnels de l'action sociale de se concentrer sur l'essentiel : 
-                  <strong className="font-semibold"> l'accompagnement humain des familles</strong>.
+                  <strong> l'accompagnement humain des familles</strong>.
                 </p>
-                <div className="grid md:grid-cols-2 gap-8 text-left">
-                  <div>
-                    <h3 className="font-semibold mb-3">Pour les professionnels</h3>
-                    <ul className="space-y-2 opacity-95">
-                      <li>• Gestion simplifiée des fiches navettes</li>
-                      <li>• Suivi en temps réel des dossiers</li>
-                      <li>• Coordination facilitée entre services</li>
-                      <li>• Reporting et analyses automatisés</li>
-                    </ul>
+                <div className={styles.benefitsGrid}>
+                  <div className={styles.benefitSection}>
+                    <h3 className={styles.benefitSectionTitle}>Pour les professionnels</h3>
+                    <div className={styles.benefitList}>
+                      <div>• Gestion simplifiée des fiches navettes</div>
+                      <div>• Suivi en temps réel des dossiers</div>
+                      <div>• Coordination facilitée entre services</div>
+                      <div>• Reporting et analyses automatisés</div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-3">Pour les familles</h3>
-                    <ul className="space-y-2 opacity-95">
-                      <li>• Accompagnement plus réactif</li>
-                      <li>• Continuité des interventions</li>
-                      <li>• Transparence sur le suivi</li>
-                      <li>• Qualité d'accompagnement renforcée</li>
-                    </ul>
+                  <div className={styles.benefitSection}>
+                    <h3 className={styles.benefitSectionTitle}>Pour les familles</h3>
+                    <div className={styles.benefitList}>
+                      <div>• Accompagnement plus réactif</div>
+                      <div>• Continuité des interventions</div>
+                      <div>• Transparence sur le suivi</div>
+                      <div>• Qualité d'accompagnement renforcée</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -162,22 +161,22 @@ export default function Home() {
         </section>
 
         {isAuthenticated && (
-          <section className="bg-card py-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <h2 className="h2 text-foreground mb-4">
+          <section className={styles.userWelcomeSection}>
+            <div className={styles.userWelcomeContent}>
+              <h2 className={styles.userWelcomeTitle}>
                 Bienvenue, {user?.role === 'ADMIN' ? 'Administrateur' : 
                            user?.role === 'EMETTEUR' ? 'Émetteur' :
                            user?.role === 'SUIVI_PROJETS' ? 'Responsable Suivi' :
                            user?.role === 'RELATIONS_EVS' ? 'Relations EVS' : 'Utilisateur'}
               </h2>
-              <p className="text-muted-foreground mb-8">
+              <p className={styles.userWelcomeText}>
                 Accédez à vos outils de travail et gérez vos fiches navettes
               </p>
-              <div className="flex justify-center gap-4">
-                <Link href="/dashboard" className="btn btn-primary">
+              <div className={styles.actionButtons}>
+                <Link href="/dashboard" className={styles.primaryButton}>
                   Tableau de bord
                 </Link>
-                <Link href="/fiches" className="btn btn-secondary">
+                <Link href="/fiches" className={styles.secondaryButton}>
                   Fiches Actives
                 </Link>
               </div>

@@ -1,0 +1,37 @@
+/* Login page styles */
+.loginContainer {
+  min-height: 100vh;
+  background-color: rgb(var(--background));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.loginCard {
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 24rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.loginHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.loginTitle {
+  font-family: var(--font-titles);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(var(--foreground));
+  margin-bottom: 0.5rem;
+}
+
+.loginSubtitle {
+  color: rgb(var(--muted-foreground));
+  font-size: 0.875rem;
+}

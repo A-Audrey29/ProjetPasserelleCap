@@ -8,8 +8,7 @@ import Header from '@/components/Layout/Header';
 import KPICards from '@/components/Dashboard/KPICards';
 import FilterBar from '@/components/Dashboard/FilterBar';
 import FichesList from '@/components/Fiches/FichesList';
-import Sidebar from '../components/Layout/Sidebar';
-import { Link } from 'wouter';
+import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -20,7 +19,6 @@ export default function Dashboard() {
     epsiId: '',
     assignedOrgId: ''
   });
-
 
   // Queries for dashboard data
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
@@ -55,39 +53,38 @@ export default function Dashboard() {
     setLocation('/fiches/new');
   };
 
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className={styles.dashboardContainer}>
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={styles.mainContent}>
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground" data-testid="text-dashboard-title">
+        <div className={styles.headerSection}>
+          <div className={styles.headerContent}>
+            <h1 data-testid="text-dashboard-title">
               Tableau de bord
             </h1>
-            <p className="text-muted-foreground">
+            <p>
               Vue d'ensemble des fiches navettes
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className={styles.actionButtons}>
             {user?.role === 'EMETTEUR' && (
               <button 
-                className="btn btn-primary"
+                className={styles.createButton}
                 onClick={handleCreateFiche}
                 data-testid="button-create-fiche"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4" />
                 Nouvelle fiche navette
               </button>
             )}
             <button 
-              className="btn btn-secondary"
+              className={styles.exportButton}
               onClick={handleExport}
               data-testid="button-export"
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Exporter
             </button>
           </div>

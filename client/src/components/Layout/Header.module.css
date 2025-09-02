@@ -1,0 +1,258 @@
+/* Header component styles */
+.header {
+  background-color: rgb(var(--card));
+  border-bottom: 1px solid rgb(var(--border));
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 4rem;
+}
+
+.logoSection {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  font-family: var(--font-titles);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(var(--primary));
+  text-decoration: none;
+}
+
+.logo:hover {
+  text-decoration: none;
+}
+
+/* Desktop Navigation */
+.desktopNav {
+  display: none;
+  align-items: center;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .desktopNav {
+    display: flex;
+  }
+}
+
+.navItems {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navLink {
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
+  text-decoration: none;
+}
+
+.navLink:hover {
+  text-decoration: none;
+}
+
+.navLinkInactive {
+  color: rgb(var(--muted-foreground));
+}
+
+.navLinkInactive:hover {
+  color: rgb(var(--foreground));
+}
+
+.navLinkActive {
+  color: rgb(var(--primary));
+}
+
+.userActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.userRole {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+}
+
+.loginButton {
+  background-color: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+  transition: opacity 0.15s ease;
+}
+
+.loginButton:hover {
+  opacity: 0.9;
+  text-decoration: none;
+}
+
+.logoutButton {
+  background-color: rgb(var(--secondary));
+  color: rgb(var(--secondary-foreground));
+  border: 1px solid rgb(var(--border));
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.logoutButton:hover:not(:disabled) {
+  background-color: rgb(var(--accent));
+}
+
+/* Mobile menu button */
+.mobileMenuButton {
+  display: block;
+  background-color: rgb(var(--secondary));
+  color: rgb(var(--secondary-foreground));
+  border: 1px solid rgb(var(--border));
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+@media (min-width: 768px) {
+  .mobileMenuButton {
+    display: none;
+  }
+}
+
+.mobileMenuButton:hover:not(:disabled) {
+  background-color: rgb(var(--accent));
+}
+
+/* Mobile Navigation */
+.mobileNav {
+  display: block;
+  border-top: 1px solid rgb(var(--border));
+  background-color: rgb(var(--card));
+}
+
+@media (min-width: 768px) {
+  .mobileNav {
+    display: none;
+  }
+}
+
+.mobileNavContent {
+  padding: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mobileNavLink {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.mobileNavLink:hover {
+  text-decoration: none;
+}
+
+.mobileNavLinkInactive {
+  color: rgb(var(--muted-foreground));
+}
+
+.mobileNavLinkInactive:hover {
+  background-color: rgb(var(--muted));
+  color: rgb(var(--foreground));
+}
+
+.mobileNavLinkActive {
+  background-color: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+}
+
+.mobileUserSection {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mobileUserRole {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+}
+
+.mobileLogoutButton {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgb(var(--muted-foreground));
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobileLogoutButton:hover {
+  background-color: rgb(var(--muted));
+  color: rgb(var(--foreground));
+}
+
+/* Mobile overlay */
+.mobileOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+}
+
+@media (min-width: 768px) {
+  .mobileOverlay {
+    display: none;
+  }
+}
