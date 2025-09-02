@@ -72,7 +72,7 @@ export default function FicheDetailPage() {
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+          <div className="flex items-center gap-2 text-sm mb-2 text-[#3b4b61]">
             <button 
               onClick={() => setLocation('/')}
               className="hover:text-foreground transition-colors"
