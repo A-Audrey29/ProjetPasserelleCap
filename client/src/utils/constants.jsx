@@ -1,6 +1,7 @@
 // Fiche states and their labels
 export const STATE_LABELS = {
   DRAFT: 'Brouillon',
+  SUBMITTED_TO_CD: 'Soumis au CD',
   SUBMITTED_TO_FEVES: 'Envoyé FEVES',
   ASSIGNED_TO_EVS: 'Affecté EVS',
   EVS_ACCEPTED: 'Accepté EVS',

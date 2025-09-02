@@ -11,18 +11,8 @@ import { Badge } from '@/components/common/Badge';
 import { Card, CardContent } from '@/components/common/Card';
 import styles from './Fiches.module.css';
 
-// State mapping for display
-const STATE_LABELS = {
-  'DRAFT': 'Brouillon',
-  'SUBMITTED_TO_CD': 'Soumise au Conseil Départemental',
-  'SUBMITTED_TO_FEVES': 'Soumise à FEVES',
-  'ASSIGNED_TO_EVS': 'Assignée à EVS',
-  'IN_PROGRESS': 'En cours',
-  'COMPLETED': 'Terminée',
-  'CLOSED': 'Fermée',
-  'REJECTED': 'Rejetée',
-  'CANCELLED': 'Annulée'
-};
+// Import state labels from constants
+import { STATE_LABELS } from '../utils/constants';
 
 const STATE_COLORS = {
   'DRAFT': 'secondary',
@@ -44,6 +34,20 @@ export default function Fiches() {
   const [stateFilter, setStateFilter] = useState('');
   
   const userRole = user?.user?.role || user?.role;
+
+  // Read URL parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const stateParam = urlParams.get('state');
+    const searchParam = urlParams.get('search');
+    
+    if (stateParam) {
+      setStateFilter(stateParam);
+    }
+    if (searchParam) {
+      setSearchTerm(searchParam);
+    }
+  }, []);
 
   // Fetch fiches from API with role-based filtering
   useEffect(() => {
