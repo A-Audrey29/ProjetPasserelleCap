@@ -1228,19 +1228,26 @@ export default function FicheForm({
           }
         });
       } else {
-        // If it's a new fiche, create it with the transmitted status
+        // If it's a new fiche, create it as draft first, then transition it
         const ficheData = {
           familyId: formData.familyId,
           epsiId: formData.epsiId,
           description: formData.description,
-          family: formData.family,
-          children: formData.children,
-          workshopPropositions: formData.workshopPropositions,
-          referent: formData.referent,
-          status: 'SUBMITTED_TO_CD'
+          workshops: formData.workshopPropositions || []
         };
 
-        await onSubmit(ficheData);
+        // Create the fiche as DRAFT
+        const newFiche = await onSubmit(ficheData);
+        
+        // Then transition it to SUBMITTED_TO_CD
+        await transitionFiche({
+          id: newFiche.id,
+          newState: 'SUBMITTED_TO_CD',
+          metadata: {
+            transmittedBy: user?.user?.id || user?.id,
+            transmissionDate: new Date().toISOString()
+          }
+        });
       }
       
       toast({
