@@ -10,7 +10,7 @@ export default function Header() {
 
   const authenticatedNavItems = [
     {
-      href: '/',
+      href: '/dashboard',
       label: 'Tableau de bord',
       roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS']
     },
@@ -31,6 +31,7 @@ export default function Header() {
   );
 
   const isActive = (href) => {
+    if (href === '/dashboard') return location === '/dashboard';
     if (href === '/') return location === '/';
     return location.startsWith(href);
   };

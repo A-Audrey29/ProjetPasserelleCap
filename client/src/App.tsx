@@ -19,10 +19,10 @@ function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   const [location, setLocation] = useLocation();
 
-  // Handle authentication redirection
+  // Handle authentication redirection for login page only
   useEffect(() => {
     if (!isLoading) {
-      if (!isAuthenticated && location !== '/login') {
+      if (!isAuthenticated && location !== '/login' && location !== '/') {
         setLocation('/login');
       } else if (isAuthenticated && location === '/login') {
         setLocation('/');
@@ -44,10 +44,10 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      <Route path="/home" component={Home} />
+      <Route path="/" component={Home} />
       {isAuthenticated ? (
         <>
-          <Route path="/" component={Dashboard} />
+          <Route path="/dashboard" component={Dashboard} />
           <Route path="/fiches/new" component={FicheCreation} />
           <Route path="/fiches/:id" component={FicheDetail} />
           <Route path="/admin" component={Admin} />
@@ -55,9 +55,7 @@ function Router() {
           <Route path="/contact" component={Contact} />
           <Route path="/fiches" component={Dashboard} />
         </>
-      ) : (
-        <Route path="/" component={Home} />
-      )}
+      ) : null}
       <Route component={NotFound} />
     </Switch>
   );

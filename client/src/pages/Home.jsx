@@ -174,7 +174,7 @@ export default function Home() {
                 Accédez à vos outils de travail et gérez vos fiches navettes
               </p>
               <div className="flex justify-center gap-4">
-                <Link href="/" className="btn btn-primary">
+                <Link href="/dashboard" className="btn btn-primary">
                   Tableau de bord
                 </Link>
                 <Link href="/fiches" className="btn btn-secondary">
