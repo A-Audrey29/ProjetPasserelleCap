@@ -1,0 +1,165 @@
+
+/* FicheDetail Page Styles */
+.container {
+  min-height: 100vh;
+  background-color: #F5F6F7;
+}
+
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16rem;
+}
+
+.loadingContent {
+  text-align: center;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid #3b4b61;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  color: #6B7280;
+  margin: 0;
+}
+
+.errorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16rem;
+}
+
+.errorContent {
+  text-align: center;
+}
+
+.errorTitle {
+  color: #DC2626;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+}
+
+.errorMessage {
+  color: #6B7280;
+  margin: 0 0 1rem 0;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #F5F6F7;
+  color: #3b4b61;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: #E5E7EB;
+  border-color: #D1D5DB;
+}
+
+.pageHeader {
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin-bottom: 0.5rem;
+}
+
+.breadcrumbLink {
+  background: none;
+  border: none;
+  color: #6B7280;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.breadcrumbLink:hover {
+  color: #3b4b61;
+}
+
+.breadcrumbIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.breadcrumbCurrent {
+  color: #3b4b61;
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titleInfo {
+  flex: 1;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3b4b61;
+  margin: 0 0 0.25rem 0;
+}
+
+.familyInfo {
+  color: #3b4b61;
+  margin: 0;
+}
+
+.statusSection {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main {
+    padding: 1rem 0.5rem;
+  }
+  
+  .titleSection {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .breadcrumb {
+    flex-wrap: wrap;
+  }
+}

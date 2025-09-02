@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useLocation, useParams } from 'wouter';
 import { ChevronRight } from 'lucide-react';
@@ -6,6 +7,7 @@ import { useFiche } from '@/hooks/useFiches';
 import Header from '@/components/Layout/Header';
 import FicheDetail from '@/components/Fiches/FicheDetail';
 import StatusBadge from '@/components/Common/StatusBadge';
+import styles from './FicheDetail.module.css';
 
 export default function FicheDetailPage() {
   const { id } = useParams();
@@ -22,13 +24,13 @@ export default function FicheDetailPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className={styles.container}>
         <Header />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Chargement de la fiche...</p>
+        <main className={styles.main}>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loadingContent}>
+              <div className={styles.spinner}></div>
+              <p className={styles.loadingText}>Chargement de la fiche...</p>
             </div>
           </div>
         </main>
@@ -42,19 +44,19 @@ export default function FicheDetailPage() {
 
   if (error || !fiche) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className={styles.container}>
         <Header />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <p className="text-destructive font-medium mb-2">
+        <main className={styles.main}>
+          <div className={styles.errorContainer}>
+            <div className={styles.errorContent}>
+              <p className={styles.errorTitle}>
                 Erreur lors du chargement
               </p>
-              <p className="text-muted-foreground">
+              <p className={styles.errorMessage}>
                 {error?.message || 'Fiche non trouvée'}
               </p>
               <button 
-                className="btn btn-secondary mt-4"
+                className={styles.backButton}
                 onClick={() => setLocation('/')}
                 data-testid="button-back-dashboard"
               >
@@ -68,31 +70,31 @@ export default function FicheDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={styles.container}>
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+      <main className={styles.main}>
+        <div className={styles.pageHeader}>
+          <div className={styles.breadcrumb}>
             <button 
               onClick={() => setLocation('/')}
-              className="hover:text-foreground transition-colors"
+              className={styles.breadcrumbLink}
               data-testid="link-dashboard"
             >
               Tableau de bord
             </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#3b4b61]">Fiche {fiche.ref}</span>
+            <ChevronRight className={styles.breadcrumbIcon} />
+            <span className={styles.breadcrumbCurrent}>Fiche {fiche.ref}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-[#3b4b61]" data-testid="text-fiche-title">
+          <div className={styles.titleSection}>
+            <div className={styles.titleInfo}>
+              <h1 className={styles.pageTitle} data-testid="text-fiche-title">
                 Fiche navette {fiche.ref}
               </h1>
-              <p className="text-[#3b4b61]" data-testid="text-family-info">
+              <p className={styles.familyInfo} data-testid="text-family-info">
                 Famille {fiche.family?.code}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className={styles.statusSection}>
               <StatusBadge state={fiche.state} />
             </div>
           </div>
