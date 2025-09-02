@@ -101,7 +101,9 @@ export default function FicheForm({
           workshopId: s.workshopId,
           qty: s.qty
         })) || [],
-        attachments: initialData.attachments || []
+        attachments: initialData.attachments || [],
+        // Map referentData from existing fiche to referent field
+        referent: initialData.referentData || formData.referent
       });
     }
   }, [initialData]);
