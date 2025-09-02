@@ -5,25 +5,25 @@
   --primary: 59 75 97; /* #3B4B61 - Bleu-gris dominant */
   --primary-foreground: 255 255 255; /* #FFFFFF - White */
   --background: 245 246 247; /* #F5F6F7 - Gris clair fond */
-  --foreground: 64 64 64; /* #404040 - Dark grey for text */
+  --foreground: 59 75 97; /* #3B4B61 - Dark blue for text */
 
   --card: 255 255 255; /* #FFFFFF - White */
-  --card-foreground: 64 64 64; /* #404040 - Dark grey for text */
+  --card-foreground: 59 75 97; /* #3B4B61 - Dark blue for text */
 
   --secondary: 245 246 247; /* #F5F6F7 - Gris clair */
-  --secondary-foreground: 64 64 64; /* #404040 - Dark grey for text */
+  --secondary-foreground: 59 75 97; /* #3B4B61 - Dark blue for text */
 
   --muted: 245 246 247;
-  --muted-foreground: 64 64 64; /* Darker grey for better contrast */
+  --muted-foreground: 59 75 97; /* Dark blue for better contrast */
 
   --accent: 245 246 247;
-  --accent-foreground: 64 64 64; /* Dark grey instead of blue */
+  --accent-foreground: 59 75 97; /* Dark blue consistent with theme */
 
   --success: 106 139 116; /* #6A8B74 - Vert doux */
   --success-foreground: 255 255 255;
 
   --warning: 217 160 102; /* #D9A066 - Orange sable */
-  --warning-foreground: 64 64 64; /* Dark grey text instead of white */
+  --warning-foreground: 59 75 97; /* Dark blue text instead of white */
 
   --destructive: 140 74 74; /* #8C4A4A - Rouge bordeaux discret */
   --destructive-foreground: 255 255 255;
@@ -566,7 +566,7 @@ table td {
 /* Special emphasis colors for specific use cases */
 .text-obj1 { color: hsl(var(--primary)); }
 .text-obj2 { color: hsl(var(--success)); }
-.text-obj3 { color: hsl(64 64 64); /* Dark grey instead of warning yellow */ }
+.text-obj3 { color: hsl(59 75 97); /* Dark blue consistent with theme */ }
 
 .bg-obj1 { background-color: hsl(var(--primary)); }
 .bg-obj2 { background-color: hsl(var(--success)); }

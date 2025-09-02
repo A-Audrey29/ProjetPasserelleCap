@@ -13,17 +13,17 @@
 
 .badgeDefault {
   background-color: #D9A066;
-  color: #404040;
+  color: #3B4B61;
 }
 
 .badgeSecondary {
   background-color: #F5F6F7;
-  color: #404040;
+  color: #3B4B61;
 }
 
 .badgeOutline {
   background-color: #F5F6F7;
-  color: #404040;
+  color: #3B4B61;
   border: 1px solid #D1D5DB;
 }
 

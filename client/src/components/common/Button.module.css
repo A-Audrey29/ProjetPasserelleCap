@@ -32,13 +32,13 @@
 
 .buttonOutline {
   background-color: #F5F6F7;
-  color: #404040;
+  color: #3B4B61;
   border: 1px solid #D1D5DB;
 }
 
 .buttonOutline:hover:not(:disabled) {
   background-color: #E5E7EB;
-  color: #404040;
+  color: #3B4B61;
 }
 
 .buttonDefault {
