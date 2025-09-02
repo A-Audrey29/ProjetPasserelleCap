@@ -8,11 +8,13 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/Select';
 import { Badge } from '@/components/common/Badge';
+import { Card, CardContent } from '@/components/common/Card';
 import styles from './Fiches.module.css';
 
 // State mapping for display
 const STATE_LABELS = {
   'DRAFT': 'Brouillon',
+  'SUBMITTED_TO_CD': 'Soumise au Conseil Départemental',
   'SUBMITTED_TO_FEVES': 'Soumise à FEVES',
   'ASSIGNED_TO_EVS': 'Assignée à EVS',
   'IN_PROGRESS': 'En cours',
@@ -24,6 +26,7 @@ const STATE_LABELS = {
 
 const STATE_COLORS = {
   'DRAFT': 'secondary',
+  'SUBMITTED_TO_CD': 'default',
   'SUBMITTED_TO_FEVES': 'default',
   'ASSIGNED_TO_EVS': 'outline',
   'IN_PROGRESS': 'default',
@@ -72,6 +75,8 @@ export default function Fiches() {
   const getPageTitle = () => {
     if (userRole === ROLES.ADMIN || userRole === ROLES.SUIVI_PROJETS) {
       return 'Toutes les fiches navettes';
+    } else if (userRole === ROLES.CD) {
+      return 'Fiches à valider - Conseil Départemental';
     } else if (userRole === ROLES.RELATIONS_EVS) {
       return 'Fiches de votre territoire';
     } else if (userRole === ROLES.EVS_CS) {
@@ -106,6 +111,8 @@ export default function Fiches() {
             <p className={styles.pageSubtitle}>
               {userRole === ROLES.ADMIN || userRole === ROLES.SUIVI_PROJETS 
                 ? 'Consultez et gérez toutes les fiches de la plateforme'
+                : userRole === ROLES.CD
+                ? 'Validez ou refusez les fiches soumises par les émetteurs'
                 : userRole === ROLES.RELATIONS_EVS
                 ? 'Consultez les fiches de votre périmètre territorial'
                 : userRole === ROLES.EVS_CS

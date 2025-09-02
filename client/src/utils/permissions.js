@@ -4,7 +4,8 @@ export const ROLES = {
   SUIVI_PROJETS: 'SUIVI_PROJETS', 
   EMETTEUR: 'EMETTEUR',
   RELATIONS_EVS: 'RELATIONS_EVS',
-  EVS_CS: 'EVS_CS'
+  EVS_CS: 'EVS_CS',
+  CD: 'CD'
 };
 
 export const ACTIONS = {
@@ -227,6 +228,34 @@ export const PERMISSIONS = {
     
     // Management - Profile only
     ACTIONS.MANAGE_PROFILE
+  ],
+  
+  [ROLES.CD]: [
+    // Consultation - Full read access to all fiches
+    ACTIONS.VIEW_ALL_FICHES,
+    ACTIONS.VIEW_HISTORY_COMPLETE,
+    ACTIONS.SEARCH_ADVANCED,
+    
+    // Creation & Edition - Read-only (no creation or modification)
+    
+    // Validation & Workflow - CD validation powers (Valider/Refuser)
+    ACTIONS.VALIDATE_OFFICIAL,
+    ACTIONS.REFUSE_REQUEST_CORRECTIONS,
+    
+    // Documents - Read access only
+    ACTIONS.DOWNLOAD_ALL_DOCUMENTS,
+    
+    // Communication - View comments only
+    ACTIONS.MESSAGING,
+    ACTIONS.NOTIFICATIONS,
+    
+    // Monitoring - Global view
+    ACTIONS.VIEW_PROGRESS_GLOBAL,
+    ACTIONS.VIEW_DASHBOARD_GLOBAL,
+    ACTIONS.EXPORT_DATA,
+    
+    // Management - Profile only
+    ACTIONS.MANAGE_PROFILE
   ]
 };
 
@@ -267,6 +296,14 @@ export const getRoleActionSuggestions = (role) => {
       icon: 'Eye',
       title: 'Consulter toutes les fiches navettes',
       description: 'Visualiser et suivre l\'état de toutes les fiches',
+      href: '/fiches',
+      color: 'primary'
+    });
+  } else if (role === ROLES.CD) {
+    actionSuggestions.push({
+      icon: 'Eye',
+      title: 'Fiches à valider',
+      description: 'Consulter les fiches soumises au Conseil Départemental',
       href: '/fiches',
       color: 'primary'
     });
@@ -383,6 +420,23 @@ export const getRoleActionSuggestions = (role) => {
       description: 'Finaliser votre partie des accompagnements',
       href: '/closure',
       color: 'success'
+    });
+  }
+  
+  if (role === ROLES.CD) {
+    actionSuggestions.push({
+      icon: 'CheckCircle',
+      title: 'Valider les fiches',
+      description: 'Valider les fiches soumises pour transmission à FEVES',
+      href: '/fiches?state=SUBMITTED_TO_CD',
+      color: 'success'
+    });
+    actionSuggestions.push({
+      icon: 'XCircle',
+      title: 'Fiches refusées',
+      description: 'Consulter les fiches refusées et archivées',
+      href: '/fiches?state=ARCHIVED',
+      color: 'destructive'
     });
   }
 
