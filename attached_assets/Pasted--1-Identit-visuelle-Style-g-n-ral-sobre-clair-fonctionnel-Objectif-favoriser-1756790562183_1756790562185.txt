@@ -1,0 +1,93 @@
+## 1. Identité visuelle
+
+- **Style général** : sobre, clair, fonctionnel.
+- **Objectif** : favoriser la **lisibilité** et la **navigation intuitive** pour des profils variés (travailleurs sociaux, administrateurs, partenaires).
+- **Tonalité** : institutionnelle mais humaine (mettre en avant l’accompagnement parentalité).
+
+---
+
+## 2. Palette de couleurs
+
+### Couleurs principales
+
+- **Bleu-gris** `#3B4B61`
+    
+    → Couleur dominante, symbolise la confiance et la stabilité.
+    
+- **Gris clair** `#F5F6F7`
+    
+    → Fond des pages, pour un contraste doux.
+    
+- **Blanc** `#FFFFFF`
+    
+    → Fond des contenus, lisibilité maximale.
+    
+
+### Couleurs secondaires
+
+- **Vert doux** `#6A8B74`
+    
+    → Validation, succès (ex. fiche acceptée, contrat signé).
+    
+- **Orange sable** `#D9A066`
+    
+    → Notifications ou points d’attention (ex. fiche en attente).
+    
+- **Rouge bordeaux discret** `#8C4A4A`
+    
+    → Erreurs ou refus, sans être agressif.
+    
+
+⚠️ Pas de couleurs flashy → toutes les teintes sont **désaturées**, apaisantes.
+
+---
+
+## 3. Typographie
+
+- **Titres** : *Source Sans Pro* (ou **Inter**, très lisible à l’écran).
+- **Texte courant** : *Roboto* (sobre, neutre, facile à lire).
+- **Hiérarchie** :
+    - H1 : 28–32px, gras.
+    - H2 : 22–26px, semi-gras.
+    - Corps : 16px, interligne 1.5.
+
+---
+
+## 4. Iconographie
+
+- Pack d’icônes : **Lucide** ou **Feather Icons** (simples, monochromes, vectoriels).
+- Utilisation sobre (max 1–2 icônes par bloc).
+- Codes couleurs :
+    - Vert pour “validé”.
+    - Orange pour “en attente”.
+    - Rouge bordeaux pour “refusé”.
+
+---
+
+## 5. Disposition & UI
+
+- **Navigation principale** : barre latérale gauche ou topbar sobre.
+- **Tableau de bord** : cartes rectangulaires avec coins légèrement arrondis (border-radius: 8px).
+- **Boutons** : plats (flat design), couleurs neutres.
+    - Primaire : bleu-gris.
+    - Secondaire : gris clair.
+    - Confirmation : vert doux.
+- **Formulaires** : champs avec bord gris clair `#D1D5DB`, focus bleu-gris `#3B4B61`.
+
+---
+
+## 6. Exemples d’usage des couleurs
+
+- **Fiche navette en attente** → pastille orange sable.
+- **Fiche validée** → pastille verte douce.
+- **Fiche refusée** → pastille rouge bordeaux.
+- **Tableau de suivi** → alternance gris clair / blanc pour les lignes.
+
+---
+
+## 7. Accessibilité
+
+- Contraste AA minimum (WCAG).
+- Couleurs testées pour daltonisme (vert ≠ rouge).
+- Police ≥ 16px pour tous les textes.
+- Navigation clavier + ARIA labels pour l’inclusivité.

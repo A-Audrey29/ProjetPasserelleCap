@@ -12,6 +12,7 @@ import FicheDetail from "@/pages/FicheDetail";
 import Admin from "@/pages/Admin";
 import Reports from "@/pages/Reports";
 import Contact from "@/pages/Contact";
+import Home from "@/pages/Home";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.jsx";
 
 function Router() {
@@ -43,7 +44,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      {isAuthenticated && (
+      <Route path="/home" component={Home} />
+      {isAuthenticated ? (
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/fiches/new" component={FicheCreation} />
@@ -53,6 +55,8 @@ function Router() {
           <Route path="/contact" component={Contact} />
           <Route path="/fiches" component={Dashboard} />
         </>
+      ) : (
+        <Route path="/" component={Home} />
       )}
       <Route component={NotFound} />
     </Switch>
