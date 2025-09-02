@@ -18,7 +18,8 @@ export default function LoginForm() {
     { role: 'EMETTEUR', email: 'emetteur@tas.cap', password: 'Demo!123' },
     { role: 'RELATIONS_EVS', email: 'relations@feves.cap', password: 'Demo!123' },
     { role: 'EVS_CS', email: 'evs@association.cap', password: 'Demo!123' },
-    { role: 'SUIVI_PROJETS', email: 'suivi@feves.cap', password: 'Demo!123' }
+    { role: 'SUIVI_PROJETS', email: 'suivi@feves.cap', password: 'Demo!123' },
+    { role: 'CD', email: 'cd@conseil.dep', password: 'password123' }
   ];
 
   const handleSubmit = async (e) => {
