@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X } from 'lucide-react';
+import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function FicheForm({ 
   initialData = null, 
@@ -12,9 +13,23 @@ export default function FicheForm({
 }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
-  // Form state
+  // Multi-step form state
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isReferentEditable, setIsReferentEditable] = useState(false);
+  
+  // Form state with référent data
   const [formData, setFormData] = useState({
+    referent: {
+      lastName: user?.user?.lastName || user?.lastName || '',
+      firstName: user?.user?.firstName || user?.firstName || '',
+      structure: user?.user?.organization || user?.organization || '',
+      role: user?.user?.role || user?.role || '',
+      phone: user?.user?.phone || user?.phone || '',
+      email: user?.user?.email || user?.email || '',
+      requestDate: new Date().toISOString().split('T')[0]
+    },
     familyId: '',
     epsiId: '',
     description: '',
@@ -228,394 +243,293 @@ export default function FicheForm({
     }
   };
 
-  return (
-    <div className="max-w-4xl">
-      {/* Référent Section */}
-      <div className="card mb-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-          <UserCheck className="w-5 h-5 mr-2" />
-          Informations du référent
-        </h2>
+  // Multi-step form steps
+  const steps = [
+    {
+      id: 0,
+      title: "Référent à l'origine de la demande",
+      icon: UserCheck,
+      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+    },
+    {
+      id: 1,
+      title: "Informations famille",
+      icon: Users,
+      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+    },
+    {
+      id: 2,
+      title: "Enfants concernés",
+      icon: Baby,
+      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+    },
+    {
+      id: 3,
+      title: "Ateliers et objectifs",
+      icon: Target,
+      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+    },
+    {
+      id: 4,
+      title: "Pièces justificatives",
+      icon: Paperclip,
+      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+    }
+  ];
+
+  const currentStepData = steps[currentStep];
+  const userRole = user?.user?.role || user?.role;
+
+  // Handle référent data validation
+  const handleValidateReferent = () => {
+    setCurrentStep(1);
+    setIsReferentEditable(false);
+  };
+
+  const handleModifyReferent = () => {
+    setIsReferentEditable(true);
+  };
+
+  const updateReferentField = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      referent: {
+        ...prev.referent,
+        [field]: value
+      }
+    }));
+  };
+
+  const renderReferentStep = () => (
+    <div className="card">
+      <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+        <UserCheck className="w-5 h-5 mr-2" />
+        Référent à l'origine de la demande
+      </h2>
+      
+      <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              EPSI
+            <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-lastName">
+              Nom *
             </label>
-            <select 
+            <input
+              id="referent-lastName"
+              type="text"
               className="input-field"
-              value={formData.epsiId}
-              onChange={(e) => handleInputChange('epsiId', e.target.value)}
-              required
-              data-testid="select-epsi"
-            >
-              <option value="">Sélectionner une EPSI</option>
-              {epsiList.map((epsi) => (
-                <option key={epsi.id} value={epsi.id}>
-                  {epsi.name}
-                </option>
-              ))}
-            </select>
+              value={formData.referent.lastName}
+              onChange={(e) => updateReferentField('lastName', e.target.value)}
+              disabled={!isReferentEditable}
+              data-testid="input-referent-lastname"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-firstName">
+              Prénom *
+            </label>
+            <input
+              id="referent-firstName"
+              type="text"
+              className="input-field"
+              value={formData.referent.firstName}
+              onChange={(e) => updateReferentField('firstName', e.target.value)}
+              disabled={!isReferentEditable}
+              data-testid="input-referent-firstname"
+            />
           </div>
         </div>
-      </div>
 
-      {/* Famille Section */}
-      <div className="card mb-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-          <Users className="w-5 h-5 mr-2" />
-          Informations famille
-        </h2>
-        
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Sélectionner une famille existante
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-structure">
+            Structure d'appartenance *
           </label>
-          <select 
+          <input
+            id="referent-structure"
+            type="text"
             className="input-field"
-            value={formData.familyId}
-            onChange={(e) => {
-              const familyId = e.target.value;
-              const selectedFamily = families.find(f => f.id === familyId);
-              handleInputChange('familyId', familyId);
-              if (selectedFamily) {
-                setFormData(prev => ({
-                  ...prev,
-                  family: {
-                    code: selectedFamily.code || '',
-                    address: selectedFamily.address || '',
-                    phone: selectedFamily.phone || '',
-                    email: selectedFamily.email || '',
-                    mother: selectedFamily.mother || '',
-                    father: selectedFamily.father || ''
-                  }
-                }));
-              }
-            }}
-            data-testid="select-family"
-          >
-            <option value="">Nouvelle famille</option>
-            {families.map((family) => (
-              <option key={family.id} value={family.id}>
-                {family.code} - {family.mother || family.father || 'Famille'}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Code famille
-            </label>
-            <input 
-              type="text" 
-              className="input-field"
-              placeholder="FAM-XXX"
-              value={formData.family.code}
-              onChange={(e) => handleFamilyChange('code', e.target.value)}
-              required
-              data-testid="input-family-code"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Adresse
-            </label>
-            <input 
-              type="text" 
-              className="input-field"
-              placeholder="Adresse complète"
-              value={formData.family.address}
-              onChange={(e) => handleFamilyChange('address', e.target.value)}
-              data-testid="input-family-address"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Téléphone
-            </label>
-            <input 
-              type="tel" 
-              className="input-field"
-              placeholder="01 23 45 67 89"
-              value={formData.family.phone}
-              onChange={(e) => handleFamilyChange('phone', e.target.value)}
-              data-testid="input-family-phone"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Email
-            </label>
-            <input 
-              type="email" 
-              className="input-field"
-              placeholder="famille@example.fr"
-              value={formData.family.email}
-              onChange={(e) => handleFamilyChange('email', e.target.value)}
-              data-testid="input-family-email"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Mère
-            </label>
-            <input 
-              type="text" 
-              className="input-field"
-              placeholder="Prénom Nom"
-              value={formData.family.mother}
-              onChange={(e) => handleFamilyChange('mother', e.target.value)}
-              data-testid="input-family-mother"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Père
-            </label>
-            <input 
-              type="text" 
-              className="input-field"
-              placeholder="Prénom Nom"
-              value={formData.family.father}
-              onChange={(e) => handleFamilyChange('father', e.target.value)}
-              data-testid="input-family-father"
-            />
-          </div>
-        </div>
-        
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Description de la situation
-          </label>
-          <textarea 
-            className="input-field h-24"
-            placeholder="Décrivez le contexte et les besoins de la famille..."
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            data-testid="textarea-description"
+            value={formData.referent.structure}
+            onChange={(e) => updateReferentField('structure', e.target.value)}
+            disabled={!isReferentEditable}
+            data-testid="input-referent-structure"
           />
         </div>
-      </div>
 
-      {/* Enfants Section */}
-      <div className="card mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center">
-            <Baby className="w-5 h-5 mr-2" />
-            Enfants
-          </h2>
-          <button 
-            type="button" 
-            className="btn btn-secondary"
-            onClick={handleAddChild}
-            data-testid="button-add-child"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Ajouter un enfant
-          </button>
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-role">
+            Fonction *
+          </label>
+          <input
+            id="referent-role"
+            type="text"
+            className="input-field"
+            value={formData.referent.role}
+            onChange={(e) => updateReferentField('role', e.target.value)}
+            disabled={!isReferentEditable}
+            data-testid="input-referent-role"
+          />
         </div>
-        
-        {formData.children.map((child, index) => (
-          <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-border rounded-md mb-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Prénom
-              </label>
-              <input 
-                type="text" 
-                className="input-field"
-                placeholder="Prénom de l'enfant"
-                value={child.firstName}
-                onChange={(e) => handleChildChange(index, 'firstName', e.target.value)}
-                data-testid={`input-child-firstname-${index}`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Date de naissance
-              </label>
-              <input 
-                type="date" 
-                className="input-field"
-                value={child.birthDate}
-                onChange={(e) => handleChildChange(index, 'birthDate', e.target.value)}
-                data-testid={`input-child-birthdate-${index}`}
-              />
-            </div>
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Niveau scolaire
-                </label>
-                <input 
-                  type="text" 
-                  className="input-field"
-                  placeholder="CP, CE1, 6ème..."
-                  value={child.level}
-                  onChange={(e) => handleChildChange(index, 'level', e.target.value)}
-                  data-testid={`input-child-level-${index}`}
-                />
-              </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-phone">
+              Téléphone *
+            </label>
+            <input
+              id="referent-phone"
+              type="tel"
+              className="input-field"
+              value={formData.referent.phone}
+              onChange={(e) => updateReferentField('phone', e.target.value)}
+              disabled={!isReferentEditable}
+              data-testid="input-referent-phone"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-email">
+              Email *
+            </label>
+            <input
+              id="referent-email"
+              type="email"
+              className="input-field"
+              value={formData.referent.email}
+              onChange={(e) => updateReferentField('email', e.target.value)}
+              disabled={!isReferentEditable}
+              data-testid="input-referent-email"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-date">
+            Date de la demande *
+          </label>
+          <input
+            id="referent-date"
+            type="date"
+            className="input-field"
+            value={formData.referent.requestDate}
+            onChange={(e) => updateReferentField('requestDate', e.target.value)}
+            disabled={!isReferentEditable}
+            data-testid="input-referent-date"
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+          {!isReferentEditable ? (
+            <>
               <button
                 type="button"
-                className="btn btn-destructive"
-                onClick={() => handleRemoveChild(index)}
-                data-testid={`button-remove-child-${index}`}
+                onClick={handleModifyReferent}
+                className="btn btn-secondary flex items-center gap-2"
+                data-testid="button-modify-referent"
               >
-                <X className="w-4 h-4" />
+                <Edit className="w-4 h-4" />
+                Modifier
               </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Workshop Selection */}
-      <div className="card mb-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-          <Target className="w-5 h-5 mr-2" />
-          Sélection d'ateliers
-        </h2>
-        
-        {objectives.map((objective) => (
-          <div key={objective.id} className="mb-6">
-            <h3 className="font-medium text-foreground mb-3 flex items-center">
-              <span className={`px-2 py-1 rounded text-sm mr-2 ${
-                objective.code === 'OBJ1' ? 'bg-primary text-primary-foreground' :
-                objective.code === 'OBJ2' ? 'bg-success text-success-foreground' :
-                'bg-warning text-warning-foreground'
-              }`}>
-                {objective.code}
-              </span>
-              {objective.name}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {workshopsByObjective[objective.id]?.map((workshop) => {
-                const isSelected = formData.workshops.some(w => w.workshopId === workshop.id);
-                const selection = formData.workshops.find(w => w.workshopId === workshop.id);
-                
-                return (
-                  <label 
-                    key={workshop.id}
-                    className="flex items-center p-3 border border-border rounded-md hover:bg-muted/50 cursor-pointer"
-                  >
-                    <input 
-                      type="checkbox"
-                      className="mr-3"
-                      checked={isSelected}
-                      onChange={(e) => handleWorkshopToggle(workshop.id, e.target.checked)}
-                      data-testid={`checkbox-workshop-${workshop.id}`}
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-foreground">{workshop.name}</div>
-                      <div className="text-sm text-muted-foreground">{workshop.description}</div>
-                      <div className="text-sm font-medium text-primary">
-                        {formatCurrency(workshop.priceCents)}
-                      </div>
-                    </div>
-                    {isSelected && (
-                      <div className="ml-2">
-                        <label className="block text-xs text-muted-foreground mb-1">Qté</label>
-                        <input
-                          type="number"
-                          min="1"
-                          className="w-16 px-2 py-1 border border-border rounded text-sm"
-                          value={selection?.qty || 1}
-                          onChange={(e) => handleWorkshopQtyChange(workshop.id, e.target.value)}
-                          data-testid={`input-workshop-qty-${workshop.id}`}
-                        />
-                      </div>
-                    )}
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-
-        <div className="flex items-center justify-between p-4 bg-muted rounded-md">
-          <span className="font-medium text-foreground">Total sélectionné:</span>
-          <span className="text-lg font-bold text-primary" data-testid="text-total-amount">
-            {formatCurrency(calculateTotal())}
-          </span>
+              <button
+                type="button"
+                onClick={handleValidateReferent}
+                className="btn btn-primary flex items-center gap-2"
+                data-testid="button-validate-referent"
+              >
+                <Check className="w-4 h-4" />
+                Valider
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsReferentEditable(false)}
+              className="btn btn-primary flex items-center gap-2"
+              data-testid="button-save-referent"
+            >
+              <Check className="w-4 h-4" />
+              Enregistrer les modifications
+            </button>
+          )}
         </div>
       </div>
+    </div>
+  );
 
-      {/* Upload Section */}
-      <div className="card mb-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-          <Paperclip className="w-5 h-5 mr-2" />
-          Pièces justificatives
-        </h2>
-        
-        <div className="upload-area">
-          <Paperclip className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-foreground font-medium mb-2">Glissez-déposez vos fichiers ici</p>
-          <p className="text-sm text-muted-foreground mb-4">
-            ou cliquez pour sélectionner (PDF, JPG, PNG - max 10 Mo)
-          </p>
-          <input
-            type="file"
-            multiple
-            accept=".pdf,.jpg,.jpeg,.png"
-            onChange={handleFileSelect}
-            className="hidden"
-            id="file-upload"
-            data-testid="input-file-upload"
-          />
-          <label htmlFor="file-upload" className="btn btn-secondary cursor-pointer">
-            Sélectionner des fichiers
-          </label>
-        </div>
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return renderReferentStep();
+      case 1:
+        return <div className="card">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Informations famille</h2>
+          <p className="text-muted-foreground">Cette section sera implémentée dans la prochaine étape.</p>
+        </div>;
+      case 2:
+        return <div className="card">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Enfants concernés</h2>
+          <p className="text-muted-foreground">Cette section sera implémentée dans la prochaine étape.</p>
+        </div>;
+      case 3:
+        return <div className="card">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Ateliers et objectifs</h2>
+          <p className="text-muted-foreground">Cette section sera implémentée dans la prochaine étape.</p>
+        </div>;
+      case 4:
+        return <div className="card">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Pièces justificatives</h2>
+          <p className="text-muted-foreground">Cette section sera implémentée dans la prochaine étape.</p>
+        </div>;
+      default:
+        return renderReferentStep();
+    }
+  };
 
-        {formData.attachments.length > 0 && (
-          <div className="mt-4 space-y-2">
-            {formData.attachments.map((file, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-md">
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Step Progress Indicator */}
+      <div className="card">
+        <div className="flex items-center justify-between">
+          {steps.map((step, index) => {
+            const StepIcon = step.icon;
+            const isActive = currentStep === index;
+            const isCompleted = currentStep > index;
+            
+            return (
+              <div
+                key={step.id}
+                className={`flex items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}
+              >
                 <div className="flex items-center">
-                  <Paperclip className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <span className="text-sm font-medium">{file.name}</span>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    ({(file.size / 1024).toFixed(1)} Ko)
-                  </span>
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      isCompleted 
+                        ? 'bg-success text-success-foreground' 
+                        : isActive 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {isCompleted ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <StepIcon className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div className="ml-2">
+                    <div className={`text-sm font-medium ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      {step.title}
+                    </div>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  className="text-destructive hover:text-destructive/80"
-                  onClick={() => handleRemoveAttachment(index)}
-                  data-testid={`button-remove-attachment-${index}`}
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                {index < steps.length - 1 && (
+                  <div className={`flex-1 h-px mx-4 ${isCompleted ? 'bg-success' : 'bg-border'}`} />
+                )}
               </div>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-4 justify-end">
-        <button 
-          type="button" 
-          className="btn btn-secondary"
-          onClick={() => handleSubmit(true)}
-          disabled={isSubmitting}
-          data-testid="button-save-draft"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          Sauvegarder brouillon
-        </button>
-        <button 
-          type="button" 
-          className="btn btn-primary"
-          onClick={() => handleSubmit(false)}
-          disabled={isSubmitting}
-          data-testid="button-submit"
-        >
-          <Send className="w-4 h-4 mr-2" />
-          Envoyer à FEVES
-        </button>
-      </div>
+      {/* Current Step Content */}
+      {renderStepContent()}
     </div>
   );
 }
