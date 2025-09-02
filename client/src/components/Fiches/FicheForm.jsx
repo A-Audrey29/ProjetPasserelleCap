@@ -332,6 +332,19 @@ export default function FicheForm({
     }));
   };
 
+  const validateReferentStep = () => {
+    if (!formData.referent.lastName || !formData.referent.firstName) {
+      return false;
+    }
+    if (!formData.referent.structure || !formData.referent.role) {
+      return false;
+    }
+    if (!formData.referent.phone || !formData.referent.email) {
+      return false;
+    }
+    return true;
+  };
+
   const validateFamilyStep = () => {
     const { mother, father, tiers, lienAvecEnfants, autoriteParentale, situationFamiliale, situationSocioProfessionnelle, telephonePortable } = formData.family;
     
