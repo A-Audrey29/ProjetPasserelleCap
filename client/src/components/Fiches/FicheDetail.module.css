@@ -197,7 +197,7 @@
 }
 
 .infoValue {
-  color: #3B4B61;
+  color: #3b4b61;
   font-weight: 500;
 }
 
@@ -238,7 +238,7 @@
 
 .commentAuthor {
   font-weight: 500;
-  color: #3B4B61;
+  color: #3b4b61;
   font-size: 0.875rem;
   margin: 0;
 }
@@ -250,7 +250,7 @@
 
 .commentContent {
   font-size: 0.875rem;
-  color: #3B4B61;
+  color: #3b4b61;
   margin: 0;
 }
 
@@ -267,7 +267,7 @@
   border: 1px solid #D1D5DB;
   border-radius: 6px;
   font-size: 0.875rem;
-  color: #3B4B61;
+  color: #3b4b61;
   background: white;
   resize: vertical;
   font-family: inherit;
