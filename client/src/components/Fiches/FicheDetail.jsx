@@ -10,13 +10,16 @@ import {
   Send,
   FileText,
   CheckCircle,
-  XCircle
+  XCircle,
+  ArrowLeft
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { Link } from 'wouter';
+import styles from './FicheDetail.module.css';
 
 export default function FicheDetail({ ficheId }) {
   const { user } = useAuth();
@@ -24,6 +27,7 @@ export default function FicheDetail({ ficheId }) {
   const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState('');
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedOrgId, setSelectedOrgId] = useState('');
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
@@ -86,7 +90,7 @@ export default function FicheDetail({ ficheId }) {
       queryClient.invalidateQueries(['/api/fiches', ficheId]);
       toast({
         title: "État mis à jour",
-        description: "L'état de la fiche a été mis à jour"
+        description: "L'état de la fiche a été mis à jour avec succès"
       });
     }
   });
@@ -99,31 +103,21 @@ export default function FicheDetail({ ficheId }) {
     } catch (error) {
       toast({
         title: "Erreur",
-        description: error.message || "Impossible d'ajouter le commentaire",
+        description: "Impossible d'ajouter le commentaire",
         variant: "destructive"
       });
     }
   };
 
-  const handleAssign = async (orgId) => {
+  const handleAssignToOrg = async () => {
+    if (!selectedOrgId) return;
+    
     try {
-      await assignMutation.mutateAsync(orgId);
+      await assignMutation.mutateAsync(selectedOrgId);
     } catch (error) {
       toast({
         title: "Erreur d'affectation",
-        description: error.message || "Impossible d'affecter la fiche",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleStateTransition = async (newState) => {
-    try {
-      await transitionMutation.mutateAsync({ newState });
-    } catch (error) {
-      toast({
-        title: "Erreur de transition",
-        description: error.message || "Impossible de changer l'état",
+        description: "Impossible d'affecter la fiche à cette organisation",
         variant: "destructive"
       });
     }
@@ -177,306 +171,320 @@ export default function FicheDetail({ ficheId }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Chargement...</p>
+      <div className={styles.container}>
+        <div className={styles.main}>
+          <div className={styles.card}>
+            <p>Chargement...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error || !fiche) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-destructive">Erreur lors du chargement de la fiche</p>
+      <div className={styles.container}>
+        <div className={styles.main}>
+          <div className={styles.card}>
+            <p>Erreur lors du chargement de la fiche</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Main Content */}
-      <div className="lg:col-span-2 space-y-6">
-        {/* Informations générales */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
-            Informations générales
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Référent</label>
-              <p className="text-foreground" data-testid="text-emitter">
-                {fiche.emitter?.firstName} {fiche.emitter?.lastName}
+    <div className={styles.container}>
+      <div className={styles.main}>
+        {/* Header Section */}
+        <div className={styles.headerSection}>
+          <div className={styles.titleRow}>
+            <div className={styles.titleColumn}>
+              <h1 className={styles.pageTitle}>
+                Fiche Navette CAP
+              </h1>
+              <p className={styles.ficheRef} data-testid="text-fiche-id">
+                #{fiche.id}
               </p>
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">EPSI</label>
-              <p className="text-foreground" data-testid="text-epsi">
-                {fiche.epsi?.name || 'N/A'}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Créé le</label>
-              <p className="text-foreground" data-testid="text-created-date">
-                {formatDate(fiche.createdAt)}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Dernière modification</label>
-              <p className="text-foreground" data-testid="text-updated-date">
-                {formatDate(fiche.updatedAt)}
-              </p>
-            </div>
-          </div>
-          {fiche.description && (
-            <div className="mt-4">
-              <label className="text-sm font-medium text-muted-foreground">Description</label>
-              <p className="text-foreground mt-1" data-testid="text-description">
-                {fiche.description}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Ateliers sélectionnés */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
-            Ateliers sélectionnés
-          </h2>
-          <div className="space-y-3">
-            {fiche.selections?.map((selection) => (
-              <div 
-                key={selection.id} 
-                className="flex items-center justify-between p-3 bg-muted rounded-md"
-              >
-                <div>
-                  <div className="font-medium text-foreground">
-                    {selection.workshop?.name}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {selection.workshop?.objective?.code} - {selection.qty} participant(s)
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-medium text-foreground">
-                    {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="flex justify-between items-center mt-4 pt-4 border-t border-border">
-            <span className="font-medium text-foreground">Total</span>
-            <span className="text-lg font-bold text-primary" data-testid="text-total-amount">
-              {formatCurrency(
-                fiche.selections?.reduce((sum, s) => 
-                  sum + (s.workshop?.priceCents || 0) * s.qty, 0
-                ) || 0
+            <div className={styles.actionButtons}>
+              <Link href="/fiches" className={styles.backButton}>
+                <ArrowLeft className={styles.buttonIcon} />
+                Retour
+              </Link>
+              
+              {canPerformAction('cd_validate') && (
+                <>
+                  <button 
+                    onClick={() => handleCDValidation('validate')}
+                    disabled={transitionMutation.isPending}
+                    className={styles.validateButton}
+                    data-testid="button-cd-validate"
+                  >
+                    <CheckCircle className={styles.buttonIcon} />
+                    Valider
+                  </button>
+                  <button 
+                    onClick={() => handleCDValidation('reject')}
+                    disabled={transitionMutation.isPending}
+                    className={styles.rejectButton}
+                    data-testid="button-cd-reject"
+                  >
+                    <XCircle className={styles.buttonIcon} />
+                    Refuser
+                  </button>
+                </>
               )}
+              
+              {canPerformAction('assign') && (
+                <button 
+                  onClick={() => setShowAssignModal(true)}
+                  className={styles.assignButton}
+                  data-testid="button-assign"
+                >
+                  <UserPlus className={styles.buttonIcon} />
+                  Affecter
+                </button>
+              )}
+              
+              <button 
+                className={styles.auditButton}
+                data-testid="button-audit-log"
+              >
+                <History className={styles.buttonIcon} />
+                Journal d'audit
+              </button>
+            </div>
+          </div>
+
+          {/* Status Info */}
+          <div className={styles.statusInfo}>
+            <div className={styles.statusBadge} data-testid="badge-status">
+              <StatusBadge state={fiche.state} />
+            </div>
+            <span className={styles.statusText}>
+              Dernière mise à jour le {formatDate(fiche.updatedAt)}
             </span>
           </div>
         </div>
 
-        {/* Pièces jointes */}
-        {fiche.attachments?.length > 0 && (
-          <div className="card">
-            <h2 className="text-lg font-semibold text-foreground mb-4">
-              Pièces jointes
-            </h2>
-            <div className="space-y-2">
-              {fiche.attachments.map((attachment) => (
-                <div 
-                  key={attachment.id} 
-                  className="flex items-center justify-between p-3 border border-border rounded-md"
-                >
-                  <div className="flex items-center">
-                    <FileText className="w-4 h-4 mr-3 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium text-foreground">
-                        {attachment.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Ajouté le {formatDate(attachment.createdAt)}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <a 
-                      href={attachment.url}
-                      download
-                      className="btn btn-secondary"
-                      data-testid={`button-download-${attachment.id}`}
-                    >
-                      <Download className="w-4 h-4" />
-                    </a>
-                    <a 
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-secondary"
-                      data-testid={`button-view-${attachment.id}`}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Timeline & Actions */}
-      <div className="space-y-6">
-        {/* Actions rapides */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Actions</h2>
-          <div className="space-y-2">
-            {canPerformAction('assign') && (
-              <button 
-                className="btn btn-primary w-full"
-                onClick={() => setShowAssignModal(true)}
-                data-testid="button-assign"
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Affecter EVS/CS
-              </button>
-            )}
-            
-            {canPerformAction('accept') && (
-              <button 
-                className="btn btn-success w-full"
-                onClick={() => handleStateTransition('EVS_ACCEPTED')}
-                data-testid="button-accept"
-              >
-                Accepter la fiche
-              </button>
-            )}
-            
-            {canPerformAction('reject') && (
-              <button 
-                className="btn btn-destructive w-full"
-                onClick={() => handleStateTransition('EVS_REJECTED')}
-                data-testid="button-reject"
-              >
-                Refuser la fiche
-              </button>
-            )}
-            
-            {canPerformAction('sign_contract') && (
-              <button 
-                className="btn btn-primary w-full"
-                onClick={() => handleStateTransition('CONTRACT_SIGNED')}
-                data-testid="button-sign-contract"
-              >
-                Signer le contrat
-              </button>
-            )}
-            
-            {/* CD Validation Actions */}
-            {canPerformAction('cd_validate') && (
-              <>
-                <button 
-                  className="btn btn-success w-full"
-                  onClick={() => handleCDValidation('validate')}
-                  data-testid="button-cd-validate"
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Valider la fiche
-                </button>
-                <button 
-                  className="btn btn-destructive w-full"
-                  onClick={() => handleCDValidation('reject')}
-                  data-testid="button-cd-reject"
-                >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Refuser la fiche
-                </button>
-              </>
-            )}
-            
-            <button 
-              className="btn btn-secondary w-full"
-              data-testid="button-view-audit"
-            >
-              <History className="w-4 h-4 mr-2" />
-              Journal d'audit
-            </button>
-          </div>
-        </div>
-
-        {/* Timeline des états */}
+        {/* Timeline */}
         <StateTimeline 
           currentState={fiche.state}
           stateHistory={fiche.stateHistory || []}
         />
 
-        {/* Commentaires */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
-            Commentaires internes
-          </h2>
-          
-          {fiche.comments?.length > 0 && (
-            <div className="space-y-3 mb-4">
-              {fiche.comments.map((comment) => (
-                <div key={comment.id} className="p-3 bg-muted rounded-md">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-foreground text-sm">
-                      {comment.author?.firstName} {comment.author?.lastName}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(comment.createdAt)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-foreground">{comment.content}</p>
+        {/* Content */}
+        <div className={styles.content}>
+          {/* Informations générales */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              Informations générales
+            </h2>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Référent</label>
+                <p className={styles.infoValue} data-testid="text-emitter">
+                  {fiche.emitter?.firstName} {fiche.emitter?.lastName}
+                </p>
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>EPSI</label>
+                <p className={styles.infoValue} data-testid="text-epsi">
+                  {fiche.epsi?.name || 'N/A'}
+                </p>
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Créé le</label>
+                <p className={styles.infoValue} data-testid="text-created-date">
+                  {formatDate(fiche.createdAt)}
+                </p>
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Dernière modification</label>
+                <p className={styles.infoValue} data-testid="text-updated-date">
+                  {formatDate(fiche.updatedAt)}
+                </p>
+              </div>
+            </div>
+            {fiche.description && (
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Description</label>
+                <p className={styles.infoValue} data-testid="text-description">
+                  {fiche.description}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Family Information */}
+          {fiche.family && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Informations Famille
+              </h2>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoItem}>
+                  <label className={styles.infoLabel}>Nom</label>
+                  <p className={styles.infoValue} data-testid="text-family-name">
+                    {fiche.family.lastName}
+                  </p>
                 </div>
-              ))}
+                <div className={styles.infoItem}>
+                  <label className={styles.infoLabel}>Prénom</label>
+                  <p className={styles.infoValue} data-testid="text-family-firstname">
+                    {fiche.family.firstName}
+                  </p>
+                </div>
+                <div className={styles.infoItem}>
+                  <label className={styles.infoLabel}>Téléphone</label>
+                  <p className={styles.infoValue} data-testid="text-family-phone">
+                    {fiche.family.phone || 'N/A'}
+                  </p>
+                </div>
+                <div className={styles.infoItem}>
+                  <label className={styles.infoLabel}>Email</label>
+                  <p className={styles.infoValue} data-testid="text-family-email">
+                    {fiche.family.email || 'N/A'}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
-          
-          {/* Only show comment form if not CD user */}
-          {user?.role !== 'CD' && (
-            <div className="space-y-2">
-              <textarea 
-                className="input-field h-20"
-                placeholder="Ajouter un commentaire interne..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                data-testid="textarea-new-comment"
-              />
-              <button 
-                className="btn btn-primary"
-                onClick={handleAddComment}
-                disabled={!newComment.trim() || addCommentMutation.isPending}
-                data-testid="button-add-comment"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Commenter
-              </button>
+
+          {/* Ateliers sélectionnés */}
+          {fiche.selections?.length > 0 && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Ateliers sélectionnés
+              </h2>
+              <div className={styles.content}>
+                {fiche.selections.map((selection) => (
+                  <div key={selection.id} className={styles.infoGrid}>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>{selection.workshop?.name}</label>
+                      <p className={styles.infoValue}>
+                        {selection.workshop?.objective?.code} - {selection.qty} participant(s)
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Prix</label>
+                      <p className={styles.infoValue}>
+                        {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className={styles.infoGrid}>
+                <div className={styles.infoItem}>
+                  <label className={styles.infoLabel}>Total</label>
+                  <p className={styles.infoValue} data-testid="text-total-amount">
+                    {formatCurrency(
+                      fiche.selections?.reduce((sum, s) => 
+                        sum + (s.workshop?.priceCents || 0) * s.qty, 0
+                      ) || 0
+                    )}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
-          
-          {/* Show read-only message for CD users */}
-          {user?.role === 'CD' && (
-            <div className="p-3 bg-muted rounded-md text-center">
-              <p className="text-sm text-muted-foreground">
-                Mode consultation - Vous pouvez voir les commentaires mais ne pouvez pas en ajouter
-              </p>
+
+          {/* Pièces jointes */}
+          {fiche.attachments?.length > 0 && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Pièces jointes
+              </h2>
+              <div className={styles.content}>
+                {fiche.attachments.map((attachment) => (
+                  <div key={attachment.id} className={styles.infoGrid}>
+                    <div className={styles.infoItem}>
+                      <FileText className={styles.actionIcon} />
+                      <p className={styles.infoValue}>{attachment.filename}</p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <button className={styles.commentButton} data-testid={`button-download-${attachment.id}`}>
+                        <Download className={styles.actionIcon} />
+                        Télécharger
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
+
+          {/* Commentaires */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              Commentaires internes
+            </h2>
+            
+            {fiche.comments?.length > 0 && (
+              <div className={styles.commentsList}>
+                {fiche.comments.map((comment) => (
+                  <div key={comment.id} className={styles.commentItem}>
+                    <div className={styles.commentHeader}>
+                      <span className={styles.commentAuthor}>
+                        {comment.author?.firstName} {comment.author?.lastName}
+                      </span>
+                      <span className={styles.commentDate}>
+                        {formatDate(comment.createdAt)}
+                      </span>
+                    </div>
+                    <p className={styles.commentContent}>{comment.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Only show comment form if not CD user */}
+            {user?.role !== 'CD' && (
+              <div className={styles.commentForm}>
+                <textarea 
+                  className={styles.commentTextarea}
+                  placeholder="Ajouter un commentaire interne..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  data-testid="textarea-new-comment"
+                />
+                <button 
+                  className={styles.commentButton}
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim() || addCommentMutation.isPending}
+                  data-testid="button-add-comment"
+                >
+                  <Send className={styles.actionIcon} />
+                  Commenter
+                </button>
+              </div>
+            )}
+            
+            {/* Show read-only message for CD users */}
+            {user?.role === 'CD' && (
+              <div className={styles.readOnlyMessage}>
+                <p className={styles.readOnlyText}>
+                  Mode consultation - Vous pouvez voir les commentaires mais ne pouvez pas en ajouter
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Assignment Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-foreground">
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>
                 Affecter à un EVS/CS
               </h2>
               <button 
-                className="text-muted-foreground hover:text-foreground"
+                className={styles.modalClose}
                 onClick={() => setShowAssignModal(false)}
                 data-testid="button-close-modal"
               >
@@ -484,33 +492,32 @@ export default function FicheDetail({ ficheId }) {
               </button>
             </div>
 
-            <div className="space-y-3 mb-6">
-              <h3 className="font-medium text-foreground">Organisations disponibles</h3>
+            <div className={styles.organizationsList}>
+              <h3 className={styles.cardTitle}>Organisations disponibles</h3>
               {organizations
                 .filter(org => org.epsiId === fiche.epsiId)
                 .map((org) => (
-                <button
-                  key={org.id}
-                  className="w-full text-left p-4 border border-border rounded-md hover:bg-muted/50"
-                  onClick={() => handleAssign(org.id)}
-                  data-testid={`button-assign-org-${org.id}`}
-                >
-                  <div className="font-medium text-foreground">{org.name}</div>
-                  <div className="text-sm text-muted-foreground">{org.type}</div>
-                  <div className="text-sm text-muted-foreground">{org.address}</div>
-                </button>
-              ))}
+                  <div 
+                    key={org.id}
+                    className={`${styles.organizationItem} ${selectedOrgId === org.id ? styles.selected : ''}`}
+                    onClick={() => setSelectedOrgId(org.id)}
+                    data-testid={`org-option-${org.id}`}
+                  >
+                    <h4 className={styles.orgName}>{org.name}</h4>
+                    <p className={styles.orgType}>{org.type}</p>
+                  </div>
+                ))}
             </div>
 
-            <div className="flex gap-3 justify-end">
-              <button 
-                className="btn btn-secondary"
-                onClick={() => setShowAssignModal(false)}
-                data-testid="button-cancel-assign"
-              >
-                Annuler
-              </button>
-            </div>
+            <button 
+              className={styles.assignButton}
+              onClick={handleAssignToOrg}
+              disabled={!selectedOrgId || assignMutation.isPending}
+              data-testid="button-confirm-assignment"
+            >
+              <UserPlus className={styles.buttonIcon} />
+              Affecter
+            </button>
           </div>
         </div>
       )}
