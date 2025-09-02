@@ -81,7 +81,7 @@ export default function FicheDetailPage() {
               Tableau de bord
             </button>
             <ChevronRight className="w-4 h-4" />
-            <span>Fiche {fiche.ref}</span>
+            <span className="text-[#3b4b61]">Fiche {fiche.ref}</span>
           </div>
           <div className="flex items-center justify-between">
             <div>
