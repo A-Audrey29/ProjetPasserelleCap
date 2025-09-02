@@ -87,7 +87,7 @@ export default function FicheCreation() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <button 
               onClick={() => setLocation('/')}
-              className="hover:text-foreground transition-colors"
+              className="hover:text-foreground transition-colors text-[#404040]"
               data-testid="link-dashboard"
             >
               Tableau de bord
