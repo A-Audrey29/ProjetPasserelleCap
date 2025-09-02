@@ -4,6 +4,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check, Trash2, PenTool, ChevronDown, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useFiches } from '@/hooks/useFiches';
 import styles from './FicheForm.module.css';
 
 export default function FicheForm({ 
@@ -15,6 +16,7 @@ export default function FicheForm({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { transitionFiche } = useFiches();
   
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(0);
@@ -1215,18 +1217,31 @@ export default function FicheForm({
     }
 
     try {
-      const ficheData = {
-        familyId: formData.familyId,
-        epsiId: formData.epsiId,
-        description: formData.description,
-        family: formData.family,
-        children: formData.children,
-        workshopPropositions: formData.workshopPropositions,
-        referent: formData.referent,
-        status: 'SUBMITTED_TO_CD'
-      };
+      // If we have an existing fiche (initialData with id), transition its state
+      if (initialData && initialData.id) {
+        await transitionFiche({
+          id: initialData.id,
+          newState: 'SUBMITTED_TO_CD',
+          metadata: {
+            transmittedBy: user?.user?.id || user?.id,
+            transmissionDate: new Date().toISOString()
+          }
+        });
+      } else {
+        // If it's a new fiche, create it with the transmitted status
+        const ficheData = {
+          familyId: formData.familyId,
+          epsiId: formData.epsiId,
+          description: formData.description,
+          family: formData.family,
+          children: formData.children,
+          workshopPropositions: formData.workshopPropositions,
+          referent: formData.referent,
+          status: 'SUBMITTED_TO_CD'
+        };
 
-      const result = await onSubmit(ficheData);
+        await onSubmit(ficheData);
+      }
       
       toast({
         title: "Fiche transmise",
@@ -1240,9 +1255,10 @@ export default function FicheForm({
       }, 2000);
 
     } catch (error) {
+      console.error('Transmission error:', error);
       toast({
         title: "Erreur de transmission",
-        description: "Une erreur est survenue lors de la transmission de la fiche.",
+        description: error.message || "Une erreur est survenue lors de la transmission de la fiche.",
         variant: "destructive"
       });
     }
