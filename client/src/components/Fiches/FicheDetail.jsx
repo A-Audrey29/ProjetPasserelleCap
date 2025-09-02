@@ -8,7 +8,9 @@ import {
   Download, 
   Eye, 
   Send,
-  FileText
+  FileText,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
@@ -127,6 +129,32 @@ export default function FicheDetail({ ficheId }) {
     }
   };
 
+  const handleCDValidation = async (action) => {
+    try {
+      if (action === 'validate') {
+        await transitionMutation.mutateAsync({ newState: 'SUBMITTED_TO_FEVES' });
+        toast({
+          title: "Fiche validée",
+          description: "La fiche a été validée et transmise à FEVES",
+          variant: "default"
+        });
+      } else if (action === 'reject') {
+        await transitionMutation.mutateAsync({ newState: 'ARCHIVED' });
+        toast({
+          title: "Fiche refusée",
+          description: "La fiche a été refusée et archivée",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur de validation",
+        description: error.message || "Impossible de traiter la validation",
+        variant: "destructive"
+      });
+    }
+  };
+
   const canPerformAction = (action) => {
     if (!fiche || !user) return false;
     
@@ -138,6 +166,10 @@ export default function FicheDetail({ ficheId }) {
         return user.role === 'EVS_CS' && fiche.state === 'ASSIGNED_TO_EVS' && fiche.assignedOrgId === user.orgId;
       case 'sign_contract':
         return user.role === 'EVS_CS' && fiche.state === 'CONTRACT_SENT' && fiche.assignedOrgId === user.orgId;
+      case 'cd_validate':
+        return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
+      case 'cd_reject':
+        return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
       default:
         return false;
     }
@@ -340,6 +372,28 @@ export default function FicheDetail({ ficheId }) {
               </button>
             )}
             
+            {/* CD Validation Actions */}
+            {canPerformAction('cd_validate') && (
+              <>
+                <button 
+                  className="btn btn-success w-full"
+                  onClick={() => handleCDValidation('validate')}
+                  data-testid="button-cd-validate"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Valider la fiche
+                </button>
+                <button 
+                  className="btn btn-destructive w-full"
+                  onClick={() => handleCDValidation('reject')}
+                  data-testid="button-cd-reject"
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Refuser la fiche
+                </button>
+              </>
+            )}
+            
             <button 
               className="btn btn-secondary w-full"
               data-testid="button-view-audit"
@@ -380,24 +434,36 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
           
-          <div className="space-y-2">
-            <textarea 
-              className="input-field h-20"
-              placeholder="Ajouter un commentaire interne..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              data-testid="textarea-new-comment"
-            />
-            <button 
-              className="btn btn-primary"
-              onClick={handleAddComment}
-              disabled={!newComment.trim() || addCommentMutation.isPending}
-              data-testid="button-add-comment"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              Commenter
-            </button>
-          </div>
+          {/* Only show comment form if not CD user */}
+          {user?.role !== 'CD' && (
+            <div className="space-y-2">
+              <textarea 
+                className="input-field h-20"
+                placeholder="Ajouter un commentaire interne..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                data-testid="textarea-new-comment"
+              />
+              <button 
+                className="btn btn-primary"
+                onClick={handleAddComment}
+                disabled={!newComment.trim() || addCommentMutation.isPending}
+                data-testid="button-add-comment"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Commenter
+              </button>
+            </div>
+          )}
+          
+          {/* Show read-only message for CD users */}
+          {user?.role === 'CD' && (
+            <div className="p-3 bg-muted rounded-md text-center">
+              <p className="text-sm text-muted-foreground">
+                Mode consultation - Vous pouvez voir les commentaires mais ne pouvez pas en ajouter
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

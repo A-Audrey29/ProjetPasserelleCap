@@ -4,7 +4,10 @@ import { logAction } from './auditLogger.js';
 // Define valid state transitions by role
 const STATE_TRANSITIONS = {
   EMETTEUR: {
-    DRAFT: ['SUBMITTED_TO_FEVES']
+    DRAFT: ['SUBMITTED_TO_CD']
+  },
+  CD: {
+    SUBMITTED_TO_CD: ['SUBMITTED_TO_FEVES', 'ARCHIVED']
   },
   RELATIONS_EVS: {
     SUBMITTED_TO_FEVES: ['ASSIGNED_TO_EVS'],
