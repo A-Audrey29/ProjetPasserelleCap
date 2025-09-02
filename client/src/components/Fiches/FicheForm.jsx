@@ -1249,6 +1249,9 @@ export default function FicheForm({
   };
 
   const validateAllSteps = () => {
+    if (!formData.familyConsent) {
+      return false;
+    }
     return validateReferentStep() && 
            validateFamilyStep() && 
            validateChildrenStep() && 
@@ -1356,6 +1359,25 @@ export default function FicheForm({
           </div>
         </div>
 
+        {/* Family Consent Checkbox */}
+        <div className={styles.consentSection}>
+          <label className={styles.consentLabel}>
+            <input
+              type="checkbox"
+              checked={formData.familyConsent || false}
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                familyConsent: e.target.checked
+              }))}
+              className={styles.consentCheckbox}
+              data-testid="checkbox-family-consent"
+            />
+            <span className={styles.consentText}>
+              La famille a connaissance de cette Fiche Navette ci-dessus et a donné son accord pour la transmettre au conseil départemental
+            </span>
+          </label>
+        </div>
+
         {/* Action Buttons */}
         <div className={styles.reviewActions}>
           <button
@@ -1384,7 +1406,7 @@ export default function FicheForm({
               data-testid="button-transmit"
             >
               <Send className={styles.buttonIcon} />
-              Transmettre à la FEVES
+              Transmettre
             </button>
           </div>
         </div>
