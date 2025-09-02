@@ -1258,6 +1258,9 @@ export default function FicheForm({
 
   const handleSaveDraft = async () => {
     try {
+      console.log('Save draft clicked! Current user:', user);
+      console.log('Current form data:', formData);
+      
       // Create minimal family data for draft (even if incomplete)
       const familyData = {
         lastName: formData.family?.lastName || '',
