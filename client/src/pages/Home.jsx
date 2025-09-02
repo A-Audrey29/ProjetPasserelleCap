@@ -23,6 +23,9 @@ export default function Home() {
   const getRoleActions = () => {
     if (!user) return [];
 
+    // Debug: log the user role
+    console.log('User role:', user.role);
+
     const roleSpecificActions = {
       'ADMIN': [
         {
@@ -127,7 +130,23 @@ export default function Home() {
       ]
     };
 
-    return roleSpecificActions[user.role] || [];
+    const actions = roleSpecificActions[user.role] || [];
+    console.log('Actions for role', user.role, ':', actions);
+    
+    // Fallback: if no specific actions found, provide basic actions
+    if (actions.length === 0) {
+      return [
+        {
+          icon: Eye,
+          title: 'Consulter les fiches navettes',
+          description: 'Visualiser et suivre l\'état des fiches',
+          href: '/dashboard',
+          color: 'primary'
+        }
+      ];
+    }
+    
+    return actions;
   };
 
   return (
