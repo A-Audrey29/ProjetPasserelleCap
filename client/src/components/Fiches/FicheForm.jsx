@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check, Trash2, PenTool } from 'lucide-react';
+import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check, Trash2, PenTool, ChevronDown, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import styles from './FicheForm.module.css';
