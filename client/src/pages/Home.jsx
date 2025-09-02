@@ -27,16 +27,11 @@ export default function Home() {
 
   // Get role-specific actions using the permissions system
   const getRoleActions = () => {
-    console.log('Home: user object:', user);
     const userRole = user?.user?.role || user?.role;
     if (!user || !userRole) {
-      console.log('Home: No user or role found');
       return [];
     }
-    console.log('Home: Getting actions for user role:', userRole);
-    const actions = getRoleActionSuggestions(userRole);
-    console.log('Home: Received actions:', actions);
-    return actions;
+    return getRoleActionSuggestions(userRole);
   };
 
   // Map icon names to actual icon components

@@ -1,0 +1,393 @@
+/* Fiches list page styles following the charte graphique */
+
+.fichesContainer {
+  min-height: 100vh;
+  background-color: var(--color-background-light);
+}
+
+.mainContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.headerSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 2rem;
+}
+
+.titleSection h1.pageTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.titleIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.pageSubtitle {
+  font-size: 1.125rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 600px;
+}
+
+.actionsSection {
+  flex-shrink: 0;
+}
+
+.createButton {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.createButton:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.buttonIcon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Filters Section */
+.filtersSection {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.searchSection {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.searchInput {
+  padding-left: 2.5rem;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background-color: white;
+  transition: border-color 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.filterSection {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.filterIcon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-muted);
+}
+
+.stateFilter {
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background-color: white;
+}
+
+/* Loading and Empty States */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--color-background-secondary);
+  border-top: 3px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background-color: white;
+  border-radius: 8px;
+  border: 2px solid var(--color-border);
+}
+
+.emptyIcon {
+  width: 4rem;
+  height: 4rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+}
+
+.emptyState h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.emptyState p {
+  color: var(--color-text-muted);
+  margin: 0 0 2rem 0;
+  max-width: 400px;
+}
+
+.createFirstButton {
+  background-color: var(--color-success);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.createFirstButton:hover {
+  background-color: var(--color-success-hover);
+  transform: translateY(-1px);
+}
+
+/* Fiches Grid */
+.fichesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.ficheCard {
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background-color: white;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.ficheCard:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 75, 97, 0.1);
+}
+
+.cardContent {
+  padding: 1.5rem;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ficheRef {
+  font-family: monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background-color: var(--color-background-secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.stateBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.createDate {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.dateIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.ficheInfo {
+  margin-bottom: 1.5rem;
+}
+
+.familyName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0 0 0.75rem 0;
+}
+
+.ficheDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.detailIcon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.amount {
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.cardActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.cardActions button {
+  border-radius: 6px;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-border);
+  background-color: white;
+  color: var(--color-primary);
+  transition: all 0.2s ease;
+}
+
+.cardActions button:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.actionIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .mainContent {
+    padding: 1rem;
+  }
+
+  .headerSection {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+
+  .titleSection h1.pageTitle {
+    font-size: 2rem;
+  }
+
+  .titleIcon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .filtersSection {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .searchSection {
+    min-width: auto;
+  }
+
+  .filterSection {
+    min-width: auto;
+  }
+
+  .fichesGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .ficheCard {
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .cardTitle {
+    order: 2;
+  }
+
+  .createDate {
+    order: 1;
+    align-self: flex-end;
+  }
+}

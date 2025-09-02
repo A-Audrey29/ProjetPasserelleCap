@@ -257,9 +257,6 @@ export const hasAllPermissions = (userRole, actions) => {
 export const getRoleActionSuggestions = (role) => {
   const actionSuggestions = [];
   
-  // Debug logging
-  console.log('Getting actions for role:', role);
-  console.log('Role permissions:', PERMISSIONS[role]);
   
   // Simplified approach: provide actions based on role regardless of specific permissions
   // This ensures all roles get basic actions displayed
@@ -385,6 +382,5 @@ export const getRoleActionSuggestions = (role) => {
     });
   }
 
-  console.log('Final action suggestions:', actionSuggestions);
   return actionSuggestions;
 };
