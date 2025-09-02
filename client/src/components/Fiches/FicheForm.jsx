@@ -348,7 +348,7 @@ export default function FicheForm({
     const { mother, father, tiers, lienAvecEnfants, autoriteParentale, situationFamiliale, situationSocioProfessionnelle, telephonePortable } = formData.family;
     
     // Au moins un des trois (mère, père, tiers) doit être rempli
-    const hasParentInfo = mother.trim() || father.trim() || tiers.trim();
+    const hasParentInfo = (mother?.trim?.() || '') || (father?.trim?.() || '') || (tiers?.trim?.() || '');
     if (!hasParentInfo) {
       toast({
         title: "Erreur de validation",
@@ -359,7 +359,7 @@ export default function FicheForm({
     }
 
     // Si tiers est rempli, le lien avec les enfants est obligatoire
-    if (tiers.trim() && !lienAvecEnfants.trim()) {
+    if ((tiers?.trim?.() || '') && !(lienAvecEnfants?.trim?.() || '')) {
       toast({
         title: "Erreur de validation", 
         description: "Le champ 'Lien avec l'enfant (les enfants)' est obligatoire lorsque 'Tiers' est renseigné",
@@ -378,7 +378,7 @@ export default function FicheForm({
       return false;
     }
 
-    if (!situationFamiliale.trim()) {
+    if (!(situationFamiliale?.trim?.() || '')) {
       toast({
         title: "Erreur de validation",
         description: "Le champ 'Situation familiale' est obligatoire",
@@ -387,7 +387,7 @@ export default function FicheForm({
       return false;
     }
 
-    if (!situationSocioProfessionnelle.trim()) {
+    if (!(situationSocioProfessionnelle?.trim?.() || '')) {
       toast({
         title: "Erreur de validation",
         description: "Le champ 'Situation socio-professionnelle' est obligatoire",
@@ -396,7 +396,7 @@ export default function FicheForm({
       return false;
     }
 
-    if (!telephonePortable.trim()) {
+    if (!(telephonePortable?.trim?.() || '')) {
       toast({
         title: "Erreur de validation",
         description: "Le champ 'Téléphone portable' est obligatoire",
