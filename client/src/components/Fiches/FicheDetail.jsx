@@ -153,16 +153,6 @@ export default function FicheDetail({ ficheId }) {
   const canPerformAction = (action) => {
     if (!fiche || !user) return false;
     
-    // Debug logging to check permission logic
-    if (action === 'edit') {
-      console.log('Edit permission check:', {
-        userRole: user.role,
-        userId: user.id,
-        ficheState: fiche.state,
-        ficheEmitterId: fiche.emitterId,
-        userObject: user
-      });
-    }
     
     switch (action) {
       case 'assign':
@@ -177,7 +167,9 @@ export default function FicheDetail({ ficheId }) {
       case 'cd_reject':
         return user.role === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
       case 'edit':
-        return user.role === 'ADMIN' || (fiche.state === 'DRAFT' && fiche.emitterId === user.id);
+        const userRole = user.user?.role || user.role;
+        const userId = user.user?.id || user.id;
+        return userRole === 'ADMIN' || (fiche.state === 'DRAFT' && fiche.emitterId === userId);
       default:
         return false;
     }
