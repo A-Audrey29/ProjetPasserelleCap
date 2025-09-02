@@ -244,6 +244,16 @@
   opacity: 0.9;
 }
 
+.buttonDraftSaved {
+  background-color: #6A8B74;
+  color: #FFFFFF;
+  transition: all 0.3s ease;
+}
+
+.buttonDraftSaved:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
 .buttonIcon {
   width: 1rem;
   height: 1rem;

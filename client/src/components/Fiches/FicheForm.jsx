@@ -21,6 +21,7 @@ export default function FicheForm({
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(0);
   const [isReferentEditable, setIsReferentEditable] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
   
   // Form state with référent data
   const [formData, setFormData] = useState({
@@ -1203,10 +1204,10 @@ export default function FicheForm({
               <button
                 type="button"
                 onClick={handleSaveDraft}
-                className={`${styles.button} ${styles.buttonDraft}`}
+                className={`${styles.button} ${draftSaved ? styles.buttonDraftSaved : styles.buttonDraft}`}
                 data-testid="button-save-draft"
               >
-                Enregistrer brouillon
+                {draftSaved ? 'Brouillon sauvegardé' : 'Enregistrer brouillon'}
               </button>
               <button
                 type="button"
@@ -1223,10 +1224,10 @@ export default function FicheForm({
               <button
                 type="button"
                 onClick={handleSaveDraft}
-                className={`${styles.button} ${styles.buttonDraft}`}
+                className={`${styles.button} ${draftSaved ? styles.buttonDraftSaved : styles.buttonDraft}`}
                 data-testid="button-save-draft"
               >
-                Enregistrer brouillon
+                {draftSaved ? 'Brouillon sauvegardé' : 'Enregistrer brouillon'}
               </button>
               <button
                 type="button"
@@ -1295,6 +1296,10 @@ export default function FicheForm({
       };
 
       const result = await onSaveDraft(ficheData);
+      
+      // Set visual feedback
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 3000); // Reset after 3 seconds
 
       toast({
         title: "Brouillon sauvegardé",
