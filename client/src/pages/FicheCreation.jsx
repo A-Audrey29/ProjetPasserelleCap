@@ -95,7 +95,7 @@ export default function FicheCreation() {
             <ChevronRight className="w-4 h-4" />
             <span className="text-[#404040]">Nouvelle fiche navette</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground" data-testid="text-page-title">
+          <h1 className="text-2xl font-bold text-[#404040]" data-testid="text-page-title">
             Créer une fiche navette
           </h1>
         </div>
