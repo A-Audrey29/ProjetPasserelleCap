@@ -8,6 +8,8 @@ import Header from '@/components/Layout/Header';
 import KPICards from '@/components/Dashboard/KPICards';
 import FilterBar from '@/components/Dashboard/FilterBar';
 import FichesList from '@/components/Fiches/FichesList';
+import Sidebar from '../components/Layout/Sidebar';
+import { Link } from 'wouter';
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -57,7 +59,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">

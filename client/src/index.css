@@ -11,10 +11,10 @@
   --card-foreground: 38 38 38;
   
   --secondary: 245 246 247; /* #F5F6F7 - Gris clair */
-  --secondary-foreground: 59 75 97;
+  --secondary-foreground: 38 38 38; /* Changed from light blue to dark for better contrast */
   
   --muted: 245 246 247;
-  --muted-foreground: 107 114 128;
+  --muted-foreground: 64 64 64; /* Darker grey for better contrast */
   
   --accent: 245 246 247;
   --accent-foreground: 59 75 97;
@@ -126,7 +126,8 @@ h3, .h3 {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: rgb(var(--accent));
+  background-color: rgb(220 220 220); /* Darker hover state for better contrast */
+  color: rgb(var(--foreground));
 }
 
 .btn-destructive {
