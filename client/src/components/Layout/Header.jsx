@@ -33,7 +33,7 @@ export default function Header() {
   ];
 
   const visibleItems = authenticatedNavItems.filter(item => 
-    item.roles.includes(user?.role)
+    item.roles.includes(user?.user?.role)
   );
 
   const isActive = (href) => {
@@ -86,7 +86,7 @@ export default function Header() {
                 {/* User Actions */}
                 <div className={styles.userActions}>
                   <span className={styles.userRole}>
-                    {user?.role}
+                    {user?.user?.role}
                   </span>
                   <button 
                     className={styles.logoutButton}

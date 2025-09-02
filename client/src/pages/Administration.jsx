@@ -55,7 +55,7 @@ export default function Administration() {
   const [editingUser, setEditingUser] = useState(null);
   const [resetPasswordUser, setResetPasswordUser] = useState(null);
 
-  const userRole = user?.user?.role || user?.role;
+  const userRole = user?.user?.role;
 
   // Check admin permission
   const canManageUsers = hasPermission(userRole, ACTIONS.MANAGE_USERS_ROLES);
