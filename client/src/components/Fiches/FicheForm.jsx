@@ -191,6 +191,12 @@ export default function FicheForm({
     }, 0);
   };
 
+  // Format currency helper function
+  const formatCurrency = (amountInCents) => {
+    if (!amountInCents) return '0,00 €';
+    return `${(amountInCents / 100).toFixed(2).replace('.', ',')} €`;
+  };
+
   const handleSubmit = async (isDraft = false) => {
     setIsSubmitting(true);
     
