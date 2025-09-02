@@ -344,7 +344,7 @@ export const getRoleActionSuggestions = (role) => {
       icon: 'Settings',
       title: 'Administration système',
       description: 'Gérer les utilisateurs et paramètres de la plateforme',
-      href: '/admin',
+      href: '/administration',
       color: 'warning'
     });
     actionSuggestions.push({
