@@ -153,6 +153,17 @@ export default function FicheDetail({ ficheId }) {
   const canPerformAction = (action) => {
     if (!fiche || !user) return false;
     
+    // Debug logging to check permission logic
+    if (action === 'edit') {
+      console.log('Edit permission check:', {
+        userRole: user.role,
+        userId: user.id,
+        ficheState: fiche.state,
+        ficheEmitterId: fiche.emitterId,
+        userObject: user
+      });
+    }
+    
     switch (action) {
       case 'assign':
         return user.role === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
