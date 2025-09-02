@@ -4,6 +4,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import styles from './FicheForm.module.css';
 
 export default function FicheForm({ 
   initialData = null, 
@@ -301,36 +302,36 @@ export default function FicheForm({
   };
 
   const renderReferentStep = () => (
-    <div className="card">
-      <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-        <UserCheck className="w-5 h-5 mr-2" />
+    <div className={styles.card}>
+      <h2 className={styles.cardTitle}>
+        <UserCheck className={styles.cardTitleIcon} />
         Référent à l'origine de la demande
       </h2>
       
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-lastName">
+      <div className={styles.formSection}>
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel} htmlFor="referent-lastName">
               Nom *
             </label>
             <input
               id="referent-lastName"
               type="text"
-              className="input-field"
+              className={styles.fieldInput}
               value={formData.referent.lastName}
               onChange={(e) => updateReferentField('lastName', e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-lastname"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-firstName">
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel} htmlFor="referent-firstName">
               Prénom *
             </label>
             <input
               id="referent-firstName"
               type="text"
-              className="input-field"
+              className={styles.fieldInput}
               value={formData.referent.firstName}
               onChange={(e) => updateReferentField('firstName', e.target.value)}
               disabled={!isReferentEditable}
@@ -339,14 +340,14 @@ export default function FicheForm({
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-structure">
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="referent-structure">
             Structure d'appartenance *
           </label>
           <input
             id="referent-structure"
             type="text"
-            className="input-field"
+            className={styles.fieldInput}
             value={formData.referent.structure}
             onChange={(e) => updateReferentField('structure', e.target.value)}
             disabled={!isReferentEditable}
@@ -354,14 +355,14 @@ export default function FicheForm({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-role">
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="referent-role">
             Fonction *
           </label>
           <input
             id="referent-role"
             type="text"
-            className="input-field"
+            className={styles.fieldInput}
             value={formData.referent.role}
             onChange={(e) => updateReferentField('role', e.target.value)}
             disabled={!isReferentEditable}
@@ -369,29 +370,29 @@ export default function FicheForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-phone">
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel} htmlFor="referent-phone">
               Téléphone *
             </label>
             <input
               id="referent-phone"
               type="tel"
-              className="input-field"
+              className={styles.fieldInput}
               value={formData.referent.phone}
               onChange={(e) => updateReferentField('phone', e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-phone"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-email">
+          <div className={styles.formField}>
+            <label className={styles.fieldLabel} htmlFor="referent-email">
               Email *
             </label>
             <input
               id="referent-email"
               type="email"
-              className="input-field"
+              className={styles.fieldInput}
               value={formData.referent.email}
               onChange={(e) => updateReferentField('email', e.target.value)}
               disabled={!isReferentEditable}
@@ -400,14 +401,14 @@ export default function FicheForm({
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1" htmlFor="referent-date">
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="referent-date">
             Date de la demande *
           </label>
           <input
             id="referent-date"
             type="date"
-            className="input-field"
+            className={styles.fieldInput}
             value={formData.referent.requestDate}
             onChange={(e) => updateReferentField('requestDate', e.target.value)}
             disabled={!isReferentEditable}
@@ -415,25 +416,25 @@ export default function FicheForm({
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+        <div className={styles.buttonContainer}>
           {!isReferentEditable ? (
             <>
               <button
                 type="button"
                 onClick={handleModifyReferent}
-                className="btn btn-secondary flex items-center gap-2"
+                className={`${styles.button} ${styles.buttonSecondary}`}
                 data-testid="button-modify-referent"
               >
-                <Edit className="w-4 h-4" />
+                <Edit className={styles.buttonIcon} />
                 Modifier
               </button>
               <button
                 type="button"
                 onClick={handleValidateReferent}
-                className="btn btn-primary flex items-center gap-2"
+                className={`${styles.button} ${styles.buttonPrimary}`}
                 data-testid="button-validate-referent"
               >
-                <Check className="w-4 h-4" />
+                <Check className={styles.buttonIcon} />
                 Valider
               </button>
             </>
@@ -441,10 +442,10 @@ export default function FicheForm({
             <button
               type="button"
               onClick={() => setIsReferentEditable(false)}
-              className="btn btn-primary flex items-center gap-2"
+              className={`${styles.button} ${styles.buttonPrimary}`}
               data-testid="button-save-referent"
             >
-              <Check className="w-4 h-4" />
+              <Check className={styles.buttonIcon} />
               Enregistrer les modifications
             </button>
           )}
@@ -458,24 +459,24 @@ export default function FicheForm({
       case 0:
         return renderReferentStep();
       case 1:
-        return <div className="card">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Informations famille</h2>
-          <p className="text-muted-foreground">Cette section sera implémentée dans la prochaine étape.</p>
+        return <div className={styles.card}>
+          <h2 className={styles.cardTitle}>Informations famille</h2>
+          <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
         </div>;
       case 2:
-        return <div className="card">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Enfants concernés</h2>
-          <p className="text-muted-foreground">Cette section sera implémentée dans la prochaine étape.</p>
+        return <div className={styles.card}>
+          <h2 className={styles.cardTitle}>Enfants concernés</h2>
+          <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
         </div>;
       case 3:
-        return <div className="card">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Ateliers et objectifs</h2>
-          <p className="text-muted-foreground">Cette section sera implémentée dans la prochaine étape.</p>
+        return <div className={styles.card}>
+          <h2 className={styles.cardTitle}>Ateliers et objectifs</h2>
+          <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
         </div>;
       case 4:
-        return <div className="card">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Pièces justificatives</h2>
-          <p className="text-muted-foreground">Cette section sera implémentée dans la prochaine étape.</p>
+        return <div className={styles.card}>
+          <h2 className={styles.cardTitle}>Pièces justificatives</h2>
+          <p className={styles.placeholderSection}>Cette section sera implémentée dans la prochaine étape.</p>
         </div>;
       default:
         return renderReferentStep();
@@ -483,10 +484,10 @@ export default function FicheForm({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className={styles.container}>
       {/* Step Progress Indicator */}
-      <div className="card">
-        <div className="flex items-center justify-between">
+      <div className={styles.progressCard}>
+        <div className={styles.progressIndicator}>
           {steps.map((step, index) => {
             const StepIcon = step.icon;
             const isActive = currentStep === index;
@@ -495,32 +496,32 @@ export default function FicheForm({
             return (
               <div
                 key={step.id}
-                className={`flex items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}
+                className={index < steps.length - 1 ? styles.stepItem : styles.stepItemLast}
               >
-                <div className="flex items-center">
+                <div className={styles.stepContent}>
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    className={`${styles.stepIcon} ${
                       isCompleted 
-                        ? 'bg-success text-success-foreground' 
+                        ? styles.stepIconCompleted
                         : isActive 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground'
+                        ? styles.stepIconActive
+                        : styles.stepIconInactive
                     }`}
                   >
                     {isCompleted ? (
-                      <Check className="w-4 h-4" />
+                      <Check style={{width: '1rem', height: '1rem'}} />
                     ) : (
-                      <StepIcon className="w-4 h-4" />
+                      <StepIcon style={{width: '1rem', height: '1rem'}} />
                     )}
                   </div>
-                  <div className="ml-2">
-                    <div className={`text-sm font-medium ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  <div className={styles.stepText}>
+                    <div className={isActive ? styles.stepTextActive : styles.stepTextInactive}>
                       {step.title}
                     </div>
                   </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`flex-1 h-px mx-4 ${isCompleted ? 'bg-success' : 'bg-border'}`} />
+                  <div className={`${styles.stepConnector} ${isCompleted ? styles.stepConnectorCompleted : styles.stepConnectorDefault}`} />
                 )}
               </div>
             );

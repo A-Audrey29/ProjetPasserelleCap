@@ -4,11 +4,10 @@ import { Eye, FileText, Plus, Search, Filter, Calendar, User, Building } from 'l
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission, ROLES, ACTIONS } from '@/utils/permissions';
 import Header from '@/components/Layout/Header';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/common/Button';
+import { Input } from '@/components/common/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/Select';
+import { Badge } from '@/components/common/Badge';
 import styles from './Fiches.module.css';
 
 // State mapping for display

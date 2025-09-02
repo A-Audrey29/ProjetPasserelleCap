@@ -1,0 +1,77 @@
+/* Select Component Styles - CSS Modules */
+
+.selectContainer {
+  position: relative;
+}
+
+.selectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  background-color: #F5F6F7;
+  color: #404040;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.selectTrigger:hover {
+  border-color: #9CA3AF;
+}
+
+.selectTrigger:focus {
+  outline: none;
+  border-color: #3B4B61;
+  box-shadow: 0 0 0 2px rgba(59, 75, 97, 0.2);
+}
+
+.chevronIcon {
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.5rem;
+}
+
+.selectValue {
+  flex: 1;
+  text-align: left;
+}
+
+.selectContent {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin-top: 0.25rem;
+}
+
+.selectItem {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #404040;
+  transition: background-color 0.2s ease;
+}
+
+.selectItem:hover {
+  background-color: #F5F6F7;
+}
+
+.selectItem:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.selectItem:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}

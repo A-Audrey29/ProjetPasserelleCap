@@ -514,6 +514,12 @@ h3, .h3 {
   to { transform: rotate(360deg); }
 }
 
+/* Global spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .fade-in { animation: fadeIn 0.3s ease; }
 .slide-in-right { animation: slideInRight 0.3s ease; }
 .animate-spin { animation: spin 1s linear infinite; }

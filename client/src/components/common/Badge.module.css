@@ -1,0 +1,38 @@
+/* Badge Component Styles - CSS Modules */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badgeDefault {
+  background-color: #D9A066;
+  color: #404040;
+}
+
+.badgeSecondary {
+  background-color: #F5F6F7;
+  color: #404040;
+}
+
+.badgeOutline {
+  background-color: #F5F6F7;
+  color: #404040;
+  border: 1px solid #D1D5DB;
+}
+
+.badgeSuccess {
+  background-color: #6A8B74;
+  color: #FFFFFF;
+}
+
+.badgeDestructive {
+  background-color: #8C4A4A;
+  color: #FFFFFF;
+}

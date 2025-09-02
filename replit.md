@@ -8,10 +8,17 @@ Passerelle CAP is a comprehensive full-stack platform for managing CAP (Contrat 
 
 Preferred communication style: Simple, everyday language.
 
+**CRITICAL STYLING PREFERENCE**: 
+- **NO TAILWIND CSS** - User explicitly wants all Tailwind removed from the project
+- **CSS Modules only** - All components must use .module.css files for styling
+- **Charte graphique colors** - Strict adherence to color palette (#3B4B61, #F5F6F7, #6A8B74, #D9A066, #8C4A4A)
+- **NO YELLOW colors** - Absolutely no yellow in the design
+- **Component structure** - All components as .jsx files with corresponding .module.css files
+
 ## System Architecture
 
 ### Frontend Architecture
-The client-side is built with React 18 using a modern component-based architecture. The application uses Wouter for lightweight routing instead of React Router, with TanStack Query for state management and data fetching. The UI is built with Radix UI components and styled using Tailwind CSS with custom CSS variables for theming. The build system uses Vite for fast development and optimized production builds.
+The client-side is built with React 18 using a modern component-based architecture. The application uses Wouter for lightweight routing instead of React Router, with TanStack Query for state management and data fetching. The UI is built with CSS Modules for component-specific styling, following the strict charte graphique color palette. Each component has a corresponding .module.css file for maintainable, scoped styling. The build system uses Vite for fast development and optimized production builds.
 
 ### Backend Architecture
 The server implements a RESTful API using Express.js with middleware-based architecture. Authentication uses JWT tokens stored in HTTPOnly cookies for security. The system includes comprehensive RBAC (Role-Based Access Control) middleware that enforces permissions at the route level. File uploads are handled through Multer with local storage (designed to be easily adaptable to S3). The API includes comprehensive audit logging and state transition management.
@@ -34,9 +41,10 @@ Authentication is implemented using bcrypt for password hashing and JWT for sess
 - **Drizzle ORM** - Type-safe database operations and migrations
 
 ### UI & Styling
-- **Radix UI** - Accessible component primitives for complex UI elements
-- **Tailwind CSS** - Utility-first CSS framework for styling
+- **CSS Modules** - Component-scoped styling with .module.css files
+- **Charte Graphique** - Strict adherence to color palette (#3B4B61, #F5F6F7, #6A8B74, #D9A066, #8C4A4A)
 - **Lucide React** - Icon library for consistent iconography
+- **Custom CSS Variables** - Global theming system without framework dependencies
 
 ### Data & State Management
 - **TanStack Query** - Server state management with caching and synchronization
