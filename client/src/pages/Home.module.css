@@ -316,6 +316,199 @@
   opacity: 0.95;
 }
 
+/* Authenticated User Greeting Section */
+.greetingSection {
+  background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgba(var(--primary), 0.8) 100%);
+  color: rgb(var(--primary-foreground));
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.greetingContent {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .greetingContent {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .greetingContent {
+    padding: 0 2rem;
+  }
+}
+
+.greetingTitle {
+  font-family: var(--font-titles);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .greetingTitle {
+    font-size: 2.5rem;
+  }
+}
+
+.greetingSubtitle {
+  font-size: 1.25rem;
+  opacity: 0.95;
+  line-height: 1.6;
+}
+
+/* Actions Section */
+.actionsSection {
+  padding: 4rem 0;
+  background-color: rgb(var(--background));
+}
+
+.actionsGrid {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .actionsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .actionsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.actionCard {
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.actionCard:hover {
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(var(--primary), 0.1);
+  transform: translateY(-2px);
+  border-color: rgb(var(--primary));
+}
+
+.actionIcon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconPrimary {
+  background-color: rgba(var(--primary), 0.1);
+  color: rgb(var(--primary));
+}
+
+.iconSuccess {
+  background-color: rgba(var(--success), 0.1);
+  color: rgb(var(--success));
+}
+
+.iconWarning {
+  background-color: rgba(var(--warning), 0.1);
+  color: rgb(var(--warning));
+}
+
+.actionContent {
+  flex: 1;
+}
+
+.actionTitle {
+  font-family: var(--font-titles);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.actionDescription {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+  line-height: 1.5;
+}
+
+.actionArrow {
+  color: rgb(var(--muted-foreground));
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.actionCard:hover .actionArrow {
+  transform: translateX(2px);
+  color: rgb(var(--primary));
+}
+
+/* Dashboard Section */
+.dashboardSection {
+  background-color: rgb(var(--card));
+  padding: 4rem 0;
+  border-top: 1px solid rgb(var(--border));
+}
+
+.dashboardCta {
+  text-align: center;
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+.dashboardTitle {
+  font-family: var(--font-titles);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 1rem;
+}
+
+.dashboardDescription {
+  color: rgb(var(--muted-foreground));
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.dashboardButton {
+  background-color: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: opacity 0.15s ease;
+}
+
+.dashboardButton:hover {
+  opacity: 0.9;
+  text-decoration: none;
+}
+
 /* User Welcome Section */
 .userWelcomeSection {
   background-color: rgb(var(--card));
