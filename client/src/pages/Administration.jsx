@@ -14,7 +14,8 @@ import {
   Key,
   Calendar,
   Mail,
-  Building
+  Building,
+  Phone
 } from 'lucide-react';
 import Header from '@/components/Layout/Header';
 import { Button } from '@/components/common/Button';
@@ -235,6 +236,20 @@ export default function Administration() {
                   </div>
 
                   <div className={styles.userDetails}>
+                    {user.structure && (
+                      <div className={styles.detailItem}>
+                        <Building className={styles.detailIcon} />
+                        <span>{user.structure}</span>
+                      </div>
+                    )}
+                    
+                    {user.phone && (
+                      <div className={styles.detailItem}>
+                        <Phone className={styles.detailIcon} />
+                        <span>{user.phone}</span>
+                      </div>
+                    )}
+                    
                     {user.organization && (
                       <div className={styles.detailItem}>
                         <Building className={styles.detailIcon} />

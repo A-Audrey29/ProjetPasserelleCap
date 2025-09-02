@@ -21,6 +21,8 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   role: roleEnum("role").notNull(),
+  structure: text("structure"),
+  phone: text("phone"),
   epsiId: varchar("epsi_id"),
   orgId: varchar("org_id"),
   isActive: boolean("is_active").notNull().default(true),

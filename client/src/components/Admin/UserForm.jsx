@@ -24,6 +24,8 @@ export default function UserForm({ user, onClose, onSuccess }) {
     email: '',
     firstName: '',
     lastName: '',
+    structure: '',
+    phone: '',
     role: 'EMETTEUR',
     password: '',
     confirmPassword: '',
@@ -40,6 +42,8 @@ export default function UserForm({ user, onClose, onSuccess }) {
         email: user.email || '',
         firstName: user.firstName || '',
         lastName: user.lastName || '',
+        structure: user.structure || '',
+        phone: user.phone || '',
         role: user.role || 'EMETTEUR',
         password: '',
         confirmPassword: '',
@@ -126,6 +130,8 @@ export default function UserForm({ user, onClose, onSuccess }) {
       email: formData.email.trim(),
       firstName: formData.firstName.trim(),
       lastName: formData.lastName.trim(),
+      structure: formData.structure.trim(),
+      phone: formData.phone.trim(),
       role: formData.role,
       isActive: formData.isActive
     };
@@ -218,6 +224,38 @@ export default function UserForm({ user, onClose, onSuccess }) {
               {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
             </div>
 
+            {/* Structure */}
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Structure
+              </label>
+              <Input
+                type="text"
+                value={formData.structure}
+                onChange={(e) => handleInputChange('structure', e.target.value)}
+                className={errors.structure ? styles.inputError : ''}
+                placeholder="Structure d'appartenance"
+                data-testid="input-user-structure"
+              />
+              {errors.structure && <span className={styles.error}>{errors.structure}</span>}
+            </div>
+
+            {/* Phone */}
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Numéro de Téléphone
+              </label>
+              <Input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                className={errors.phone ? styles.inputError : ''}
+                placeholder="0123456789"
+                data-testid="input-user-phone"
+              />
+              {errors.phone && <span className={styles.error}>{errors.phone}</span>}
+            </div>
+
             {/* Role */}
             <div className={styles.formGroup}>
               <label className={styles.label}>
@@ -236,10 +274,6 @@ export default function UserForm({ user, onClose, onSuccess }) {
               </select>
               {errors.role && <span className={styles.error}>{errors.role}</span>}
             </div>
-
-            
-
-            
 
             {/* Password */}
             <div className={styles.formGroup}>
