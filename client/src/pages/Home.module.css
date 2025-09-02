@@ -318,8 +318,8 @@
 
 /* Authenticated User Greeting Section */
 .greetingSection {
-  background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgba(var(--primary), 0.8) 100%);
-  color: rgb(var(--primary-foreground));
+  background-color: rgb(var(--card));
+  border-bottom: 1px solid rgb(var(--border));
   padding: 4rem 0;
   text-align: center;
 }
@@ -348,6 +348,7 @@
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: 1rem;
+  color: rgb(var(--foreground));
 }
 
 @media (min-width: 768px) {
@@ -358,8 +359,8 @@
 
 .greetingSubtitle {
   font-size: 1.25rem;
-  opacity: 0.95;
   line-height: 1.6;
+  color: rgb(var(--muted-foreground));
 }
 
 /* Actions Section */
