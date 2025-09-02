@@ -85,13 +85,13 @@ export default function FicheCreation() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <button 
+            <span 
               onClick={() => setLocation('/')}
-              className="hover:text-foreground transition-colors text-[#404040]"
+              className="hover:text-foreground transition-colors text-[#404040] cursor-pointer"
               data-testid="link-dashboard"
             >
               Tableau de bord
-            </button>
+            </span>
             <ChevronRight className="w-4 h-4" />
             <span className="text-[#404040]">Nouvelle fiche navette</span>
           </div>
