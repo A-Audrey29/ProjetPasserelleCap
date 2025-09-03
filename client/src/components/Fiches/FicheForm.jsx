@@ -1209,7 +1209,7 @@ export default function FicheForm({
               >
                 {draftSaved ? 
                   (initialData?.state === 'DRAFT' ? 'Brouillon sauvegardé' : 'Fiche sauvegardée') :
-                  (initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche')
+                  ((initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche')
                 }
               </button>
               <button
@@ -1232,7 +1232,7 @@ export default function FicheForm({
               >
                 {draftSaved ? 
                   (initialData?.state === 'DRAFT' ? 'Brouillon sauvegardé' : 'Fiche sauvegardée') :
-                  (initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche')
+                  ((initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche')
                 }
               </button>
               <button
