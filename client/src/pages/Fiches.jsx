@@ -57,9 +57,16 @@ export default function Fiches() {
         if (searchTerm) params.append('search', searchTerm);
         if (stateFilter && stateFilter !== 'all') params.append('state', stateFilter);
         
-        // For CD role, only show SUBMITTED_TO_CD fiches
+        // For CD role filtering - check URL to determine which CD action
         if (userRole === ROLES.CD) {
-          params.append('state', 'SUBMITTED_TO_CD');
+          const urlParams = new URLSearchParams(window.location.search);
+          const isValidationPage = urlParams.get('state') === 'SUBMITTED_TO_CD';
+          
+          if (isValidationPage) {
+            // This is the "Fiches en attente de validations" action
+            params.set('state', 'SUBMITTED_TO_CD'); // Use set() to avoid duplicates
+          }
+          // If not validation page, show all fiches ("Consulter les Fiches" action)
         }
 
         const response = await fetch(`/api/fiches?${params}`);
@@ -84,7 +91,9 @@ export default function Fiches() {
     if (userRole === ROLES.ADMIN || userRole === ROLES.SUIVI_PROJETS) {
       return 'Toutes les fiches navettes';
     } else if (userRole === ROLES.CD) {
-      return 'Fiches à valider - Conseil Départemental';
+      const urlParams = new URLSearchParams(window.location.search);
+      const isValidationPage = urlParams.get('state') === 'SUBMITTED_TO_CD';
+      return isValidationPage ? 'Fiches à valider - Conseil Départemental' : 'Consulter les fiches - Conseil Départemental';
     } else if (userRole === ROLES.RELATIONS_EVS) {
       return 'Fiches de votre territoire';
     } else if (userRole === ROLES.EVS_CS) {
@@ -155,8 +164,8 @@ export default function Fiches() {
             />
           </div>
 
-          {/* Only show status filter for non-CD users */}
-          {userRole !== ROLES.CD && (
+          {/* Only show status filter for non-CD users or CD users in "Consulter les Fiches" mode */}
+          {(userRole !== ROLES.CD || (userRole === ROLES.CD && new URLSearchParams(window.location.search).get('state') !== 'SUBMITTED_TO_CD')) && (
             <div className={styles.filterSection}>
               <Filter className={styles.filterIcon} />
               <select 
