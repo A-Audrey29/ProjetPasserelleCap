@@ -936,7 +936,7 @@ export default function FicheDetail({ ficheId }) {
                     const relationsEvsValidation = auditLogs.find(log => 
                       log.action === 'state_transition' && 
                       log.meta?.oldState === 'SUBMITTED_TO_FEVES' &&
-                      log.meta?.newState === 'ASSIGNED_TO_EVS'
+                      log.meta?.newState === 'ASSIGNED_EVS'
                     );
                     
                     if (relationsEvsValidation && relationsEvsValidation.actor) {
