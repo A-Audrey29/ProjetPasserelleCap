@@ -4,6 +4,7 @@ export const STATE_LABELS = {
   SUBMITTED_TO_CD: 'Soumis au CD',
   SUBMITTED_TO_FEVES: 'Envoyé FEVES',
   ASSIGNED_EVS: 'Affecté EVS',
+  ACCEPTED_EVS: 'Accepté EVS',
   EVS_ACCEPTED: 'Accepté EVS',
   EVS_REJECTED: 'Refusé EVS',
   NEEDS_INFO: 'Infos demandées',
