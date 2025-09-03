@@ -381,7 +381,7 @@ export default function FicheDetail({ ficheId }) {
         return user.role === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
       case 'accept':
       case 'reject':
-        return user.role === 'EVS_CS' && fiche.state === 'ASSIGNED_EVS';
+        return user.role === 'EVS_CS' && fiche.state === 'ASSIGNED_EVS' && fiche.assignedOrgId === user.orgId;
       case 'sign_contract':
         return user.role === 'EVS_CS' && fiche.state === 'CONTRACT_SENT' && fiche.assignedOrgId === user.orgId;
       case 'cd_validate':

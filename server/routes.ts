@@ -163,8 +163,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.ficheAccess.role === 'EMETTEUR') {
         filters.emitterId = req.ficheAccess.userId;
       } else if (req.ficheAccess.role === 'EVS_CS') {
-        // EVS users should only see fiches assigned to organizations where they are the contact
-        filters.evsUserId = req.ficheAccess.userId;
+        // EVS users should only see fiches assigned to their organization
+        filters.assignedOrgId = req.ficheAccess.orgId;
       }
 
       const fiches = await storage.getAllFiches(filters);
@@ -218,12 +218,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check access rights for EVS users
       if (req.ficheAccess.role === 'EVS_CS') {
-        // EVS users can access fiches assigned to their organizations in ASSIGNED_EVS and ACCEPTED_EVS states
-        const org = await storage.getOrganization(fiche.assignedOrgId);
-        const hasAccess = org?.userId === req.ficheAccess.userId && 
-          (fiche.state === 'ASSIGNED_EVS' || fiche.state === 'ACCEPTED_EVS');
-        
-        if (!hasAccess) {
+        // EVS users can access fiches assigned to their organization
+        if (fiche.assignedOrgId !== req.ficheAccess.orgId) {
           return res.status(403).json({ message: 'Accès interdit' });
         }
       }
