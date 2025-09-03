@@ -243,6 +243,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selections.map(async (selection) => {
           const workshop = await storage.getWorkshop(selection.workshopId);
           const objective = workshop ? await storage.getWorkshopObjective(workshop.objectiveId) : null;
+          console.log(`Workshop for selection ${selection.id}:`, {
+            workshopId: selection.workshopId,
+            workshop: workshop ? { id: workshop.id, name: workshop.name } : null,
+            objective: objective ? { code: objective.code, name: objective.name } : null
+          });
           return {
             ...selection,
             workshop: workshop ? {
