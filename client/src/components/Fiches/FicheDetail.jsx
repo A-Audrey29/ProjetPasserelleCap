@@ -851,6 +851,32 @@ export default function FicheDetail({ ficheId }) {
                     return null;
                   })()
                 )}
+                
+                {/* RELATIONS_EVS validation - only show if fiche has been transmitted to EVS/CS */}
+                {(fiche.state === 'ASSIGNED_TO_EVS' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && auditLogs && (
+                  (() => {
+                    const relationsEvsValidation = auditLogs.find(log => 
+                      log.action === 'state_transition' && 
+                      log.meta?.oldState === 'SUBMITTED_TO_FEVES' &&
+                      log.meta?.newState === 'ASSIGNED_TO_EVS'
+                    );
+                    
+                    if (relationsEvsValidation && relationsEvsValidation.actor) {
+                      return (
+                        <div className={styles.validationItem} data-testid="validation-relations-evs">
+                          <span className={styles.validationCheck}>✓</span>
+                          <span>
+                            {relationsEvsValidation.actor.firstName} {relationsEvsValidation.actor.lastName}
+                            {relationsEvsValidation.actor.structure && ` de ${relationsEvsValidation.actor.structure}`}
+                            {' '}a validé la fiche et l'a transmise à{' '}
+                            {relationsEvsValidation.meta?.assignedOrgName || 'l\'organisation EVS/CS sélectionnée'}
+                          </span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()
+                )}
               </div>
             </div>
           )}
