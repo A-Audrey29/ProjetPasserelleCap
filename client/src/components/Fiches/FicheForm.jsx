@@ -92,19 +92,56 @@ export default function FicheForm({
   // Initialize form with existing data
   useEffect(() => {
     if (initialData) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         familyId: initialData.familyId || '',
         description: initialData.description || '',
-        family: initialData.family || formData.family,
-        children: initialData.children || [],
+        family: {
+          ...prev.family,
+          ...(initialData.family || {}),
+          code: initialData.family?.code || '',
+          address: initialData.family?.address || '',
+          phone: initialData.family?.phone || '',
+          email: initialData.family?.email || '',
+          mother: initialData.family?.mother || '',
+          father: initialData.family?.father || '',
+          tiers: initialData.family?.tiers || '',
+          lienAvecEnfants: initialData.family?.lienAvecEnfants || '',
+          autoriteParentale: initialData.family?.autoriteParentale || '',
+          situationFamiliale: initialData.family?.situationFamiliale || '',
+          situationSocioProfessionnelle: initialData.family?.situationSocioProfessionnelle || '',
+          adresse: initialData.family?.adresse || '',
+          telephonePortable: initialData.family?.telephonePortable || '',
+          telephoneFixe: initialData.family?.telephoneFixe || ''
+        },
+        children: initialData.children?.map(child => ({
+          firstName: child.firstName || '',
+          birthDate: child.birthDate ? new Date(child.birthDate).toISOString().split('T')[0] : '',
+          level: child.level || ''
+        })) || prev.children,
         workshops: initialData.selections?.map(s => ({
           workshopId: s.workshopId,
           qty: s.qty
         })) || [],
         attachments: initialData.attachments || [],
-        // Map referentData from existing fiche to referent field
-        referent: initialData.referentData || formData.referent
-      });
+        referent: initialData.referentData ? {
+          lastName: initialData.referentData.lastName || '',
+          firstName: initialData.referentData.firstName || '',
+          structure: initialData.referentData.structure || '',
+          phone: initialData.referentData.phone || '',
+          email: initialData.referentData.email || '',
+          requestDate: initialData.referentData.requestDate || prev.referent.requestDate
+        } : (initialData.emitter ? {
+          lastName: initialData.emitter.lastName || '',
+          firstName: initialData.emitter.firstName || '',
+          structure: initialData.emitter.structure || '',
+          phone: initialData.emitter.phone || '',
+          email: initialData.emitter.email || '',
+          requestDate: initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : prev.referent.requestDate
+        } : prev.referent),
+        descriptionSituation: initialData.descriptionSituation || '',
+        workshopPropositions: initialData.workshopPropositions || {}
+      }));
     }
   }, [initialData]);
 
