@@ -37,7 +37,8 @@ async function main() {
       { name: 'EPCI Côte d\'Opale' },
       { name: 'EPCI Valenciennes Hainaut' },
       { name: 'EPCI Artois-Ternois' },
-      { name: 'EPCI Flandre-Lys' }
+      { name: 'EPCI Flandre-Lys' },
+      { name: 'EPCI test' }
     ]).returning();
 
     // Seed Organizations
@@ -170,6 +171,17 @@ async function main() {
         contactEmail: 'isabelle.vandenberghe@cs-lys.fr',
         contactPhone: '03 28 23 45 67',
         epciId: epcisData[5].id
+      },
+      
+      // EPCI test
+      {
+        name: 'EVS test',
+        type: 'EVS',
+        address: '1 rue de Test, 00000 Test City',
+        contactPersonName: 'Gregory Boil',
+        contactEmail: 'gregory.boil@gmail.com',
+        contactPhone: '01 23 45 67 89',
+        epciId: epcisData[6].id
       }
     ]).returning();
 
