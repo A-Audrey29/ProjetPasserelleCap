@@ -754,27 +754,33 @@ export default function FicheDetail({ ficheId }) {
                             ) : null;
                           })()}
                         </div>
-                        <div className={styles.propositionPrice} data-testid={`text-workshop-price-${selection.id}`}>
-                          {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
-                        </div>
+                        {/* Only show price for ADMIN and RELATIONS_EVS */}
+                        {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
+                          <div className={styles.propositionPrice} data-testid={`text-workshop-price-${selection.id}`}>
+                            {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
               
-              <div className={styles.totalSection}>
-                <div className={styles.totalItem}>
-                  <label className={styles.totalLabel}>Total</label>
-                  <p className={styles.totalValue} data-testid="text-total-amount">
-                    {formatCurrency(
-                      fiche.selections?.reduce((sum, s) => 
-                        sum + (s.workshop?.priceCents || 0) * s.qty, 0
-                      ) || 0
-                    )}
-                  </p>
+              {/* Only show total for ADMIN and RELATIONS_EVS */}
+              {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
+                <div className={styles.totalSection}>
+                  <div className={styles.totalItem}>
+                    <label className={styles.totalLabel}>Total</label>
+                    <p className={styles.totalValue} data-testid="text-total-amount">
+                      {formatCurrency(
+                        fiche.selections?.reduce((sum, s) => 
+                          sum + (s.workshop?.priceCents || 0) * s.qty, 0
+                        ) || 0
+                      )}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
