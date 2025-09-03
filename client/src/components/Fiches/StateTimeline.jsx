@@ -10,12 +10,9 @@ export default function StateTimeline({ currentState, stateHistory = [] }) {
     'ASSIGNED_EVS',
     'ACCEPTED_EVS',
     'CONTRACT_SIGNED',
-    'ADVANCE_70_PAID',
     'ACTIVITY_DONE',
     'FIELD_CHECK_SCHEDULED',
     'FIELD_CHECK_DONE',
-    'FINAL_REPORT_RECEIVED',
-    'REMAINING_30_PAID',
     'CLOSED',
     'ARCHIVED'
   ];

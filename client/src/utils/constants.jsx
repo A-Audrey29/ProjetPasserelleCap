@@ -9,12 +9,9 @@ export const STATE_LABELS = {
   EVS_REJECTED: 'Refusé EVS',
   NEEDS_INFO: 'Infos demandées',
   CONTRACT_SIGNED: 'Contrat signé',
-  ADVANCE_70_PAID: 'Avance 70% payée',
   ACTIVITY_DONE: 'Activité réalisée',
   FIELD_CHECK_SCHEDULED: 'Vérification programmée',
   FIELD_CHECK_DONE: 'Vérification effectuée',
-  FINAL_REPORT_RECEIVED: 'Rapport final reçu',
-  REMAINING_30_PAID: 'Solde 30% payé',
   CLOSED: 'Clôturé',
   ARCHIVED: 'Archivé'
 };
