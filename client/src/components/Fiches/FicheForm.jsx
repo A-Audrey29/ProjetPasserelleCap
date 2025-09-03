@@ -90,8 +90,6 @@ export default function FicheForm({
     enabled: true,
   });
 
-  console.log(objectives);
-
   const { data: workshops = [] } = useQuery({
     queryKey: ["/api/workshops"],
     enabled: true,
@@ -797,17 +795,21 @@ export default function FicheForm({
   const [expandedObjectives, setExpandedObjectives] = useState({});
 
   // Build objectives data dynamically from database
-  const objectivesData = objectives.map((objective) => ({
-    id: objective.order || objective.id,
-    title: objective.name,
-    workshops: workshops
-      .filter((workshop) => workshop.objectiveId === objective.id)
-      .map((workshop) => ({
+  const objectivesData = objectives.map((objective) => {
+    // Normalize IDs for matching (remove dashes from objective.id)
+    const normalizedObjectiveId = objective.id.replace(/-/g, "");
+    const filteredWorkshops = workshops.filter((workshop) => workshop.objectiveId === normalizedObjectiveId);
+    
+    return {
+      id: objective.order || objective.id,
+      title: objective.name,
+      workshops: filteredWorkshops.map((workshop) => ({
         id: `workshop_${objective.order || objective.id}_${workshop.id}`,
         name: workshop.name,
         objective: workshop.description,
       })),
-  }));
+    };
+  });
 
   const toggleObjective = (objectiveId) => {
     setExpandedObjectives((prev) => ({
