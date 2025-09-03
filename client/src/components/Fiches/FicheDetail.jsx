@@ -515,10 +515,19 @@ export default function FicheDetail({ ficheId }) {
         />
 
         {/* EPCI Selection for RELATIONS_EVS with SUBMITTED_TO_FEVES status */}
+        {console.log('EPCI Debug:', {
+          userRole: user?.role,
+          userUserRole: user?.user?.role, 
+          ficheState: fiche?.state,
+          roleMatch: (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS'),
+          stateMatch: fiche?.state === 'SUBMITTED_TO_FEVES',
+          showSection: (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche?.state === 'SUBMITTED_TO_FEVES',
+          epcisData: epcis
+        })}
         {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'SUBMITTED_TO_FEVES' && (
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>
-              Transmission vers EVS/CS
+          <div className={styles.card} style={{backgroundColor: '#ffe6e6', border: '2px solid red'}}>
+            <h2 className={styles.cardTitle} style={{color: 'red'}}>
+              🔴 DEBUG: Transmission vers EVS/CS
             </h2>
             
             <div className={styles.epciSelection}>
