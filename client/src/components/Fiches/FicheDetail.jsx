@@ -46,6 +46,12 @@ export default function FicheDetail({ ficheId }) {
   const [finalReportSent, setFinalReportSent] = useState(false);
   const [remainingPaymentSent, setRemainingPaymentSent] = useState(false);
 
+  // Query for fiche details
+  const { data: fiche, isLoading, error } = useQuery({
+    queryKey: ['/api/fiches', ficheId],
+    enabled: !!ficheId
+  });
+
   // Update states when fiche data loads
   useEffect(() => {
     if (fiche) {
@@ -57,12 +63,6 @@ export default function FicheDetail({ ficheId }) {
       setRemainingPaymentSent(fiche.remainingPaymentSent || false);
     }
   }, [fiche]);
-
-  // Query for fiche details
-  const { data: fiche, isLoading, error } = useQuery({
-    queryKey: ['/api/fiches', ficheId],
-    enabled: !!ficheId
-  });
 
   // Query for organizations (for assignment)
   const { data: organizations = [] } = useQuery({
