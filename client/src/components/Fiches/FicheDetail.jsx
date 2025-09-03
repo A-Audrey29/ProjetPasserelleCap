@@ -53,13 +53,13 @@ export default function FicheDetail({ ficheId }) {
   // Query for EPCIs (for RELATIONS_EVS selection)
   const { data: epcis = [] } = useQuery({
     queryKey: ['/api/epcis'],
-    enabled: user?.role === 'RELATIONS_EVS' && fiche?.state === 'SUBMITTED_TO_FEVES'
+    enabled: (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche?.state === 'SUBMITTED_TO_FEVES'
   });
 
   // Query for organizations by selected EPCI
   const { data: epciOrganizations = [] } = useQuery({
     queryKey: ['/api/epcis', selectedEpciId, 'organizations'],
-    enabled: !!selectedEpciId && user?.role === 'RELATIONS_EVS' && fiche?.state === 'SUBMITTED_TO_FEVES'
+    enabled: !!selectedEpciId && (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche?.state === 'SUBMITTED_TO_FEVES'
   });
 
   // Query for audit logs
@@ -515,7 +515,7 @@ export default function FicheDetail({ ficheId }) {
         />
 
         {/* EPCI Selection for RELATIONS_EVS with SUBMITTED_TO_FEVES status */}
-        {user?.role === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES' && (
+        {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'SUBMITTED_TO_FEVES' && (
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>
               Transmission vers EVS/CS
