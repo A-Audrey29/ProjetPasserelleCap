@@ -8,7 +8,6 @@ export const STATE_LABELS = {
   EVS_ACCEPTED: 'Accepté EVS',
   EVS_REJECTED: 'Refusé EVS',
   NEEDS_INFO: 'Infos demandées',
-  CONTRACT_SENT: 'Contrat envoyé',
   CONTRACT_SIGNED: 'Contrat signé',
   ADVANCE_70_PAID: 'Avance 70% payée',
   ACTIVITY_DONE: 'Activité réalisée',

@@ -1056,6 +1056,145 @@
   box-shadow: none;
 }
 
+/* Contract Verification Styles */
+.contractVerification {
+  padding: 1.5rem;
+}
+
+.verificationIntro {
+  font-size: 1rem;
+  color: #3B4B61;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 1rem;
+  border: 2px solid #E5E7EB;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.checkboxItem:hover {
+  border-color: #6A8B74;
+  background-color: #F8FDF9;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #6A8B74;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.checkboxLabel {
+  font-size: 0.95rem;
+  color: #3B4B61;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.amountInfo {
+  color: #6A8B74;
+  font-weight: 600;
+}
+
+.contractActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.validateContractButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #6A8B74;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.validateContractButton:hover:not(:disabled) {
+  background: #5A7A64;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(106, 139, 116, 0.2);
+}
+
+.validateContractButton:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.archiveContractButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #8C4A4A;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
+  justify-content: center;
+}
+
+.archiveContractButton:hover:not(:disabled) {
+  background: #7A3D3D;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(140, 74, 74, 0.2);
+}
+
+.archiveContractButton:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.validationNote {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #FEF3CD;
+  border: 1px solid #F59E0B;
+  border-radius: 8px;
+}
+
+.noteText {
+  font-size: 0.875rem;
+  color: #92400E;
+  margin: 0;
+  text-align: center;
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
   .transmissionActions {
     flex-direction: column;
@@ -1067,6 +1206,25 @@
   .transmissionActions .archiveButton {
     width: 100%;
     max-width: 300px;
+  }
+  
+  .contractActions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .validateContractButton,
+  .archiveContractButton {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .checkboxItem {
+    padding: 0.75rem;
+  }
+  
+  .checkboxLabel {
+    font-size: 0.9rem;
   }
 }
 

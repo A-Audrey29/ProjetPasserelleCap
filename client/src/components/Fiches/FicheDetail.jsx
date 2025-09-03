@@ -37,6 +37,10 @@ export default function FicheDetail({ ficheId }) {
   // EPCI selection states for RELATIONS_EVS
   const [selectedEpciId, setSelectedEpciId] = useState('');
   const [selectedEvscsId, setSelectedEvscsId] = useState('');
+  
+  // Contract verification states
+  const [contractSigned, setContractSigned] = useState(false);
+  const [fundsTransferred, setFundsTransferred] = useState(false);
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
@@ -198,6 +202,48 @@ export default function FicheDetail({ ficheId }) {
         toast({
           title: "Fiche refusée",
           description: "Vous avez refusé cette fiche. Elle a été renvoyée à FEVES pour réaffectation.",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de traiter l'action",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Contract verification actions for RELATIONS_EVS
+  const handleContractVerification = async (action) => {
+    try {
+      if (action === 'validate') {
+        await transitionMutation.mutateAsync({ 
+          newState: 'CONTRACT_SIGNED',
+          metadata: {
+            contractSigned: true,
+            fundsTransferred: true,
+            verifiedBy: user?.id,
+            verifiedAt: new Date().toISOString()
+          }
+        });
+        toast({
+          title: "Contrat validé",
+          description: "Le contrat a été validé et signé. La fiche passe au statut 'Contrat signé'.",
+          variant: "default"
+        });
+      } else if (action === 'archive') {
+        await transitionMutation.mutateAsync({ 
+          newState: 'ARCHIVED',
+          metadata: {
+            archivedBy: user?.id,
+            archivedAt: new Date().toISOString(),
+            reason: 'Contract verification failed or cancelled'
+          }
+        });
+        toast({
+          title: "Fiche archivée",
+          description: "La fiche a été annulée et archivée.",
           variant: "default"
         });
       }
@@ -954,6 +1000,89 @@ export default function FicheDetail({ ficheId }) {
                     }
                     return null;
                   })()
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Contract Verification for RELATIONS_EVS with ACCEPTED_EVS status */}
+          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'ACCEPTED_EVS' && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Vérification du contrat
+              </h2>
+              
+              <div className={styles.contractVerification}>
+                <p className={styles.verificationIntro}>
+                  Avant de valider le contrat, veuillez vérifier les points suivants :
+                </p>
+                
+                <div className={styles.checkboxGroup}>
+                  <label className={styles.checkboxItem}>
+                    <input
+                      type="checkbox"
+                      className={styles.checkbox}
+                      checked={contractSigned}
+                      onChange={(e) => setContractSigned(e.target.checked)}
+                      data-testid="checkbox-contract-signed"
+                    />
+                    <span className={styles.checkboxLabel}>
+                      Est-ce que le contrat a été signé par l'organisme assigné (EVS/CS) ?
+                    </span>
+                  </label>
+                  
+                  <label className={styles.checkboxItem}>
+                    <input
+                      type="checkbox"
+                      className={styles.checkbox}
+                      checked={fundsTransferred}
+                      onChange={(e) => setFundsTransferred(e.target.checked)}
+                      data-testid="checkbox-funds-transferred"
+                    />
+                    <span className={styles.checkboxLabel}>
+                      Est-ce que 70% des fonds ont été transférés à l'organisme assigné ?
+                      {fiche.selections?.length > 0 && (
+                        <span className={styles.amountInfo}>
+                          {' '}(70% de {formatCurrency(
+                            fiche.selections?.reduce((sum, s) => 
+                              sum + (s.workshop?.priceCents || 0) * s.qty, 0
+                            ) * 0.7 || 0
+                          )})
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                </div>
+
+                {/* Action buttons */}
+                <div className={styles.contractActions}>
+                  <button
+                    className={styles.validateContractButton}
+                    onClick={() => handleContractVerification('validate')}
+                    disabled={!contractSigned || !fundsTransferred || transitionMutation.isPending}
+                    data-testid="button-validate-contract"
+                  >
+                    <CheckCircle className={styles.buttonIcon} />
+                    Valider
+                  </button>
+                  
+                  <button
+                    className={styles.archiveContractButton}
+                    onClick={() => handleContractVerification('archive')}
+                    disabled={transitionMutation.isPending}
+                    data-testid="button-archive-contract"
+                  >
+                    <Archive className={styles.buttonIcon} />
+                    Annuler et archiver la fiche
+                  </button>
+                </div>
+
+                {(!contractSigned || !fundsTransferred) && (
+                  <div className={styles.validationNote}>
+                    <p className={styles.noteText}>
+                      Les deux vérifications doivent être cochées pour pouvoir valider le contrat.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
