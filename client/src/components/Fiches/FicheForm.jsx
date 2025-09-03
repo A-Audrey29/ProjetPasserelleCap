@@ -539,11 +539,11 @@ export default function FicheForm({
           </button>
           <button
             type="button"
-            onClick={handleSaveDraft}
+            onClick={handleSave}
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            Enregistrer brouillon
+            {initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
           </button>
           <button
             type="button"
@@ -656,11 +656,11 @@ export default function FicheForm({
           </button>
           <button
             type="button"
-            onClick={handleSaveDraft}
+            onClick={handleSave}
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            Enregistrer brouillon
+            {initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
           </button>
           <button
             type="button"
@@ -851,11 +851,11 @@ export default function FicheForm({
           </button>
           <button
             type="button"
-            onClick={handleSaveDraft}
+            onClick={handleSave}
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            Enregistrer brouillon
+            {initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
           </button>
           <button
             type="button"
@@ -1065,11 +1065,11 @@ export default function FicheForm({
           </button>
           <button
             type="button"
-            onClick={handleSaveDraft}
+            onClick={handleSave}
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            Enregistrer brouillon
+            {initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
           </button>
           <button
             type="button"
@@ -1203,11 +1203,14 @@ export default function FicheForm({
               </button>
               <button
                 type="button"
-                onClick={handleSaveDraft}
+                onClick={handleSave}
                 className={`${styles.button} ${draftSaved ? styles.buttonDraftSaved : styles.buttonDraft}`}
                 data-testid="button-save-draft"
               >
-                {draftSaved ? 'Brouillon sauvegardé' : 'Enregistrer brouillon'}
+                {draftSaved ? 
+                  (initialData?.state === 'DRAFT' ? 'Brouillon sauvegardé' : 'Fiche sauvegardée') :
+                  (initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche')
+                }
               </button>
               <button
                 type="button"
@@ -1223,11 +1226,14 @@ export default function FicheForm({
             <>
               <button
                 type="button"
-                onClick={handleSaveDraft}
+                onClick={handleSave}
                 className={`${styles.button} ${draftSaved ? styles.buttonDraftSaved : styles.buttonDraft}`}
                 data-testid="button-save-draft"
               >
-                {draftSaved ? 'Brouillon sauvegardé' : 'Enregistrer brouillon'}
+                {draftSaved ? 
+                  (initialData?.state === 'DRAFT' ? 'Brouillon sauvegardé' : 'Fiche sauvegardée') :
+                  (initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche')
+                }
               </button>
               <button
                 type="button"
@@ -1257,12 +1263,17 @@ export default function FicheForm({
     setCurrentStep(0);
   };
 
-  const handleSaveDraft = async () => {
+  const handleSave = async () => {
     try {
-      console.log('Save draft clicked! Current user:', user);
+      console.log('Save clicked! Current user:', user);
       console.log('Current form data:', formData);
       
-      // Create minimal family data for draft (even if incomplete)
+      const userRole = user?.user?.role || user?.role;
+      const currentState = initialData?.state || 'DRAFT';
+      const isAdmin = userRole === 'ADMIN';
+      const isDraft = currentState === 'DRAFT';
+
+      // Create minimal family data (even if incomplete for non-draft saves)
       const familyData = {
         lastName: formData.family?.lastName || '',
         firstName: formData.family?.firstName || '',
@@ -1279,7 +1290,7 @@ export default function FicheForm({
         address: formData.family?.adresse || ''
       };
 
-      // Transform workshop propositions for draft (can be empty)
+      // Transform workshop propositions
       const workshops = formData.workshopPropositions ? 
         Object.entries(formData.workshopPropositions).map(([workshopId, _]) => ({
           workshopId,
@@ -1288,29 +1299,43 @@ export default function FicheForm({
 
       const ficheData = {
         description: formData.descriptionSituation || '',
-        state: 'DRAFT',
         workshops: workshops,
         objectiveIds: (formData.objectives || []).map(obj => obj.id || obj),
         family: familyData
       };
 
-      const result = await onSaveDraft(ficheData);
+      // For draft fiches or admin users, save as draft
+      // For non-draft fiches with non-admin users, save without changing state
+      if (isDraft || isAdmin) {
+        ficheData.state = 'DRAFT';
+        await onSaveDraft(ficheData);
+      } else {
+        // For non-admin editing non-draft fiches, update without state change
+        await apiRequest('PATCH', `/api/fiches/${initialData.id}`, ficheData);
+        queryClient.invalidateQueries(['/api/fiches']);
+        queryClient.invalidateQueries(['/api/fiches', initialData.id]);
+      }
       
       // Set visual feedback
       setDraftSaved(true);
       setTimeout(() => setDraftSaved(false), 3000); // Reset after 3 seconds
 
+      const toastTitle = isDraft ? "Brouillon sauvegardé" : "Fiche sauvegardée";
+      const toastDescription = isDraft ? 
+        "Votre fiche a été sauvegardée en brouillon avec succès." :
+        "Les modifications de la fiche ont été sauvegardées avec succès.";
+
       toast({
-        title: "Brouillon sauvegardé",
-        description: "Votre fiche a été sauvegardée en brouillon avec succès.",
+        title: toastTitle,
+        description: toastDescription,
         variant: "default"
       });
 
     } catch (error) {
-      console.error('Draft save error:', error);
+      console.error('Save error:', error);
       toast({
         title: "Erreur de sauvegarde",
-        description: error.message || "Une erreur est survenue lors de la sauvegarde du brouillon.",
+        description: error.message || "Une erreur est survenue lors de la sauvegarde.",
         variant: "destructive"
       });
     }
