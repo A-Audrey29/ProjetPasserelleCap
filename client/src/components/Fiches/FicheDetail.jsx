@@ -1043,7 +1043,7 @@ export default function FicheDetail({ ficheId }) {
                       Est-ce que 70% des fonds ont été transférés à l'organisme assigné ?
                       {fiche.selections?.length > 0 && (
                         <span className={styles.amountInfo}>
-                          {' '}(70% de {formatCurrency(
+                          {' '}(70% du budget est {formatCurrency(
                             fiche.selections?.reduce((sum, s) => 
                               sum + (s.workshop?.priceCents || 0) * s.qty, 0
                             ) * 0.7 || 0
