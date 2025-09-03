@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { db } from '../server/db.ts';
 import { 
-  users, epsi, organizations, families, children, workshopObjectives, 
+  users, epcis, organizations, families, children, workshopObjectives, 
   workshops, ficheNavettes, ficheWorkshopSelections, auditLogs, comments
 } from '../shared/schema.ts';
 
@@ -27,75 +27,149 @@ async function main() {
     await db.delete(families);
     await db.delete(users);
     await db.delete(organizations);
-    await db.delete(epsi);
+    await db.delete(epcis);
 
-    // Seed EPSI
-    console.log('🏢 Creating EPSI...');
-    const epsiData = await db.insert(epsi).values([
-      { name: 'EPSI Nord' },
-      { name: 'EPSI Sud' },
-      { name: 'EPSI Est' },
-      { name: 'EPSI Ouest' },
-      { name: 'EPSI Centre' },
-      { name: 'EPSI Métropole' }
+    // Seed EPCIs
+    console.log('🏢 Creating EPCIs...');
+    const epcisData = await db.insert(epcis).values([
+      { name: 'EPCI Nord Pas-de-Calais' },
+      { name: 'EPCI Métropole Lilloise' },
+      { name: 'EPCI Côte d\'Opale' },
+      { name: 'EPCI Valenciennes Hainaut' },
+      { name: 'EPCI Artois-Ternois' },
+      { name: 'EPCI Flandre-Lys' }
     ]).returning();
 
     // Seed Organizations
     console.log('🏛️  Creating Organizations...');
     const orgsData = await db.insert(organizations).values([
+      // EPCI Nord Pas-de-Calais
       {
-        name: 'Association Entraide',
+        name: 'EVS Solidarité Nord',
         type: 'EVS',
-        address: '15 rue des Fleurs, 75001 Paris',
-        contact: 'Marie Dupuis',
-        email: 'contact@entraide.fr',
-        phone: '01 23 45 67 89',
-        epsiId: epsiData[0].id
+        address: '15 rue de la Paix, 59000 Lille',
+        contactPersonName: 'Marie Dupont',
+        contactEmail: 'marie.dupont@evs-nord.fr',
+        contactPhone: '03 20 12 34 56',
+        epciId: epcisData[0].id
       },
       {
         name: 'Centre Social Horizon',
         type: 'CS',
-        address: '42 avenue de la République, 75011 Paris',
-        contact: 'Jean Martin',
-        email: 'horizon@cs.fr',
-        phone: '01 34 56 78 90',
-        epsiId: epsiData[0].id
+        address: '42 avenue de la République, 59100 Roubaix',
+        contactPersonName: 'Jean Martin',
+        contactEmail: 'jean.martin@cs-horizon.fr',
+        contactPhone: '03 20 23 45 67',
+        epciId: epcisData[0].id
       },
       {
-        name: 'EVS Solidarité',
+        name: 'Association Entraide Familiale',
+        type: 'OTHER',
+        address: '8 place de la Liberté, 59200 Tourcoing',
+        contactPersonName: 'Sophie Rousseau',
+        contactEmail: 'sophie.rousseau@entraide-familiale.fr',
+        contactPhone: '03 20 34 56 78',
+        epciId: epcisData[0].id
+      },
+      
+      // EPCI Métropole Lilloise
+      {
+        name: 'EVS Métropole',
         type: 'EVS',
-        address: '8 place de la Mairie, 69001 Lyon',
-        contact: 'Sophie Rousseau',
-        email: 'solidarite@evs.fr',
-        phone: '04 12 34 56 78',
-        epsiId: epsiData[1].id
+        address: '25 boulevard Victor Hugo, 59000 Lille',
+        contactPersonName: 'Pierre Durand',
+        contactEmail: 'pierre.durand@evs-metropole.fr',
+        contactPhone: '03 20 45 67 89',
+        epciId: epcisData[1].id
       },
       {
-        name: 'Maison des Familles',
+        name: 'Centre Social Villeneuve',
         type: 'CS',
-        address: '25 rue Victor Hugo, 13001 Marseille',
-        contact: 'Pierre Blanc',
-        email: 'familles@cs-marseille.fr',
-        phone: '04 91 23 45 67',
-        epsiId: epsiData[1].id
+        address: '18 rue des Roses, 59650 Villeneuve-d\'Ascq',
+        contactPersonName: 'Claire Moreau',
+        contactEmail: 'claire.moreau@cs-villeneuve.fr',
+        contactPhone: '03 20 56 78 90',
+        epciId: epcisData[1].id
       },
+      
+      // EPCI Côte d'Opale
       {
-        name: 'Centre Social Espoir',
-        type: 'CS',
-        address: '12 boulevard Clemenceau, 67000 Strasbourg',
-        contact: 'Annie Weber',
-        email: 'espoir@cs-alsace.fr',
-        phone: '03 88 12 34 56',
-        epsiId: epsiData[2].id
-      },
-      {
-        name: 'EVS Les Liens',
+        name: 'EVS Littoral',
         type: 'EVS',
-        address: '7 rue de la Paix, 35000 Rennes',
-        contact: 'Luc Moreau',
-        email: 'liens@evs-bretagne.fr',
-        phone: '02 99 87 65 43',
-        epsiId: epsiData[3].id
+        address: '12 quai des Pêcheurs, 62100 Calais',
+        contactPersonName: 'Michel Blanc',
+        contactEmail: 'michel.blanc@evs-littoral.fr',
+        contactPhone: '03 21 12 34 56',
+        epciId: epcisData[2].id
+      },
+      {
+        name: 'Centre Social Maritime',
+        type: 'CS',
+        address: '30 rue de la Mer, 62200 Boulogne-sur-Mer',
+        contactPersonName: 'Anne Dubois',
+        contactEmail: 'anne.dubois@cs-maritime.fr',
+        contactPhone: '03 21 23 45 67',
+        epciId: epcisData[2].id
+      },
+      
+      // EPCI Valenciennes Hainaut
+      {
+        name: 'EVS Hainaut',
+        type: 'EVS',
+        address: '40 avenue de la Gare, 59300 Valenciennes',
+        contactPersonName: 'Laurent Petit',
+        contactEmail: 'laurent.petit@evs-hainaut.fr',
+        contactPhone: '03 27 12 34 56',
+        epciId: epcisData[3].id
+      },
+      {
+        name: 'Centre Social Escaut',
+        type: 'CS',
+        address: '22 place d\'Armes, 59300 Valenciennes',
+        contactPersonName: 'Nathalie Grand',
+        contactEmail: 'nathalie.grand@cs-escaut.fr',
+        contactPhone: '03 27 23 45 67',
+        epciId: epcisData[3].id
+      },
+      
+      // EPCI Artois-Ternois
+      {
+        name: 'EVS Artois',
+        type: 'EVS',
+        address: '15 rue Saint-Bertin, 62000 Arras',
+        contactPersonName: 'Patrick Lebrun',
+        contactEmail: 'patrick.lebrun@evs-artois.fr',
+        contactPhone: '03 21 34 56 78',
+        epciId: epcisData[4].id
+      },
+      {
+        name: 'Centre Social Ternois',
+        type: 'CS',
+        address: '5 place des Héros, 62130 Saint-Pol-sur-Ternoise',
+        contactPersonName: 'Véronique Leroy',
+        contactEmail: 'veronique.leroy@cs-ternois.fr',
+        contactPhone: '03 21 45 67 89',
+        epciId: epcisData[4].id
+      },
+      
+      // EPCI Flandre-Lys
+      {
+        name: 'EVS Flandre',
+        type: 'EVS',
+        address: '28 Grand-Place, 59190 Hazebrouck',
+        contactPersonName: 'Thierry Vandenbroucke',
+        contactEmail: 'thierry.vandenbroucke@evs-flandre.fr',
+        contactPhone: '03 28 12 34 56',
+        epciId: epcisData[5].id
+      },
+      {
+        name: 'Centre Social Lys',
+        type: 'CS',
+        address: '33 rue de la Lys, 59190 Hazebrouck',
+        contactPersonName: 'Isabelle Vandenberghe',
+        contactEmail: 'isabelle.vandenberghe@cs-lys.fr',
+        contactPhone: '03 28 23 45 67',
+        epciId: epcisData[5].id
       }
     ]).returning();
 
@@ -206,7 +280,7 @@ async function main() {
         firstName: 'Marie',
         lastName: 'Dupont',
         role: 'EMETTEUR',
-        epsiId: epsiData[0].id
+        orgId: orgsData[0].id
       },
       {
         email: 'relations@feves.cap',
@@ -214,7 +288,7 @@ async function main() {
         firstName: 'Jean',
         lastName: 'Martin',
         role: 'RELATIONS_EVS',
-        epsiId: epsiData[0].id
+        orgId: orgsData[0].id
       },
       {
         email: 'evs@association.cap',
@@ -223,7 +297,7 @@ async function main() {
         lastName: 'Rousseau',
         role: 'EVS_CS',
         orgId: orgsData[0].id,
-        epsiId: epsiData[0].id
+        orgId: orgsData[0].id
       },
       {
         email: 'suivi@feves.cap',
@@ -231,7 +305,7 @@ async function main() {
         firstName: 'Pierre',
         lastName: 'Blanc',
         role: 'SUIVI_PROJETS',
-        epsiId: epsiData[0].id
+        orgId: orgsData[0].id
       },
       {
         email: 'evs2@horizon.cap',
@@ -240,7 +314,7 @@ async function main() {
         lastName: 'Weber',
         role: 'EVS_CS',
         orgId: orgsData[1].id,
-        epsiId: epsiData[0].id
+        orgId: orgsData[0].id
       }
     ]).returning();
 
@@ -335,7 +409,7 @@ async function main() {
         state: 'SUBMITTED_TO_FEVES',
         emitterId: usersData[1].id, // Marie Dupont (EMETTEUR)
         familyId: familiesData[0].id,
-        epsiId: epsiData[0].id,
+        orgId: orgsData[0].id,
         description: 'Famille monoparentale avec deux enfants en difficulté scolaire. Besoin d\'accompagnement pour améliorer la communication et établir des routines éducatives.',
         createdAt: new Date('2024-01-15T09:30:00Z'),
         updatedAt: new Date('2024-01-15T14:20:00Z')
@@ -346,7 +420,7 @@ async function main() {
         emitterId: usersData[1].id,
         familyId: familiesData[1].id,
         assignedOrgId: orgsData[1].id,
-        epsiId: epsiData[0].id,
+        orgId: orgsData[0].id,
         description: 'Mère seule avec trois enfants, demande d\'accompagnement pour gestion du stress parental et activités en famille.',
         createdAt: new Date('2024-01-12T10:15:00Z'),
         updatedAt: new Date('2024-01-18T16:30:00Z')
@@ -357,7 +431,7 @@ async function main() {
         emitterId: usersData[1].id,
         familyId: familiesData[2].id,
         assignedOrgId: orgsData[2].id,
-        epsiId: epsiData[1].id,
+        epsiId: epcisData[1].id,
         description: 'Famille d\'origine étrangère, besoin d\'accompagnement pour l\'intégration et la communication intergénérationnelle.',
         createdAt: new Date('2024-01-08T08:45:00Z'),
         updatedAt: new Date('2024-01-25T17:00:00Z')
@@ -471,7 +545,7 @@ async function main() {
     console.log('EVS_CS: evs@association.cap / Demo!123');
     console.log('SUIVI_PROJETS: suivi@feves.cap / Demo!123');
     console.log('\n🏢 Created:');
-    console.log(`- ${epsiData.length} EPSI`);
+    console.log(`- ${epcisData.length} EPSI`);
     console.log(`- ${orgsData.length} Organizations`);
     console.log(`- ${objectivesData.length} Workshop Objectives`);
     console.log(`- ${workshopsData.length} Workshops`);

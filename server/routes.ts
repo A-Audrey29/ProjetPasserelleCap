@@ -535,6 +535,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Reference data routes
 
+  // EPCIs routes
+  app.get('/api/epcis', requireAuth, async (req, res) => {
+    try {
+      const epcis = await storage.getAllEpcis();
+      res.json(epcis);
+    } catch (error) {
+      console.error('Get EPCIs error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.get('/api/epcis/:id/organizations', requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const organizations = await storage.getOrganizationsByEpci(id);
+      res.json(organizations);
+    } catch (error) {
+      console.error('Get organizations by EPCI error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
   app.get('/api/organizations', requireAuth, async (req, res) => {
     try {
       const organizations = await storage.getAllOrganizations();

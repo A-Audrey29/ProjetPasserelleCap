@@ -1,8 +1,8 @@
 import {
-  users, organizations, families, children, workshopObjectives, workshops,
+  epcis, users, organizations, families, children, workshopObjectives, workshops,
   ficheNavettes, ficheWorkshopSelections, contracts, payments, fieldVerifications,
   finalReports, attachments, auditLogs, comments,
-  type User, type InsertUser, type Organization,
+  type Epci, type InsertEpci, type User, type InsertUser, type Organization,
   type InsertOrganization, type Family, type InsertFamily, type Child, type InsertChild,
   type WorkshopObjective, type InsertWorkshopObjective, type Workshop, type InsertWorkshop,
   type FicheNavette, type InsertFicheNavette, type FicheWorkshopSelection,
@@ -15,6 +15,13 @@ import { db } from "./db";
 import { eq, and, or, desc, asc, like, inArray } from "drizzle-orm";
 
 export interface IStorage {
+  // EPCIs
+  getAllEpcis(): Promise<Epci[]>;
+  getEpci(id: string): Promise<Epci | undefined>;
+  createEpci(epci: InsertEpci): Promise<Epci>;
+  updateEpci(id: string, epci: Partial<InsertEpci>): Promise<Epci>;
+  deleteEpci(id: string): Promise<void>;
+
   // Users
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -23,10 +30,10 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   deleteUser(id: string): Promise<void>;
 
-
   // Organizations
   getAllOrganizations(): Promise<Organization[]>;
   getOrganization(id: string): Promise<Organization | undefined>;
+  getOrganizationsByEpci(epciId: string): Promise<Organization[]>;
   createOrganization(org: InsertOrganization): Promise<Organization>;
   updateOrganization(id: string, org: Partial<InsertOrganization>): Promise<Organization>;
   deleteOrganization(id: string): Promise<void>;
@@ -114,6 +121,30 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // EPCIs
+  async getAllEpcis(): Promise<Epci[]> {
+    return await db.select().from(epcis).orderBy(asc(epcis.name));
+  }
+
+  async getEpci(id: string): Promise<Epci | undefined> {
+    const [epci] = await db.select().from(epcis).where(eq(epcis.id, id));
+    return epci || undefined;
+  }
+
+  async createEpci(insertEpci: InsertEpci): Promise<Epci> {
+    const [epci] = await db.insert(epcis).values(insertEpci).returning();
+    return epci;
+  }
+
+  async updateEpci(id: string, insertEpci: Partial<InsertEpci>): Promise<Epci> {
+    const [epci] = await db.update(epcis).set(insertEpci).where(eq(epcis.id, id)).returning();
+    return epci;
+  }
+
+  async deleteEpci(id: string): Promise<void> {
+    await db.delete(epcis).where(eq(epcis.id, id));
+  }
+
   // Users
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -154,6 +185,9 @@ export class DatabaseStorage implements IStorage {
     return org || undefined;
   }
 
+  async getOrganizationsByEpci(epciId: string): Promise<Organization[]> {
+    return await db.select().from(organizations).where(eq(organizations.epciId, epciId)).orderBy(asc(organizations.name));
+  }
 
   async createOrganization(insertOrg: InsertOrganization): Promise<Organization> {
     const [org] = await db.insert(organizations).values(insertOrg).returning();

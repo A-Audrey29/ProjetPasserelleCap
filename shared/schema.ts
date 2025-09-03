@@ -5,7 +5,7 @@ import { z } from "zod";
 
 // Enums
 export const roleEnum = pgEnum("role", ["ADMIN", "SUIVI_PROJETS", "EMETTEUR", "RELATIONS_EVS", "EVS_CS", "CD"]);
-export const orgTypeEnum = pgEnum("org_type", ["EVS", "CS"]);
+export const orgTypeEnum = pgEnum("org_type", ["EVS", "CS", "OTHER"]);
 export const ficheStateEnum = pgEnum("fiche_state", [
   "DRAFT", "SUBMITTED_TO_CD", "SUBMITTED_TO_FEVES", "ASSIGNED_TO_EVS", "EVS_ACCEPTED", "EVS_REJECTED", "NEEDS_INFO",
   "CONTRACT_SENT", "CONTRACT_SIGNED", "ADVANCE_70_PAID", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
@@ -14,6 +14,14 @@ export const ficheStateEnum = pgEnum("fiche_state", [
 export const paymentKindEnum = pgEnum("payment_kind", ["ADVANCE_70", "REMAINING_30"]);
 
 // Tables
+export const epcis = pgTable("epcis", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  nameIdx: index("epcis_name_idx").on(table.name),
+}));
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
@@ -32,18 +40,19 @@ export const users = pgTable("users", {
   roleIdx: index("users_role_idx").on(table.role),
 }));
 
-
 export const organizations = pgTable("organizations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   type: orgTypeEnum("type").notNull(),
   address: text("address"),
-  contact: text("contact"),
-  email: text("email"),
-  phone: text("phone"),
+  contactPersonName: text("contact_person_name"),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  epciId: varchar("epci_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   typeIdx: index("organizations_type_idx").on(table.type),
+  epciIdx: index("organizations_epci_idx").on(table.epciId),
 }));
 
 export const families = pgTable("families", {
@@ -222,6 +231,10 @@ export const comments = pgTable("comments", {
 }));
 
 // Relations
+export const epcisRelations = relations(epcis, ({ many }) => ({
+  organizations: many(organizations),
+}));
+
 export const usersRelations = relations(users, ({ one, many }) => ({
   organization: one(organizations, { fields: [users.orgId], references: [organizations.id] }),
   emittedFiches: many(ficheNavettes),
@@ -229,8 +242,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   comments: many(comments),
 }));
 
-
 export const organizationsRelations = relations(organizations, ({ one, many }) => ({
+  epci: one(epcis, { fields: [organizations.epciId], references: [epcis.id] }),
   users: many(users),
   workshops: many(workshops),
   assignedFiches: many(ficheNavettes),
@@ -304,12 +317,16 @@ export const commentsRelations = relations(comments, ({ one }) => ({
 }));
 
 // Insert schemas
+export const insertEpciSchema = createInsertSchema(epcis).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
-
 
 export const insertOrganizationSchema = createInsertSchema(organizations).omit({
   id: true,
@@ -383,6 +400,8 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
 });
 
 // Types
+export type Epci = typeof epcis.$inferSelect;
+export type InsertEpci = z.infer<typeof insertEpciSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Organization = typeof organizations.$inferSelect;
