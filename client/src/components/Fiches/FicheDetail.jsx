@@ -43,6 +43,8 @@ export default function FicheDetail({ ficheId }) {
   const [fundsTransferred, setFundsTransferred] = useState(false);
   const [activityCompleted, setActivityCompleted] = useState(false);
   const [fieldCheckCompleted, setFieldCheckCompleted] = useState(false);
+  const [finalReportSent, setFinalReportSent] = useState(false);
+  const [remainingPaymentSent, setRemainingPaymentSent] = useState(false);
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
@@ -303,6 +305,32 @@ export default function FicheDetail({ ficheId }) {
       toast({
         title: "Erreur",
         description: error.message || "Impossible de valider la vérification terrain",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Final verification completion for RELATIONS_EVS
+  const handleFinalVerificationCompletion = async () => {
+    try {
+      await transitionMutation.mutateAsync({ 
+        newState: 'CLOSED',
+        metadata: {
+          finalReportSent: true,
+          remainingPaymentSent: true,
+          completedBy: user?.id,
+          completedAt: new Date().toISOString()
+        }
+      });
+      toast({
+        title: "Fiche clôturée",
+        description: "La vérification finale a été confirmée. La fiche est maintenant clôturée.",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de clôturer la fiche",
         variant: "destructive"
       });
     }
@@ -1232,6 +1260,72 @@ export default function FicheDetail({ ficheId }) {
                   <div className={styles.validationNote}>
                     <p className={styles.noteText}>
                       Vous devez attester que l'activité a été tenue par l'organisme pour pouvoir valider.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Final Verification for RELATIONS_EVS with FIELD_CHECK_DONE status */}
+          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'FIELD_CHECK_DONE' && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Vérification finale
+              </h2>
+              
+              <div className={styles.finalVerification}>
+                <div className={styles.verificationChecks}>
+                  <div className={styles.checkItem}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkbox}
+                        checked={finalReportSent}
+                        onChange={(e) => setFinalReportSent(e.target.checked)}
+                        data-testid="checkbox-final-report-sent"
+                      />
+                      <span className={styles.checkboxText}>
+                        Le rapport final de l'activité a été envoyé à la FEVES et au Conseil départemental.
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div className={styles.checkItem}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkbox}
+                        checked={remainingPaymentSent}
+                        onChange={(e) => setRemainingPaymentSent(e.target.checked)}
+                        data-testid="checkbox-remaining-payment-sent"
+                      />
+                      <span className={styles.checkboxText}>
+                        Le solde restant, 30% du Total à savoir <span className={styles.amountInfo}>
+                          {fiche.totalAmount ? (fiche.totalAmount * 0.3).toFixed(2) : '0.00'} €
+                        </span> a été versé à l'organisme désigné.
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Action button */}
+                <div className={styles.finalVerificationActions}>
+                  <button
+                    className={styles.validateFinalButton}
+                    onClick={() => handleFinalVerificationCompletion()}
+                    disabled={!finalReportSent || !remainingPaymentSent || transitionMutation.isPending}
+                    data-testid="button-validate-final-verification"
+                  >
+                    <CheckCircle className={styles.buttonIcon} />
+                    Valider
+                  </button>
+                </div>
+
+                {(!finalReportSent || !remainingPaymentSent) && (
+                  <div className={styles.validationNote}>
+                    <p className={styles.noteText}>
+                      Les deux vérifications doivent être cochées pour pouvoir clôturer la fiche.
                     </p>
                   </div>
                 )}

@@ -1071,6 +1071,11 @@
   padding: 1.5rem;
 }
 
+/* Final Verification Styles */
+.finalVerification {
+  padding: 1.5rem;
+}
+
 .verificationIntro {
   font-size: 1rem;
   color: #3B4B61;
@@ -1138,6 +1143,14 @@
 }
 
 .fieldCheckActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.finalVerificationActions {
   display: flex;
   gap: 1rem;
   justify-content: center;
@@ -1265,6 +1278,36 @@
   box-shadow: none;
 }
 
+.validateFinalButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #6A8B74;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.validateFinalButton:hover:not(:disabled) {
+  background: #5A7A64;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(106, 139, 116, 0.2);
+}
+
+.validateFinalButton:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .validationNote {
   margin-top: 1rem;
   padding: 1rem;
@@ -1321,6 +1364,16 @@
   }
   
   .validateFieldCheckButton {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .finalVerificationActions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .validateFinalButton {
     width: 100%;
     max-width: 300px;
   }
