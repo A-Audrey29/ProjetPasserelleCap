@@ -364,20 +364,6 @@ export const getRoleActionSuggestions = (role) => {
   
   if (role === ROLES.RELATIONS_EVS) {
     actionSuggestions.push({
-      icon: 'Eye',
-      title: 'Consulter les fiches navettes',
-      description: 'Visualiser les fiches de votre périmètre géographique',
-      href: '/fiches',
-      color: 'primary'
-    });
-    actionSuggestions.push({
-      icon: 'Plus',
-      title: 'Émettre une nouvelle fiche navette',
-      description: 'Créer une nouvelle demande d\'accompagnement CAP',
-      href: '/fiches/new',
-      color: 'success'
-    });
-    actionSuggestions.push({
       icon: 'CheckCircle',
       title: 'Valider et transmettre les fiches',
       description: 'Traiter les fiches prêtes à être affectées aux EVS',
