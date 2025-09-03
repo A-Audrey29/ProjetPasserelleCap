@@ -48,7 +48,12 @@ export default function FicheDetail({ ficheId }) {
 
   // Query for audit logs
   const { data: auditLogs = [], isLoading: auditLoading } = useQuery({
-    queryKey: ['/api/audit', { entityId: ficheId, entity: 'FicheNavette' }],
+    queryKey: ['/api/audit', ficheId, 'FicheNavette'],
+    queryFn: async () => {
+      const response = await fetch(`/api/audit?entityId=${ficheId}&entity=FicheNavette`);
+      if (!response.ok) throw new Error('Failed to fetch audit logs');
+      return response.json();
+    },
     enabled: !!ficheId, // Always fetch audit logs for validation display
     retry: false
   });
