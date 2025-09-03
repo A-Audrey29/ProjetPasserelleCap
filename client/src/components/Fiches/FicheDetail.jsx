@@ -690,6 +690,58 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
+          {/* Validation tracking for all fiches */}
+          {(fiche.state === 'SUBMITTED_TO_CD' || fiche.state === 'SUBMITTED_TO_FEVES' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Historique des validations
+              </h2>
+              <div className={styles.validationMessages}>
+                {/* Family consent */}
+                {fiche.familyConsent && (
+                  <div className={styles.validationItem} data-testid="validation-family">
+                    <span className={styles.validationCheck}>✓</span>
+                    <span>La famille a donné son accord pour cet accompagnement</span>
+                  </div>
+                )}
+                
+                {/* Emitter validation */}
+                <div className={styles.validationItem} data-testid="validation-emitter">
+                  <span className={styles.validationCheck}>✓</span>
+                  <span>
+                    {fiche.emitter?.firstName} {fiche.emitter?.lastName} 
+                    {fiche.emitter?.structure && ` (${fiche.emitter.structure})`} a validé et transmis cette fiche
+                  </span>
+                </div>
+                
+                {/* CD validation - only show if fiche has been validated by CD */}
+                {(fiche.state === 'SUBMITTED_TO_FEVES' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && auditLogs && (
+                  (() => {
+                    const cdValidation = auditLogs.find(log => 
+                      log.action === 'state_transition' && 
+                      log.meta?.oldState === 'SUBMITTED_TO_CD' &&
+                      log.meta?.newState === 'SUBMITTED_TO_FEVES'
+                    );
+                    
+                    if (cdValidation && cdValidation.actor) {
+                      return (
+                        <div className={styles.validationItem} data-testid="validation-cd">
+                          <span className={styles.validationCheck}>✓</span>
+                          <span>
+                            {cdValidation.actor.firstName} {cdValidation.actor.lastName}
+                            {cdValidation.actor.structure && ` (${cdValidation.actor.structure})`} 
+                            {' '}a validé cette fiche
+                          </span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Commentaires */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>
@@ -745,58 +797,6 @@ export default function FicheDetail({ ficheId }) {
               </div>
             )}
           </div>
-
-          {/* Validation tracking for all fiches */}
-          {(fiche.state === 'SUBMITTED_TO_CD' || fiche.state === 'SUBMITTED_TO_FEVES' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && (
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                Historique des validations
-              </h2>
-              <div className={styles.validationMessages}>
-                {/* Family consent */}
-                {fiche.familyConsent && (
-                  <div className={styles.validationItem} data-testid="validation-family">
-                    <span className={styles.validationCheck}>✓</span>
-                    <span>La famille a donné son accord pour cet accompagnement</span>
-                  </div>
-                )}
-                
-                {/* Emitter validation */}
-                <div className={styles.validationItem} data-testid="validation-emitter">
-                  <span className={styles.validationCheck}>✓</span>
-                  <span>
-                    {fiche.emitter?.firstName} {fiche.emitter?.lastName} 
-                    {fiche.emitter?.structure && ` (${fiche.emitter.structure})`} a validé et transmis cette fiche
-                  </span>
-                </div>
-                
-                {/* CD validation - only show if fiche has been validated by CD */}
-                {(fiche.state === 'SUBMITTED_TO_FEVES' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && auditLogs && (
-                  (() => {
-                    const cdValidation = auditLogs.find(log => 
-                      log.action === 'state_transition' && 
-                      log.meta?.oldState === 'SUBMITTED_TO_CD' &&
-                      log.meta?.newState === 'SUBMITTED_TO_FEVES'
-                    );
-                    
-                    if (cdValidation && cdValidation.actor) {
-                      return (
-                        <div className={styles.validationItem} data-testid="validation-cd">
-                          <span className={styles.validationCheck}>✓</span>
-                          <span>
-                            {cdValidation.actor.firstName} {cdValidation.actor.lastName}
-                            {cdValidation.actor.structure && ` (${cdValidation.actor.structure})`} 
-                            {' '}a validé cette fiche
-                          </span>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
