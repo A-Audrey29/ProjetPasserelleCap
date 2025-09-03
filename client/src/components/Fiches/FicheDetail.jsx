@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { 
@@ -38,13 +38,25 @@ export default function FicheDetail({ ficheId }) {
   const [selectedEpciId, setSelectedEpciId] = useState('');
   const [selectedEvscsId, setSelectedEvscsId] = useState('');
   
-  // Contract verification states
+  // Contract verification states - initialize from fiche data
   const [contractSigned, setContractSigned] = useState(false);
   const [fundsTransferred, setFundsTransferred] = useState(false);
   const [activityCompleted, setActivityCompleted] = useState(false);
   const [fieldCheckCompleted, setFieldCheckCompleted] = useState(false);
   const [finalReportSent, setFinalReportSent] = useState(false);
   const [remainingPaymentSent, setRemainingPaymentSent] = useState(false);
+
+  // Update states when fiche data loads
+  useEffect(() => {
+    if (fiche) {
+      setContractSigned(fiche.contractSigned || false);
+      setFundsTransferred(fiche.fundsTransferred || false);
+      setActivityCompleted(fiche.activityCompleted || false);
+      setFieldCheckCompleted(fiche.fieldCheckCompleted || false);
+      setFinalReportSent(fiche.finalReportSent || false);
+      setRemainingPaymentSent(fiche.remainingPaymentSent || false);
+    }
+  }, [fiche]);
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({

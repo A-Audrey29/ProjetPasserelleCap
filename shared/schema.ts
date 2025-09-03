@@ -127,6 +127,31 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   // Family consent
   familyConsent: boolean("family_consent").notNull().default(false),
   
+  // Contract verification tracking
+  contractSigned: boolean("contract_signed").notNull().default(false),
+  fundsTransferred: boolean("funds_transferred").notNull().default(false),
+  contractVerifiedBy: varchar("contract_verified_by"),
+  contractVerifiedAt: timestamp("contract_verified_at"),
+  
+  // Activity completion tracking
+  activityCompleted: boolean("activity_completed").notNull().default(false),
+  activityCompletedBy: varchar("activity_completed_by"),
+  activityCompletedAt: timestamp("activity_completed_at"),
+  
+  // Field check tracking
+  fieldCheckCompleted: boolean("field_check_completed").notNull().default(false),
+  fieldCheckCompletedBy: varchar("field_check_completed_by"),
+  fieldCheckCompletedAt: timestamp("field_check_completed_at"),
+  
+  // Final verification tracking
+  finalReportSent: boolean("final_report_sent").notNull().default(false),
+  remainingPaymentSent: boolean("remaining_payment_sent").notNull().default(false),
+  finalVerificationBy: varchar("final_verification_by"),
+  finalVerificationAt: timestamp("final_verification_at"),
+  
+  // Total amount for calculations
+  totalAmount: integer("total_amount"), // in cents
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
