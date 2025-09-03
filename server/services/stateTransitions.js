@@ -32,18 +32,11 @@ export function canTransition(userRole, currentState, newState) {
     return true;
   }
   
-  console.log('[DEBUG] State transition check - Role:', userRole, 'Current:', currentState, 'New:', newState);
   const allowedTransitions = STATE_TRANSITIONS[userRole];
-  if (!allowedTransitions) {
-    console.log('[DEBUG] No transitions defined for role:', userRole);
-    return false;
-  }
+  if (!allowedTransitions) return false;
   
   const validNextStates = allowedTransitions[currentState];
-  console.log('[DEBUG] Valid next states for', currentState, ':', validNextStates);
-  const canTransition = validNextStates?.includes(newState) || false;
-  console.log('[DEBUG] Can transition result:', canTransition);
-  return canTransition;
+  return validNextStates?.includes(newState) || false;
 }
 
 export async function transitionFicheState(ficheId, newState, userId, metadata = {}) {

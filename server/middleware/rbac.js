@@ -21,9 +21,7 @@ export function requireRole(...allowedRoles) {
       return res.status(401).json({ message: 'Non autorisé' });
     }
 
-    console.log('[DEBUG] Role check - User role:', req.user.role, 'Allowed roles:', allowedRoles);
     if (!allowedRoles.includes(req.user.role)) {
-      console.log('[DEBUG] Role check failed - Role not allowed');
       return res.status(403).json({ message: 'Accès interdit - Rôle insuffisant' });
     }
 
