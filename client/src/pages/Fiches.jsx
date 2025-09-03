@@ -216,19 +216,27 @@ export default function Fiches() {
                       <h3 className={styles.familyName}>
                         {(() => {
                           const family = fiche.family;
-                          if (!family) return 'Nom non disponible';
+                          const familyData = fiche.familyDetailedData;
                           
-                          const autoriteParentale = family.autoriteParentale;
-                          if (autoriteParentale === 'Mère') {
-                            return family.mother || 'Nom non disponible';
-                          } else if (autoriteParentale === 'Père') {
-                            return family.father || 'Nom non disponible';
-                          } else if (autoriteParentale === 'Tiers') {
-                            return family.tiers || family.guardian || 'Nom non disponible';
+                          if (!family && !familyData) return 'Nom non disponible';
+                          
+                          // Check if autoriteParentale exists in familyDetailedData
+                          if (familyData?.autoriteParentale) {
+                            if (familyData.autoriteParentale === 'Mère') {
+                              return familyData.mother || family?.mother || 'Nom non disponible';
+                            } else if (familyData.autoriteParentale === 'Père') {
+                              return familyData.father || family?.father || 'Nom non disponible';
+                            } else if (familyData.autoriteParentale === 'Tiers') {
+                              return familyData.tiers || family?.guardian || 'Nom non disponible';
+                            }
                           }
                           
-                          // Fallback to lastName if autoriteParentale is not set
-                          return family.lastName || 'Nom non disponible';
+                          // Fallback: display available parent names from family table
+                          if (family?.mother) return family.mother;
+                          if (family?.father) return family.father;
+                          if (family?.guardian) return family.guardian;
+                          
+                          return 'Nom non disponible';
                         })()}
                       </h3>
                       
