@@ -913,6 +913,38 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
+          {/* Ateliers proposés (pour les fiches en draft) */}
+          {fiche.state === 'DRAFT' && fiche.workshopPropositions?.workshops?.length > 0 && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Ateliers proposés
+              </h2>
+              <div className={styles.workshopSelections}>
+                {fiche.workshopPropositions.workshops.map((workshop, index) => (
+                  <div key={workshop.id || index} className={styles.workshopItem} data-testid={`workshop-${workshop.id || index}`}>
+                    <div className={styles.workshopHierarchy}>
+                      <div className={styles.workshopLevel}>
+                        <h3 className={styles.workshopName} data-testid={`text-workshop-name-${workshop.id || index}`}>
+                          {workshop.name}
+                        </h3>
+                      </div>
+                      {workshop.reason && (
+                        <div className={styles.propositionLevel}>
+                          <div className={styles.propositionContent}>
+                            <span className={styles.propositionLabel}>Justification</span>
+                            <p className={styles.propositionText} data-testid={`text-workshop-reason-${workshop.id || index}`}>
+                              {workshop.reason}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Ateliers sélectionnés */}
           {fiche.selections?.length > 0 && (
             <div className={styles.card}>

@@ -195,7 +195,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             emitter,
             family,
             assignedOrg,
-            totalAmount
+            totalAmount,
+            // Ensure JSON fields are properly parsed with safe parsing
+            referentData: fiche.referentData && typeof fiche.referentData === 'string' ? 
+              (() => { try { return JSON.parse(fiche.referentData); } catch { return null; } })() : fiche.referentData,
+            familyDetailedData: fiche.familyDetailedData && typeof fiche.familyDetailedData === 'string' ? 
+              (() => { try { return JSON.parse(fiche.familyDetailedData); } catch { return null; } })() : fiche.familyDetailedData,
+            childrenData: fiche.childrenData && typeof fiche.childrenData === 'string' ? 
+              (() => { try { return JSON.parse(fiche.childrenData); } catch { return null; } })() : fiche.childrenData,
+            workshopPropositions: fiche.workshopPropositions && typeof fiche.workshopPropositions === 'string' ? 
+              (() => { try { return JSON.parse(fiche.workshopPropositions); } catch { return null; } })() : fiche.workshopPropositions
           };
         })
       );
@@ -282,6 +291,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         finalReport,
         comments: commentsWithAuthors,
         children,
+        // Ensure JSON fields are properly parsed with safe parsing
+        referentData: fiche.referentData && typeof fiche.referentData === 'string' ? 
+          (() => { try { return JSON.parse(fiche.referentData); } catch { return null; } })() : fiche.referentData,
+        familyDetailedData: fiche.familyDetailedData && typeof fiche.familyDetailedData === 'string' ? 
+          (() => { try { return JSON.parse(fiche.familyDetailedData); } catch { return null; } })() : fiche.familyDetailedData,
+        childrenData: fiche.childrenData && typeof fiche.childrenData === 'string' ? 
+          (() => { try { return JSON.parse(fiche.childrenData); } catch { return null; } })() : fiche.childrenData,
+        workshopPropositions: fiche.workshopPropositions && typeof fiche.workshopPropositions === 'string' ? 
+          (() => { try { return JSON.parse(fiche.workshopPropositions); } catch { return null; } })() : fiche.workshopPropositions,
         validTransitions: getValidTransitions(req.ficheAccess.role, fiche.state)
       };
 
