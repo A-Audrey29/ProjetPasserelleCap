@@ -1421,8 +1421,11 @@ export default function FicheForm({
     }
 
     try {
+      let ficheId;
+      
       // If we have an existing fiche (initialData with id), transition its state
       if (initialData && initialData.id) {
+        ficheId = initialData.id;
         await transitionFiche({
           id: initialData.id,
           newState: 'SUBMITTED_TO_CD',
@@ -1462,6 +1465,8 @@ export default function FicheForm({
           throw new Error('Fiche creation failed - no ID returned');
         }
         
+        ficheId = newFiche.id;
+        
         // Then transition it to SUBMITTED_TO_CD
         const transitionResult = await transitionFiche({
           id: newFiche.id,
@@ -1479,9 +1484,9 @@ export default function FicheForm({
         variant: "success"
       });
 
-      // Redirect to home page after successful submission
+      // Redirect to fiche detail page after successful submission
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = `/fiches/${ficheId}`;
       }, 2000);
 
     } catch (error) {
