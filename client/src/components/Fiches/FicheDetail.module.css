@@ -802,7 +802,15 @@
   padding-left: 3rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.propositionContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .propositionLabel {
@@ -811,15 +819,62 @@
   font-style: italic;
 }
 
-.propositionDetails {
-  display: flex;
-  align-items: center;
+.propositionText {
+  font-size: 0.875rem;
+  color: #4B5563;
+  line-height: 1.5;
+  margin: 0;
+  background: #F9FAFB;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #D9A066;
 }
 
 .propositionPrice {
   font-size: 1rem;
   font-weight: 600;
   color: #D9A066;
+  flex-shrink: 0;
+}
+
+/* Enhanced Family Layout */
+.familyDetailsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.familySection {
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #FAFBFC;
+}
+
+.sectionSubtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.descriptionSection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #E2E8F0;
+}
+
+.descriptionValue {
+  font-size: 0.875rem;
+  color: #4B5563;
+  line-height: 1.6;
+  margin: 0.5rem 0 0 0;
+  background: #F9FAFB;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 3px solid #6A8B74;
 }
 
 .totalSection {

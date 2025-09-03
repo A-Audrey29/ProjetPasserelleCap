@@ -404,35 +404,53 @@ export default function FicheDetail({ ficheId }) {
 
         {/* Content */}
         <div className={styles.content}>
-          {/* Informations générales */}
+          {/* Informations du référent */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>
-              Informations générales
+              Informations du référent
             </h2>
             <div className={styles.infoGrid}>
               <div className={styles.infoItem}>
-                <label className={styles.infoLabel}>Référent</label>
-                <p className={styles.infoValue} data-testid="text-emitter">
-                  {fiche.emitter?.firstName} {fiche.emitter?.lastName}
+                <label className={styles.infoLabel}>Nom</label>
+                <p className={styles.infoValue} data-testid="text-referent-lastname">
+                  {fiche.referentData?.lastName || fiche.emitter?.lastName || 'N/A'}
                 </p>
               </div>
               <div className={styles.infoItem}>
-                <label className={styles.infoLabel}>Créé le</label>
-                <p className={styles.infoValue} data-testid="text-created-date">
-                  {formatDate(fiche.createdAt)}
+                <label className={styles.infoLabel}>Prénom</label>
+                <p className={styles.infoValue} data-testid="text-referent-firstname">
+                  {fiche.referentData?.firstName || fiche.emitter?.firstName || 'N/A'}
                 </p>
               </div>
               <div className={styles.infoItem}>
-                <label className={styles.infoLabel}>Dernière modification</label>
-                <p className={styles.infoValue} data-testid="text-updated-date">
-                  {formatDate(fiche.updatedAt)}
+                <label className={styles.infoLabel}>Structure</label>
+                <p className={styles.infoValue} data-testid="text-referent-structure">
+                  {fiche.referentData?.structure || fiche.emitter?.structure || 'N/A'}
+                </p>
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Téléphone</label>
+                <p className={styles.infoValue} data-testid="text-referent-phone">
+                  {fiche.referentData?.phone || fiche.emitter?.phone || 'N/A'}
+                </p>
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Email</label>
+                <p className={styles.infoValue} data-testid="text-referent-email">
+                  {fiche.referentData?.email || fiche.emitter?.email || 'N/A'}
+                </p>
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Date de demande</label>
+                <p className={styles.infoValue} data-testid="text-request-date">
+                  {fiche.referentData?.requestDate ? formatDate(fiche.referentData.requestDate) : formatDate(fiche.createdAt)}
                 </p>
               </div>
             </div>
             {fiche.description && (
-              <div className={styles.infoItem}>
-                <label className={styles.infoLabel}>Description</label>
-                <p className={styles.infoValue} data-testid="text-description">
+              <div className={styles.descriptionSection}>
+                <label className={styles.infoLabel}>Description de la demande</label>
+                <p className={styles.descriptionValue} data-testid="text-description">
                   {fiche.description}
                 </p>
               </div>
@@ -445,57 +463,123 @@ export default function FicheDetail({ ficheId }) {
               <h2 className={styles.cardTitle}>
                 Informations Famille
               </h2>
-              <div className={styles.infoGrid}>
-                <div className={styles.infoItem}>
-                  <label className={styles.infoLabel}>Nom</label>
-                  <p className={styles.infoValue} data-testid="text-family-name">
-                    {fiche.family.lastName}
-                  </p>
+              <div className={styles.familyDetailsGrid}>
+                <div className={styles.familySection}>
+                  <h3 className={styles.sectionSubtitle}>Informations de base</h3>
+                  <div className={styles.infoGrid}>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Code famille</label>
+                      <p className={styles.infoValue} data-testid="text-family-code">
+                        {fiche.familyDetailedData?.code || fiche.family.code || 'N/A'}
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Adresse</label>
+                      <p className={styles.infoValue} data-testid="text-family-address">
+                        {fiche.familyDetailedData?.adresse || fiche.family.address || 'N/A'}
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Téléphone portable</label>
+                      <p className={styles.infoValue} data-testid="text-family-mobile">
+                        {fiche.familyDetailedData?.telephonePortable || fiche.family.phone || 'N/A'}
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Téléphone fixe</label>
+                      <p className={styles.infoValue} data-testid="text-family-phone">
+                        {fiche.familyDetailedData?.telephoneFixe || 'N/A'}
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Email</label>
+                      <p className={styles.infoValue} data-testid="text-family-email">
+                        {fiche.familyDetailedData?.email || fiche.family.email || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className={styles.infoItem}>
-                  <label className={styles.infoLabel}>Prénom</label>
-                  <p className={styles.infoValue} data-testid="text-family-firstname">
-                    {fiche.family.firstName}
-                  </p>
+
+                <div className={styles.familySection}>
+                  <h3 className={styles.sectionSubtitle}>Composition familiale</h3>
+                  <div className={styles.infoGrid}>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Mère</label>
+                      <p className={styles.infoValue} data-testid="text-family-mother">
+                        {fiche.familyDetailedData?.mother || fiche.family.mother || 'N/A'}
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Père</label>
+                      <p className={styles.infoValue} data-testid="text-family-father">
+                        {fiche.familyDetailedData?.father || fiche.family.father || 'N/A'}
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Tiers</label>
+                      <p className={styles.infoValue} data-testid="text-family-tiers">
+                        {fiche.familyDetailedData?.tiers || fiche.family.tiers || 'N/A'}
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Lien avec les enfants</label>
+                      <p className={styles.infoValue} data-testid="text-family-link">
+                        {fiche.familyDetailedData?.lienAvecEnfants || fiche.family.lienAvecEnfants || 'N/A'}
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Autorité parentale</label>
+                      <p className={styles.infoValue} data-testid="text-family-authority">
+                        {fiche.familyDetailedData?.autoriteParentale || fiche.family.autoriteParentale || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className={styles.infoItem}>
-                  <label className={styles.infoLabel}>Téléphone</label>
-                  <p className={styles.infoValue} data-testid="text-family-phone">
-                    {fiche.family.phone || 'N/A'}
-                  </p>
-                </div>
-                <div className={styles.infoItem}>
-                  <label className={styles.infoLabel}>Email</label>
-                  <p className={styles.infoValue} data-testid="text-family-email">
-                    {fiche.family.email || 'N/A'}
-                  </p>
+
+                <div className={styles.familySection}>
+                  <h3 className={styles.sectionSubtitle}>Situation</h3>
+                  <div className={styles.infoGrid}>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Situation familiale</label>
+                      <p className={styles.infoValue} data-testid="text-family-situation">
+                        {fiche.familyDetailedData?.situationFamiliale || fiche.family.situationFamiliale || 'N/A'}
+                      </p>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel}>Situation socio-professionnelle</label>
+                      <p className={styles.infoValue} data-testid="text-family-sociopro">
+                        {fiche.familyDetailedData?.situationSocioProfessionnelle || fiche.family.situationSocioProfessionnelle || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
           {/* Children Information */}
-          {fiche.children && fiche.children.length > 0 && (
+          {((fiche.children && fiche.children.length > 0) || (fiche.childrenData && fiche.childrenData.length > 0)) && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Enfants
               </h2>
               <div className={styles.childrenList}>
-                {fiche.children.map((child) => (
-                  <div key={child.id} className={styles.childCard} data-testid={`child-${child.id}`}>
+                {/* Display children from database or form data */}
+                {(fiche.children?.length > 0 ? fiche.children : fiche.childrenData || []).map((child, index) => (
+                  <div key={child.id || index} className={styles.childCard} data-testid={`child-${child.id || index}`}>
                     <div className={styles.childInfo}>
-                      <h3 className={styles.childName} data-testid={`text-child-name-${child.id}`}>
-                        {child.firstName}
+                      <h3 className={styles.childName} data-testid={`text-child-name-${child.id || index}`}>
+                        {child.firstName || child.name || 'N/A'}
                       </h3>
                       <div className={styles.childDetails}>
-                        {child.birthDate && (
-                          <span className={styles.childAge} data-testid={`text-child-age-${child.id}`}>
-                            Né(e) le {formatDate(child.birthDate)}
+                        {(child.birthDate || child.dateNaissance) && (
+                          <span className={styles.childAge} data-testid={`text-child-age-${child.id || index}`}>
+                            Né(e) le {formatDate(child.birthDate || child.dateNaissance)}
                           </span>
                         )}
-                        {child.level && (
-                          <span className={styles.childLevel} data-testid={`text-child-level-${child.id}`}>
-                            Niveau: {child.level}
+                        {(child.level || child.niveauScolaire) && (
+                          <span className={styles.childLevel} data-testid={`text-child-level-${child.id || index}`}>
+                            Niveau: {child.level || child.niveauScolaire}
                           </span>
                         )}
                       </div>
@@ -530,11 +614,16 @@ export default function FicheDetail({ ficheId }) {
                         </h3>
                       </div>
                       <div className={styles.propositionLevel}>
-                        <span className={styles.propositionLabel}>Proposition du référent</span>
-                        <div className={styles.propositionDetails}>
-                          <span className={styles.propositionPrice} data-testid={`text-workshop-price-${selection.id}`}>
-                            {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
-                          </span>
+                        <div className={styles.propositionContent}>
+                          <span className={styles.propositionLabel}>Proposition du référent</span>
+                          {fiche.workshopPropositions && fiche.workshopPropositions[selection.workshopId] && (
+                            <p className={styles.propositionText} data-testid={`text-proposition-${selection.id}`}>
+                              {fiche.workshopPropositions[selection.workshopId]}
+                            </p>
+                          )}
+                        </div>
+                        <div className={styles.propositionPrice} data-testid={`text-workshop-price-${selection.id}`}>
+                          {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
                         </div>
                       </div>
                     </div>
