@@ -13,7 +13,9 @@ import {
   XCircle,
   ArrowLeft,
   Edit,
-  RotateCcw
+  RotateCcw,
+  Archive,
+  Trash2
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
@@ -166,6 +168,73 @@ export default function FicheDetail({ ficheId }) {
     }
   };
 
+  // Admin-only actions
+  const handleArchive = async () => {
+    if (!window.confirm('Êtes-vous sûr de vouloir archiver cette fiche ? Cette action ne peut pas être annulée.')) {
+      return;
+    }
+
+    try {
+      await transitionMutation.mutateAsync({ 
+        newState: 'ARCHIVED',
+        metadata: {
+          archivedBy: user?.user?.id || user?.id,
+          archiveDate: new Date().toISOString(),
+          reason: 'Admin archive action'
+        }
+      });
+
+      toast({
+        title: "Fiche archivée",
+        description: "La fiche a été archivée avec succès.",
+        variant: "default"
+      });
+
+      // Redirect to fiches list
+      setTimeout(() => {
+        window.location.href = '/fiches';
+      }, 1000);
+
+    } catch (error) {
+      toast({
+        title: "Erreur d'archivage",
+        description: error.message || "Une erreur est survenue lors de l'archivage.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer définitivement cette fiche ? Cette action ne peut pas être annulée.')) {
+      return;
+    }
+
+    try {
+      await apiRequest('DELETE', `/api/fiches/${ficheId}`);
+      
+      queryClient.invalidateQueries(['/api/fiches']);
+      
+      toast({
+        title: "Fiche supprimée",
+        description: "La fiche a été supprimée définitivement.",
+        variant: "default"
+      });
+
+      // Redirect to fiches list
+      setTimeout(() => {
+        window.location.href = '/fiches';
+      }, 1000);
+
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: "Erreur de suppression",
+        description: error.message || "Une erreur est survenue lors de la suppression.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const canPerformAction = (action) => {
     if (!fiche || !user) return false;
     
@@ -291,6 +360,30 @@ export default function FicheDetail({ ficheId }) {
                   <Edit className={styles.buttonIcon} />
                   Modifier la fiche
                 </Link>
+              )}
+              
+              {/* Admin-only actions */}
+              {user?.user?.role === 'ADMIN' && (
+                <>
+                  <button 
+                    onClick={handleArchive}
+                    disabled={transitionMutation.isPending}
+                    className={styles.archiveButton}
+                    data-testid="button-archive-fiche"
+                  >
+                    <Archive className={styles.buttonIcon} />
+                    Archiver
+                  </button>
+                  <button 
+                    onClick={handleDelete}
+                    disabled={transitionMutation.isPending}
+                    className={styles.deleteButton}
+                    data-testid="button-delete-fiche"
+                  >
+                    <Trash2 className={styles.buttonIcon} />
+                    Supprimer
+                  </button>
+                </>
               )}
               
               <button 

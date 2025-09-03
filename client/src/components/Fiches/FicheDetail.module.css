@@ -616,3 +616,60 @@
     gap: 0.5rem;
   }
 }
+
+/* Admin Action Buttons */
+.archiveButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #D9A066;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.archiveButton:hover {
+  background: #C89152;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(217, 160, 102, 0.2);
+}
+
+.archiveButton:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #8C4A4A;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+  background: #7A3D3D;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(140, 74, 74, 0.2);
+}
+
+.deleteButton:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
