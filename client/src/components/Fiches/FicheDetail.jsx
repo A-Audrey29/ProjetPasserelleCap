@@ -635,7 +635,7 @@ export default function FicheDetail({ ficheId }) {
                           <span>
                             {cdValidation.actor.firstName} {cdValidation.actor.lastName}
                             {cdValidation.actor.structure && ` (${cdValidation.actor.structure})`} 
-                            a validé cette fiche
+                            {' '}a validé cette fiche
                           </span>
                         </div>
                       );
