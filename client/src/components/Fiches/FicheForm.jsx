@@ -92,33 +92,40 @@ export default function FicheForm({
   // Initialize form with existing data
   useEffect(() => {
     if (initialData) {
+      console.log('Initializing form with data:', initialData);
+      
+      // Extract family data from familyDetailedData JSON field or family object
+      const familyData = initialData.familyDetailedData || initialData.family || {};
+      
+      // Extract children data from childrenData JSON field or children array
+      const childrenData = initialData.childrenData || initialData.children || [];
+      
       setFormData(prev => ({
         ...prev,
         familyId: initialData.familyId || '',
         description: initialData.description || '',
         family: {
           ...prev.family,
-          ...(initialData.family || {}),
-          code: initialData.family?.code || '',
-          address: initialData.family?.address || '',
-          phone: initialData.family?.phone || '',
-          email: initialData.family?.email || '',
-          mother: initialData.family?.mother || '',
-          father: initialData.family?.father || '',
-          tiers: initialData.family?.tiers || '',
-          lienAvecEnfants: initialData.family?.lienAvecEnfants || '',
-          autoriteParentale: initialData.family?.autoriteParentale || '',
-          situationFamiliale: initialData.family?.situationFamiliale || '',
-          situationSocioProfessionnelle: initialData.family?.situationSocioProfessionnelle || '',
-          adresse: initialData.family?.adresse || '',
-          telephonePortable: initialData.family?.telephonePortable || '',
-          telephoneFixe: initialData.family?.telephoneFixe || ''
+          code: familyData.code || '',
+          address: familyData.address || '',
+          phone: familyData.phone || '',
+          email: familyData.email || '',
+          mother: familyData.mother || '',
+          father: familyData.father || '',
+          tiers: familyData.tiers || '',
+          lienAvecEnfants: familyData.lienAvecEnfants || '',
+          autoriteParentale: familyData.autoriteParentale || '',
+          situationFamiliale: familyData.situationFamiliale || '',
+          situationSocioProfessionnelle: familyData.situationSocioProfessionnelle || '',
+          adresse: familyData.adresse || '',
+          telephonePortable: familyData.telephonePortable || '',
+          telephoneFixe: familyData.telephoneFixe || ''
         },
-        children: initialData.children?.map(child => ({
-          firstName: child.firstName || '',
-          birthDate: child.birthDate ? new Date(child.birthDate).toISOString().split('T')[0] : '',
-          level: child.level || ''
-        })) || prev.children,
+        children: childrenData.map(child => ({
+          name: child.name || child.firstName || '',
+          dateNaissance: child.dateNaissance || (child.birthDate ? new Date(child.birthDate).toISOString().split('T')[0] : ''),
+          niveauScolaire: child.niveauScolaire || child.level || ''
+        })),
         workshops: initialData.selections?.map(s => ({
           workshopId: s.workshopId,
           qty: s.qty
@@ -139,8 +146,9 @@ export default function FicheForm({
           email: initialData.emitter.email || '',
           requestDate: initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : prev.referent.requestDate
         } : prev.referent),
-        descriptionSituation: initialData.descriptionSituation || '',
-        workshopPropositions: initialData.workshopPropositions || {}
+        descriptionSituation: initialData.description || initialData.descriptionSituation || '',
+        workshopPropositions: initialData.workshopPropositions || {},
+        familyConsent: initialData.familyConsent || false
       }));
     }
   }, [initialData]);
