@@ -804,15 +804,15 @@ export default function FicheDetail({ ficheId }) {
                           {(() => {
                             // Reverse mapping to find technical ID from database ID
                             const workshopIdReverseMapping = {
-                              '0ae9279f-9d7a-4778-875a-3ed84ee9d1b1': 'workshop_1_1', // Atelier communication parent-enfant
-                              'bca25252-1dcf-4e35-b426-7374b79bafe1': 'workshop_1_2', // Gestion des émotions
-                              '102d9611-e264-42a9-aca8-0da0a73956ba': 'workshop_1_3', // Techniques éducatives positives
-                              '0c28af6d-e911-4c98-b5b2-10d9c585d3bb': 'workshop_2_1', // Ateliers famille
-                              '3f48eed0-f7a0-4cc5-85d4-f2feb39371e7': 'workshop_2_2', // Dialogue intergénérationnel
-                              '69ab54c3-a222-4fce-b6d4-1fe56fbf046f': 'workshop_2_3', // Médiation familiale
-                              '475e5207-044a-4ef0-a285-a1350f049ef7': 'workshop_3_1', // Jeux coopératifs
-                              'c09e5c74-a78b-4da8-9e48-1a4e7e28b58a': 'workshop_3_2', // Randonnée familiale
-                              '0b7fbcb2-6d56-48fe-ad97-07a5f9fb5293': 'workshop_3_3'  // Sport collectif famille
+                              '2ff85efb-af49-466e-8aa5-b802dcb3c5b0': 'workshop_1_1', // Atelier communication parent-enfant
+                              '83d25a3f-c182-4898-bdbb-aefd4a88a15f': 'workshop_1_2', // Gestion des émotions
+                              '1a1189c5-e0f5-46be-a9c2-86c371515495': 'workshop_1_3', // Techniques éducatives positives
+                              '4a8f91db-1411-451f-aca0-1bff527aefc8': 'workshop_2_1', // Ateliers famille
+                              'a9d90a93-7235-4945-b393-62bf9d7e15c4': 'workshop_2_2', // Dialogue intergénérationnel
+                              '1c000ff7-5446-439d-ac0b-9d4472e44335': 'workshop_2_3', // Médiation familiale
+                              '4bf718dc-76c3-4fe8-bc59-2f2240b9863d': 'workshop_3_1', // Jeux coopératifs
+                              'df0b5ff3-cac6-45c0-b734-23c3ea6d3caa': 'workshop_3_2', // Randonnée familiale
+                              'e7534955-4ad1-42a3-a068-0513efe28cba': 'workshop_3_3'  // Sport collectif famille
                             };
                             
                             const technicalId = workshopIdReverseMapping[selection.workshopId];
@@ -882,7 +882,7 @@ export default function FicheDetail({ ficheId }) {
           )}
 
           {/* Validation tracking for all fiches */}
-          {(fiche.state === 'SUBMITTED_TO_CD' || fiche.state === 'SUBMITTED_TO_FEVES' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && (
+          {(fiche.state === 'SUBMITTED_TO_CD' || fiche.state === 'SUBMITTED_TO_FEVES' || fiche.state === 'ASSIGNED_EVS' || fiche.state === 'ACCEPTED_EVS' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Historique des validations
@@ -931,7 +931,7 @@ export default function FicheDetail({ ficheId }) {
                 )}
                 
                 {/* RELATIONS_EVS validation - only show if fiche has been transmitted to EVS/CS */}
-                {(fiche.state === 'ASSIGNED_TO_EVS' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && auditLogs && (
+                {(fiche.state === 'ASSIGNED_EVS' || fiche.state === 'ACCEPTED_EVS' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && auditLogs && (
                   (() => {
                     const relationsEvsValidation = auditLogs.find(log => 
                       log.action === 'state_transition' && 
