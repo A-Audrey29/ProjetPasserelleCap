@@ -91,16 +91,12 @@ export const workshopObjectives = pgTable("workshop_objectives", {
 });
 
 export const workshops = pgTable("workshops", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   objectiveId: varchar("objective_id").notNull(),
   name: text("name").notNull(),
-  description: text("description"),
   priceCents: integer("price_cents").notNull(),
-  orgId: varchar("org_id"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   objectiveIdx: index("workshops_objective_idx").on(table.objectiveId),
-  orgIdx: index("workshops_org_idx").on(table.orgId),
 }));
 
 export const ficheNavettes = pgTable("fiche_navettes", {
@@ -290,7 +286,6 @@ export const workshopObjectivesRelations = relations(workshopObjectives, ({ many
 
 export const workshopsRelations = relations(workshops, ({ one, many }) => ({
   objective: one(workshopObjectives, { fields: [workshops.objectiveId], references: [workshopObjectives.id] }),
-  organization: one(organizations, { fields: [workshops.orgId], references: [organizations.id] }),
   selections: many(ficheWorkshopSelections),
 }));
 
