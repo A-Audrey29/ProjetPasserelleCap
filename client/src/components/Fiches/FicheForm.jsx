@@ -90,6 +90,8 @@ export default function FicheForm({
     enabled: true,
   });
 
+  console.log(objectives);
+
   const { data: workshops = [] } = useQuery({
     queryKey: ["/api/workshops"],
     enabled: true,
