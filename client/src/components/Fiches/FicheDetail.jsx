@@ -594,7 +594,7 @@ export default function FicheDetail({ ficheId }) {
           {fiche.state === 'SUBMITTED_TO_CD' && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
-                Validation
+                Validations
               </h2>
               <div className={styles.validationMessages}>
                 <p className={styles.validationMessage} data-testid="text-family-acknowledgment">
