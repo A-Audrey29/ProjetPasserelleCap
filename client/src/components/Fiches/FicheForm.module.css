@@ -574,6 +574,28 @@
   box-shadow: 0 2px 4px rgba(140, 74, 74, 0.2);
 }
 
+.buttonWarning {
+  background-color: #D9A066;
+  color: #FFFFFF;
+  border: 1px solid #D9A066;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.buttonWarning:hover {
+  background-color: #C89152;
+  border-color: #C89152;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(217, 160, 102, 0.2);
+}
+
 /* Consent Section Styles */
 .consentSection {
   background-color: #FFFFFF;

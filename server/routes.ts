@@ -383,6 +383,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete fiche (admin only)
+  app.delete('/api/fiches/:id', requireAuth, requireRole('ADMIN'), auditMiddleware('delete', 'FicheNavette'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const fiche = await storage.getFiche(id);
+      if (!fiche) {
+        return res.status(404).json({ message: 'Fiche non trouvée' });
+      }
+
+      await storage.deleteFiche(id);
+      res.json({ message: 'Fiche supprimée avec succès' });
+    } catch (error) {
+      console.error('Delete fiche error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
   // Comments
   app.get('/api/fiches/:id/comments', requireAuth, requireFicheAccess, async (req, res) => {
     try {
