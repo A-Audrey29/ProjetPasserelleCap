@@ -381,9 +381,13 @@ export default function FicheDetail({ ficheId }) {
         return user.role === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
       case 'accept':
       case 'reject':
-        return user.role === 'EVS_CS' && fiche.state === 'ASSIGNED_EVS' && fiche.assignedOrgId === user.orgId;
+        const userRoleEvs = user.user?.role || user.role;
+        const userOrgIdEvs = user.user?.orgId || user.orgId;
+        return userRoleEvs === 'EVS_CS' && fiche.state === 'ASSIGNED_EVS' && fiche.assignedOrgId === userOrgIdEvs;
       case 'sign_contract':
-        return user.role === 'EVS_CS' && fiche.state === 'CONTRACT_SENT' && fiche.assignedOrgId === user.orgId;
+        const userRoleContract = user.user?.role || user.role;
+        const userOrgIdContract = user.user?.orgId || user.orgId;
+        return userRoleContract === 'EVS_CS' && fiche.state === 'CONTRACT_SENT' && fiche.assignedOrgId === userOrgIdContract;
       case 'cd_validate':
         const userRoleForCD = user.user?.role || user.role;
         return userRoleForCD === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
@@ -574,7 +578,12 @@ export default function FicheDetail({ ficheId }) {
         {/* Timeline */}
         <StateTimeline 
           currentState={fiche.state}
-          stateHistory={fiche.stateHistory || []}
+          stateHistory={auditLogs.filter(log => log.action === 'state_transition').map(log => ({
+            state: log.meta?.newState || log.meta?.oldState,
+            timestamp: log.createdAt,
+            actor: log.actor,
+            metadata: log.meta
+          }))}
         />
 
 

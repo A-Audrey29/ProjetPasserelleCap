@@ -7,8 +7,8 @@ export default function StateTimeline({ currentState, stateHistory = [] }) {
   const workflowStates = [
     'DRAFT',
     'SUBMITTED_TO_FEVES',
-    'ASSIGNED_TO_EVS',
-    'EVS_ACCEPTED',
+    'ASSIGNED_EVS',
+    'ACCEPTED_EVS',
     'CONTRACT_SENT',
     'CONTRACT_SIGNED',
     'ADVANCE_70_PAID',
