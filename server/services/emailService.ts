@@ -1,20 +1,25 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 class EmailService {
   constructor() {
-    // Create transporter with O2Switch SMTP configuration
-    this.transporter = nodemailer.createTransporter({
+    // Create transporter with O2Switch SMTP configuration  
+    // Use port 587 with STARTTLS which is often more reliable
+    this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '465'),
-      secure: true, // SSL for port 465
+      port: 587, // Try STARTTLS on 587
+      secure: false, // STARTTLS instead of SSL
       auth: {
         user: process.env.SMTP_USERNAME,
         pass: process.env.SMTP_PASSWORD
       },
-      // Additional options for better compatibility
+      // Additional options for O2Switch compatibility
       tls: {
         rejectUnauthorized: false
-      }
+      },
+      // Add connection timeout and authentication timeout
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000
     });
 
     // Verify connection configuration on startup
@@ -171,4 +176,4 @@ class EmailService {
 }
 
 // Export singleton instance
-module.exports = new EmailService();
+export default new EmailService();

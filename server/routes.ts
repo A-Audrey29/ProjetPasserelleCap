@@ -15,6 +15,7 @@ import {
 import { requireAuth, requireRole, requireFicheAccess } from './middleware/rbac.js';
 import { auditMiddleware } from './services/auditLogger.js';
 import { transitionFicheState, getValidTransitions } from './services/stateTransitions.js';
+import emailService from './services/emailService.js';
 import { 
   validateRequest, 
   loginSchema, 
@@ -762,9 +763,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { ficheId, orgId, orgName, contactEmail, contactName } = req.body;
       
-      // Import email service
-      const emailService = require('./services/emailService');
-      
       // Log notification details
       console.log('EVS Assignment Notification:', {
         ficheId,
@@ -813,9 +811,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/notifications/emitter-return', requireAuth, requireRole('RELATIONS_EVS'), async (req, res) => {
     try {
       const { ficheId, emitterEmail, emitterName, reason } = req.body;
-      
-      // Import email service
-      const emailService = require('./services/emailService');
       
       // Log notification details
       console.log('Emitter Return Notification:', {
