@@ -52,7 +52,8 @@ export function useFiches(filters = {}) {
       return fiche;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/fiches']);
+      // Invalidate all fiches queries (including parameterized ones)
+      queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
     }
   });
 
@@ -62,7 +63,8 @@ export function useFiches(filters = {}) {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['/api/fiches']);
+      // Invalidate all fiches queries (including parameterized ones)
+      queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
       queryClient.setQueryData(['/api/fiches', data.id], data);
     }
   });
@@ -76,7 +78,8 @@ export function useFiches(filters = {}) {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['/api/fiches']);
+      // Invalidate all fiches queries (including parameterized ones)
+      queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
       queryClient.setQueryData(['/api/fiches', data.id], data);
     }
   });
@@ -89,7 +92,8 @@ export function useFiches(filters = {}) {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['/api/fiches']);
+      // Invalidate all fiches queries (including parameterized ones)
+      queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
       queryClient.setQueryData(['/api/fiches', data.id], data);
     }
   });

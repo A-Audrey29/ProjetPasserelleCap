@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { Eye, FileText, Plus, Search, Filter, Calendar, User, Building } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission, ROLES, ACTIONS } from '@/utils/permissions';
@@ -27,8 +28,6 @@ const STATE_COLORS = {
 
 export default function Fiches() {
   const { user } = useAuth();
-  const [fiches, setFiches] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   
@@ -48,43 +47,38 @@ export default function Fiches() {
     }
   }, []);
 
-  // Fetch fiches from API with role-based filtering
-  useEffect(() => {
-    const fetchFiches = async () => {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams();
-        if (searchTerm) params.append('search', searchTerm);
-        if (stateFilter && stateFilter !== 'all') params.append('state', stateFilter);
-        
-        // For CD role filtering - check URL to determine which CD action
-        if (userRole === ROLES.CD) {
-          const urlParams = new URLSearchParams(window.location.search);
-          const isValidationPage = urlParams.get('state') === 'SUBMITTED_TO_CD';
-          
-          if (isValidationPage) {
-            // This is the "Fiches en attente de validations" action
-            params.set('state', 'SUBMITTED_TO_CD'); // Use set() to avoid duplicates
-          }
-          // If not validation page, show all fiches ("Consulter les Fiches" action)
-        }
-
-        const response = await fetch(`/api/fiches?${params}`);
-        if (response.ok) {
-          const data = await response.json();
-          setFiches(data);
-        } else {
-          console.error('Failed to fetch fiches:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Error fetching fiches:', error);
-      } finally {
-        setLoading(false);
+  // Build query parameters for API call
+  const buildQueryParams = () => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.append('search', searchTerm);
+    if (stateFilter && stateFilter !== 'all') params.append('state', stateFilter);
+    
+    // For CD role filtering - check URL to determine which CD action
+    if (userRole === ROLES.CD) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isValidationPage = urlParams.get('state') === 'SUBMITTED_TO_CD';
+      
+      if (isValidationPage) {
+        // This is the "Fiches en attente de validations" action
+        params.set('state', 'SUBMITTED_TO_CD'); // Use set() to avoid duplicates
       }
-    };
+      // If not validation page, show all fiches ("Consulter les Fiches" action)
+    }
+    
+    return params.toString();
+  };
 
-    fetchFiches();
-  }, [searchTerm, stateFilter]);
+  // Fetch fiches using TanStack Query for proper cache management
+  const queryParams = buildQueryParams();
+  const { data: fiches = [], isLoading: loading } = useQuery({
+    queryKey: ['/api/fiches', queryParams],
+    queryFn: async () => {
+      const response = await fetch(`/api/fiches?${queryParams}`);
+      if (!response.ok) throw new Error('Failed to fetch fiches');
+      return response.json();
+    },
+    enabled: !!userRole
+  });
 
   // Get appropriate page title based on user role
   const getPageTitle = () => {
