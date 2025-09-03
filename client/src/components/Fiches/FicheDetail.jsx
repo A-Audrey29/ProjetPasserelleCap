@@ -601,7 +601,7 @@ export default function FicheDetail({ ficheId }) {
                   La famille a connaissance du contenu de cette fiche et adhère à cet accompagnement
                 </p>
                 <p className={styles.validationMessage} data-testid="text-referent-validation">
-                  {fiche.referentData?.firstName} {fiche.referentData?.lastName} ({fiche.emitter?.id}) a validé et transmis cette fiche
+                  {fiche.emitter?.firstName} {fiche.emitter?.lastName} a validé et transmis cette fiche
                 </p>
               </div>
             </div>
