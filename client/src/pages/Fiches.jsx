@@ -205,7 +205,22 @@ export default function Fiches() {
 
                     <div className={styles.ficheInfo}>
                       <h3 className={styles.familyName}>
-                        {fiche.family?.lastName || 'Nom non disponible'}
+                        {(() => {
+                          const family = fiche.family;
+                          if (!family) return 'Nom non disponible';
+                          
+                          const autoriteParentale = family.autoriteParentale;
+                          if (autoriteParentale === 'Mère') {
+                            return family.mother || 'Nom non disponible';
+                          } else if (autoriteParentale === 'Père') {
+                            return family.father || 'Nom non disponible';
+                          } else if (autoriteParentale === 'Tiers') {
+                            return family.tiers || family.guardian || 'Nom non disponible';
+                          }
+                          
+                          // Fallback to lastName if autoriteParentale is not set
+                          return family.lastName || 'Nom non disponible';
+                        })()}
                       </h3>
                       
                       <div className={styles.ficheDetails}>
