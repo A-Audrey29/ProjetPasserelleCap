@@ -300,16 +300,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyConsent 
       } = req.validatedData;
 
-      console.log('Creating fiche with detailed data:', {
-        familyId,
-        description,
-        hasReferentData: !!referentData,
-        hasFamilyDetailedData: !!familyDetailedData,
-        hasChildrenData: !!childrenData,
-        hasWorkshopPropositions: !!workshopPropositions,
-        familyConsent,
-        workshopPropositions
-      });
 
       // Generate reference number
       const year = new Date().getFullYear();

@@ -1338,7 +1338,13 @@ export default function FicheForm({
         description: formData.descriptionSituation || '',
         workshops: workshops,
         objectiveIds: (formData.objectives || []).map(obj => obj.id || obj),
-        family: familyData
+        family: familyData,
+        // Map form data to detailed JSON fields
+        referentData: formData.referent,
+        familyDetailedData: formData.family,
+        childrenData: formData.children,
+        workshopPropositions: formData.workshopPropositions,
+        familyConsent: formData.familyConsent
       };
 
       // For draft fiches or admin users, save as draft
@@ -1492,7 +1498,13 @@ export default function FicheForm({
             phone: formData.family.telephonePortable,
             email: formData.family.email,
             address: formData.family.adresse
-          }
+          },
+          // Map form data to detailed JSON fields
+          referentData: formData.referent,
+          familyDetailedData: formData.family,
+          childrenData: formData.children,
+          workshopPropositions: formData.workshopPropositions,
+          familyConsent: formData.familyConsent
         };
 
         // Create the fiche as DRAFT

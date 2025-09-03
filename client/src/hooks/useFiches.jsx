@@ -32,8 +32,8 @@ export function useFiches(filters = {}) {
         familyId = family.id;
       }
 
-      // Create the fiche with all detailed form data
-      const response = await apiRequest('POST', '/api/fiches', {
+      // Prepare detailed form data
+      const requestData = {
         familyId,
         description: ficheData.description,
         workshops: ficheData.workshops,
@@ -42,7 +42,11 @@ export function useFiches(filters = {}) {
         childrenData: ficheData.childrenData,
         workshopPropositions: ficheData.workshopPropositions,
         familyConsent: ficheData.familyConsent
-      });
+      };
+      
+      
+      // Create the fiche with all detailed form data
+      const response = await apiRequest('POST', '/api/fiches', requestData);
       
       const fiche = await response.json();
 
