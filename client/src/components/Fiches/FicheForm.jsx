@@ -724,17 +724,17 @@ export default function FicheForm({
       workshops: [
         {
           id: "workshop_1_1",
-          name: "Gestion du temps et de l'organisation familiale",
+          name: "Atelier communication parent-enfant",
           objective: "Aider les familles à organiser le temps entre les activités scolaires, les loisirs et la vie familiale."
         },
         {
           id: "workshop_1_2", 
-          name: "Communication entre parents et enfants",
+          name: "Gestion des émotions",
           objective: "Renforcer la communication au sein de la famille pour créer un environnement propice à l'apprentissage."
         },
         {
           id: "workshop_1_3",
-          name: "Atelier sur les méthodes d'apprentissage à la maison",
+          name: "Techniques éducatives positives",
           objective: "Fournir aux parents des outils pratiques pour soutenir l'apprentissage des enfants à la maison."
         },
         {
@@ -750,17 +750,17 @@ export default function FicheForm({
       workshops: [
         {
           id: "workshop_2_1",
-          name: "La parole des aînés : une richesse pour l'éducation",
+          name: "Ateliers famille",
           objective: "Aider les parents à mieux accompagner leurs enfants dans leur parcours scolaire."
         },
         {
           id: "workshop_2_2",
-          name: "Mieux se comprendre pour mieux s'entraider",
+          name: "Dialogue intergénérationnel",
           objective: "Gérer les émotions liées à l'école."
         },
         {
           id: "workshop_2_3",
-          name: "Soutien scolaire et méthodes familiales d'apprentissage",
+          name: "Médiation familiale",
           objective: "Soutenir les enfants dans leur parcours."
         },
         {
@@ -776,17 +776,17 @@ export default function FicheForm({
       workshops: [
         {
           id: "workshop_3_1",
-          name: "Pratique d'activité physique",
+          name: "Jeux coopératifs",
           objective: "Renforcer les liens familiaux par le bien-être physique et mental."
         },
         {
           id: "workshop_3_2",
-          name: "Atelier découverte Sport/Étude",
+          name: "Randonnée familiale",
           objective: "Comprendre l'impact du sport sur la motivation scolaire."
         },
         {
           id: "workshop_3_3",
-          name: "Atelier challenge famille",
+          name: "Sport collectif famille",
           objective: "Créer un événement sportif ludique inter-familles."
         }
       ]
