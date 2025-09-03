@@ -289,7 +289,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/fiches', requireAuth, requireRole('ADMIN', 'EMETTEUR', 'RELATIONS_EVS'), validateRequest(ficheCreationSchema), auditMiddleware('create', 'FicheNavette'), async (req, res) => {
     try {
-      const { familyId, description, workshops } = req.validatedData;
+      const { 
+        familyId, 
+        description, 
+        workshops, 
+        referentData, 
+        familyDetailedData, 
+        childrenData, 
+        workshopPropositions,
+        familyConsent 
+      } = req.validatedData;
 
       // Generate reference number
       const year = new Date().getFullYear();
@@ -297,13 +306,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const count = existingFiches.filter(f => f.ref.startsWith(`FN-${year}`)).length + 1;
       const ref = `FN-${year}-${count.toString().padStart(3, '0')}`;
 
-      // Create fiche
+      // Create fiche with all detailed data
       const fiche = await storage.createFiche({
         ref,
         emitterId: req.user.userId,
         familyId,
         description,
-        state: 'DRAFT'
+        state: 'DRAFT',
+        referentData: referentData || null,
+        familyDetailedData: familyDetailedData || null,
+        childrenData: childrenData || null,
+        workshopPropositions: workshopPropositions || null,
+        familyConsent: familyConsent || false
       });
 
       // Create workshop selections
@@ -340,7 +354,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Modification interdite - Fiche déjà envoyée' });
       }
 
-      const updatedFiche = await storage.updateFiche(id, req.body);
+      // Extract the detailed form data from request body
+      const { 
+        description, 
+        referentData, 
+        familyDetailedData, 
+        childrenData, 
+        workshopPropositions,
+        familyConsent,
+        ...otherFields 
+      } = req.body;
+
+      const updateData = {
+        ...otherFields,
+        description,
+        referentData: referentData || null,
+        familyDetailedData: familyDetailedData || null,
+        childrenData: childrenData || null,
+        workshopPropositions: workshopPropositions || null,
+        familyConsent: familyConsent || false
+      };
+
+      const updatedFiche = await storage.updateFiche(id, updateData);
       res.json(updatedFiche);
     } catch (error) {
       console.error('Update fiche error:', error);

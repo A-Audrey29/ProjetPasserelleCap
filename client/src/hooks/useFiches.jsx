@@ -32,12 +32,16 @@ export function useFiches(filters = {}) {
         familyId = family.id;
       }
 
-      // Create the fiche
+      // Create the fiche with all detailed form data
       const response = await apiRequest('POST', '/api/fiches', {
         familyId,
-        epsiId: ficheData.epsiId,
         description: ficheData.description,
-        workshops: ficheData.workshops
+        workshops: ficheData.workshops,
+        referentData: ficheData.referentData,
+        familyDetailedData: ficheData.familyDetailedData,
+        childrenData: ficheData.childrenData,
+        workshopPropositions: ficheData.workshopPropositions,
+        familyConsent: ficheData.familyConsent
       });
       
       const fiche = await response.json();
