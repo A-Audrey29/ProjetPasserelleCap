@@ -673,3 +673,34 @@
   transform: none;
   box-shadow: none;
 }
+
+/* Validation tracking styles */
+.validationMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.validationItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #F0F9F4;
+  border: 1px solid #6A8B74;
+  border-radius: 8px;
+}
+
+.validationCheck {
+  width: 1.25rem;
+  height: 1.25rem;
+  background: #6A8B74;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
