@@ -616,7 +616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new family
-  app.post('/api/families', requireAuth, requireRole('EMETTEUR'), async (req, res) => {
+  app.post('/api/families', requireAuth, requireRole('EMETTEUR', 'RELATIONS_EVS'), async (req, res) => {
     try {
       const family = await storage.createFamily(req.body);
       res.status(201).json(family);
