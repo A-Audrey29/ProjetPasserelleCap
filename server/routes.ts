@@ -224,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get related data
-      const [emitter, family, assignedOrg, selections, attachments, contract, payments, verification, finalReport, comments] = await Promise.all([
+      const [emitter, family, assignedOrg, selections, attachments, contract, payments, verification, finalReport, comments, children] = await Promise.all([
         storage.getUser(fiche.emitterId),
         storage.getFamily(fiche.familyId),
         fiche.assignedOrgId ? storage.getOrganization(fiche.assignedOrgId) : null,
@@ -234,7 +234,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getPayments(fiche.id),
         storage.getFieldVerification(fiche.id),
         storage.getFinalReport(fiche.id),
-        storage.getComments(fiche.id)
+        storage.getComments(fiche.id),
+        storage.getChildrenByFamily(fiche.familyId)
       ]);
 
       // Get workshop details for selections
@@ -275,6 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         verification,
         finalReport,
         comments: commentsWithAuthors,
+        children,
         validTransitions: getValidTransitions(req.ficheAccess.role, fiche.state)
       };
 

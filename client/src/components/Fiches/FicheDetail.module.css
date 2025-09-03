@@ -704,3 +704,42 @@
   font-weight: 600;
   flex-shrink: 0;
 }
+
+/* Children Styles */
+.childrenList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.childCard {
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #F8FAFC;
+}
+
+.childInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.childName {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin: 0;
+}
+
+.childDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.childAge,
+.childLevel {
+  font-size: 0.875rem;
+  color: #6B7280;
+}

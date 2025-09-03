@@ -474,6 +474,38 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
+          {/* Children Information */}
+          {fiche.children && fiche.children.length > 0 && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Enfants
+              </h2>
+              <div className={styles.childrenList}>
+                {fiche.children.map((child) => (
+                  <div key={child.id} className={styles.childCard} data-testid={`child-${child.id}`}>
+                    <div className={styles.childInfo}>
+                      <h3 className={styles.childName} data-testid={`text-child-name-${child.id}`}>
+                        {child.firstName}
+                      </h3>
+                      <div className={styles.childDetails}>
+                        {child.birthDate && (
+                          <span className={styles.childAge} data-testid={`text-child-age-${child.id}`}>
+                            Né(e) le {formatDate(child.birthDate)}
+                          </span>
+                        )}
+                        {child.level && (
+                          <span className={styles.childLevel} data-testid={`text-child-level-${child.id}`}>
+                            Niveau: {child.level}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Ateliers sélectionnés */}
           {fiche.selections?.length > 0 && (
             <div className={styles.card}>
