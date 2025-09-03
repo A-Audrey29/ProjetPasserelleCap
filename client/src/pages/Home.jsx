@@ -52,7 +52,7 @@ export default function Home() {
   return (
     <div className={styles.homeContainer}>
       <Header />
-      
+
       <main>
         {isAuthenticated ? (
           /* Authenticated User Home */
@@ -178,11 +178,10 @@ export default function Home() {
                     Pourquoi les fiches navettes ?
                   </h2>
                   <p className={styles.fichesSubtitle}>
-                    Les fiches navettes sont au cœur du processus CAP. Elles garantissent une coordination 
-                    efficace entre tous les acteurs de l'accompagnement familial.
+                    Visualiser les fiches navettes
                   </p>
                 </div>
-                
+
                 <div className={styles.featuresGrid}>
                   <div className={styles.featureCard}>
                     <div className={`${styles.featureIcon} ${styles.iconSuccess}`}>
@@ -194,7 +193,7 @@ export default function Home() {
                       et une continuité des interventions.
                     </p>
                   </div>
-                  
+
                   <div className={styles.featureCard}>
                     <div className={`${styles.featureIcon} ${styles.iconWarning}`}>
                       <Users className={`w-8 h-8 ${styles.iconWarningColor}`} />
@@ -205,7 +204,7 @@ export default function Home() {
                       pour un accompagnement cohérent.
                     </p>
                   </div>
-                  
+
                   <div className={styles.featureCard}>
                     <div className={`${styles.featureIcon} ${styles.iconContainer}`}>
                       <CheckCircle className={`w-8 h-8 ${styles.iconPrimary}`} />
