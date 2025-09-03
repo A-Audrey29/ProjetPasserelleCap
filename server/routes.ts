@@ -762,15 +762,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { ficheId, orgId, orgName, contactEmail, contactName } = req.body;
       
-      // Here you would integrate with your email service (SendGrid, etc.)
-      // For now, we'll just log the notification
+      // Import email service
+      const emailService = require('./services/emailService');
+      
+      // Log notification details
       console.log('EVS Assignment Notification:', {
         ficheId,
         orgId,
         orgName,
         contactEmail,
+        contactName
+      });
+
+      // Send actual email
+      const emailResult = await emailService.sendEvsAssignmentNotification({
+        contactEmail,
         contactName,
-        message: `Une nouvelle fiche CAP vous a été assignée. Connectez-vous à la plateforme pour la consulter.`
+        orgName,
+        ficheId
       });
 
       // Create audit log for notification
@@ -784,11 +793,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           recipientEmail: contactEmail,
           recipientName: contactName,
           orgId,
-          orgName
+          orgName,
+          emailSuccess: emailResult.success,
+          messageId: emailResult.messageId
         }
       });
 
-      res.json({ success: true, message: 'Notification envoyée' });
+      if (emailResult.success) {
+        res.json({ success: true, message: 'Notification envoyée par email' });
+      } else {
+        res.status(500).json({ success: false, message: 'Erreur lors de l\'envoi de l\'email', error: emailResult.error });
+      }
     } catch (error) {
       console.error('EVS assignment notification error:', error);
       res.status(500).json({ message: 'Erreur lors de l\'envoi de la notification' });
@@ -797,15 +812,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/notifications/emitter-return', requireAuth, requireRole('RELATIONS_EVS'), async (req, res) => {
     try {
-      const { ficheId, emitterEmail, emitterName } = req.body;
+      const { ficheId, emitterEmail, emitterName, reason } = req.body;
       
-      // Here you would integrate with your email service (SendGrid, etc.)
-      // For now, we'll just log the notification
+      // Import email service
+      const emailService = require('./services/emailService');
+      
+      // Log notification details
       console.log('Emitter Return Notification:', {
         ficheId,
         emitterEmail,
         emitterName,
-        message: `Votre fiche CAP a été renvoyée pour modification. Connectez-vous à la plateforme pour voir les détails.`
+        reason
+      });
+
+      // Send actual email
+      const emailResult = await emailService.sendEmitterReturnNotification({
+        emitterEmail,
+        emitterName,
+        ficheId,
+        reason
       });
 
       // Create audit log for notification
@@ -817,11 +842,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         meta: {
           notificationType: 'emitter_return',
           recipientEmail: emitterEmail,
-          recipientName: emitterName
+          recipientName: emitterName,
+          reason,
+          emailSuccess: emailResult.success,
+          messageId: emailResult.messageId
         }
       });
 
-      res.json({ success: true, message: 'Notification envoyée' });
+      if (emailResult.success) {
+        res.json({ success: true, message: 'Notification envoyée par email' });
+      } else {
+        res.status(500).json({ success: false, message: 'Erreur lors de l\'envoi de l\'email', error: emailResult.error });
+      }
     } catch (error) {
       console.error('Emitter return notification error:', error);
       res.status(500).json({ message: 'Erreur lors de l\'envoi de la notification' });
