@@ -247,11 +247,14 @@ export default function Fiches() {
                           </div>
                         )}
 
-                        <div className={styles.detailItem}>
-                          <span className={styles.amount}>
-                            Montant: {formatAmount(fiche.totalAmount)}
-                          </span>
-                        </div>
+                        {/* Only show amount for ADMIN and RELATIONS_EVS */}
+                        {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
+                          <div className={styles.detailItem}>
+                            <span className={styles.amount}>
+                              Montant: {formatAmount(fiche.totalAmount)}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
