@@ -56,6 +56,11 @@ export default function Fiches() {
         const params = new URLSearchParams();
         if (searchTerm) params.append('search', searchTerm);
         if (stateFilter && stateFilter !== 'all') params.append('state', stateFilter);
+        
+        // For CD role, only show SUBMITTED_TO_CD fiches
+        if (userRole === ROLES.CD) {
+          params.append('state', 'SUBMITTED_TO_CD');
+        }
 
         const response = await fetch(`/api/fiches?${params}`);
         if (response.ok) {
@@ -150,21 +155,24 @@ export default function Fiches() {
             />
           </div>
 
-          <div className={styles.filterSection}>
-            <Filter className={styles.filterIcon} />
-            <select 
-              className={styles.stateFilter}
-              value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value)}
-              data-testid="select-state-filter"
-            >
-              <option value="">Filtrer par état</option>
-              <option value="all">Tous les états</option>
-              {Object.entries(STATE_LABELS).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
-          </div>
+          {/* Only show status filter for non-CD users */}
+          {userRole !== ROLES.CD && (
+            <div className={styles.filterSection}>
+              <Filter className={styles.filterIcon} />
+              <select 
+                className={styles.stateFilter}
+                value={stateFilter}
+                onChange={(e) => setStateFilter(e.target.value)}
+                data-testid="select-state-filter"
+              >
+                <option value="">Filtrer par état</option>
+                <option value="all">Tous les états</option>
+                {Object.entries(STATE_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Fiches list */}
