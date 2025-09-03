@@ -11,7 +11,7 @@ export default function StatusBadge({ state, className = '' }) {
       case 'SUBMITTED_TO_FEVES':
       case 'NEEDS_INFO':
         return `${baseClass} ${styles.statusSubmitted}`;
-      case 'ASSIGNED_TO_EVS':
+      case 'ASSIGNED_EVS':
       case 'CONTRACT_SENT':
         return `${baseClass} ${styles.statusAssigned}`;
       case 'EVS_ACCEPTED':

@@ -3,7 +3,7 @@ export const STATE_LABELS = {
   DRAFT: 'Brouillon',
   SUBMITTED_TO_CD: 'Soumis au CD',
   SUBMITTED_TO_FEVES: 'Envoyé FEVES',
-  ASSIGNED_TO_EVS: 'Affecté EVS',
+  ASSIGNED_EVS: 'Affecté EVS',
   EVS_ACCEPTED: 'Accepté EVS',
   EVS_REJECTED: 'Refusé EVS',
   NEEDS_INFO: 'Infos demandées',

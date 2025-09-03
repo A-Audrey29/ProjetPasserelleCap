@@ -18,7 +18,7 @@ const STATE_COLORS = {
   'DRAFT': 'secondary',
   'SUBMITTED_TO_CD': 'default',
   'SUBMITTED_TO_FEVES': 'default',
-  'ASSIGNED_TO_EVS': 'outline',
+  'ASSIGNED_EVS': 'outline',
   'IN_PROGRESS': 'default',
   'COMPLETED': 'success',
   'CLOSED': 'success',

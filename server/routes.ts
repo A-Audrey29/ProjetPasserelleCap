@@ -417,7 +417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedFiche = await storage.updateFiche(id, { assignedOrgId });
-      await transitionFicheState(id, 'ASSIGNED_TO_EVS', req.user.userId, { assignedOrgId });
+      await transitionFicheState(id, 'ASSIGNED_EVS', req.user.userId, { assignedOrgId });
 
       res.json(updatedFiche);
     } catch (error) {
