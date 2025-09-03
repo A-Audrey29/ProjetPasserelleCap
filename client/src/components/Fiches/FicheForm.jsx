@@ -1328,9 +1328,22 @@ export default function FicheForm({
       };
 
       // Transform workshop propositions
+      // Map technical form IDs to actual database workshop IDs
+      const workshopIdMapping = {
+        'workshop_1_1': '0ae9279f-9d7a-4778-875a-3ed84ee9d1b1', // Atelier communication parent-enfant
+        'workshop_1_2': 'bca25252-1dcf-4e35-b426-7374b79bafe1', // Gestion des émotions
+        'workshop_1_3': '102d9611-e264-42a9-aca8-0da0a73956ba', // Techniques éducatives positives
+        'workshop_2_1': '0c28af6d-e911-4c98-b5b2-10d9c585d3bb', // Ateliers famille
+        'workshop_2_2': '3f48eed0-f7a0-4cc5-85d4-f2feb39371e7', // Dialogue intergénérationnel
+        'workshop_2_3': '69ab54c3-a222-4fce-b6d4-1fe56fbf046f', // Médiation familiale
+        'workshop_3_1': '475e5207-044a-4ef0-a285-a1350f049ef7', // Jeux coopératifs
+        'workshop_3_2': 'c09e5c74-a78b-4da8-9e48-1a4e7e28b58a', // Randonnée familiale
+        'workshop_3_3': '0b7fbcb2-6d56-48fe-ad97-07a5f9fb5293'  // Sport collectif famille
+      };
+
       const workshops = formData.workshopPropositions ? 
-        Object.entries(formData.workshopPropositions).map(([workshopId, _]) => ({
-          workshopId,
+        Object.entries(formData.workshopPropositions).map(([technicalId, _]) => ({
+          workshopId: workshopIdMapping[technicalId] || technicalId,
           qty: 1
         })) : [];
 
@@ -1480,9 +1493,22 @@ export default function FicheForm({
       } else {
         // If it's a new fiche, create it as draft first, then transition it
         // Transform workshopPropositions to workshops array format
+        // Map technical form IDs to actual database workshop IDs
+        const workshopIdMapping = {
+          'workshop_1_1': '0ae9279f-9d7a-4778-875a-3ed84ee9d1b1', // Atelier communication parent-enfant
+          'workshop_1_2': 'bca25252-1dcf-4e35-b426-7374b79bafe1', // Gestion des émotions
+          'workshop_1_3': '102d9611-e264-42a9-aca8-0da0a73956ba', // Techniques éducatives positives
+          'workshop_2_1': '0c28af6d-e911-4c98-b5b2-10d9c585d3bb', // Ateliers famille
+          'workshop_2_2': '3f48eed0-f7a0-4cc5-85d4-f2feb39371e7', // Dialogue intergénérationnel
+          'workshop_2_3': '69ab54c3-a222-4fce-b6d4-1fe56fbf046f', // Médiation familiale
+          'workshop_3_1': '475e5207-044a-4ef0-a285-a1350f049ef7', // Jeux coopératifs
+          'workshop_3_2': 'c09e5c74-a78b-4da8-9e48-1a4e7e28b58a', // Randonnée familiale
+          'workshop_3_3': '0b7fbcb2-6d56-48fe-ad97-07a5f9fb5293'  // Sport collectif famille
+        };
+
         const workshops = formData.workshopPropositions ? 
-          Object.entries(formData.workshopPropositions).map(([workshopId, qty]) => ({
-            workshopId: workshopId,
+          Object.entries(formData.workshopPropositions).map(([technicalId, qty]) => ({
+            workshopId: workshopIdMapping[technicalId] || technicalId,
             qty: parseInt(qty) || 1
           })) : [];
 
