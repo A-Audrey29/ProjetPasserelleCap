@@ -514,118 +514,6 @@ export default function FicheDetail({ ficheId }) {
           stateHistory={fiche.stateHistory || []}
         />
 
-        {/* EPCI Selection for RELATIONS_EVS with SUBMITTED_TO_FEVES status */}
-        {console.log('EPCI Debug:', {
-          userRole: user?.role,
-          userUserRole: user?.user?.role, 
-          ficheState: fiche?.state,
-          roleMatch: (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS'),
-          stateMatch: fiche?.state === 'SUBMITTED_TO_FEVES',
-          showSection: (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche?.state === 'SUBMITTED_TO_FEVES',
-          epcisData: epcis
-        })}
-        {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'SUBMITTED_TO_FEVES' && (
-          <div className={styles.card} style={{backgroundColor: '#ffe6e6', border: '2px solid red'}}>
-            <h2 className={styles.cardTitle} style={{color: 'red'}}>
-              🔴 DEBUG: Transmission vers EVS/CS
-            </h2>
-            
-            <div className={styles.epciSelection}>
-              <div className={styles.infoGrid}>
-                <div className={styles.infoItem}>
-                  <label className={styles.infoLabel} htmlFor="epci-select">
-                    Sélectionnez un EPCI
-                  </label>
-                  <select
-                    id="epci-select"
-                    className={styles.selectField}
-                    value={selectedEpciId}
-                    onChange={(e) => {
-                      setSelectedEpciId(e.target.value);
-                      setSelectedEvscsId(''); // Reset EVS/CS selection when EPCI changes
-                    }}
-                    data-testid="select-epci"
-                  >
-                    <option value="">-- Choisir un EPCI --</option>
-                    {epcis.map((epci) => (
-                      <option key={epci.id} value={epci.id}>
-                        {epci.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {selectedEpciId && (
-                  <div className={styles.infoItem}>
-                    <label className={styles.infoLabel} htmlFor="evs-select">
-                      Sélectionnez une structure EVS/CS
-                    </label>
-                    <select
-                      id="evs-select"
-                      className={styles.selectField}
-                      value={selectedEvscsId}
-                      onChange={(e) => setSelectedEvscsId(e.target.value)}
-                      data-testid="select-evs-cs"
-                    >
-                      <option value="">-- Choisir une structure --</option>
-                      {epciOrganizations
-                        .filter(org => org.type === 'EVS' || org.type === 'CS')
-                        .map((org) => (
-                          <option key={org.id} value={org.id}>
-                            {org.name} ({org.type})
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              {selectedEvscsId && (
-                <>
-                  {/* Confirmation text */}
-                  <div className={styles.confirmationText}>
-                    <p className={styles.confirmationMessage} data-testid="text-transmission-confirmation">
-                      Transmettre cette fiche à la structure : <strong>
-                        {epciOrganizations.find(org => org.id === selectedEvscsId)?.name}
-                      </strong>
-                    </p>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className={styles.transmissionActions}>
-                    <button
-                      className={styles.validateButton}
-                      onClick={() => handleRelationsEvsAction('validate')}
-                      disabled={transitionMutation.isPending}
-                      data-testid="button-relations-validate"
-                    >
-                      <CheckCircle className={styles.buttonIcon} />
-                      Valider
-                    </button>
-                    <button
-                      className={styles.returnButton}
-                      onClick={() => handleRelationsEvsAction('return')}
-                      disabled={transitionMutation.isPending}
-                      data-testid="button-relations-return"
-                    >
-                      <RotateCcw className={styles.buttonIcon} />
-                      Renvoyer à la structure émettrice
-                    </button>
-                    <button
-                      className={styles.archiveButton}
-                      onClick={() => handleRelationsEvsAction('archive')}
-                      disabled={transitionMutation.isPending}
-                      data-testid="button-relations-archive"
-                    >
-                      <Archive className={styles.buttonIcon} />
-                      Archiver
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Content */}
         <div className={styles.content}>
@@ -962,6 +850,110 @@ export default function FicheDetail({ ficheId }) {
                     }
                     return null;
                   })()
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* EPCI Selection for RELATIONS_EVS with SUBMITTED_TO_FEVES status */}
+          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'SUBMITTED_TO_FEVES' && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Transmission vers EVS/CS
+              </h2>
+              
+              <div className={styles.epciSelection}>
+                <div className={styles.infoGrid}>
+                  <div className={styles.infoItem}>
+                    <label className={styles.infoLabel} htmlFor="epci-select">
+                      Sélectionnez un EPCI
+                    </label>
+                    <select
+                      id="epci-select"
+                      className={styles.selectField}
+                      value={selectedEpciId}
+                      onChange={(e) => {
+                        setSelectedEpciId(e.target.value);
+                        setSelectedEvscsId(''); // Reset EVS/CS selection when EPCI changes
+                      }}
+                      data-testid="select-epci"
+                    >
+                      <option value="">-- Choisir un EPCI --</option>
+                      {epcis.map((epci) => (
+                        <option key={epci.id} value={epci.id}>
+                          {epci.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedEpciId && (
+                    <div className={styles.infoItem}>
+                      <label className={styles.infoLabel} htmlFor="evs-select">
+                        Sélectionnez une structure EVS/CS
+                      </label>
+                      <select
+                        id="evs-select"
+                        className={styles.selectField}
+                        value={selectedEvscsId}
+                        onChange={(e) => setSelectedEvscsId(e.target.value)}
+                        data-testid="select-evs-cs"
+                      >
+                        <option value="">-- Choisir une structure --</option>
+                        {epciOrganizations
+                          .filter(org => org.type === 'EVS' || org.type === 'CS')
+                          .map((org) => (
+                            <option key={org.id} value={org.id}>
+                              {org.name} ({org.type})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {selectedEvscsId && (
+                  <>
+                    {/* Confirmation text */}
+                    <div className={styles.confirmationText}>
+                      <p className={styles.confirmationMessage} data-testid="text-transmission-confirmation">
+                        Transmettre cette fiche à la structure : <strong>
+                          {epciOrganizations.find(org => org.id === selectedEvscsId)?.name}
+                        </strong>
+                      </p>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className={styles.transmissionActions}>
+                      <button
+                        className={styles.validateButton}
+                        onClick={() => handleRelationsEvsAction('validate')}
+                        disabled={transitionMutation.isPending}
+                        data-testid="button-relations-validate"
+                      >
+                        <CheckCircle className={styles.buttonIcon} />
+                        Valider
+                      </button>
+                      <button
+                        className={styles.returnButton}
+                        onClick={() => handleRelationsEvsAction('return')}
+                        disabled={transitionMutation.isPending}
+                        data-testid="button-relations-return"
+                      >
+                        <RotateCcw className={styles.buttonIcon} />
+                        Renvoyer à la structure émettrice
+                      </button>
+                      <button
+                        className={styles.archiveButton}
+                        onClick={() => handleRelationsEvsAction('archive')}
+                        disabled={transitionMutation.isPending}
+                        data-testid="button-relations-archive"
+                      >
+                        <Archive className={styles.buttonIcon} />
+                        Archiver
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
