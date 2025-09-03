@@ -31,11 +31,11 @@ export const ORG_TYPE_LABELS = {
   CS: 'Centre Social'
 };
 
-// Payment kinds
-export const PAYMENT_KIND_LABELS = {
-  ADVANCE_70: 'Avance 70%',
-  REMAINING_30: 'Solde 30%'
-};
+// Payment kinds (kept for future use if needed)
+// export const PAYMENT_KIND_LABELS = {
+//   ADVANCE_70: 'Avance 70%',
+//   REMAINING_30: 'Solde 30%'
+// };
 
 // Workshop objectives
 export const OBJECTIVE_LABELS = {

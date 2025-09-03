@@ -8,8 +8,8 @@ export const roleEnum = pgEnum("role", ["ADMIN", "SUIVI_PROJETS", "EMETTEUR", "R
 export const orgTypeEnum = pgEnum("org_type", ["EVS", "CS", "OTHER"]);
 export const ficheStateEnum = pgEnum("fiche_state", [
   "DRAFT", "SUBMITTED_TO_CD", "SUBMITTED_TO_FEVES", "ASSIGNED_EVS", "ACCEPTED_EVS", "EVS_REJECTED", "NEEDS_INFO",
-  "CONTRACT_SENT", "CONTRACT_SIGNED", "ADVANCE_70_PAID", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
-  "FIELD_CHECK_DONE", "FINAL_REPORT_RECEIVED", "REMAINING_30_PAID", "CLOSED", "ARCHIVED"
+  "CONTRACT_SIGNED", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
+  "FIELD_CHECK_DONE", "CLOSED", "ARCHIVED"
 ]);
 export const paymentKindEnum = pgEnum("payment_kind", ["ADVANCE_70", "REMAINING_30"]);
 
