@@ -155,6 +155,52 @@
   background: #C4935A;
 }
 
+.acceptButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #6A8B74;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.acceptButton:hover {
+  background: #5A7A64;
+}
+
+.acceptButton:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.refuseButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #8C4A4A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refuseButton:hover {
+  background: #7A3F3F;
+}
+
+.refuseButton:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+}
+
 .statusInfo {
   display: flex;
   align-items: center;

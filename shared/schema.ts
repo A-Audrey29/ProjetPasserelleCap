@@ -7,7 +7,7 @@ import { z } from "zod";
 export const roleEnum = pgEnum("role", ["ADMIN", "SUIVI_PROJETS", "EMETTEUR", "RELATIONS_EVS", "EVS_CS", "CD"]);
 export const orgTypeEnum = pgEnum("org_type", ["EVS", "CS", "OTHER"]);
 export const ficheStateEnum = pgEnum("fiche_state", [
-  "DRAFT", "SUBMITTED_TO_CD", "SUBMITTED_TO_FEVES", "ASSIGNED_TO_EVS", "EVS_ACCEPTED", "EVS_REJECTED", "NEEDS_INFO",
+  "DRAFT", "SUBMITTED_TO_CD", "SUBMITTED_TO_FEVES", "ASSIGNED_EVS", "ACCEPTED_EVS", "EVS_REJECTED", "NEEDS_INFO",
   "CONTRACT_SENT", "CONTRACT_SIGNED", "ADVANCE_70_PAID", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
   "FIELD_CHECK_DONE", "FINAL_REPORT_RECEIVED", "REMAINING_30_PAID", "CLOSED", "ARCHIVED"
 ]);
@@ -49,6 +49,7 @@ export const organizations = pgTable("organizations", {
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
   epciId: varchar("epci_id").notNull(),
+  userId: varchar("user_id"), // EVS/CS contact user ID
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   typeIdx: index("organizations_type_idx").on(table.type),

@@ -73,6 +73,7 @@ export interface IStorage {
     state?: string;
     assignedOrgId?: string;
     emitterId?: string;
+    evsUserId?: string;
     search?: string;
   }): Promise<FicheNavette[]>;
   getFiche(id: string): Promise<FicheNavette | undefined>;
@@ -312,6 +313,7 @@ export class DatabaseStorage implements IStorage {
     state?: string;
     assignedOrgId?: string;
     emitterId?: string;
+    evsUserId?: string;
     search?: string;
   }): Promise<FicheNavette[]> {
     let query = db.select().from(ficheNavettes);
@@ -320,6 +322,19 @@ export class DatabaseStorage implements IStorage {
     if (filters?.state) conditions.push(eq(ficheNavettes.state, filters.state as any));
     if (filters?.assignedOrgId) conditions.push(eq(ficheNavettes.assignedOrgId, filters.assignedOrgId));
     if (filters?.emitterId) conditions.push(eq(ficheNavettes.emitterId, filters.emitterId));
+    if (filters?.evsUserId) {
+      // Join with organizations to filter by user_id
+      // Include fiches assigned to EVS user in ASSIGNED_EVS and ACCEPTED_EVS states
+      query = query
+        .innerJoin(organizations, eq(ficheNavettes.assignedOrgId, organizations.id));
+      conditions.push(and(
+        eq(organizations.userId, filters.evsUserId),
+        or(
+          eq(ficheNavettes.state, 'ASSIGNED_EVS' as any),
+          eq(ficheNavettes.state, 'ACCEPTED_EVS' as any)
+        )
+      ));
+    }
     if (filters?.search) {
       conditions.push(
         or(

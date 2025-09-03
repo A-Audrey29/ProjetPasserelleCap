@@ -171,6 +171,45 @@ export default function FicheDetail({ ficheId }) {
     }
   };
 
+  // EVS accept/refuse actions
+  const handleEvsAction = async (action) => {
+    try {
+      if (action === 'accept') {
+        await transitionMutation.mutateAsync({ 
+          newState: 'ACCEPTED_EVS',
+          metadata: {
+            acceptedBy: user?.id,
+            acceptedAt: new Date().toISOString()
+          }
+        });
+        toast({
+          title: "Fiche acceptée",
+          description: "Vous avez accepté cette fiche CAP. Elle sera traitée dans le cadre du contrat d'accompagnement.",
+          variant: "default"
+        });
+      } else if (action === 'refuse') {
+        await transitionMutation.mutateAsync({ 
+          newState: 'SUBMITTED_TO_FEVES',
+          metadata: {
+            refusedBy: user?.id,
+            refusedAt: new Date().toISOString()
+          }
+        });
+        toast({
+          title: "Fiche refusée",
+          description: "Vous avez refusé cette fiche. Elle a été renvoyée à FEVES pour réaffectation.",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de traiter l'action",
+        variant: "destructive"
+      });
+    }
+  };
+
   // RELATIONS_EVS actions with EPCI selection
   const handleRelationsEvsAction = async (action) => {
     if (!selectedEvscsId) {
@@ -188,7 +227,7 @@ export default function FicheDetail({ ficheId }) {
       if (action === 'validate') {
         // Advance to next state and send notification to EVS/CS
         await transitionMutation.mutateAsync({ 
-          newState: 'ASSIGNED_TO_EVS',
+          newState: 'ASSIGNED_EVS',
           metadata: {
             assignedOrgId: selectedEvscsId,
             assignedOrgName: selectedOrg?.name,
@@ -342,7 +381,7 @@ export default function FicheDetail({ ficheId }) {
         return user.role === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
       case 'accept':
       case 'reject':
-        return user.role === 'EVS_CS' && fiche.state === 'ASSIGNED_TO_EVS' && fiche.assignedOrgId === user.orgId;
+        return user.role === 'EVS_CS' && fiche.state === 'ASSIGNED_EVS';
       case 'sign_contract':
         return user.role === 'EVS_CS' && fiche.state === 'CONTRACT_SENT' && fiche.assignedOrgId === user.orgId;
       case 'cd_validate':
@@ -450,6 +489,30 @@ export default function FicheDetail({ ficheId }) {
                 <UserPlus className={styles.buttonIcon} />
                 Affecter
               </button>
+            )}
+            
+            {/* EVS accept/refuse buttons */}
+            {canPerformAction('accept') && (
+              <>
+                <button 
+                  onClick={() => handleEvsAction('accept')}
+                  disabled={transitionMutation.isPending}
+                  className={styles.acceptButton}
+                  data-testid="button-evs-accept"
+                >
+                  <CheckCircle className={styles.buttonIcon} />
+                  Accepter
+                </button>
+                <button 
+                  onClick={() => handleEvsAction('refuse')}
+                  disabled={transitionMutation.isPending}
+                  className={styles.refuseButton}
+                  data-testid="button-evs-refuse"
+                >
+                  <XCircle className={styles.buttonIcon} />
+                  Refuser
+                </button>
+              </>
             )}
             
             {canPerformAction('edit') && (
