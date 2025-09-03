@@ -2,21 +2,20 @@ import nodemailer from 'nodemailer';
 
 class EmailService {
   constructor() {
-    // Create transporter with O2Switch SSL/TLS configuration (recommended)
+    // Create transporter with O2Switch non-SSL configuration
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST, // fevesguadeloupeetsaintmartin.org
-      port: parseInt(process.env.SMTP_PORT || '465'), // 465 for SSL
-      secure: true, // SSL for port 465
+      host: 'mail.fevesguadeloupeetsaintmartin.org', // Non-SSL server
+      port: 26, // Non-SSL SMTP port
+      secure: false, // No SSL/TLS
       auth: {
         user: process.env.SMTP_USERNAME,
         pass: process.env.SMTP_PASSWORD
       },
-      // O2Switch SSL/TLS compatibility options
+      // Basic authentication settings for non-SSL
       tls: {
-        rejectUnauthorized: false,
-        servername: process.env.SMTP_HOST
+        rejectUnauthorized: false
       },
-      // Authentication and connection settings
+      // Connection timeouts
       connectionTimeout: 15000,
       greetingTimeout: 10000,
       socketTimeout: 15000,
