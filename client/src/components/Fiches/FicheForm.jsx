@@ -1700,7 +1700,7 @@ export default function FicheForm({
               data-testid="checkbox-family-consent"
             />
             <span className={styles.consentText}>
-              La famille a connaissance de cette Fiche Navette ci-dessus et a donné son accord pour la transmettre au conseil départemental
+              La famille a connaissance de la Fiche Navette et adhère à cet accompagnement.
             </span>
           </label>
         </div>
