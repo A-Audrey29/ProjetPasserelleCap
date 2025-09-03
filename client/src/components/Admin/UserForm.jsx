@@ -69,6 +69,14 @@ export default function UserForm({ user, onClose, onSuccess }) {
       newErrors.lastName = 'Le nom est requis';
     }
 
+    if (!formData.structure.trim()) {
+      newErrors.structure = 'La structure d\'appartenance est requise';
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Le numéro de téléphone est requis';
+    }
+
     if (!formData.role) {
       newErrors.role = 'Le rôle est requis';
     }
@@ -227,7 +235,7 @@ export default function UserForm({ user, onClose, onSuccess }) {
             {/* Structure */}
             <div className={styles.formGroup}>
               <label className={styles.label}>
-                Structure
+                Structure d'appartenance *
               </label>
               <Input
                 type="text"
@@ -243,7 +251,7 @@ export default function UserForm({ user, onClose, onSuccess }) {
             {/* Phone */}
             <div className={styles.formGroup}>
               <label className={styles.label}>
-                Numéro de Téléphone
+                Numéro de Téléphone *
               </label>
               <Input
                 type="tel"
