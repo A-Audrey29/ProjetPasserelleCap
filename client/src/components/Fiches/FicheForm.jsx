@@ -23,14 +23,14 @@ export default function FicheForm({
   const [isReferentEditable, setIsReferentEditable] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   
-  // Form state with référent data
+  // Form state with référent data - Initialize with empty strings to prevent controlled/uncontrolled issues
   const [formData, setFormData] = useState({
     referent: {
-      lastName: user?.user?.lastName || user?.lastName || '',
-      firstName: user?.user?.firstName || user?.firstName || '',
-      structure: user?.user?.structure || user?.structure || '',
-      phone: user?.user?.phone || user?.phone || '',
-      email: user?.user?.email || user?.email || '',
+      lastName: '',
+      firstName: '',
+      structure: '',
+      phone: '',
+      email: '',
       requestDate: new Date().toISOString().split('T')[0]
     },
     familyId: '',
@@ -60,7 +60,8 @@ export default function FicheForm({
     ],
     workshops: [],
     attachments: [],
-    descriptionSituation: ''
+    descriptionSituation: '',
+    workshopPropositions: {}
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,15 +111,16 @@ export default function FicheForm({
   // Auto-populate referent fields when user data becomes available
   useEffect(() => {
     if (user && !initialData) {
+      const currentUser = user?.user || user;
       setFormData(prev => ({
         ...prev,
         referent: {
           ...prev.referent,
-          lastName: user?.user?.lastName || user?.lastName || prev.referent.lastName,
-          firstName: user?.user?.firstName || user?.firstName || prev.referent.firstName,
-          structure: user?.user?.structure || user?.structure || prev.referent.structure,
-          phone: user?.user?.phone || user?.phone || prev.referent.phone,
-          email: user?.user?.email || user?.email || prev.referent.email
+          lastName: currentUser?.lastName || '',
+          firstName: currentUser?.firstName || '',
+          structure: currentUser?.structure || '',
+          phone: currentUser?.phone || '',
+          email: currentUser?.email || ''
         }
       }));
     }
