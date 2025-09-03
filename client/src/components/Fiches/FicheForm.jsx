@@ -1,67 +1,84 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { UserCheck, Users, Baby, Target, Paperclip, Save, Send, Plus, X, Edit, Check, Trash2, PenTool, ChevronDown, ChevronRight, Archive } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { useFiches } from '@/hooks/useFiches';
-import styles from './FicheForm.module.css';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import {
+  UserCheck,
+  Users,
+  Baby,
+  Target,
+  Paperclip,
+  Save,
+  Send,
+  Plus,
+  X,
+  Edit,
+  Check,
+  Trash2,
+  PenTool,
+  ChevronDown,
+  ChevronRight,
+  Archive,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useFiches } from "@/hooks/useFiches";
+import styles from "./FicheForm.module.css";
 
-export default function FicheForm({ 
-  initialData = null, 
-  onSubmit, 
+export default function FicheForm({
+  initialData = null,
+  onSubmit,
   onSaveDraft,
-  isEditing = false 
+  isEditing = false,
 }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { transitionFiche } = useFiches();
-  
+
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(0);
   const [isReferentEditable, setIsReferentEditable] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
-  
+
   // Form state with référent data - Initialize with empty strings to prevent controlled/uncontrolled issues
   const [formData, setFormData] = useState({
     referent: {
-      lastName: '',
-      firstName: '',
-      structure: '',
-      phone: '',
-      email: '',
-      requestDate: new Date().toISOString().split('T')[0]
+      lastName: "",
+      firstName: "",
+      structure: "",
+      phone: "",
+      email: "",
+      requestDate: new Date().toISOString().split("T")[0],
     },
-    familyId: '',
-    description: '',
+    familyId: "",
+    description: "",
     family: {
-      code: '',
-      address: '',
-      phone: '',
-      email: '',
-      mother: '',
-      father: '',
-      tiers: '',
-      lienAvecEnfants: '',
-      autoriteParentale: '',
-      situationFamiliale: '',
-      situationSocioProfessionnelle: '',
-      adresse: '',
-      telephonePortable: '',
-      telephoneFixe: ''
+      code: "",
+      address: "",
+      phone: "",
+      email: "",
+      mother: "",
+      father: "",
+      tiers: "",
+      lienAvecEnfants: "",
+      autoriteParentale: "",
+      situationFamiliale: "",
+      situationSocioProfessionnelle: "",
+      adresse: "",
+      telephonePortable: "",
+      telephoneFixe: "",
     },
     children: [
       {
-        name: '',
-        dateNaissance: '',
-        niveauScolaire: ''
-      }
+        name: "",
+        dateNaissance: "",
+        niveauScolaire: "",
+      },
     ],
     workshops: [],
     attachments: [],
-    descriptionSituation: '',
-    workshopPropositions: {}
+    descriptionSituation: "",
+    workshopPropositions: {},
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,86 +86,103 @@ export default function FicheForm({
   // Queries for reference data
 
   const { data: objectives = [] } = useQuery({
-    queryKey: ['/api/objectives'],
-    enabled: true
+    queryKey: ["/api/objectives"],
+    enabled: true,
   });
 
   const { data: workshops = [] } = useQuery({
-    queryKey: ['/api/workshops'],
-    enabled: true
+    queryKey: ["/api/workshops"],
+    enabled: true,
   });
 
   const { data: families = [] } = useQuery({
-    queryKey: ['/api/families'],
-    enabled: true
+    queryKey: ["/api/families"],
+    enabled: true,
   });
 
   // Group workshops by objective
   const workshopsByObjective = objectives.reduce((acc, objective) => {
-    acc[objective.id] = workshops.filter(w => w.objectiveId === objective.id);
+    acc[objective.id] = workshops.filter((w) => w.objectiveId === objective.id);
     return acc;
   }, {});
 
   // Initialize form with existing data
   useEffect(() => {
     if (initialData) {
-      console.log('Initializing form with data:', initialData);
-      
+      console.log("Initializing form with data:", initialData);
+
       // Extract family data from familyDetailedData JSON field or family object
-      const familyData = initialData.familyDetailedData || initialData.family || {};
-      
+      const familyData =
+        initialData.familyDetailedData || initialData.family || {};
+
       // Extract children data from childrenData JSON field or children array
-      const childrenData = initialData.childrenData || initialData.children || [];
-      
-      setFormData(prev => ({
+      const childrenData =
+        initialData.childrenData || initialData.children || [];
+
+      setFormData((prev) => ({
         ...prev,
-        familyId: initialData.familyId || '',
-        description: initialData.description || '',
+        familyId: initialData.familyId || "",
+        description: initialData.description || "",
         family: {
           ...prev.family,
-          code: familyData.code || '',
-          address: familyData.address || '',
-          phone: familyData.phone || '',
-          email: familyData.email || '',
-          mother: familyData.mother || '',
-          father: familyData.father || '',
-          tiers: familyData.tiers || '',
-          lienAvecEnfants: familyData.lienAvecEnfants || '',
-          autoriteParentale: familyData.autoriteParentale || '',
-          situationFamiliale: familyData.situationFamiliale || '',
-          situationSocioProfessionnelle: familyData.situationSocioProfessionnelle || '',
-          adresse: familyData.adresse || '',
-          telephonePortable: familyData.telephonePortable || '',
-          telephoneFixe: familyData.telephoneFixe || ''
+          code: familyData.code || "",
+          address: familyData.address || "",
+          phone: familyData.phone || "",
+          email: familyData.email || "",
+          mother: familyData.mother || "",
+          father: familyData.father || "",
+          tiers: familyData.tiers || "",
+          lienAvecEnfants: familyData.lienAvecEnfants || "",
+          autoriteParentale: familyData.autoriteParentale || "",
+          situationFamiliale: familyData.situationFamiliale || "",
+          situationSocioProfessionnelle:
+            familyData.situationSocioProfessionnelle || "",
+          adresse: familyData.adresse || "",
+          telephonePortable: familyData.telephonePortable || "",
+          telephoneFixe: familyData.telephoneFixe || "",
         },
-        children: childrenData.map(child => ({
-          name: child.name || child.firstName || '',
-          dateNaissance: child.dateNaissance || (child.birthDate ? new Date(child.birthDate).toISOString().split('T')[0] : ''),
-          niveauScolaire: child.niveauScolaire || child.level || ''
+        children: childrenData.map((child) => ({
+          name: child.name || child.firstName || "",
+          dateNaissance:
+            child.dateNaissance ||
+            (child.birthDate
+              ? new Date(child.birthDate).toISOString().split("T")[0]
+              : ""),
+          niveauScolaire: child.niveauScolaire || child.level || "",
         })),
-        workshops: initialData.selections?.map(s => ({
-          workshopId: s.workshopId,
-          qty: s.qty
-        })) || [],
+        workshops:
+          initialData.selections?.map((s) => ({
+            workshopId: s.workshopId,
+            qty: s.qty,
+          })) || [],
         attachments: initialData.attachments || [],
-        referent: initialData.referentData ? {
-          lastName: initialData.referentData.lastName || '',
-          firstName: initialData.referentData.firstName || '',
-          structure: initialData.referentData.structure || '',
-          phone: initialData.referentData.phone || '',
-          email: initialData.referentData.email || '',
-          requestDate: initialData.referentData.requestDate || prev.referent.requestDate
-        } : (initialData.emitter ? {
-          lastName: initialData.emitter.lastName || '',
-          firstName: initialData.emitter.firstName || '',
-          structure: initialData.emitter.structure || '',
-          phone: initialData.emitter.phone || '',
-          email: initialData.emitter.email || '',
-          requestDate: initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : prev.referent.requestDate
-        } : prev.referent),
-        descriptionSituation: initialData.description || initialData.descriptionSituation || '',
+        referent: initialData.referentData
+          ? {
+              lastName: initialData.referentData.lastName || "",
+              firstName: initialData.referentData.firstName || "",
+              structure: initialData.referentData.structure || "",
+              phone: initialData.referentData.phone || "",
+              email: initialData.referentData.email || "",
+              requestDate:
+                initialData.referentData.requestDate ||
+                prev.referent.requestDate,
+            }
+          : initialData.emitter
+            ? {
+                lastName: initialData.emitter.lastName || "",
+                firstName: initialData.emitter.firstName || "",
+                structure: initialData.emitter.structure || "",
+                phone: initialData.emitter.phone || "",
+                email: initialData.emitter.email || "",
+                requestDate: initialData.createdAt
+                  ? new Date(initialData.createdAt).toISOString().split("T")[0]
+                  : prev.referent.requestDate,
+              }
+            : prev.referent,
+        descriptionSituation:
+          initialData.description || initialData.descriptionSituation || "",
         workshopPropositions: initialData.workshopPropositions || {},
-        familyConsent: initialData.familyConsent || false
+        familyConsent: initialData.familyConsent || false,
       }));
     }
   }, [initialData]);
@@ -157,16 +191,16 @@ export default function FicheForm({
   useEffect(() => {
     if (user && !initialData) {
       const currentUser = user?.user || user;
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         referent: {
           ...prev.referent,
-          lastName: currentUser?.lastName || '',
-          firstName: currentUser?.firstName || '',
-          structure: currentUser?.structure || '',
-          phone: currentUser?.phone || '',
-          email: currentUser?.email || ''
-        }
+          lastName: currentUser?.lastName || "",
+          firstName: currentUser?.firstName || "",
+          structure: currentUser?.structure || "",
+          phone: currentUser?.phone || "",
+          email: currentUser?.email || "",
+        },
       }));
     }
   }, [user, initialData]);
@@ -175,80 +209,77 @@ export default function FicheForm({
   const uploadMutation = useMutation({
     mutationFn: async (file) => {
       const formData = new FormData();
-      formData.append('file', file);
-      const response = await apiRequest('POST', '/api/uploads', formData);
+      formData.append("file", file);
+      const response = await apiRequest("POST", "/api/uploads", formData);
       return response.json();
-    }
+    },
   });
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleFamilyChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       family: {
         ...prev.family,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
   const handleAddChild = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      children: [
-        ...prev.children,
-        { firstName: '', birthDate: '', level: '' }
-      ]
+      children: [...prev.children, { firstName: "", birthDate: "", level: "" }],
     }));
   };
 
   const handleChildChange = (index, field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      children: prev.children.map((child, i) => 
-        i === index ? { ...child, [field]: value } : child
-      )
+      children: prev.children.map((child, i) =>
+        i === index ? { ...child, [field]: value } : child,
+      ),
     }));
   };
 
   const handleRemoveChild = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      children: prev.children.filter((_, i) => i !== index)
+      children: prev.children.filter((_, i) => i !== index),
     }));
   };
 
   const handleWorkshopToggle = (workshopId, isSelected) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      workshops: isSelected 
+      workshops: isSelected
         ? [...prev.workshops, { workshopId, qty: 1 }]
-        : prev.workshops.filter(w => w.workshopId !== workshopId)
+        : prev.workshops.filter((w) => w.workshopId !== workshopId),
     }));
   };
 
   const handleWorkshopQtyChange = (workshopId, qty) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      workshops: prev.workshops.map(w => 
-        w.workshopId === workshopId ? { ...w, qty: parseInt(qty) || 1 } : w
-      )
+      workshops: prev.workshops.map((w) =>
+        w.workshopId === workshopId ? { ...w, qty: parseInt(qty) || 1 } : w,
+      ),
     }));
   };
 
   const handleFileSelect = async (event) => {
     const files = Array.from(event.target.files);
-    
+
     for (const file of files) {
       try {
         const uploadResult = await uploadMutation.mutateAsync(file);
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           attachments: [
             ...prev.attachments,
@@ -256,65 +287,67 @@ export default function FicheForm({
               name: uploadResult.name,
               url: uploadResult.url,
               mime: uploadResult.mime,
-              size: uploadResult.size
-            }
-          ]
+              size: uploadResult.size,
+            },
+          ],
         }));
       } catch (error) {
         toast({
           title: "Erreur de téléchargement",
           description: `Impossible de télécharger ${file.name}`,
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     }
   };
 
   const handleRemoveAttachment = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index)
+      attachments: prev.attachments.filter((_, i) => i !== index),
     }));
   };
 
   const calculateTotal = () => {
     return formData.workshops.reduce((total, selection) => {
-      const workshop = workshops.find(w => w.id === selection.workshopId);
+      const workshop = workshops.find((w) => w.id === selection.workshopId);
       return total + (workshop?.priceCents || 0) * selection.qty;
     }, 0);
   };
 
   // Format currency helper function
   const formatCurrency = (amountInCents) => {
-    if (!amountInCents) return '0,00 €';
-    return `${(amountInCents / 100).toFixed(2).replace('.', ',')} €`;
+    if (!amountInCents) return "0,00 €";
+    return `${(amountInCents / 100).toFixed(2).replace(".", ",")} €`;
   };
 
   const handleSubmit = async (isDraft = false) => {
     setIsSubmitting(true);
-    
+
     try {
       const submitData = {
         ...formData,
-        isDraft
+        isDraft,
       };
-      
+
       if (isDraft && onSaveDraft) {
         await onSaveDraft(submitData);
       } else if (onSubmit) {
         await onSubmit(submitData);
       }
-      
+
       toast({
         title: isDraft ? "Brouillon sauvegardé" : "Fiche envoyée",
-        description: isDraft ? "La fiche a été sauvegardée en brouillon" : "La fiche a été envoyée à FEVES",
-        variant: "default"
+        description: isDraft
+          ? "La fiche a été sauvegardée en brouillon"
+          : "La fiche a été envoyée à FEVES",
+        variant: "default",
       });
     } catch (error) {
       toast({
         title: "Erreur",
         description: error.message || "Une erreur est survenue",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -327,38 +360,38 @@ export default function FicheForm({
       id: 0,
       title: "Référent à l'origine de la demande",
       icon: UserCheck,
-      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+      allowedRoles: ["ADMIN", "EMETTEUR", "RELATIONS_EVS"],
     },
     {
       id: 1,
       title: "Informations famille",
       icon: Users,
-      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+      allowedRoles: ["ADMIN", "EMETTEUR", "RELATIONS_EVS"],
     },
     {
       id: 2,
       title: "Enfants concernés",
       icon: Baby,
-      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+      allowedRoles: ["ADMIN", "EMETTEUR", "RELATIONS_EVS"],
     },
     {
       id: 3,
       title: "Identification des besoins",
       icon: PenTool,
-      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+      allowedRoles: ["ADMIN", "EMETTEUR", "RELATIONS_EVS"],
     },
     {
       id: 4,
       title: "Ateliers et objectifs",
       icon: Target,
-      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
+      allowedRoles: ["ADMIN", "EMETTEUR", "RELATIONS_EVS"],
     },
     {
       id: 5,
       title: "Revoir et transmettre au Conseil Départemental",
       icon: Send,
-      allowedRoles: ['ADMIN', 'EMETTEUR', 'RELATIONS_EVS']
-    }
+      allowedRoles: ["ADMIN", "EMETTEUR", "RELATIONS_EVS"],
+    },
   ];
 
   const currentStepData = steps[currentStep];
@@ -375,22 +408,22 @@ export default function FicheForm({
   };
 
   const updateReferentField = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       referent: {
         ...prev.referent,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
   const updateFamilyField = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       family: {
         ...prev.family,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
@@ -408,25 +441,37 @@ export default function FicheForm({
   };
 
   const validateFamilyStep = () => {
-    const { mother, father, tiers, lienAvecEnfants, autoriteParentale, situationFamiliale, situationSocioProfessionnelle, telephonePortable } = formData.family;
-    
+    const {
+      mother,
+      father,
+      tiers,
+      lienAvecEnfants,
+      autoriteParentale,
+      situationFamiliale,
+      situationSocioProfessionnelle,
+      telephonePortable,
+    } = formData.family;
+
     // Au moins un des trois (mère, père, tiers) doit être rempli
-    const hasParentInfo = (mother?.trim?.() || '') || (father?.trim?.() || '') || (tiers?.trim?.() || '');
+    const hasParentInfo =
+      mother?.trim?.() || "" || father?.trim?.() || "" || tiers?.trim?.() || "";
     if (!hasParentInfo) {
       toast({
         title: "Erreur de validation",
-        description: "Veuillez renseigner au moins l'un des champs : Mère, Père ou Tiers",
-        variant: "destructive"
+        description:
+          "Veuillez renseigner au moins l'un des champs : Mère, Père ou Tiers",
+        variant: "destructive",
       });
       return false;
     }
 
     // Si tiers est rempli, le lien avec les enfants est obligatoire
-    if ((tiers?.trim?.() || '') && !(lienAvecEnfants?.trim?.() || '')) {
+    if ((tiers?.trim?.() || "") && !(lienAvecEnfants?.trim?.() || "")) {
       toast({
-        title: "Erreur de validation", 
-        description: "Le champ 'Lien avec l'enfant (les enfants)' est obligatoire lorsque 'Tiers' est renseigné",
-        variant: "destructive"
+        title: "Erreur de validation",
+        description:
+          "Le champ 'Lien avec l'enfant (les enfants)' est obligatoire lorsque 'Tiers' est renseigné",
+        variant: "destructive",
       });
       return false;
     }
@@ -436,34 +481,35 @@ export default function FicheForm({
       toast({
         title: "Erreur de validation",
         description: "Veuillez sélectionner l'autorité parentale",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
 
-    if (!(situationFamiliale?.trim?.() || '')) {
+    if (!(situationFamiliale?.trim?.() || "")) {
       toast({
         title: "Erreur de validation",
         description: "Le champ 'Situation familiale' est obligatoire",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
 
-    if (!(situationSocioProfessionnelle?.trim?.() || '')) {
+    if (!(situationSocioProfessionnelle?.trim?.() || "")) {
       toast({
         title: "Erreur de validation",
-        description: "Le champ 'Situation socio-professionnelle' est obligatoire",
-        variant: "destructive"
+        description:
+          "Le champ 'Situation socio-professionnelle' est obligatoire",
+        variant: "destructive",
       });
       return false;
     }
 
-    if (!(telephonePortable?.trim?.() || '')) {
+    if (!(telephonePortable?.trim?.() || "")) {
       toast({
         title: "Erreur de validation",
         description: "Le champ 'Téléphone portable' est obligatoire",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -472,33 +518,33 @@ export default function FicheForm({
   };
 
   const updateChildField = (index, field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      children: prev.children.map((child, i) => 
-        i === index ? { ...child, [field]: value } : child
-      )
+      children: prev.children.map((child, i) =>
+        i === index ? { ...child, [field]: value } : child,
+      ),
     }));
   };
 
   const addChild = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       children: [
         ...prev.children,
         {
-          name: '',
-          dateNaissance: '',
-          niveauScolaire: ''
-        }
-      ]
+          name: "",
+          dateNaissance: "",
+          niveauScolaire: "",
+        },
+      ],
     }));
   };
 
   const removeChild = (index) => {
     if (formData.children.length > 1) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        children: prev.children.filter((_, i) => i !== index)
+        children: prev.children.filter((_, i) => i !== index),
       }));
     }
   };
@@ -506,12 +552,12 @@ export default function FicheForm({
   const validateChildrenStep = () => {
     for (let i = 0; i < formData.children.length; i++) {
       const child = formData.children[i];
-      
+
       if (!child.name.trim()) {
         toast({
           title: "Erreur de validation",
           description: `Le nom de l'enfant ${i + 1} est obligatoire`,
-          variant: "destructive"
+          variant: "destructive",
         });
         return false;
       }
@@ -520,7 +566,7 @@ export default function FicheForm({
         toast({
           title: "Erreur de validation",
           description: `La date de naissance de l'enfant ${i + 1} est obligatoire`,
-          variant: "destructive"
+          variant: "destructive",
         });
         return false;
       }
@@ -529,7 +575,7 @@ export default function FicheForm({
         toast({
           title: "Erreur de validation",
           description: `Le niveau scolaire de l'enfant ${i + 1} est obligatoire`,
-          variant: "destructive"
+          variant: "destructive",
         });
         return false;
       }
@@ -543,7 +589,7 @@ export default function FicheForm({
       toast({
         title: "Erreur de validation",
         description: "La description de la situation est obligatoire",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -556,7 +602,7 @@ export default function FicheForm({
         <PenTool className={styles.cardTitleIcon} />
         Identification des besoins de la famille
       </h2>
-      
+
       <div className={styles.formSection}>
         <div className={styles.formField}>
           <label className={styles.fieldLabel} htmlFor="description-situation">
@@ -566,7 +612,12 @@ export default function FicheForm({
             id="description-situation"
             className={styles.fieldTextarea}
             value={formData.descriptionSituation}
-            onChange={(e) => setFormData(prev => ({ ...prev, descriptionSituation: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                descriptionSituation: e.target.value,
+              }))
+            }
             placeholder="Décrivez la situation familiale, les difficultés rencontrées, les besoins identifiés..."
             rows={8}
             data-testid="textarea-description-situation"
@@ -588,7 +639,9 @@ export default function FicheForm({
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            {(initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
+            {initialData?.state === "DRAFT" || !initialData?.id
+              ? "Enregistrer brouillon"
+              : "Enregistrer fiche"}
           </button>
           <button
             type="button"
@@ -613,14 +666,12 @@ export default function FicheForm({
         <Baby className={styles.cardTitleIcon} />
         Enfants concernés
       </h2>
-      
+
       <div className={styles.formSection}>
         {formData.children.map((child, index) => (
           <div key={index} className={styles.childSection}>
             <div className={styles.childHeader}>
-              <h3 className={styles.childTitle}>
-                Enfant {index + 1}
-              </h3>
+              <h3 className={styles.childTitle}>Enfant {index + 1}</h3>
               {formData.children.length > 1 && (
                 <button
                   type="button"
@@ -634,7 +685,10 @@ export default function FicheForm({
             </div>
 
             <div className={styles.formField}>
-              <label className={styles.fieldLabel} htmlFor={`child-name-${index}`}>
+              <label
+                className={styles.fieldLabel}
+                htmlFor={`child-name-${index}`}
+              >
                 Nom et prénom *
               </label>
               <input
@@ -642,7 +696,9 @@ export default function FicheForm({
                 type="text"
                 className={styles.fieldInput}
                 value={child.name}
-                onChange={(e) => updateChildField(index, 'name', e.target.value)}
+                onChange={(e) =>
+                  updateChildField(index, "name", e.target.value)
+                }
                 placeholder="Nom et prénom de l'enfant"
                 data-testid={`input-child-name-${index}`}
               />
@@ -650,7 +706,10 @@ export default function FicheForm({
 
             <div className={styles.formGrid}>
               <div className={styles.formField}>
-                <label className={styles.fieldLabel} htmlFor={`child-birth-${index}`}>
+                <label
+                  className={styles.fieldLabel}
+                  htmlFor={`child-birth-${index}`}
+                >
                   Date de naissance *
                 </label>
                 <input
@@ -658,12 +717,17 @@ export default function FicheForm({
                   type="date"
                   className={styles.fieldInput}
                   value={child.dateNaissance}
-                  onChange={(e) => updateChildField(index, 'dateNaissance', e.target.value)}
+                  onChange={(e) =>
+                    updateChildField(index, "dateNaissance", e.target.value)
+                  }
                   data-testid={`input-child-birth-${index}`}
                 />
               </div>
               <div className={styles.formField}>
-                <label className={styles.fieldLabel} htmlFor={`child-level-${index}`}>
+                <label
+                  className={styles.fieldLabel}
+                  htmlFor={`child-level-${index}`}
+                >
                   Niveau scolaire *
                 </label>
                 <input
@@ -671,7 +735,9 @@ export default function FicheForm({
                   type="text"
                   className={styles.fieldInput}
                   value={child.niveauScolaire}
-                  onChange={(e) => updateChildField(index, 'niveauScolaire', e.target.value)}
+                  onChange={(e) =>
+                    updateChildField(index, "niveauScolaire", e.target.value)
+                  }
                   placeholder="Ex: CP, CE1, 6ème, Maternelle..."
                   data-testid={`input-child-level-${index}`}
                 />
@@ -705,7 +771,9 @@ export default function FicheForm({
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            {(initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
+            {initialData?.state === "DRAFT" || !initialData?.id
+              ? "Enregistrer brouillon"
+              : "Enregistrer fiche"}
           </button>
           <button
             type="button"
@@ -725,34 +793,34 @@ export default function FicheForm({
   );
 
   // Build objectives data dynamically from database
-  const objectivesData = objectives.map(objective => ({
+  const objectivesData = objectives.map((objective) => ({
     id: objective.order || objective.id,
     title: objective.name,
     workshops: workshops
-      .filter(workshop => workshop.objectiveId === objective.id)
-      .map(workshop => ({
+      .filter((workshop) => workshop.objectiveId === objective.id)
+      .map((workshop) => ({
         id: `workshop_${objective.order || objective.id}_${workshop.id}`,
         name: workshop.name,
-        objective: workshop.description || workshop.name
-      }))
+        objective: workshop.description,
+      })),
   }));
 
   const [expandedObjectives, setExpandedObjectives] = useState({});
 
   const toggleObjective = (objectiveId) => {
-    setExpandedObjectives(prev => ({
+    setExpandedObjectives((prev) => ({
       ...prev,
-      [objectiveId]: !prev[objectiveId]
+      [objectiveId]: !prev[objectiveId],
     }));
   };
 
   const updateWorkshopProposition = (workshopId, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       workshopPropositions: {
         ...prev.workshopPropositions,
-        [workshopId]: value
-      }
+        [workshopId]: value,
+      },
     }));
   };
 
@@ -767,7 +835,7 @@ export default function FicheForm({
         <Target className={styles.cardTitleIcon} />
         Ateliers et objectifs
       </h2>
-      
+
       <div className={styles.formSection}>
         {objectivesData.map((objective) => (
           <div key={objective.id} className={styles.objectiveSection}>
@@ -783,14 +851,16 @@ export default function FicheForm({
                 ) : (
                   <ChevronRight size={20} />
                 )}
-                <span>OBJECTIF {objective.id} : {objective.title}</span>
+                <span>
+                  OBJECTIF {objective.id} : {objective.title}
+                </span>
               </div>
             </button>
 
             {expandedObjectives[objective.id] && (
               <div className={styles.workshopsContainer}>
                 <h4 className={styles.workshopsSubtitle}>Ateliers proposés</h4>
-                
+
                 {objective.workshops.map((workshop) => (
                   <div key={workshop.id} className={styles.workshopItem}>
                     <div className={styles.workshopInfo}>
@@ -799,16 +869,23 @@ export default function FicheForm({
                         <strong>Objectif :</strong> {workshop.objective}
                       </p>
                     </div>
-                    
+
                     <div className={styles.workshopProposition}>
-                      <label className={styles.fieldLabel} htmlFor={`proposition-${workshop.id}`}>
+                      <label
+                        className={styles.fieldLabel}
+                        htmlFor={`proposition-${workshop.id}`}
+                      >
                         Proposition du référent
                       </label>
                       <textarea
                         id={`proposition-${workshop.id}`}
                         className={styles.fieldTextarea}
-                        value={formData.workshopPropositions?.[workshop.id] || ''}
-                        onChange={(e) => updateWorkshopProposition(workshop.id, e.target.value)}
+                        value={
+                          formData.workshopPropositions?.[workshop.id] || ""
+                        }
+                        onChange={(e) =>
+                          updateWorkshopProposition(workshop.id, e.target.value)
+                        }
                         placeholder="Décrivez votre proposition pour cet atelier..."
                         rows={3}
                         data-testid={`textarea-proposition-${workshop.id}`}
@@ -836,7 +913,9 @@ export default function FicheForm({
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            {(initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
+            {initialData?.state === "DRAFT" || !initialData?.id
+              ? "Enregistrer brouillon"
+              : "Enregistrer fiche"}
           </button>
           <button
             type="button"
@@ -861,7 +940,7 @@ export default function FicheForm({
         <Users className={styles.cardTitleIcon} />
         Informations famille
       </h2>
-      
+
       <div className={styles.formSection}>
         <div className={styles.formGrid}>
           <div className={styles.formField}>
@@ -873,7 +952,7 @@ export default function FicheForm({
               type="text"
               className={styles.fieldInput}
               value={formData.family.mother}
-              onChange={(e) => updateFamilyField('mother', e.target.value)}
+              onChange={(e) => updateFamilyField("mother", e.target.value)}
               placeholder="Nom et prénom de la mère"
               data-testid="input-family-mother"
             />
@@ -887,7 +966,7 @@ export default function FicheForm({
               type="text"
               className={styles.fieldInput}
               value={formData.family.father}
-              onChange={(e) => updateFamilyField('father', e.target.value)}
+              onChange={(e) => updateFamilyField("father", e.target.value)}
               placeholder="Nom et prénom du père"
               data-testid="input-family-father"
             />
@@ -903,7 +982,7 @@ export default function FicheForm({
             type="text"
             className={styles.fieldInput}
             value={formData.family.tiers}
-            onChange={(e) => updateFamilyField('tiers', e.target.value)}
+            onChange={(e) => updateFamilyField("tiers", e.target.value)}
             placeholder="Nom et prénom du tiers"
             data-testid="input-family-tiers"
           />
@@ -919,7 +998,9 @@ export default function FicheForm({
               type="text"
               className={styles.fieldInput}
               value={formData.family.lienAvecEnfants}
-              onChange={(e) => updateFamilyField('lienAvecEnfants', e.target.value)}
+              onChange={(e) =>
+                updateFamilyField("lienAvecEnfants", e.target.value)
+              }
               placeholder="Ex: Grand-mère, Oncle, Tuteur légal..."
               data-testid="input-family-lien"
             />
@@ -934,7 +1015,9 @@ export default function FicheForm({
             id="family-autorite"
             className={styles.fieldSelect}
             value={formData.family.autoriteParentale}
-            onChange={(e) => updateFamilyField('autoriteParentale', e.target.value)}
+            onChange={(e) =>
+              updateFamilyField("autoriteParentale", e.target.value)
+            }
             data-testid="select-family-autorite"
           >
             <option value="">Sélectionner...</option>
@@ -953,7 +1036,9 @@ export default function FicheForm({
             type="text"
             className={styles.fieldInput}
             value={formData.family.situationFamiliale}
-            onChange={(e) => updateFamilyField('situationFamiliale', e.target.value)}
+            onChange={(e) =>
+              updateFamilyField("situationFamiliale", e.target.value)
+            }
             placeholder="Ex: Famille monoparentale, Couple, Séparés..."
             data-testid="input-family-situation"
           />
@@ -968,7 +1053,9 @@ export default function FicheForm({
             type="text"
             className={styles.fieldInput}
             value={formData.family.situationSocioProfessionnelle}
-            onChange={(e) => updateFamilyField('situationSocioProfessionnelle', e.target.value)}
+            onChange={(e) =>
+              updateFamilyField("situationSocioProfessionnelle", e.target.value)
+            }
             placeholder="Ex: Demandeur d'emploi, Salarié, RSA..."
             data-testid="input-family-socio"
           />
@@ -983,7 +1070,7 @@ export default function FicheForm({
             type="text"
             className={styles.fieldInput}
             value={formData.family.adresse}
-            onChange={(e) => updateFamilyField('adresse', e.target.value)}
+            onChange={(e) => updateFamilyField("adresse", e.target.value)}
             placeholder="Adresse complète de la famille"
             data-testid="input-family-address"
           />
@@ -999,7 +1086,9 @@ export default function FicheForm({
               type="tel"
               className={styles.fieldInput}
               value={formData.family.telephonePortable}
-              onChange={(e) => updateFamilyField('telephonePortable', e.target.value)}
+              onChange={(e) =>
+                updateFamilyField("telephonePortable", e.target.value)
+              }
               placeholder="06 12 34 56 78"
               data-testid="input-family-mobile"
             />
@@ -1013,7 +1102,9 @@ export default function FicheForm({
               type="tel"
               className={styles.fieldInput}
               value={formData.family.telephoneFixe}
-              onChange={(e) => updateFamilyField('telephoneFixe', e.target.value)}
+              onChange={(e) =>
+                updateFamilyField("telephoneFixe", e.target.value)
+              }
               placeholder="01 23 45 67 89"
               data-testid="input-family-landline"
             />
@@ -1029,7 +1120,7 @@ export default function FicheForm({
             type="email"
             className={styles.fieldInput}
             value={formData.family.email}
-            onChange={(e) => updateFamilyField('email', e.target.value)}
+            onChange={(e) => updateFamilyField("email", e.target.value)}
             placeholder="exemple@email.com"
             data-testid="input-family-email"
           />
@@ -1050,7 +1141,9 @@ export default function FicheForm({
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            {(initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
+            {initialData?.state === "DRAFT" || !initialData?.id
+              ? "Enregistrer brouillon"
+              : "Enregistrer fiche"}
           </button>
           <button
             type="button"
@@ -1075,7 +1168,7 @@ export default function FicheForm({
         <UserCheck className={styles.cardTitleIcon} />
         Référent à l'origine de la demande
       </h2>
-      
+
       <div className={styles.formSection}>
         <div className={styles.formGrid}>
           <div className={styles.formField}>
@@ -1087,7 +1180,7 @@ export default function FicheForm({
               type="text"
               className={styles.fieldInput}
               value={formData.referent.lastName}
-              onChange={(e) => updateReferentField('lastName', e.target.value)}
+              onChange={(e) => updateReferentField("lastName", e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-lastname"
             />
@@ -1101,7 +1194,7 @@ export default function FicheForm({
               type="text"
               className={styles.fieldInput}
               value={formData.referent.firstName}
-              onChange={(e) => updateReferentField('firstName', e.target.value)}
+              onChange={(e) => updateReferentField("firstName", e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-firstname"
             />
@@ -1117,12 +1210,11 @@ export default function FicheForm({
             type="text"
             className={styles.fieldInput}
             value={formData.referent.structure}
-            onChange={(e) => updateReferentField('structure', e.target.value)}
+            onChange={(e) => updateReferentField("structure", e.target.value)}
             disabled={!isReferentEditable}
             data-testid="input-referent-structure"
           />
         </div>
-
 
         <div className={styles.formGrid}>
           <div className={styles.formField}>
@@ -1134,7 +1226,7 @@ export default function FicheForm({
               type="tel"
               className={styles.fieldInput}
               value={formData.referent.phone}
-              onChange={(e) => updateReferentField('phone', e.target.value)}
+              onChange={(e) => updateReferentField("phone", e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-phone"
             />
@@ -1148,7 +1240,7 @@ export default function FicheForm({
               type="email"
               className={styles.fieldInput}
               value={formData.referent.email}
-              onChange={(e) => updateReferentField('email', e.target.value)}
+              onChange={(e) => updateReferentField("email", e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-email"
             />
@@ -1164,7 +1256,7 @@ export default function FicheForm({
             type="date"
             className={styles.fieldInput}
             value={formData.referent.requestDate}
-            onChange={(e) => updateReferentField('requestDate', e.target.value)}
+            onChange={(e) => updateReferentField("requestDate", e.target.value)}
             disabled={!isReferentEditable}
             data-testid="input-referent-date"
           />
@@ -1188,10 +1280,13 @@ export default function FicheForm({
                 className={`${styles.button} ${draftSaved ? styles.buttonDraftSaved : styles.buttonDraft}`}
                 data-testid="button-save-draft"
               >
-                {draftSaved ? 
-                  (initialData?.state === 'DRAFT' ? 'Brouillon sauvegardé' : 'Fiche sauvegardée') :
-                  ((initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche')
-                }
+                {draftSaved
+                  ? initialData?.state === "DRAFT"
+                    ? "Brouillon sauvegardé"
+                    : "Fiche sauvegardée"
+                  : initialData?.state === "DRAFT" || !initialData?.id
+                    ? "Enregistrer brouillon"
+                    : "Enregistrer fiche"}
               </button>
               <button
                 type="button"
@@ -1211,10 +1306,13 @@ export default function FicheForm({
                 className={`${styles.button} ${draftSaved ? styles.buttonDraftSaved : styles.buttonDraft}`}
                 data-testid="button-save-draft"
               >
-                {draftSaved ? 
-                  (initialData?.state === 'DRAFT' ? 'Brouillon sauvegardé' : 'Fiche sauvegardée') :
-                  ((initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche')
-                }
+                {draftSaved
+                  ? initialData?.state === "DRAFT"
+                    ? "Brouillon sauvegardé"
+                    : "Fiche sauvegardée"
+                  : initialData?.state === "DRAFT" || !initialData?.id
+                    ? "Enregistrer brouillon"
+                    : "Enregistrer fiche"}
               </button>
               <button
                 type="button"
@@ -1233,9 +1331,13 @@ export default function FicheForm({
   );
 
   const handleCancel = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir annuler ? Toutes les données saisies seront perdues.')) {
+    if (
+      window.confirm(
+        "Êtes-vous sûr de vouloir annuler ? Toutes les données saisies seront perdues.",
+      )
+    ) {
       // Reset form and go back to dashboard
-      window.location.href = '/dashboard';
+      window.location.href = "/dashboard";
     }
   };
 
@@ -1246,166 +1348,178 @@ export default function FicheForm({
 
   const handleSave = async () => {
     try {
-      console.log('Save clicked! Current user:', user);
-      console.log('Current form data:', formData);
-      
+      console.log("Save clicked! Current user:", user);
+      console.log("Current form data:", formData);
+
       const userRole = user?.user?.role || user?.role;
-      const currentState = initialData?.state || 'DRAFT';
-      const isAdmin = userRole === 'ADMIN';
-      const isDraft = currentState === 'DRAFT';
+      const currentState = initialData?.state || "DRAFT";
+      const isAdmin = userRole === "ADMIN";
+      const isDraft = currentState === "DRAFT";
 
       // Create minimal family data (even if incomplete for non-draft saves)
       const familyData = {
-        lastName: formData.family?.lastName || '',
-        firstName: formData.family?.firstName || '',
-        birthDate: formData.family?.birthDate || '',
-        birthPlace: formData.family?.birthPlace || '',
-        nationality: formData.family?.nationality || '',
-        lienAvecEnfants: formData.family?.lienAvecEnfants || '',
-        autoriteParentale: formData.family?.autoriteParentale || '',
-        situationFamiliale: formData.family?.situationFamiliale || '',
-        situationSocioProfessionnelle: formData.family?.situationSocioProfessionnelle || '',
-        telephonePortable: formData.family?.telephonePortable || '',
-        telephoneFixe: formData.family?.telephoneFixe || '',
-        email: formData.family?.email || '',
-        address: formData.family?.adresse || ''
+        lastName: formData.family?.lastName || "",
+        firstName: formData.family?.firstName || "",
+        birthDate: formData.family?.birthDate || "",
+        birthPlace: formData.family?.birthPlace || "",
+        nationality: formData.family?.nationality || "",
+        lienAvecEnfants: formData.family?.lienAvecEnfants || "",
+        autoriteParentale: formData.family?.autoriteParentale || "",
+        situationFamiliale: formData.family?.situationFamiliale || "",
+        situationSocioProfessionnelle:
+          formData.family?.situationSocioProfessionnelle || "",
+        telephonePortable: formData.family?.telephonePortable || "",
+        telephoneFixe: formData.family?.telephoneFixe || "",
+        email: formData.family?.email || "",
+        address: formData.family?.adresse || "",
       };
 
       // Transform workshop propositions
       // Map technical form IDs to actual database workshop IDs
       const workshopIdMapping = {
-        'workshop_1_1': '0ae9279f-9d7a-4778-875a-3ed84ee9d1b1', // Atelier communication parent-enfant
-        'workshop_1_2': 'bca25252-1dcf-4e35-b426-7374b79bafe1', // Gestion des émotions
-        'workshop_1_3': '102d9611-e264-42a9-aca8-0da0a73956ba', // Techniques éducatives positives
-        'workshop_2_1': '0c28af6d-e911-4c98-b5b2-10d9c585d3bb', // Ateliers famille
-        'workshop_2_2': '3f48eed0-f7a0-4cc5-85d4-f2feb39371e7', // Dialogue intergénérationnel
-        'workshop_2_3': '69ab54c3-a222-4fce-b6d4-1fe56fbf046f', // Médiation familiale
-        'workshop_3_1': '475e5207-044a-4ef0-a285-a1350f049ef7', // Jeux coopératifs
-        'workshop_3_2': 'c09e5c74-a78b-4da8-9e48-1a4e7e28b58a', // Randonnée familiale
-        'workshop_3_3': '0b7fbcb2-6d56-48fe-ad97-07a5f9fb5293'  // Sport collectif famille
+        workshop_1_1: "0ae9279f-9d7a-4778-875a-3ed84ee9d1b1", // Atelier communication parent-enfant
+        workshop_1_2: "bca25252-1dcf-4e35-b426-7374b79bafe1", // Gestion des émotions
+        workshop_1_3: "102d9611-e264-42a9-aca8-0da0a73956ba", // Techniques éducatives positives
+        workshop_2_1: "0c28af6d-e911-4c98-b5b2-10d9c585d3bb", // Ateliers famille
+        workshop_2_2: "3f48eed0-f7a0-4cc5-85d4-f2feb39371e7", // Dialogue intergénérationnel
+        workshop_2_3: "69ab54c3-a222-4fce-b6d4-1fe56fbf046f", // Médiation familiale
+        workshop_3_1: "475e5207-044a-4ef0-a285-a1350f049ef7", // Jeux coopératifs
+        workshop_3_2: "c09e5c74-a78b-4da8-9e48-1a4e7e28b58a", // Randonnée familiale
+        workshop_3_3: "0b7fbcb2-6d56-48fe-ad97-07a5f9fb5293", // Sport collectif famille
       };
 
-      const workshops = formData.workshopPropositions ? 
-        Object.entries(formData.workshopPropositions).map(([technicalId, _]) => ({
-          workshopId: workshopIdMapping[technicalId] || technicalId,
-          qty: 1
-        })) : [];
+      const workshops = formData.workshopPropositions
+        ? Object.entries(formData.workshopPropositions).map(
+            ([technicalId, _]) => ({
+              workshopId: workshopIdMapping[technicalId] || technicalId,
+              qty: 1,
+            }),
+          )
+        : [];
 
       const ficheData = {
-        description: formData.descriptionSituation || '',
+        description: formData.descriptionSituation || "",
         workshops: workshops,
-        objectiveIds: (formData.objectives || []).map(obj => obj.id || obj),
+        objectiveIds: (formData.objectives || []).map((obj) => obj.id || obj),
         family: familyData,
         // Map form data to detailed JSON fields
         referentData: formData.referent,
         familyDetailedData: formData.family,
         childrenData: formData.children,
         workshopPropositions: formData.workshopPropositions,
-        familyConsent: formData.familyConsent
+        familyConsent: formData.familyConsent,
       };
 
       // For draft fiches or admin users, save as draft
       // For non-draft fiches with non-admin users, save without changing state
       if (isDraft || isAdmin) {
-        ficheData.state = 'DRAFT';
+        ficheData.state = "DRAFT";
         await onSaveDraft(ficheData);
       } else {
         // For non-admin editing non-draft fiches, update without state change
-        await apiRequest('PATCH', `/api/fiches/${initialData.id}`, ficheData);
-        queryClient.invalidateQueries(['/api/fiches']);
-        queryClient.invalidateQueries(['/api/fiches', initialData.id]);
+        await apiRequest("PATCH", `/api/fiches/${initialData.id}`, ficheData);
+        queryClient.invalidateQueries(["/api/fiches"]);
+        queryClient.invalidateQueries(["/api/fiches", initialData.id]);
       }
-      
+
       // Set visual feedback
       setDraftSaved(true);
       setTimeout(() => setDraftSaved(false), 3000); // Reset after 3 seconds
 
       const toastTitle = isDraft ? "Brouillon sauvegardé" : "Fiche sauvegardée";
-      const toastDescription = isDraft ? 
-        "Votre fiche a été sauvegardée en brouillon avec succès." :
-        "Les modifications de la fiche ont été sauvegardées avec succès.";
+      const toastDescription = isDraft
+        ? "Votre fiche a été sauvegardée en brouillon avec succès."
+        : "Les modifications de la fiche ont été sauvegardées avec succès.";
 
       toast({
         title: toastTitle,
         description: toastDescription,
-        variant: "default"
+        variant: "default",
       });
-
     } catch (error) {
-      console.error('Save error:', error);
+      console.error("Save error:", error);
       toast({
         title: "Erreur de sauvegarde",
-        description: error.message || "Une erreur est survenue lors de la sauvegarde.",
-        variant: "destructive"
+        description:
+          error.message || "Une erreur est survenue lors de la sauvegarde.",
+        variant: "destructive",
       });
     }
   };
 
   // Admin-only actions
   const handleArchive = async () => {
-    if (!window.confirm('Êtes-vous sûr de vouloir archiver cette fiche ? Cette action ne peut pas être annulée.')) {
+    if (
+      !window.confirm(
+        "Êtes-vous sûr de vouloir archiver cette fiche ? Cette action ne peut pas être annulée.",
+      )
+    ) {
       return;
     }
 
     try {
       await transitionFiche({
         id: initialData.id,
-        newState: 'ARCHIVED',
+        newState: "ARCHIVED",
         metadata: {
           archivedBy: user?.user?.id || user?.id,
           archiveDate: new Date().toISOString(),
-          reason: 'Admin archive action'
-        }
+          reason: "Admin archive action",
+        },
       });
 
       toast({
         title: "Fiche archivée",
         description: "La fiche a été archivée avec succès.",
-        variant: "default"
+        variant: "default",
       });
 
       // Redirect to fiches list
       setTimeout(() => {
-        window.location.href = '/fiches';
+        window.location.href = "/fiches";
       }, 1000);
-
     } catch (error) {
-      console.error('Archive error:', error);
+      console.error("Archive error:", error);
       toast({
         title: "Erreur d'archivage",
-        description: error.message || "Une erreur est survenue lors de l'archivage.",
-        variant: "destructive"
+        description:
+          error.message || "Une erreur est survenue lors de l'archivage.",
+        variant: "destructive",
       });
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer définitivement cette fiche ? Cette action ne peut pas être annulée.')) {
+    if (
+      !window.confirm(
+        "Êtes-vous sûr de vouloir supprimer définitivement cette fiche ? Cette action ne peut pas être annulée.",
+      )
+    ) {
       return;
     }
 
     try {
-      await apiRequest('DELETE', `/api/fiches/${initialData.id}`);
-      
-      queryClient.invalidateQueries(['/api/fiches']);
-      
+      await apiRequest("DELETE", `/api/fiches/${initialData.id}`);
+
+      queryClient.invalidateQueries(["/api/fiches"]);
+
       toast({
         title: "Fiche supprimée",
         description: "La fiche a été supprimée définitivement.",
-        variant: "default"
+        variant: "default",
       });
 
       // Redirect to fiches list
       setTimeout(() => {
-        window.location.href = '/fiches';
+        window.location.href = "/fiches";
       }, 1000);
-
     } catch (error) {
-      console.error('Delete error:', error);
+      console.error("Delete error:", error);
       toast({
         title: "Erreur de suppression",
-        description: error.message || "Une erreur est survenue lors de la suppression.",
-        variant: "destructive"
+        description:
+          error.message || "Une erreur est survenue lors de la suppression.",
+        variant: "destructive",
       });
     }
   };
@@ -1414,106 +1528,115 @@ export default function FicheForm({
     if (!validateAllSteps()) {
       toast({
         title: "Erreur de validation",
-        description: "Veuillez remplir tous les champs obligatoires. Vérifiez particulièrement les champs Structure et Téléphone dans l'étape Référent.",
-        variant: "destructive"
+        description:
+          "Veuillez remplir tous les champs obligatoires. Vérifiez particulièrement les champs Structure et Téléphone dans l'étape Référent.",
+        variant: "destructive",
       });
       return;
     }
 
     try {
       let ficheId;
-      
+
       // If we have an existing fiche (initialData with id), transition its state
       if (initialData && initialData.id) {
         ficheId = initialData.id;
         await transitionFiche({
           id: initialData.id,
-          newState: 'SUBMITTED_TO_CD',
+          newState: "SUBMITTED_TO_CD",
           metadata: {
             transmittedBy: user?.user?.id || user?.id,
-            transmissionDate: new Date().toISOString()
-          }
+            transmissionDate: new Date().toISOString(),
+          },
         });
       } else {
         // If it's a new fiche, create it as draft first, then transition it
         // Transform workshopPropositions to workshops array format
         // Map technical form IDs to actual database workshop IDs
         const workshopIdMapping = {
-          'workshop_1_1': '0ae9279f-9d7a-4778-875a-3ed84ee9d1b1', // Atelier communication parent-enfant
-          'workshop_1_2': 'bca25252-1dcf-4e35-b426-7374b79bafe1', // Gestion des émotions
-          'workshop_1_3': '102d9611-e264-42a9-aca8-0da0a73956ba', // Techniques éducatives positives
-          'workshop_2_1': '0c28af6d-e911-4c98-b5b2-10d9c585d3bb', // Ateliers famille
-          'workshop_2_2': '3f48eed0-f7a0-4cc5-85d4-f2feb39371e7', // Dialogue intergénérationnel
-          'workshop_2_3': '69ab54c3-a222-4fce-b6d4-1fe56fbf046f', // Médiation familiale
-          'workshop_3_1': '475e5207-044a-4ef0-a285-a1350f049ef7', // Jeux coopératifs
-          'workshop_3_2': 'c09e5c74-a78b-4da8-9e48-1a4e7e28b58a', // Randonnée familiale
-          'workshop_3_3': '0b7fbcb2-6d56-48fe-ad97-07a5f9fb5293'  // Sport collectif famille
+          workshop_1_1: "0ae9279f-9d7a-4778-875a-3ed84ee9d1b1", // Atelier communication parent-enfant
+          workshop_1_2: "bca25252-1dcf-4e35-b426-7374b79bafe1", // Gestion des émotions
+          workshop_1_3: "102d9611-e264-42a9-aca8-0da0a73956ba", // Techniques éducatives positives
+          workshop_2_1: "0c28af6d-e911-4c98-b5b2-10d9c585d3bb", // Ateliers famille
+          workshop_2_2: "3f48eed0-f7a0-4cc5-85d4-f2feb39371e7", // Dialogue intergénérationnel
+          workshop_2_3: "69ab54c3-a222-4fce-b6d4-1fe56fbf046f", // Médiation familiale
+          workshop_3_1: "475e5207-044a-4ef0-a285-a1350f049ef7", // Jeux coopératifs
+          workshop_3_2: "c09e5c74-a78b-4da8-9e48-1a4e7e28b58a", // Randonnée familiale
+          workshop_3_3: "0b7fbcb2-6d56-48fe-ad97-07a5f9fb5293", // Sport collectif famille
         };
 
-        const workshops = formData.workshopPropositions ? 
-          Object.entries(formData.workshopPropositions).map(([technicalId, qty]) => ({
-            workshopId: workshopIdMapping[technicalId] || technicalId,
-            qty: parseInt(qty) || 1
-          })) : [];
+        const workshops = formData.workshopPropositions
+          ? Object.entries(formData.workshopPropositions).map(
+              ([technicalId, qty]) => ({
+                workshopId: workshopIdMapping[technicalId] || technicalId,
+                qty: parseInt(qty) || 1,
+              }),
+            )
+          : [];
 
         const ficheData = {
           familyId: formData.familyId,
-          description: formData.description || formData.descriptionSituation || '',
+          description:
+            formData.description || formData.descriptionSituation || "",
           workshops: workshops,
           // Include family data for dynamic creation
-          family: formData.familyId ? undefined : {
-            code: `FAM_${Date.now()}`, // Generate a unique family code
-            mother: formData.family.mother,
-            father: formData.family.father,
-            phone: formData.family.telephonePortable,
-            email: formData.family.email,
-            address: formData.family.adresse
-          },
+          family: formData.familyId
+            ? undefined
+            : {
+                code: `FAM_${Date.now()}`, // Generate a unique family code
+                mother: formData.family.mother,
+                father: formData.family.father,
+                phone: formData.family.telephonePortable,
+                email: formData.family.email,
+                address: formData.family.adresse,
+              },
           // Map form data to detailed JSON fields
           referentData: formData.referent,
           familyDetailedData: formData.family,
           childrenData: formData.children,
           workshopPropositions: formData.workshopPropositions,
-          familyConsent: formData.familyConsent
+          familyConsent: formData.familyConsent,
         };
 
         // Create the fiche as DRAFT
         const newFiche = await onSubmit(ficheData);
-        
+
         if (!newFiche || !newFiche.id) {
-          throw new Error('Fiche creation failed - no ID returned');
+          throw new Error("Fiche creation failed - no ID returned");
         }
-        
+
         ficheId = newFiche.id;
-        
+
         // Then transition it to SUBMITTED_TO_CD
         const transitionResult = await transitionFiche({
           id: newFiche.id,
-          newState: 'SUBMITTED_TO_CD',
+          newState: "SUBMITTED_TO_CD",
           metadata: {
             transmittedBy: user?.user?.id || user?.id,
-            transmissionDate: new Date().toISOString()
-          }
+            transmissionDate: new Date().toISOString(),
+          },
         });
       }
-      
+
       toast({
         title: "Fiche Validée!",
-        description: "La fiche a été transmise avec succès au Conseil Départemental pour validation.",
-        variant: "success"
+        description:
+          "La fiche a été transmise avec succès au Conseil Départemental pour validation.",
+        variant: "success",
       });
 
       // Redirect to fiche detail page after successful submission
       setTimeout(() => {
         window.location.href = `/fiches/${ficheId}`;
       }, 2000);
-
     } catch (error) {
-      console.error('Transmission error:', error);
+      console.error("Transmission error:", error);
       toast({
         title: "Erreur de transmission",
-        description: error.message || "Une erreur est survenue lors de la transmission de la fiche.",
-        variant: "destructive"
+        description:
+          error.message ||
+          "Une erreur est survenue lors de la transmission de la fiche.",
+        variant: "destructive",
       });
     }
   };
@@ -1522,11 +1645,13 @@ export default function FicheForm({
     if (!formData.familyConsent) {
       return false;
     }
-    return validateReferentStep() && 
-           validateFamilyStep() && 
-           validateChildrenStep() && 
-           validateBesoinStep() && 
-           validateObjectivesStep();
+    return (
+      validateReferentStep() &&
+      validateFamilyStep() &&
+      validateChildrenStep() &&
+      validateBesoinStep() &&
+      validateObjectivesStep()
+    );
   };
 
   const renderReviewStep = () => (
@@ -1535,7 +1660,7 @@ export default function FicheForm({
         <Send className={styles.cardTitleIcon} />
         Revoir et transmettre au Conseil Départemental
       </h2>
-      
+
       <div className={styles.formSection}>
         {/* Référent Information */}
         <div className={styles.reviewSection}>
@@ -1544,12 +1669,25 @@ export default function FicheForm({
             Référent à l'origine de la demande
           </h3>
           <div className={styles.reviewContent}>
-            <p><strong>Nom :</strong> {formData.referent.lastName}</p>
-            <p><strong>Prénom :</strong> {formData.referent.firstName}</p>
-            <p><strong>Structure :</strong> {formData.referent.structure}</p>
-            <p><strong>Téléphone :</strong> {formData.referent.phone}</p>
-            <p><strong>Email :</strong> {formData.referent.email}</p>
-            <p><strong>Date de la demande :</strong> {formData.referent.requestDate}</p>
+            <p>
+              <strong>Nom :</strong> {formData.referent.lastName}
+            </p>
+            <p>
+              <strong>Prénom :</strong> {formData.referent.firstName}
+            </p>
+            <p>
+              <strong>Structure :</strong> {formData.referent.structure}
+            </p>
+            <p>
+              <strong>Téléphone :</strong> {formData.referent.phone}
+            </p>
+            <p>
+              <strong>Email :</strong> {formData.referent.email}
+            </p>
+            <p>
+              <strong>Date de la demande :</strong>{" "}
+              {formData.referent.requestDate}
+            </p>
           </div>
         </div>
 
@@ -1560,19 +1698,78 @@ export default function FicheForm({
             Informations famille
           </h3>
           <div className={styles.reviewContent}>
-            {formData.family.lastName && <p><strong>Nom :</strong> {formData.family.lastName}</p>}
-            {formData.family.firstName && <p><strong>Prénom :</strong> {formData.family.firstName}</p>}
-            {formData.family.birthDate && <p><strong>Date de naissance :</strong> {formData.family.birthDate}</p>}
-            {formData.family.birthPlace && <p><strong>Lieu de naissance :</strong> {formData.family.birthPlace}</p>}
-            {formData.family.nationality && <p><strong>Nationalité :</strong> {formData.family.nationality}</p>}
-            {formData.family.lienAvecEnfants && <p><strong>Lien avec les enfants :</strong> {formData.family.lienAvecEnfants}</p>}
-            {formData.family.autoriteParentale && <p><strong>Autorité parentale :</strong> {formData.family.autoriteParentale}</p>}
-            {formData.family.situationFamiliale && <p><strong>Situation familiale :</strong> {formData.family.situationFamiliale}</p>}
-            {formData.family.situationSocioProfessionnelle && <p><strong>Situation socio-professionnelle :</strong> {formData.family.situationSocioProfessionnelle}</p>}
-            {formData.family.adresse && <p><strong>Adresse :</strong> {formData.family.adresse}</p>}
-            {formData.family.telephonePortable && <p><strong>Téléphone portable :</strong> {formData.family.telephonePortable}</p>}
-            {formData.family.telephoneFixe && <p><strong>Téléphone fixe :</strong> {formData.family.telephoneFixe}</p>}
-            {formData.family.email && <p><strong>Email :</strong> {formData.family.email}</p>}
+            {formData.family.lastName && (
+              <p>
+                <strong>Nom :</strong> {formData.family.lastName}
+              </p>
+            )}
+            {formData.family.firstName && (
+              <p>
+                <strong>Prénom :</strong> {formData.family.firstName}
+              </p>
+            )}
+            {formData.family.birthDate && (
+              <p>
+                <strong>Date de naissance :</strong> {formData.family.birthDate}
+              </p>
+            )}
+            {formData.family.birthPlace && (
+              <p>
+                <strong>Lieu de naissance :</strong>{" "}
+                {formData.family.birthPlace}
+              </p>
+            )}
+            {formData.family.nationality && (
+              <p>
+                <strong>Nationalité :</strong> {formData.family.nationality}
+              </p>
+            )}
+            {formData.family.lienAvecEnfants && (
+              <p>
+                <strong>Lien avec les enfants :</strong>{" "}
+                {formData.family.lienAvecEnfants}
+              </p>
+            )}
+            {formData.family.autoriteParentale && (
+              <p>
+                <strong>Autorité parentale :</strong>{" "}
+                {formData.family.autoriteParentale}
+              </p>
+            )}
+            {formData.family.situationFamiliale && (
+              <p>
+                <strong>Situation familiale :</strong>{" "}
+                {formData.family.situationFamiliale}
+              </p>
+            )}
+            {formData.family.situationSocioProfessionnelle && (
+              <p>
+                <strong>Situation socio-professionnelle :</strong>{" "}
+                {formData.family.situationSocioProfessionnelle}
+              </p>
+            )}
+            {formData.family.adresse && (
+              <p>
+                <strong>Adresse :</strong> {formData.family.adresse}
+              </p>
+            )}
+            {formData.family.telephonePortable && (
+              <p>
+                <strong>Téléphone portable :</strong>{" "}
+                {formData.family.telephonePortable}
+              </p>
+            )}
+            {formData.family.telephoneFixe && (
+              <p>
+                <strong>Téléphone fixe :</strong>{" "}
+                {formData.family.telephoneFixe}
+              </p>
+            )}
+            {formData.family.email && (
+              <p>
+                <strong>Email :</strong> {formData.family.email}
+              </p>
+            )}
           </div>
         </div>
 
@@ -1586,9 +1783,15 @@ export default function FicheForm({
             {formData.children.map((child, index) => (
               <div key={index} className={styles.childReview}>
                 <h4>Enfant {index + 1}</h4>
-                <p><strong>Prénom :</strong> {child.firstName}</p>
-                <p><strong>Date de naissance :</strong> {child.birthDate}</p>
-                <p><strong>Niveau scolaire :</strong> {child.level}</p>
+                <p>
+                  <strong>Prénom :</strong> {child.firstName}
+                </p>
+                <p>
+                  <strong>Date de naissance :</strong> {child.birthDate}
+                </p>
+                <p>
+                  <strong>Niveau scolaire :</strong> {child.level}
+                </p>
               </div>
             ))}
           </div>
@@ -1601,7 +1804,7 @@ export default function FicheForm({
             Identification des besoins de la famille
           </h3>
           <div className={styles.reviewContent}>
-            <p>{formData.description || 'Aucune description fournie'}</p>
+            <p>{formData.description || "Aucune description fournie"}</p>
           </div>
         </div>
 
@@ -1612,36 +1815,44 @@ export default function FicheForm({
             Propositions d'ateliers
           </h3>
           <div className={styles.reviewContent}>
-            {Object.entries(formData.workshopPropositions || {}).filter(([_, value]) => value?.trim()).length > 0 ? (
-              Object.entries(formData.workshopPropositions || {}).map(([technicalId, proposition]) => {
-                if (!proposition?.trim()) return null;
-                
-                // Map technical form IDs to actual database workshop IDs
-                const workshopIdMapping = {
-                  'workshop_1_1': '1', // Gestion du temps et de l'organisation familiale
-                  'workshop_1_2': '2', // Communication entre parents et enfants
-                  'workshop_1_3': '3', // Atelier sur les méthodes d'apprentissage à la maison
-                  'workshop_1_4': '4', // Soutien émotionnel et la motivation scolaire
-                  'workshop_2_1': '5', // La parole des aînés : une richesse pour l'éducation
-                  'workshop_2_2': '6', // Mieux se comprendre pour mieux s'entraider
-                  'workshop_2_3': '7', // Soutien scolaire et méthodes familiales d'apprentissage
-                  'workshop_2_4': '8', // Renforcer la motivation scolaire par le dialogue
-                  'workshop_3_1': '9', // Pratique d'activité physique
-                  'workshop_3_2': '10', // Atelier découverte Sport/Étude
-                  'workshop_3_3': '11'  // Atelier challenge famille
-                };
-                
-                const actualWorkshopId = workshopIdMapping[technicalId] || technicalId;
-                const workshop = workshops?.find(w => w.id === actualWorkshopId);
-                const workshopName = workshop?.name || `Atelier ${technicalId}`;
-                
-                return (
-                  <div key={technicalId} className={styles.propositionReview}>
-                    <h4>{workshopName}</h4>
-                    <p>{proposition}</p>
-                  </div>
-                );
-              })
+            {Object.entries(formData.workshopPropositions || {}).filter(
+              ([_, value]) => value?.trim(),
+            ).length > 0 ? (
+              Object.entries(formData.workshopPropositions || {}).map(
+                ([technicalId, proposition]) => {
+                  if (!proposition?.trim()) return null;
+
+                  // Map technical form IDs to actual database workshop IDs
+                  const workshopIdMapping = {
+                    workshop_1_1: "1", // Gestion du temps et de l'organisation familiale
+                    workshop_1_2: "2", // Communication entre parents et enfants
+                    workshop_1_3: "3", // Atelier sur les méthodes d'apprentissage à la maison
+                    workshop_1_4: "4", // Soutien émotionnel et la motivation scolaire
+                    workshop_2_1: "5", // La parole des aînés : une richesse pour l'éducation
+                    workshop_2_2: "6", // Mieux se comprendre pour mieux s'entraider
+                    workshop_2_3: "7", // Soutien scolaire et méthodes familiales d'apprentissage
+                    workshop_2_4: "8", // Renforcer la motivation scolaire par le dialogue
+                    workshop_3_1: "9", // Pratique d'activité physique
+                    workshop_3_2: "10", // Atelier découverte Sport/Étude
+                    workshop_3_3: "11", // Atelier challenge famille
+                  };
+
+                  const actualWorkshopId =
+                    workshopIdMapping[technicalId] || technicalId;
+                  const workshop = workshops?.find(
+                    (w) => w.id === actualWorkshopId,
+                  );
+                  const workshopName =
+                    workshop?.name || `Atelier ${technicalId}`;
+
+                  return (
+                    <div key={technicalId} className={styles.propositionReview}>
+                      <h4>{workshopName}</h4>
+                      <p>{proposition}</p>
+                    </div>
+                  );
+                },
+              )
             ) : (
               <p>Aucune proposition d'atelier</p>
             )}
@@ -1654,15 +1865,18 @@ export default function FicheForm({
             <input
               type="checkbox"
               checked={formData.familyConsent || false}
-              onChange={(e) => setFormData(prev => ({
-                ...prev,
-                familyConsent: e.target.checked
-              }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  familyConsent: e.target.checked,
+                }))
+              }
               className={styles.consentCheckbox}
               data-testid="checkbox-family-consent"
             />
             <span className={styles.consentText}>
-              La famille a connaissance de la Fiche Navette et adhère à cet accompagnement.
+              La famille a connaissance de la Fiche Navette et adhère à cet
+              accompagnement.
             </span>
           </label>
         </div>
@@ -1677,7 +1891,7 @@ export default function FicheForm({
           >
             Annuler
           </button>
-          
+
           <div className={styles.reviewActionsRight}>
             <button
               type="button"
@@ -1697,9 +1911,9 @@ export default function FicheForm({
               <Send className={styles.buttonIcon} />
               Transmettre
             </button>
-            
+
             {/* Admin-only actions - only show if user is ADMIN and fiche exists */}
-            {user?.user?.role === 'ADMIN' && initialData?.id && (
+            {user?.user?.role === "ADMIN" && initialData?.id && (
               <>
                 <button
                   type="button"
@@ -1755,36 +1969,48 @@ export default function FicheForm({
             const StepIcon = step.icon;
             const isActive = currentStep === index;
             const isCompleted = currentStep > index;
-            
+
             return (
               <div
                 key={step.id}
-                className={index < steps.length - 1 ? styles.stepItem : styles.stepItemLast}
+                className={
+                  index < steps.length - 1
+                    ? styles.stepItem
+                    : styles.stepItemLast
+                }
               >
                 <div className={styles.stepContent}>
                   <div
                     className={`${styles.stepIcon} ${
-                      isCompleted 
+                      isCompleted
                         ? styles.stepIconCompleted
-                        : isActive 
-                        ? styles.stepIconActive
-                        : styles.stepIconInactive
+                        : isActive
+                          ? styles.stepIconActive
+                          : styles.stepIconInactive
                     }`}
                   >
                     {isCompleted ? (
-                      <Check style={{width: '1rem', height: '1rem'}} />
+                      <Check style={{ width: "1rem", height: "1rem" }} />
                     ) : (
-                      <StepIcon style={{width: '1rem', height: '1rem'}} />
+                      <StepIcon style={{ width: "1rem", height: "1rem" }} />
                     )}
                   </div>
                   <div className={styles.stepText}>
-                    <div className={isActive ? styles.stepTextActive : styles.stepTextInactive}>
+                    <div
+                      className={
+                        isActive
+                          ? styles.stepTextActive
+                          : styles.stepTextInactive
+                      }
+                    >
                       {step.title}
                     </div>
                   </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`${styles.stepConnector} ${isCompleted ? styles.stepConnectorCompleted : styles.stepConnectorDefault}`} />
+                  <div
+                    className={`${styles.stepConnector} ${isCompleted ? styles.stepConnectorCompleted : styles.stepConnectorDefault}`}
+                  />
                 )}
               </div>
             );

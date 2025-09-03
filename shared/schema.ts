@@ -84,6 +84,7 @@ export const workshopObjectives = pgTable("workshop_objectives", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),
   name: text("name").notNull(),
+  description: text("description"),
   order: integer("order").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -92,7 +93,7 @@ export const workshops = pgTable("workshops", {
   id: varchar("id").primaryKey(),
   objectiveId: varchar("objective_id").notNull(),
   name: text("name").notNull(),
-  priceCents: integer("price_cents").notNull(),
+  description: text("description"),
 }, (table) => ({
   objectiveIdx: index("workshops_objective_idx").on(table.objectiveId),
 }));
