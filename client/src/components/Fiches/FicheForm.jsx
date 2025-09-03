@@ -29,7 +29,6 @@ export default function FicheForm({
       lastName: user?.user?.lastName || user?.lastName || '',
       firstName: user?.user?.firstName || user?.firstName || '',
       structure: user?.user?.structure || user?.structure || '',
-      role: user?.user?.role || user?.role || '',
       phone: user?.user?.phone || user?.phone || '',
       email: user?.user?.email || user?.email || '',
       requestDate: new Date().toISOString().split('T')[0]
@@ -118,7 +117,6 @@ export default function FicheForm({
           lastName: user?.user?.lastName || user?.lastName || prev.referent.lastName,
           firstName: user?.user?.firstName || user?.firstName || prev.referent.firstName,
           structure: user?.user?.structure || user?.structure || prev.referent.structure,
-          role: user?.user?.role || user?.role || prev.referent.role,
           phone: user?.user?.phone || user?.phone || prev.referent.phone,
           email: user?.user?.email || user?.email || prev.referent.email
         }
@@ -353,7 +351,7 @@ export default function FicheForm({
     if (!formData.referent.lastName || !formData.referent.firstName) {
       return false;
     }
-    if (!formData.referent.structure || !formData.referent.role) {
+    if (!formData.referent.structure) {
       return false;
     }
     if (!formData.referent.phone || !formData.referent.email) {
@@ -1142,20 +1140,6 @@ export default function FicheForm({
           />
         </div>
 
-        <div className={styles.formField}>
-          <label className={styles.fieldLabel} htmlFor="referent-role">
-            Fonction *
-          </label>
-          <input
-            id="referent-role"
-            type="text"
-            className={styles.fieldInput}
-            value={formData.referent.role}
-            onChange={(e) => updateReferentField('role', e.target.value)}
-            disabled={!isReferentEditable}
-            data-testid="input-referent-role"
-          />
-        </div>
 
         <div className={styles.formGrid}>
           <div className={styles.formField}>
@@ -1443,7 +1427,6 @@ export default function FicheForm({
             <p><strong>Nom :</strong> {formData.referent.lastName}</p>
             <p><strong>Prénom :</strong> {formData.referent.firstName}</p>
             <p><strong>Structure :</strong> {formData.referent.structure}</p>
-            <p><strong>Fonction :</strong> {formData.referent.role}</p>
             <p><strong>Téléphone :</strong> {formData.referent.phone}</p>
             <p><strong>Email :</strong> {formData.referent.email}</p>
             <p><strong>Date de la demande :</strong> {formData.referent.requestDate}</p>

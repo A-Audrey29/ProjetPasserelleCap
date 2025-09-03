@@ -318,16 +318,6 @@ export default function Header() {
                     data-testid="input-readonly-email"
                   />
                 </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Rôle</label>
-                  <input 
-                    type="text" 
-                    className={`${styles.input} ${styles.readOnly}`}
-                    value={user?.user?.role || user?.role || ''}
-                    disabled
-                    data-testid="input-readonly-role"
-                  />
-                </div>
               </div>
 
               {/* Editable fields */}
