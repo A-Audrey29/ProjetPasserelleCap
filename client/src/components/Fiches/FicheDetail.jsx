@@ -974,15 +974,17 @@ export default function FicheDetail({ ficheId }) {
                           {(() => {
                             // Reverse mapping to find technical ID from database ID
                             const workshopIdReverseMapping = {
-                              '2ff85efb-af49-466e-8aa5-b802dcb3c5b0': 'workshop_1_1', // Atelier communication parent-enfant
-                              '83d25a3f-c182-4898-bdbb-aefd4a88a15f': 'workshop_1_2', // Gestion des émotions
-                              '1a1189c5-e0f5-46be-a9c2-86c371515495': 'workshop_1_3', // Techniques éducatives positives
-                              '4a8f91db-1411-451f-aca0-1bff527aefc8': 'workshop_2_1', // Ateliers famille
-                              'a9d90a93-7235-4945-b393-62bf9d7e15c4': 'workshop_2_2', // Dialogue intergénérationnel
-                              '1c000ff7-5446-439d-ac0b-9d4472e44335': 'workshop_2_3', // Médiation familiale
-                              '4bf718dc-76c3-4fe8-bc59-2f2240b9863d': 'workshop_3_1', // Jeux coopératifs
-                              'df0b5ff3-cac6-45c0-b734-23c3ea6d3caa': 'workshop_3_2', // Randonnée familiale
-                              'e7534955-4ad1-42a3-a068-0513efe28cba': 'workshop_3_3'  // Sport collectif famille
+                              '1': 'workshop_1_1', // Gestion du temps et de l'organisation familiale
+                              '2': 'workshop_1_2', // Communication entre parents et enfants
+                              '3': 'workshop_1_3', // Atelier sur les méthodes d'apprentissage à la maison
+                              '4': 'workshop_1_4', // Soutien émotionnel et la motivation scolaire
+                              '5': 'workshop_2_1', // La parole des aînés : une richesse pour l'éducation
+                              '6': 'workshop_2_2', // Mieux se comprendre pour mieux s'entraider
+                              '7': 'workshop_2_3', // Soutien scolaire et méthodes familiales d'apprentissage
+                              '8': 'workshop_2_4', // Renforcer la motivation scolaire par le dialogue
+                              '9': 'workshop_3_1', // Pratique d'activité physique
+                              '10': 'workshop_3_2', // Atelier découverte Sport/Étude
+                              '11': 'workshop_3_3'  // Atelier challenge famille
                             };
                             
                             const technicalId = workshopIdReverseMapping[selection.workshopId];

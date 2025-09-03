@@ -1682,15 +1682,17 @@ export default function FicheForm({
                 
                 // Map technical form IDs to actual database workshop IDs
                 const workshopIdMapping = {
-                  'workshop_1_1': '1', // Atelier communication parent-enfant
-                  'workshop_1_2': '2', // Gestion des émotions
-                  'workshop_1_3': '3', // Techniques éducatives positives
-                  'workshop_2_1': '4', // Ateliers famille
-                  'workshop_2_2': '5', // Dialogue intergénérationnel
-                  'workshop_2_3': '6', // Médiation familiale
-                  'workshop_3_1': '7', // Jeux coopératifs
-                  'workshop_3_2': '8', // Randonnée familiale
-                  'workshop_3_3': '9'  // Sport collectif famille
+                  'workshop_1_1': '1', // Gestion du temps et de l'organisation familiale
+                  'workshop_1_2': '2', // Communication entre parents et enfants
+                  'workshop_1_3': '3', // Atelier sur les méthodes d'apprentissage à la maison
+                  'workshop_1_4': '4', // Soutien émotionnel et la motivation scolaire
+                  'workshop_2_1': '5', // La parole des aînés : une richesse pour l'éducation
+                  'workshop_2_2': '6', // Mieux se comprendre pour mieux s'entraider
+                  'workshop_2_3': '7', // Soutien scolaire et méthodes familiales d'apprentissage
+                  'workshop_2_4': '8', // Renforcer la motivation scolaire par le dialogue
+                  'workshop_3_1': '9', // Pratique d'activité physique
+                  'workshop_3_2': '10', // Atelier découverte Sport/Étude
+                  'workshop_3_3': '11'  // Atelier challenge famille
                 };
                 
                 const actualWorkshopId = workshopIdMapping[technicalId] || technicalId;
