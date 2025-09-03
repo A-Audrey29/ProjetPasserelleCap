@@ -28,7 +28,7 @@ export default function FicheForm({
     referent: {
       lastName: user?.user?.lastName || user?.lastName || '',
       firstName: user?.user?.firstName || user?.firstName || '',
-      structure: user?.user?.organization || user?.organization || '',
+      structure: user?.user?.structure || user?.structure || '',
       role: user?.user?.role || user?.role || '',
       phone: user?.user?.phone || user?.phone || '',
       email: user?.user?.email || user?.email || '',
@@ -107,6 +107,24 @@ export default function FicheForm({
       });
     }
   }, [initialData]);
+
+  // Auto-populate referent fields when user data becomes available
+  useEffect(() => {
+    if (user && !initialData) {
+      setFormData(prev => ({
+        ...prev,
+        referent: {
+          ...prev.referent,
+          lastName: user?.user?.lastName || user?.lastName || prev.referent.lastName,
+          firstName: user?.user?.firstName || user?.firstName || prev.referent.firstName,
+          structure: user?.user?.structure || user?.structure || prev.referent.structure,
+          role: user?.user?.role || user?.role || prev.referent.role,
+          phone: user?.user?.phone || user?.phone || prev.referent.phone,
+          email: user?.user?.email || user?.email || prev.referent.email
+        }
+      }));
+    }
+  }, [user, initialData]);
 
   // File upload mutation
   const uploadMutation = useMutation({
