@@ -6,7 +6,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  CheckCircle
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth.jsx';
@@ -29,6 +30,12 @@ export default function Sidebar() {
       icon: FileText,
       label: 'Fiches navettes',
       roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS']
+    },
+    {
+      href: '/fiches?state=SUBMITTED_TO_FEVES',
+      icon: CheckCircle,
+      label: 'Valider et transmettre',
+      roles: ['ADMIN', 'RELATIONS_EVS']
     },
     {
       href: '/reports',

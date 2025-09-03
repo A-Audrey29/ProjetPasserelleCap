@@ -29,6 +29,11 @@ export default function Header() {
       roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS']
     },
     {
+      href: '/fiches?state=SUBMITTED_TO_FEVES',
+      label: 'Valider et transmettre les fiches',
+      roles: ['ADMIN', 'RELATIONS_EVS']
+    },
+    {
       href: '/fiches?state=SUBMITTED_TO_CD',
       label: 'Fiches en attente de validations',
       roles: ['CD']
