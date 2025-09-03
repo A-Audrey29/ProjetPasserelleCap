@@ -1633,9 +1633,10 @@ export default function FicheForm({
             {Object.entries(formData.workshopPropositions || {}).filter(([_, value]) => value?.trim()).length > 0 ? (
               Object.entries(formData.workshopPropositions || {}).map(([workshopId, proposition]) => {
                 if (!proposition?.trim()) return null;
+                const workshop = workshops.find(w => w.id === workshopId);
                 return (
                   <div key={workshopId} className={styles.propositionReview}>
-                    <h4>{workshopId.replace('workshop_', 'Atelier ')}</h4>
+                    <h4>{workshop?.name || workshopId}</h4>
                     <p>{proposition}</p>
                   </div>
                 );
