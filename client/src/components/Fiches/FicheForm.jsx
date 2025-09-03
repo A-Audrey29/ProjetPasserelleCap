@@ -1624,17 +1624,17 @@ export default function FicheForm({
             Informations famille
           </h3>
           <div className={styles.reviewContent}>
-            <p><strong>Nom :</strong> {formData.family.lastName}</p>
-            <p><strong>Prénom :</strong> {formData.family.firstName}</p>
-            <p><strong>Date de naissance :</strong> {formData.family.birthDate}</p>
-            <p><strong>Lieu de naissance :</strong> {formData.family.birthPlace}</p>
-            <p><strong>Nationalité :</strong> {formData.family.nationality}</p>
-            <p><strong>Lien avec les enfants :</strong> {formData.family.lienAvecEnfants}</p>
-            <p><strong>Autorité parentale :</strong> {formData.family.autoriteParentale}</p>
-            <p><strong>Situation familiale :</strong> {formData.family.situationFamiliale}</p>
-            <p><strong>Situation socio-professionnelle :</strong> {formData.family.situationSocioProfessionnelle}</p>
+            {formData.family.lastName && <p><strong>Nom :</strong> {formData.family.lastName}</p>}
+            {formData.family.firstName && <p><strong>Prénom :</strong> {formData.family.firstName}</p>}
+            {formData.family.birthDate && <p><strong>Date de naissance :</strong> {formData.family.birthDate}</p>}
+            {formData.family.birthPlace && <p><strong>Lieu de naissance :</strong> {formData.family.birthPlace}</p>}
+            {formData.family.nationality && <p><strong>Nationalité :</strong> {formData.family.nationality}</p>}
+            {formData.family.lienAvecEnfants && <p><strong>Lien avec les enfants :</strong> {formData.family.lienAvecEnfants}</p>}
+            {formData.family.autoriteParentale && <p><strong>Autorité parentale :</strong> {formData.family.autoriteParentale}</p>}
+            {formData.family.situationFamiliale && <p><strong>Situation familiale :</strong> {formData.family.situationFamiliale}</p>}
+            {formData.family.situationSocioProfessionnelle && <p><strong>Situation socio-professionnelle :</strong> {formData.family.situationSocioProfessionnelle}</p>}
             {formData.family.adresse && <p><strong>Adresse :</strong> {formData.family.adresse}</p>}
-            <p><strong>Téléphone portable :</strong> {formData.family.telephonePortable}</p>
+            {formData.family.telephonePortable && <p><strong>Téléphone portable :</strong> {formData.family.telephonePortable}</p>}
             {formData.family.telephoneFixe && <p><strong>Téléphone fixe :</strong> {formData.family.telephoneFixe}</p>}
             {formData.family.email && <p><strong>Email :</strong> {formData.family.email}</p>}
           </div>
