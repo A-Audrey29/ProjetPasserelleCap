@@ -512,29 +512,38 @@ export default function FicheDetail({ ficheId }) {
               <h2 className={styles.cardTitle}>
                 Ateliers sélectionnés
               </h2>
-              <div className={styles.content}>
+              <div className={styles.workshopSelections}>
                 {fiche.selections.map((selection) => (
-                  <div key={selection.id} className={styles.infoGrid}>
-                    <div className={styles.infoItem}>
-                      <label className={styles.infoLabel}>{selection.workshop?.name}</label>
-                      <p className={styles.infoValue}>
-                        {selection.workshop?.objective?.code} - {selection.qty} participant(s)
-                      </p>
+                  <div key={selection.id} className={styles.workshopItem} data-testid={`workshop-${selection.id}`}>
+                    <div className={styles.workshopHeader}>
+                      <h3 className={styles.workshopName} data-testid={`text-workshop-name-${selection.id}`}>
+                        {selection.workshop?.name}
+                      </h3>
+                      <span className={styles.workshopQty} data-testid={`text-workshop-qty-${selection.id}`}>
+                        {selection.qty} participant(s)
+                      </span>
                     </div>
-                    <div className={styles.infoItem}>
-                      <label className={styles.infoLabel}>Prix</label>
-                      <p className={styles.infoValue}>
+                    <div className={styles.workshopDetails}>
+                      <div className={styles.objectiveInfo}>
+                        <span className={styles.objectiveCode} data-testid={`text-objective-code-${selection.id}`}>
+                          {selection.workshop?.objective?.code}
+                        </span>
+                        <span className={styles.objectiveName} data-testid={`text-objective-name-${selection.id}`}>
+                          {selection.workshop?.objective?.name}
+                        </span>
+                      </div>
+                      <div className={styles.workshopPrice} data-testid={`text-workshop-price-${selection.id}`}>
                         {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
-                      </p>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
               
-              <div className={styles.infoGrid}>
-                <div className={styles.infoItem}>
-                  <label className={styles.infoLabel}>Total</label>
-                  <p className={styles.infoValue} data-testid="text-total-amount">
+              <div className={styles.totalSection}>
+                <div className={styles.totalItem}>
+                  <label className={styles.totalLabel}>Total</label>
+                  <p className={styles.totalValue} data-testid="text-total-amount">
                     {formatCurrency(
                       fiche.selections?.reduce((sum, s) => 
                         sum + (s.workshop?.priceCents || 0) * s.qty, 0
@@ -543,6 +552,27 @@ export default function FicheDetail({ ficheId }) {
                   </p>
                 </div>
               </div>
+
+              {/* Emitter's Comment */}
+              {(() => {
+                const emitterComment = fiche.comments?.find(comment => comment.authorId === fiche.emitterId);
+                return emitterComment && (
+                  <div className={styles.emitterComment}>
+                    <h3 className={styles.commentTitle}>Commentaire de l'émetteur</h3>
+                    <p className={styles.commentContent} data-testid="text-emitter-comment">
+                      {emitterComment.content}
+                    </p>
+                    <div className={styles.commentMeta}>
+                      <span className={styles.commentAuthor}>
+                        {emitterComment.author?.firstName} {emitterComment.author?.lastName}
+                      </span>
+                      <span className={styles.commentDate}>
+                        {formatDate(emitterComment.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
