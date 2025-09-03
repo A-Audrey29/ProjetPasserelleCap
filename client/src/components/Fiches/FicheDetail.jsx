@@ -42,6 +42,7 @@ export default function FicheDetail({ ficheId }) {
   const [contractSigned, setContractSigned] = useState(false);
   const [fundsTransferred, setFundsTransferred] = useState(false);
   const [activityCompleted, setActivityCompleted] = useState(false);
+  const [fieldCheckCompleted, setFieldCheckCompleted] = useState(false);
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
@@ -277,6 +278,31 @@ export default function FicheDetail({ ficheId }) {
       toast({
         title: "Erreur",
         description: error.message || "Impossible de valider l'activité",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Field check completion for RELATIONS_EVS
+  const handleFieldCheckCompletion = async () => {
+    try {
+      await transitionMutation.mutateAsync({ 
+        newState: 'FIELD_CHECK_DONE',
+        metadata: {
+          fieldCheckCompleted: true,
+          checkedBy: user?.id,
+          checkedAt: new Date().toISOString()
+        }
+      });
+      toast({
+        title: "Vérification terrain validée",
+        description: "La vérification terrain a été confirmée. La fiche passe au statut 'Vérification effectuée'.",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de valider la vérification terrain",
         variant: "destructive"
       });
     }
@@ -1157,6 +1183,55 @@ export default function FicheDetail({ ficheId }) {
                   <div className={styles.validationNote}>
                     <p className={styles.noteText}>
                       Vous devez confirmer que l'activité a été effectuée pour pouvoir valider.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Field Check Verification for RELATIONS_EVS with FIELD_CHECK_SCHEDULED status */}
+          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'FIELD_CHECK_SCHEDULED' && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Vérification terrain
+              </h2>
+              
+              <div className={styles.fieldCheckVerification}>
+                <div className={styles.verificationChecks}>
+                  <div className={styles.checkItem}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkbox}
+                        checked={fieldCheckCompleted}
+                        onChange={(e) => setFieldCheckCompleted(e.target.checked)}
+                        data-testid="checkbox-field-check-completed"
+                      />
+                      <span className={styles.checkboxText}>
+                        L'agent de terrain atteste que l'activité a été tenue par l'organisme désigné.
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Action button */}
+                <div className={styles.fieldCheckActions}>
+                  <button
+                    className={styles.validateFieldCheckButton}
+                    onClick={() => handleFieldCheckCompletion()}
+                    disabled={!fieldCheckCompleted || transitionMutation.isPending}
+                    data-testid="button-validate-field-check"
+                  >
+                    <CheckCircle className={styles.buttonIcon} />
+                    Valider
+                  </button>
+                </div>
+
+                {!fieldCheckCompleted && (
+                  <div className={styles.validationNote}>
+                    <p className={styles.noteText}>
+                      Vous devez attester que l'activité a été tenue par l'organisme pour pouvoir valider.
                     </p>
                   </div>
                 )}
