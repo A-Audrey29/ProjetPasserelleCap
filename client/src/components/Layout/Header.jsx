@@ -21,12 +21,22 @@ export default function Header() {
     {
       href: '/dashboard',
       label: 'Tableau de bord',
-      roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS']
+      roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS', 'CD']
     },
     {
       href: '/fiches',
       label: 'Fiches Actives',
       roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS']
+    },
+    {
+      href: '/fiches?state=SUBMITTED_TO_CD',
+      label: 'Fiches en attente de validations',
+      roles: ['CD']
+    },
+    {
+      href: '/fiches',
+      label: 'Consulter les Fiches',
+      roles: ['CD']
     },
     {
       href: '/administration',
@@ -36,7 +46,7 @@ export default function Header() {
     {
       href: '/contact',
       label: 'Nous contacter',
-      roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS']
+      roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS', 'CD']
     }
   ];
 
