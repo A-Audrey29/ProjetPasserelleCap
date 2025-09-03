@@ -167,32 +167,11 @@ export const PERMISSIONS = {
   ],
   
   [ROLES.RELATIONS_EVS]: [
-    // Consultation - Filtered by territory
+    // Consultation - Basic fiche viewing only
     ACTIONS.VIEW_FILTERED_FICHES,
-    ACTIONS.VIEW_HISTORY_COMPLETE,
-    ACTIONS.SEARCH_ADVANCED,
     
-    // Creation & Edition - No creation, can modify before transmission
-    ACTIONS.MODIFY_FICHE_BEFORE_TRANSMISSION,
-    ACTIONS.COMPLETE_FICHE_PARTIAL,
-    
-    // Validation & Workflow - Pre-validation only
-    ACTIONS.VALIDATE_PRE,
-    ACTIONS.REFUSE_REQUEST_CORRECTIONS,
-    
-    // Documents - Full access
-    ACTIONS.UPLOAD_DOCUMENTS,
-    ACTIONS.DOWNLOAD_ALL_DOCUMENTS,
-    
-    // Communication - Full access
-    ACTIONS.ADD_COMMENTS,
-    ACTIONS.MESSAGING,
-    ACTIONS.NOTIFICATIONS,
-    
-    // Monitoring - Territory level
-    ACTIONS.VIEW_PROGRESS_TERRITORY,
-    ACTIONS.VIEW_DASHBOARD_TERRITORY,
-    ACTIONS.EXPORT_DATA_LIMITED,
+    // Creation & Edition - Can create new fiches only
+    ACTIONS.CREATE_FICHE,
     
     // Management - Profile only
     ACTIONS.MANAGE_PROFILE

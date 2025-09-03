@@ -25,7 +25,7 @@ export default function Header() {
     },
     {
       href: '/fiches',
-      label: 'Fiches Actives',
+      label: 'Consulter les fiches navettes',
       roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS']
     },
     {
@@ -46,7 +46,7 @@ export default function Header() {
     {
       href: '/contact',
       label: 'Nous contacter',
-      roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS', 'CD']
+      roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'EVS_CS', 'CD']
     }
   ];
 

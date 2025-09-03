@@ -69,7 +69,7 @@ export default function Dashboard() {
             </p>
           </div>
           <div className={styles.actionButtons}>
-            {user?.role === 'EMETTEUR' && (
+            {(user?.role === 'EMETTEUR' || user?.role === 'RELATIONS_EVS') && (
               <button 
                 className={styles.createButton}
                 onClick={handleCreateFiche}
@@ -79,14 +79,16 @@ export default function Dashboard() {
                 Nouvelle fiche navette
               </button>
             )}
-            <button 
-              className={styles.exportButton}
-              onClick={handleExport}
-              data-testid="button-export"
-            >
-              <Download className="w-4 h-4" />
-              Exporter
-            </button>
+            {user?.role !== 'RELATIONS_EVS' && (
+              <button 
+                className={styles.exportButton}
+                onClick={handleExport}
+                data-testid="button-export"
+              >
+                <Download className="w-4 h-4" />
+                Exporter
+              </button>
+            )}
           </div>
         </div>
 

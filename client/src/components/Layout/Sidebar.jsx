@@ -34,7 +34,7 @@ export default function Sidebar() {
       href: '/reports',
       icon: BarChart3,
       label: 'Rapports',
-      roles: ['ADMIN', 'SUIVI_PROJETS', 'RELATIONS_EVS']
+      roles: ['ADMIN', 'SUIVI_PROJETS']
     },
     {
       href: '/admin',
