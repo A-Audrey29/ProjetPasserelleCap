@@ -41,6 +41,7 @@ export default function FicheDetail({ ficheId }) {
   // Contract verification states
   const [contractSigned, setContractSigned] = useState(false);
   const [fundsTransferred, setFundsTransferred] = useState(false);
+  const [activityCompleted, setActivityCompleted] = useState(false);
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
@@ -251,6 +252,31 @@ export default function FicheDetail({ ficheId }) {
       toast({
         title: "Erreur",
         description: error.message || "Impossible de traiter l'action",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Activity completion for EVS_CS
+  const handleActivityCompletion = async () => {
+    try {
+      await transitionMutation.mutateAsync({ 
+        newState: 'FIELD_CHECK_SCHEDULED',
+        metadata: {
+          activityCompleted: true,
+          completedBy: user?.id,
+          completedAt: new Date().toISOString()
+        }
+      });
+      toast({
+        title: "Activité validée",
+        description: "L'activité a été confirmée comme effectuée. La fiche passe au statut 'Vérification programmée'.",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de valider l'activité",
         variant: "destructive"
       });
     }
@@ -1081,6 +1107,56 @@ export default function FicheDetail({ ficheId }) {
                   <div className={styles.validationNote}>
                     <p className={styles.noteText}>
                       Les deux vérifications doivent être cochées pour pouvoir valider le contrat.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Activity Completion Verification for EVS_CS with CONTRACT_SIGNED status */}
+          {(user?.user?.role === 'EVS_CS' || user?.role === 'EVS_CS') && fiche.state === 'CONTRACT_SIGNED' && 
+           (user?.user?.orgId === fiche.assignedOrgId || user?.orgId === fiche.assignedOrgId) && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Validation de l'activité
+              </h2>
+              
+              <div className={styles.activityVerification}>
+                <div className={styles.verificationChecks}>
+                  <div className={styles.checkItem}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkbox}
+                        checked={activityCompleted}
+                        onChange={(e) => setActivityCompleted(e.target.checked)}
+                        data-testid="checkbox-activity-completed"
+                      />
+                      <span className={styles.checkboxText}>
+                        L'activité a été effectuée
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Action button */}
+                <div className={styles.activityActions}>
+                  <button
+                    className={styles.validateActivityButton}
+                    onClick={() => handleActivityCompletion()}
+                    disabled={!activityCompleted || transitionMutation.isPending}
+                    data-testid="button-validate-activity"
+                  >
+                    <CheckCircle className={styles.buttonIcon} />
+                    Valider
+                  </button>
+                </div>
+
+                {!activityCompleted && (
+                  <div className={styles.validationNote}>
+                    <p className={styles.noteText}>
+                      Vous devez confirmer que l'activité a été effectuée pour pouvoir valider.
                     </p>
                   </div>
                 )}

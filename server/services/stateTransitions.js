@@ -19,7 +19,7 @@ const STATE_TRANSITIONS = {
   },
   EVS_CS: {
     ASSIGNED_EVS: ['ACCEPTED_EVS', 'SUBMITTED_TO_FEVES'], // EVS can accept or refuse (back to SUBMITTED_TO_FEVES)
-    CONTRACT_SIGNED: ['ACTIVITY_DONE']
+    CONTRACT_SIGNED: ['FIELD_CHECK_SCHEDULED'] // EVS_CS confirms activity completion
   }
 };
 
