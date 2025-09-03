@@ -794,6 +794,8 @@ export default function FicheForm({
     </div>
   );
 
+  const [expandedObjectives, setExpandedObjectives] = useState({});
+
   // Build objectives data dynamically from database
   const objectivesData = objectives.map((objective) => ({
     id: objective.order || objective.id,
@@ -806,8 +808,6 @@ export default function FicheForm({
         objective: workshop.description,
       })),
   }));
-
-  const [expandedObjectives, setExpandedObjectives] = useState({});
 
   const toggleObjective = (objectiveId) => {
     setExpandedObjectives((prev) => ({
