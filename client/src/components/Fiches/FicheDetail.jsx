@@ -515,13 +515,8 @@ export default function FicheDetail({ ficheId }) {
               <div className={styles.workshopSelections}>
                 {fiche.selections.map((selection) => (
                   <div key={selection.id} className={styles.workshopItem} data-testid={`workshop-${selection.id}`}>
-                    <div className={styles.workshopHeader}>
-                      <h3 className={styles.workshopName} data-testid={`text-workshop-name-${selection.id}`}>
-                        {selection.workshop?.name}
-                      </h3>
-                    </div>
-                    <div className={styles.workshopDetails}>
-                      <div className={styles.objectiveInfo}>
+                    <div className={styles.workshopHierarchy}>
+                      <div className={styles.objectiveLevel}>
                         <span className={styles.objectiveCode} data-testid={`text-objective-code-${selection.id}`}>
                           {selection.workshop?.objective?.code}
                         </span>
@@ -529,8 +524,18 @@ export default function FicheDetail({ ficheId }) {
                           {selection.workshop?.objective?.name}
                         </span>
                       </div>
-                      <div className={styles.workshopPrice} data-testid={`text-workshop-price-${selection.id}`}>
-                        {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
+                      <div className={styles.workshopLevel}>
+                        <h3 className={styles.workshopName} data-testid={`text-workshop-name-${selection.id}`}>
+                          {selection.workshop?.name}
+                        </h3>
+                      </div>
+                      <div className={styles.propositionLevel}>
+                        <span className={styles.propositionLabel}>Proposition du référent</span>
+                        <div className={styles.propositionDetails}>
+                          <span className={styles.propositionPrice} data-testid={`text-workshop-price-${selection.id}`}>
+                            {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -549,27 +554,6 @@ export default function FicheDetail({ ficheId }) {
                   </p>
                 </div>
               </div>
-
-              {/* Emitter's Comment */}
-              {(() => {
-                const emitterComment = fiche.comments?.find(comment => comment.authorId === fiche.emitterId);
-                return emitterComment && (
-                  <div className={styles.emitterComment}>
-                    <h3 className={styles.commentTitle}>Commentaire de l'émetteur</h3>
-                    <p className={styles.commentContent} data-testid="text-emitter-comment">
-                      {emitterComment.content}
-                    </p>
-                    <div className={styles.commentMeta}>
-                      <span className={styles.commentAuthor}>
-                        {emitterComment.author?.firstName} {emitterComment.author?.lastName}
-                      </span>
-                      <span className={styles.commentDate}>
-                        {formatDate(emitterComment.createdAt)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })()}
             </div>
           )}
 
