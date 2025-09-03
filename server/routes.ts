@@ -348,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/fiches/:id/transition', requireAuth, requireFicheAccess, auditMiddleware('transition', 'FicheNavette'), async (req, res) => {
+  app.post('/api/fiches/:id/transition', requireAuth, requireRole('ADMIN', 'EMETTEUR', 'RELATIONS_EVS', 'CD'), requireFicheAccess, auditMiddleware('transition', 'FicheNavette'), async (req, res) => {
     try {
       const { id } = req.params;
       const { newState, metadata } = req.body;
