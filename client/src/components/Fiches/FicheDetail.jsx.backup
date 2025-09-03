@@ -56,39 +56,57 @@ export default function FicheDetail({ ficheId }) {
   // Comment mutation
   const addCommentMutation = useMutation({
     mutationFn: async (content) => {
-      return await apiRequest('POST', `/api/fiches/${ficheId}/comments`, { content });
+      const response = await apiRequest('POST', `/api/fiches/${ficheId}/comments`, {
+        content
+      });
+      return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries(['/api/fiches', ficheId]);
       setNewComment('');
-      queryClient.invalidateQueries(['/api/fiches', ficheId]);
-    },
-  });
-
-  // Transition mutation
-  const transitionMutation = useMutation({
-    mutationFn: async ({ newState, metadata = {} }) => {
-      return await apiRequest('POST', `/api/fiches/${ficheId}/transition`, { newState, metadata });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['/api/fiches', ficheId]);
-      queryClient.invalidateQueries(['/api/fiches']);
+      toast({
+        title: "Commentaire ajouté",
+        description: "Votre commentaire a été ajouté avec succès"
+      });
     }
   });
 
   // Assignment mutation
   const assignMutation = useMutation({
     mutationFn: async (assignedOrgId) => {
-      return await apiRequest('POST', `/api/fiches/${ficheId}/assign`, { assignedOrgId });
+      const response = await apiRequest('POST', `/api/fiches/${ficheId}/assign`, {
+        assignedOrgId
+      });
+      return response.json();
     },
     onSuccess: () => {
-      setShowAssignModal(false);
-      setSelectedOrgId('');
       queryClient.invalidateQueries(['/api/fiches', ficheId]);
-      queryClient.invalidateQueries(['/api/fiches']);
+      setShowAssignModal(false);
+      toast({
+        title: "Affectation réussie",
+        description: "La fiche a été affectée avec succès"
+      });
     }
   });
 
-  // Handlers
+  // State transition mutation
+  const transitionMutation = useMutation({
+    mutationFn: async ({ newState, metadata = {} }) => {
+      const response = await apiRequest('POST', `/api/fiches/${ficheId}/transition`, {
+        newState,
+        metadata
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/fiches', ficheId]);
+      toast({
+        title: "État mis à jour",
+        description: "L'état de la fiche a été mis à jour avec succès"
+      });
+    }
+  });
+
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
     
@@ -275,8 +293,7 @@ export default function FicheDetail({ ficheId }) {
       <div className={styles.main}>
         {/* Header Section */}
         <div className={styles.headerSection}>
-          {/* Title Row */}
-          <div className={styles.titleColumn}>
+          <div className={styles.titleRow}>
             <h1 className={styles.pageTitle}>
               Fiche Navette CAP
             </h1>
@@ -285,99 +302,99 @@ export default function FicheDetail({ ficheId }) {
             </p>
           </div>
           
-          {/* Action Buttons Row */}
           <div className={styles.actionButtons}>
-            <Link href="/fiches" className={styles.backButton}>
-              <ArrowLeft className={styles.buttonIcon} />
-              Retour
-            </Link>
-            
-            {canPerformAction('cd_validate') && (
-              <>
-                <button 
-                  onClick={() => handleCDValidation('validate')}
-                  disabled={transitionMutation.isPending}
-                  className={styles.validateButton}
-                  data-testid="button-cd-validate"
-                >
-                  <CheckCircle className={styles.buttonIcon} />
-                  Valider
-                </button>
-                <button 
-                  onClick={() => handleCDValidation('return')}
-                  disabled={transitionMutation.isPending}
-                  className={styles.returnButton}
-                  data-testid="button-cd-return"
-                >
-                  <RotateCcw className={styles.buttonIcon} />
-                  Renvoyer
-                </button>
-                <button 
-                  onClick={() => handleCDValidation('reject')}
-                  disabled={transitionMutation.isPending}
-                  className={styles.rejectButton}
-                  data-testid="button-cd-reject"
-                >
-                  <XCircle className={styles.buttonIcon} />
-                  Refuser
-                </button>
-              </>
-            )}
-            
-            {canPerformAction('assign') && (
-              <button 
-                onClick={() => setShowAssignModal(true)}
-                className={styles.assignButton}
-                data-testid="button-assign"
-              >
-                <UserPlus className={styles.buttonIcon} />
-                Affecter
-              </button>
-            )}
-            
-            {canPerformAction('edit') && (
-              <Link 
-                href={`/fiches/${ficheId}/edit`}
-                className={styles.editButton}
-                data-testid="button-edit-fiche"
-              >
-                <Edit className={styles.buttonIcon} />
-                Modifier la fiche
+              <Link href="/fiches" className={styles.backButton}>
+                <ArrowLeft className={styles.buttonIcon} />
+                Retour
               </Link>
-            )}
-            
-            {/* Admin-only actions */}
-            {user?.user?.role === 'ADMIN' && (
-              <>
+              
+              {canPerformAction('cd_validate') && (
+                <>
+                  <button 
+                    onClick={() => handleCDValidation('validate')}
+                    disabled={transitionMutation.isPending}
+                    className={styles.validateButton}
+                    data-testid="button-cd-validate"
+                  >
+                    <CheckCircle className={styles.buttonIcon} />
+                    Valider
+                  </button>
+                  <button 
+                    onClick={() => handleCDValidation('return')}
+                    disabled={transitionMutation.isPending}
+                    className={styles.returnButton}
+                    data-testid="button-cd-return"
+                  >
+                    <RotateCcw className={styles.buttonIcon} />
+                    Renvoyer
+                  </button>
+                  <button 
+                    onClick={() => handleCDValidation('reject')}
+                    disabled={transitionMutation.isPending}
+                    className={styles.rejectButton}
+                    data-testid="button-cd-reject"
+                  >
+                    <XCircle className={styles.buttonIcon} />
+                    Refuser
+                  </button>
+                </>
+              )}
+              
+              {canPerformAction('assign') && (
                 <button 
-                  onClick={handleArchive}
-                  disabled={transitionMutation.isPending}
-                  className={styles.archiveButton}
-                  data-testid="button-archive-fiche"
+                  onClick={() => setShowAssignModal(true)}
+                  className={styles.assignButton}
+                  data-testid="button-assign"
                 >
-                  <Archive className={styles.buttonIcon} />
-                  Archiver
+                  <UserPlus className={styles.buttonIcon} />
+                  Affecter
                 </button>
-                <button 
-                  onClick={handleDelete}
-                  disabled={transitionMutation.isPending}
-                  className={styles.deleteButton}
-                  data-testid="button-delete-fiche"
+              )}
+              
+              {canPerformAction('edit') && (
+                <Link 
+                  href={`/fiches/${ficheId}/edit`}
+                  className={styles.editButton}
+                  data-testid="button-edit-fiche"
                 >
-                  <Trash2 className={styles.buttonIcon} />
-                  Supprimer
-                </button>
-              </>
-            )}
-            
-            <button 
-              className={styles.auditButton}
-              onClick={() => setShowAuditModal(true)}
-              data-testid="button-audit-log"
-            >
-              <History className={styles.buttonIcon} />
-              Journal d'audit
-            </button>
+                  <Edit className={styles.buttonIcon} />
+                  Modifier la fiche
+                </Link>
+              )}
+              
+              {/* Admin-only actions */}
+              {user?.user?.role === 'ADMIN' && (
+                <>
+                  <button 
+                    onClick={handleArchive}
+                    disabled={transitionMutation.isPending}
+                    className={styles.archiveButton}
+                    data-testid="button-archive-fiche"
+                  >
+                    <Archive className={styles.buttonIcon} />
+                    Archiver
+                  </button>
+                  <button 
+                    onClick={handleDelete}
+                    disabled={transitionMutation.isPending}
+                    className={styles.deleteButton}
+                    data-testid="button-delete-fiche"
+                  >
+                    <Trash2 className={styles.buttonIcon} />
+                    Supprimer
+                  </button>
+                </>
+              )}
+              
+              <button 
+                className={styles.auditButton}
+                onClick={() => setShowAuditModal(true)}
+                data-testid="button-audit-log"
+              >
+                <History className={styles.buttonIcon} />
+                Journal d'audit
+              </button>
+            </div>
           </div>
 
           {/* Status Info */}
