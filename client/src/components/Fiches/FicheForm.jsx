@@ -724,82 +724,18 @@ export default function FicheForm({
     </div>
   );
 
-  // Static objectives and workshops data based on user requirements
-  const objectivesData = [
-    {
-      id: 1,
-      title: "Développement des compétences parentales pour favoriser la réussite scolaire des enfants",
-      workshops: [
-        {
-          id: "workshop_1_1",
-          name: "Atelier communication parent-enfant",
-          objective: "Aider les familles à organiser le temps entre les activités scolaires, les loisirs et la vie familiale."
-        },
-        {
-          id: "workshop_1_2", 
-          name: "Gestion des émotions",
-          objective: "Renforcer la communication au sein de la famille pour créer un environnement propice à l'apprentissage."
-        },
-        {
-          id: "workshop_1_3",
-          name: "Techniques éducatives positives",
-          objective: "Fournir aux parents des outils pratiques pour soutenir l'apprentissage des enfants à la maison."
-        },
-        {
-          id: "workshop_1_4",
-          name: "Soutien émotionnel et la motivation scolaire",
-          objective: "Apprendre aux parents à soutenir la motivation de leurs enfants et à gérer les émotions liées à l'école (stress, anxiété, etc.)."
-        }
-      ]
-    },
-    {
-      id: 2,
-      title: "Renforcement des liens familiaux par la communication intergénérationnelle pour favoriser la réussite scolaire des enfants",
-      workshops: [
-        {
-          id: "workshop_2_1",
-          name: "Ateliers famille",
-          objective: "Aider les parents à mieux accompagner leurs enfants dans leur parcours scolaire."
-        },
-        {
-          id: "workshop_2_2",
-          name: "Dialogue intergénérationnel",
-          objective: "Gérer les émotions liées à l'école."
-        },
-        {
-          id: "workshop_2_3",
-          name: "Médiation familiale",
-          objective: "Soutenir les enfants dans leur parcours."
-        },
-        {
-          id: "workshop_2_4",
-          name: "Renforcer la motivation scolaire par le dialogue",
-          objective: "Encourager la projection positive."
-        }
-      ]
-    },
-    {
-      id: 3,
-      title: "Renforcement des dynamiques familiales positives par le sport",
-      workshops: [
-        {
-          id: "workshop_3_1",
-          name: "Jeux coopératifs",
-          objective: "Renforcer les liens familiaux par le bien-être physique et mental."
-        },
-        {
-          id: "workshop_3_2",
-          name: "Randonnée familiale",
-          objective: "Comprendre l'impact du sport sur la motivation scolaire."
-        },
-        {
-          id: "workshop_3_3",
-          name: "Sport collectif famille",
-          objective: "Créer un événement sportif ludique inter-familles."
-        }
-      ]
-    }
-  ];
+  // Build objectives data dynamically from database
+  const objectivesData = objectives.map(objective => ({
+    id: objective.order || objective.id,
+    title: objective.name,
+    workshops: workshops
+      .filter(workshop => workshop.objectiveId === objective.id)
+      .map(workshop => ({
+        id: `workshop_${objective.order || objective.id}_${workshop.id}`,
+        name: workshop.name,
+        objective: workshop.description || workshop.name
+      }))
+  }));
 
   const [expandedObjectives, setExpandedObjectives] = useState({});
 
