@@ -519,9 +519,6 @@ export default function FicheDetail({ ficheId }) {
                       <h3 className={styles.workshopName} data-testid={`text-workshop-name-${selection.id}`}>
                         {selection.workshop?.name}
                       </h3>
-                      <span className={styles.workshopQty} data-testid={`text-workshop-qty-${selection.id}`}>
-                        {selection.qty} participant(s)
-                      </span>
                     </div>
                     <div className={styles.workshopDetails}>
                       <div className={styles.objectiveInfo}>
