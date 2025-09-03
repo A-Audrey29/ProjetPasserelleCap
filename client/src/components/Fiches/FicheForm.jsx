@@ -1677,12 +1677,28 @@ export default function FicheForm({
           </h3>
           <div className={styles.reviewContent}>
             {Object.entries(formData.workshopPropositions || {}).filter(([_, value]) => value?.trim()).length > 0 ? (
-              Object.entries(formData.workshopPropositions || {}).map(([workshopId, proposition]) => {
+              Object.entries(formData.workshopPropositions || {}).map(([technicalId, proposition]) => {
                 if (!proposition?.trim()) return null;
-                const workshop = workshops?.find(w => w.id === workshopId);
-                const workshopName = workshop?.name || `Atelier ${workshopId}`;
+                
+                // Map technical form IDs to actual database workshop IDs
+                const workshopIdMapping = {
+                  'workshop_1_1': '0ae9279f-9d7a-4778-875a-3ed84ee9d1b1', // Atelier communication parent-enfant
+                  'workshop_1_2': 'bca25252-1dcf-4e35-b426-7374b79bafe1', // Gestion des émotions
+                  'workshop_1_3': '102d9611-e264-42a9-aca8-0da0a73956ba', // Techniques éducatives positives
+                  'workshop_2_1': '0c28af6d-e911-4c98-b5b2-10d9c585d3bb', // Ateliers famille
+                  'workshop_2_2': '3f48eed0-f7a0-4cc5-85d4-f2feb39371e7', // Dialogue intergénérationnel
+                  'workshop_2_3': '69ab54c3-a222-4fce-b6d4-1fe56fbf046f', // Médiation familiale
+                  'workshop_3_1': '475e5207-044a-4ef0-a285-a1350f049ef7', // Jeux coopératifs
+                  'workshop_3_2': 'c09e5c74-a78b-4da8-9e48-1a4e7e28b58a', // Randonnée familiale
+                  'workshop_3_3': '0b7fbcb2-6d56-48fe-ad97-07a5f9fb5293'  // Sport collectif famille
+                };
+                
+                const actualWorkshopId = workshopIdMapping[technicalId] || technicalId;
+                const workshop = workshops?.find(w => w.id === actualWorkshopId);
+                const workshopName = workshop?.name || `Atelier ${technicalId}`;
+                
                 return (
-                  <div key={workshopId} className={styles.propositionReview}>
+                  <div key={technicalId} className={styles.propositionReview}>
                     <h4>{workshopName}</h4>
                     <p>{proposition}</p>
                   </div>
