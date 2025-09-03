@@ -902,3 +902,125 @@
   margin: 0;
 }
 
+/* EPCI Selection Styles */
+.epciSelection {
+  background: #F9FAFB;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.selectField {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: white;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.selectField:focus {
+  outline: none;
+  border-color: #6A8B74;
+  box-shadow: 0 0 0 3px rgba(106, 139, 116, 0.1);
+}
+
+.confirmationText {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #EBF8FF;
+  border: 1px solid #BEE3F8;
+  border-radius: 8px;
+}
+
+.confirmationMessage {
+  font-size: 1rem;
+  color: #2D3748;
+  margin: 0;
+  text-align: center;
+}
+
+.transmissionActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.transmissionActions .validateButton,
+.transmissionActions .returnButton,
+.transmissionActions .archiveButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.transmissionActions .validateButton {
+  background: #6A8B74;
+  color: white;
+}
+
+.transmissionActions .validateButton:hover {
+  background: #5A7A64;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(106, 139, 116, 0.2);
+}
+
+.transmissionActions .returnButton {
+  background: #D9A066;
+  color: white;
+}
+
+.transmissionActions .returnButton:hover {
+  background: #C89152;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(217, 160, 102, 0.2);
+}
+
+.transmissionActions .archiveButton {
+  background: #8C4A4A;
+  color: white;
+}
+
+.transmissionActions .archiveButton:hover {
+  background: #7A3D3D;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(140, 74, 74, 0.2);
+}
+
+.transmissionActions .validateButton:disabled,
+.transmissionActions .returnButton:disabled,
+.transmissionActions .archiveButton:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .transmissionActions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .transmissionActions .validateButton,
+  .transmissionActions .returnButton,
+  .transmissionActions .archiveButton {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+

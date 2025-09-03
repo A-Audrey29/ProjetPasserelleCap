@@ -757,6 +757,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Notification endpoints for EPCI workflow
+  app.post('/api/notifications/evs-assignment', requireAuth, requireRole('RELATIONS_EVS'), async (req, res) => {
+    try {
+      const { ficheId, orgId, orgName, contactEmail, contactName } = req.body;
+      
+      // Here you would integrate with your email service (SendGrid, etc.)
+      // For now, we'll just log the notification
+      console.log('EVS Assignment Notification:', {
+        ficheId,
+        orgId,
+        orgName,
+        contactEmail,
+        contactName,
+        message: `Une nouvelle fiche CAP vous a été assignée. Connectez-vous à la plateforme pour la consulter.`
+      });
+
+      // Create audit log for notification
+      await storage.createAuditLog({
+        action: 'email_notification',
+        entity: 'FicheNavette',
+        entityId: ficheId,
+        actorId: req.user.userId,
+        meta: {
+          notificationType: 'evs_assignment',
+          recipientEmail: contactEmail,
+          recipientName: contactName,
+          orgId,
+          orgName
+        }
+      });
+
+      res.json({ success: true, message: 'Notification envoyée' });
+    } catch (error) {
+      console.error('EVS assignment notification error:', error);
+      res.status(500).json({ message: 'Erreur lors de l\'envoi de la notification' });
+    }
+  });
+
+  app.post('/api/notifications/emitter-return', requireAuth, requireRole('RELATIONS_EVS'), async (req, res) => {
+    try {
+      const { ficheId, emitterEmail, emitterName } = req.body;
+      
+      // Here you would integrate with your email service (SendGrid, etc.)
+      // For now, we'll just log the notification
+      console.log('Emitter Return Notification:', {
+        ficheId,
+        emitterEmail,
+        emitterName,
+        message: `Votre fiche CAP a été renvoyée pour modification. Connectez-vous à la plateforme pour voir les détails.`
+      });
+
+      // Create audit log for notification
+      await storage.createAuditLog({
+        action: 'email_notification',
+        entity: 'FicheNavette',
+        entityId: ficheId,
+        actorId: req.user.userId,
+        meta: {
+          notificationType: 'emitter_return',
+          recipientEmail: emitterEmail,
+          recipientName: emitterName
+        }
+      });
+
+      res.json({ success: true, message: 'Notification envoyée' });
+    } catch (error) {
+      console.error('Emitter return notification error:', error);
+      res.status(500).json({ message: 'Erreur lors de l\'envoi de la notification' });
+    }
+  });
+
   // Dashboard stats
   app.get('/api/dashboard/stats', requireAuth, async (req, res) => {
     try {

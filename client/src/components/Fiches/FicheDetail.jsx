@@ -33,6 +33,10 @@ export default function FicheDetail({ ficheId }) {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState('');
   const [showAuditModal, setShowAuditModal] = useState(false);
+  
+  // EPCI selection states for RELATIONS_EVS
+  const [selectedEpciId, setSelectedEpciId] = useState('');
+  const [selectedEvscsId, setSelectedEvscsId] = useState('');
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
@@ -44,6 +48,18 @@ export default function FicheDetail({ ficheId }) {
   const { data: organizations = [] } = useQuery({
     queryKey: ['/api/organizations'],
     enabled: showAssignModal
+  });
+
+  // Query for EPCIs (for RELATIONS_EVS selection)
+  const { data: epcis = [] } = useQuery({
+    queryKey: ['/api/epcis'],
+    enabled: user?.role === 'RELATIONS_EVS' && fiche?.state === 'SUBMITTED_TO_FEVES'
+  });
+
+  // Query for organizations by selected EPCI
+  const { data: epciOrganizations = [] } = useQuery({
+    queryKey: ['/api/epcis', selectedEpciId, 'organizations'],
+    enabled: !!selectedEpciId && user?.role === 'RELATIONS_EVS' && fiche?.state === 'SUBMITTED_TO_FEVES'
   });
 
   // Query for audit logs
@@ -150,6 +166,102 @@ export default function FicheDetail({ ficheId }) {
       toast({
         title: "Erreur de validation",
         description: error.message || "Impossible de traiter la validation",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // RELATIONS_EVS actions with EPCI selection
+  const handleRelationsEvsAction = async (action) => {
+    if (!selectedEvscsId) {
+      toast({
+        title: "Sélection requise",
+        description: "Veuillez sélectionner une structure EVS/CS",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const selectedOrg = epciOrganizations.find(org => org.id === selectedEvscsId);
+      
+      if (action === 'validate') {
+        // Advance to next state and send notification to EVS/CS
+        await transitionMutation.mutateAsync({ 
+          newState: 'ASSIGNED_TO_EVS',
+          metadata: {
+            assignedOrgId: selectedEvscsId,
+            assignedOrgName: selectedOrg?.name,
+            assignedBy: user?.id,
+            assignedAt: new Date().toISOString()
+          }
+        });
+        
+        // Send notification email to EVS/CS
+        await apiRequest('POST', '/api/notifications/evs-assignment', {
+          ficheId: ficheId,
+          orgId: selectedEvscsId,
+          orgName: selectedOrg?.name,
+          contactEmail: selectedOrg?.contactEmail,
+          contactName: selectedOrg?.contactPersonName
+        });
+        
+        toast({
+          title: "Fiche transmise",
+          description: `La fiche a été transmise à ${selectedOrg?.name}. Un email de notification a été envoyé.`,
+          variant: "default"
+        });
+        
+      } else if (action === 'return') {
+        // Return to draft and notify EMETTEUR
+        await transitionMutation.mutateAsync({ 
+          newState: 'DRAFT',
+          metadata: {
+            returnedBy: user?.id,
+            returnedAt: new Date().toISOString(),
+            reason: 'Renvoyée par RELATIONS_EVS'
+          }
+        });
+        
+        // Send notification email to EMETTEUR
+        await apiRequest('POST', '/api/notifications/emitter-return', {
+          ficheId: ficheId,
+          emitterEmail: fiche.emitter?.email,
+          emitterName: `${fiche.emitter?.firstName} ${fiche.emitter?.lastName}`
+        });
+        
+        toast({
+          title: "Fiche renvoyée",
+          description: "La fiche a été renvoyée à l'émetteur. Un email de notification a été envoyé.",
+          variant: "default"
+        });
+        
+      } else if (action === 'archive') {
+        // Archive the fiche
+        await transitionMutation.mutateAsync({ 
+          newState: 'ARCHIVED',
+          metadata: {
+            archivedBy: user?.id,
+            archivedAt: new Date().toISOString(),
+            reason: 'Archivée par RELATIONS_EVS'
+          }
+        });
+        
+        toast({
+          title: "Fiche archivée",
+          description: "La fiche a été archivée avec succès.",
+          variant: "default"
+        });
+      }
+      
+      // Reset selections
+      setSelectedEpciId('');
+      setSelectedEvscsId('');
+      
+    } catch (error) {
+      toast({
+        title: "Erreur de traitement",
+        description: error.message || "Impossible de traiter l'action",
         variant: "destructive"
       });
     }
@@ -401,6 +513,110 @@ export default function FicheDetail({ ficheId }) {
           currentState={fiche.state}
           stateHistory={fiche.stateHistory || []}
         />
+
+        {/* EPCI Selection for RELATIONS_EVS with SUBMITTED_TO_FEVES status */}
+        {user?.role === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES' && (
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              Transmission vers EVS/CS
+            </h2>
+            
+            <div className={styles.epciSelection}>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoItem}>
+                  <label className={styles.infoLabel} htmlFor="epci-select">
+                    Sélectionnez un EPCI
+                  </label>
+                  <select
+                    id="epci-select"
+                    className={styles.selectField}
+                    value={selectedEpciId}
+                    onChange={(e) => {
+                      setSelectedEpciId(e.target.value);
+                      setSelectedEvscsId(''); // Reset EVS/CS selection when EPCI changes
+                    }}
+                    data-testid="select-epci"
+                  >
+                    <option value="">-- Choisir un EPCI --</option>
+                    {epcis.map((epci) => (
+                      <option key={epci.id} value={epci.id}>
+                        {epci.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedEpciId && (
+                  <div className={styles.infoItem}>
+                    <label className={styles.infoLabel} htmlFor="evs-select">
+                      Sélectionnez une structure EVS/CS
+                    </label>
+                    <select
+                      id="evs-select"
+                      className={styles.selectField}
+                      value={selectedEvscsId}
+                      onChange={(e) => setSelectedEvscsId(e.target.value)}
+                      data-testid="select-evs-cs"
+                    >
+                      <option value="">-- Choisir une structure --</option>
+                      {epciOrganizations
+                        .filter(org => org.type === 'EVS' || org.type === 'CS')
+                        .map((org) => (
+                          <option key={org.id} value={org.id}>
+                            {org.name} ({org.type})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {selectedEvscsId && (
+                <>
+                  {/* Confirmation text */}
+                  <div className={styles.confirmationText}>
+                    <p className={styles.confirmationMessage} data-testid="text-transmission-confirmation">
+                      Transmettre cette fiche à la structure : <strong>
+                        {epciOrganizations.find(org => org.id === selectedEvscsId)?.name}
+                      </strong>
+                    </p>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className={styles.transmissionActions}>
+                    <button
+                      className={styles.validateButton}
+                      onClick={() => handleRelationsEvsAction('validate')}
+                      disabled={transitionMutation.isPending}
+                      data-testid="button-relations-validate"
+                    >
+                      <CheckCircle className={styles.buttonIcon} />
+                      Valider
+                    </button>
+                    <button
+                      className={styles.returnButton}
+                      onClick={() => handleRelationsEvsAction('return')}
+                      disabled={transitionMutation.isPending}
+                      data-testid="button-relations-return"
+                    >
+                      <RotateCcw className={styles.buttonIcon} />
+                      Renvoyer à la structure émettrice
+                    </button>
+                    <button
+                      className={styles.archiveButton}
+                      onClick={() => handleRelationsEvsAction('archive')}
+                      disabled={transitionMutation.isPending}
+                      data-testid="button-relations-archive"
+                    >
+                      <Archive className={styles.buttonIcon} />
+                      Archiver
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className={styles.content}>
