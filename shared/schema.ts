@@ -15,7 +15,7 @@ export const paymentKindEnum = pgEnum("payment_kind", ["ADVANCE_70", "REMAINING_
 
 // Tables
 export const epcis = pgTable("epcis", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   name: text("name").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
@@ -41,18 +41,16 @@ export const users = pgTable("users", {
 }));
 
 export const organizations = pgTable("organizations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orgId: varchar("org_id").primaryKey(),
   name: text("name").notNull(),
-  type: orgTypeEnum("type").notNull(),
-  address: text("address"),
-  contactPersonName: text("contact_person_name"),
+  contact: text("contact"),
+  contactName: text("contact_name"),
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
+  epci: text("epci"),
   epciId: varchar("epci_id").notNull(),
-  userId: varchar("user_id"), // EVS/CS contact user ID
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
-  typeIdx: index("organizations_type_idx").on(table.type),
   epciIdx: index("organizations_epci_idx").on(table.epciId),
 }));
 
@@ -258,7 +256,7 @@ export const epcisRelations = relations(epcis, ({ many }) => ({
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
-  organization: one(organizations, { fields: [users.orgId], references: [organizations.id] }),
+  organization: one(organizations, { fields: [users.orgId], references: [organizations.orgId] }),
   emittedFiches: many(ficheNavettes),
   auditLogs: many(auditLogs),
   comments: many(comments),
@@ -267,7 +265,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 export const organizationsRelations = relations(organizations, ({ one, many }) => ({
   epci: one(epcis, { fields: [organizations.epciId], references: [epcis.id] }),
   users: many(users),
-  workshops: many(workshops),
   assignedFiches: many(ficheNavettes),
 }));
 
@@ -292,7 +289,7 @@ export const workshopsRelations = relations(workshops, ({ one, many }) => ({
 export const ficheNavettesRelations = relations(ficheNavettes, ({ one, many }) => ({
   emitter: one(users, { fields: [ficheNavettes.emitterId], references: [users.id] }),
   family: one(families, { fields: [ficheNavettes.familyId], references: [families.id] }),
-  assignedOrg: one(organizations, { fields: [ficheNavettes.assignedOrgId], references: [organizations.id] }),
+  assignedOrg: one(organizations, { fields: [ficheNavettes.assignedOrgId], references: [organizations.orgId] }),
   selections: many(ficheWorkshopSelections),
   attachments: many(attachments),
   contract: one(contracts),
@@ -350,7 +347,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
 });
 
 export const insertOrganizationSchema = createInsertSchema(organizations).omit({
-  id: true,
+  orgId: true,
   createdAt: true,
 });
 
@@ -369,10 +366,7 @@ export const insertWorkshopObjectiveSchema = createInsertSchema(workshopObjectiv
   createdAt: true,
 });
 
-export const insertWorkshopSchema = createInsertSchema(workshops).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertWorkshopSchema = createInsertSchema(workshops);
 
 export const insertFicheNavetteSchema = createInsertSchema(ficheNavettes).omit({
   id: true,
