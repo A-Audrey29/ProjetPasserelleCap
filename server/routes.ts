@@ -97,12 +97,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
-
+          structure: user.structure,
+          phone: user.phone,
           orgId: user.orgId
         }
       });
     } catch (error) {
       console.error('Get user error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Self profile update endpoint
+  app.put('/api/auth/profile', requireAuth, auditMiddleware('update', 'UserProfile'), async (req, res) => {
+    try {
+      const updateData = req.body;
+      
+      // Only allow updating specific fields
+      const allowedFields = {
+        structure: updateData.structure,
+        phone: updateData.phone
+      };
+
+      // If password is provided, hash it
+      if (updateData.password) {
+        allowedFields.passwordHash = await hashPassword(updateData.password);
+      }
+      
+      const user = await storage.updateUser(req.user.userId, allowedFields);
+      if (!user) {
+        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      }
+
+      res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          structure: user.structure,
+          phone: user.phone,
+          orgId: user.orgId
+        }
+      });
+    } catch (error) {
+      console.error('Update profile error:', error);
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });
