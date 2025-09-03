@@ -543,7 +543,7 @@ export default function FicheForm({
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            {initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
+            {(initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
           </button>
           <button
             type="button"
@@ -660,7 +660,7 @@ export default function FicheForm({
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            {initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
+            {(initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
           </button>
           <button
             type="button"
@@ -855,7 +855,7 @@ export default function FicheForm({
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            {initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
+            {(initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
           </button>
           <button
             type="button"
@@ -1069,7 +1069,7 @@ export default function FicheForm({
             className={`${styles.button} ${styles.buttonDraft}`}
             data-testid="button-save-draft"
           >
-            {initialData?.state === 'DRAFT' ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
+            {(initialData?.state === 'DRAFT' || !initialData?.id) ? 'Enregistrer brouillon' : 'Enregistrer fiche'}
           </button>
           <button
             type="button"
