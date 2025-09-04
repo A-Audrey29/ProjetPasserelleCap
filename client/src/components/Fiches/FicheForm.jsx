@@ -1200,7 +1200,6 @@ export default function FicheForm({
       const ficheData = {
         description: formData.descriptionSituation || "",
         objectiveIds: (formData.objectives || []).map((obj) => obj.id || obj),
-        workshops: Object.keys(cleanPropositions),
         // Map form data to detailed JSON fields
         referentData: formData.referent,
         familyDetailedData: formData.family,
@@ -1375,12 +1374,9 @@ export default function FicheForm({
           )
         );
 
-        const selectedWorkshops = Object.keys(cleanPropositions);
-
         const ficheData = {
           description:
             formData.description || formData.descriptionSituation || "",
-          workshops: selectedWorkshops,
           // Map form data to detailed JSON fields
           referentData: formData.referent,
           familyDetailedData: formData.family,
