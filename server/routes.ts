@@ -566,8 +566,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/admin/users', requireAuth, requireRole('ADMIN'), auditMiddleware('create', 'User'), async (req, res) => {
     try {
       const { password, ...userData } = req.body;
+
+      if (userData.role === 'EVS_CS') {
+        if (!userData.orgId) {
+          return res.status(400).json({ message: "L'organisation est requise pour le rôle EVS/CS" });
+        }
+        const org = await storage.getOrganization(userData.orgId);
+        if (!org) {
+          return res.status(400).json({ message: "Organisation invalide" });
+        }
+      }
+
       const passwordHash = await hashPassword(password);
-      
+
       const user = await storage.createUser({
         ...userData,
         passwordHash
@@ -585,17 +596,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      
+
+      const existing = await storage.getUser(id);
+      if (!existing) {
+        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      }
+
       // If password is provided, hash it
       if (updateData.password) {
         updateData.passwordHash = await hashPassword(updateData.password);
         delete updateData.password;
       }
-      
-      const user = await storage.updateUser(id, updateData);
-      if (!user) {
-        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+
+      const finalRole = updateData.role || existing.role;
+      const finalOrgId = updateData.orgId !== undefined ? updateData.orgId : existing.orgId;
+
+      if (finalRole === 'EVS_CS') {
+        if (!finalOrgId) {
+          return res.status(400).json({ message: "L'organisation est requise pour le rôle EVS/CS" });
+        }
+        const org = await storage.getOrganization(finalOrgId);
+        if (!org) {
+          return res.status(400).json({ message: "Organisation invalide" });
+        }
+        updateData.orgId = finalOrgId;
+      } else if (updateData.role && updateData.role !== 'EVS_CS') {
+        updateData.orgId = null;
       }
+
+      const user = await storage.updateUser(id, updateData);
 
       res.json(user);
     } catch (error) {

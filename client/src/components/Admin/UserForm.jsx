@@ -20,12 +20,21 @@ export default function UserForm({ user, onClose, onSuccess }) {
   const queryClient = useQueryClient();
   const isEditing = !!user;
 
+  const { data: organizations = [] } = useQuery({
+    queryKey: ['/api/organizations'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/organizations');
+      return res.json();
+    }
+  });
+
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
     lastName: '',
     structure: '',
     phone: '',
+    orgId: '',
     role: 'EMETTEUR',
     password: '',
     confirmPassword: '',
@@ -44,6 +53,7 @@ export default function UserForm({ user, onClose, onSuccess }) {
         lastName: user.lastName || '',
         structure: user.structure || '',
         phone: user.phone || '',
+        orgId: user.orgId || '',
         role: user.role || 'EMETTEUR',
         password: '',
         confirmPassword: '',
@@ -79,6 +89,10 @@ export default function UserForm({ user, onClose, onSuccess }) {
 
     if (!formData.role) {
       newErrors.role = 'Le rôle est requis';
+    }
+
+    if (formData.role === 'EVS_CS' && !formData.orgId.trim()) {
+      newErrors.orgId = 'L\'organisation est requise pour le rôle EVS/CS';
     }
 
     if (!isEditing) {
@@ -144,6 +158,10 @@ export default function UserForm({ user, onClose, onSuccess }) {
       isActive: formData.isActive
     };
 
+    if (formData.role === 'EVS_CS') {
+      submitData.orgId = formData.orgId;
+    }
+
     if (!isEditing || formData.password) {
       submitData.password = formData.password;
     }
@@ -156,7 +174,11 @@ export default function UserForm({ user, onClose, onSuccess }) {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+      ...(field === 'role' && value !== 'EVS_CS' ? { orgId: '' } : {})
+    }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -282,6 +304,26 @@ export default function UserForm({ user, onClose, onSuccess }) {
               </select>
               {errors.role && <span className={styles.error}>{errors.role}</span>}
             </div>
+
+            {formData.role === 'EVS_CS' && (
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Organisation *
+                </label>
+                <select
+                  value={formData.orgId}
+                  onChange={(e) => handleInputChange('orgId', e.target.value)}
+                  className={`${styles.select} ${errors.orgId ? styles.inputError : ''}`}
+                  data-testid="select-user-organization"
+                >
+                  <option value="">Sélectionner une organisation</option>
+                  {organizations.map(org => (
+                    <option key={org.orgId} value={org.orgId}>{org.name}</option>
+                  ))}
+                </select>
+                {errors.orgId && <span className={styles.error}>{errors.orgId}</span>}
+              </div>
+            )}
 
             {/* Password */}
             <div className={styles.formGroup}>
