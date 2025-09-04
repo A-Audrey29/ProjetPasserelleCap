@@ -54,7 +54,7 @@ export async function transitionFicheState(ficheId, newState, userId, metadata =
   }
 
   // Perform the transition
-  const updatedFiche = await storage.updateFiche(ficheId, { state: newState });
+  const updatedFiche = await storage.updateFiche(ficheId, { state: newState, ...metadata });
 
   // Log the transition
   await logAction(userId, 'state_transition', 'FicheNavette', ficheId, {

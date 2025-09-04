@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { 
-  UserPlus, 
-  MessageCircle, 
-  History, 
-  Download, 
-  Eye, 
+import {
+  UserPlus,
+  MessageCircle,
+  History,
+  Eye,
   Send,
-  FileText,
   CheckCircle,
   XCircle,
   ArrowLeft,
@@ -40,7 +38,7 @@ export default function FicheDetail({ ficheId }) {
   
   // Contract verification states - initialize from fiche data
   const [contractSigned, setContractSigned] = useState(false);
-  const [fundsTransferred, setFundsTransferred] = useState(false);
+  const [advancePaymentSent, setAdvancePaymentSent] = useState(false);
   const [activityCompleted, setActivityCompleted] = useState(false);
   const [fieldCheckCompleted, setFieldCheckCompleted] = useState(false);
   const [finalReportSent, setFinalReportSent] = useState(false);
@@ -56,7 +54,7 @@ export default function FicheDetail({ ficheId }) {
   useEffect(() => {
     if (fiche) {
       setContractSigned(fiche.contractSigned || false);
-      setFundsTransferred(fiche.fundsTransferred || false);
+      setAdvancePaymentSent(fiche.advancePaymentSent || false);
       setActivityCompleted(fiche.activityCompleted || false);
       setFieldCheckCompleted(fiche.fieldCheckCompleted || false);
       setFinalReportSent(fiche.finalReportSent || false);
@@ -93,6 +91,27 @@ export default function FicheDetail({ ficheId }) {
     enabled: !!ficheId, // Always fetch audit logs for validation display
     retry: false
   });
+
+  // Query for workshops to display selections
+  const { data: workshopsList = [] } = useQuery({
+    queryKey: ['/api/workshops'],
+    enabled: !!fiche
+  });
+
+  const selectedWorkshops = fiche && workshopsList.length > 0
+    ? Object.entries(fiche.workshopPropositions || {})
+        .filter(([_, v]) => (v ?? '').toString().trim())
+        .map(([workshopId, reason]) => {
+          const workshop = workshopsList.find((w) => w.id === workshopId);
+          return workshop ? { id: workshopId, workshop, reason } : null;
+        })
+        .filter(Boolean)
+    : [];
+
+  const totalAmount = selectedWorkshops.reduce(
+    (sum, s) => sum + (s.workshop?.priceCents || 0),
+    0
+  );
 
   // Comment mutation
   const addCommentMutation = useMutation({
@@ -238,7 +257,7 @@ export default function FicheDetail({ ficheId }) {
           newState: 'CONTRACT_SIGNED',
           metadata: {
             contractSigned: true,
-            fundsTransferred: true,
+            advancePaymentSent: true,
             verifiedBy: user?.id,
             verifiedAt: new Date().toISOString()
           }
@@ -781,7 +800,7 @@ export default function FicheDetail({ ficheId }) {
           </div>
 
           {/* Family Information */}
-          {fiche.family && (
+          {(fiche.familyDetailedData || fiche.family) && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Informations Famille
@@ -913,46 +932,13 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
-          {/* Ateliers proposés (pour les fiches en draft) */}
-          {fiche.state === 'DRAFT' && fiche.workshopPropositions?.workshops?.length > 0 && (
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                Ateliers proposés
-              </h2>
-              <div className={styles.workshopSelections}>
-                {fiche.workshopPropositions.workshops.map((workshop, index) => (
-                  <div key={workshop.id || index} className={styles.workshopItem} data-testid={`workshop-${workshop.id || index}`}>
-                    <div className={styles.workshopHierarchy}>
-                      <div className={styles.workshopLevel}>
-                        <h3 className={styles.workshopName} data-testid={`text-workshop-name-${workshop.id || index}`}>
-                          {workshop.name}
-                        </h3>
-                      </div>
-                      {workshop.reason && (
-                        <div className={styles.propositionLevel}>
-                          <div className={styles.propositionContent}>
-                            <span className={styles.propositionLabel}>Justification</span>
-                            <p className={styles.propositionText} data-testid={`text-workshop-reason-${workshop.id || index}`}>
-                              {workshop.reason}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Ateliers sélectionnés */}
-          {fiche.selections?.length > 0 && (
+          {selectedWorkshops.length > 0 && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Ateliers sélectionnés
               </h2>
               <div className={styles.workshopSelections}>
-                {fiche.selections.map((selection) => (
+                {selectedWorkshops.map((selection) => (
                   <div key={selection.id} className={styles.workshopItem} data-testid={`workshop-${selection.id}`}>
                     <div className={styles.workshopHierarchy}>
                       <div className={styles.objectiveLevel}>
@@ -971,37 +957,15 @@ export default function FicheDetail({ ficheId }) {
                       <div className={styles.propositionLevel}>
                         <div className={styles.propositionContent}>
                           <span className={styles.propositionLabel}>Proposition du référent</span>
-                          {(() => {
-                            // Reverse mapping to find technical ID from database ID
-                            const workshopIdReverseMapping = {
-                              '1': 'workshop_1_1', // Gestion du temps et de l'organisation familiale
-                              '2': 'workshop_1_2', // Communication entre parents et enfants
-                              '3': 'workshop_1_3', // Atelier sur les méthodes d'apprentissage à la maison
-                              '4': 'workshop_1_4', // Soutien émotionnel et la motivation scolaire
-                              '5': 'workshop_2_1', // La parole des aînés : une richesse pour l'éducation
-                              '6': 'workshop_2_2', // Mieux se comprendre pour mieux s'entraider
-                              '7': 'workshop_2_3', // Soutien scolaire et méthodes familiales d'apprentissage
-                              '8': 'workshop_2_4', // Renforcer la motivation scolaire par le dialogue
-                              '9': 'workshop_3_1', // Pratique d'activité physique
-                              '10': 'workshop_3_2', // Atelier découverte Sport/Étude
-                              '11': 'workshop_3_3'  // Atelier challenge famille
-                            };
-                            
-                            const technicalId = workshopIdReverseMapping[selection.workshopId];
-                            const propositionText = fiche.workshopPropositions && technicalId ? 
-                              fiche.workshopPropositions[technicalId] : null;
-                              
-                            return propositionText ? (
-                              <p className={styles.propositionText} data-testid={`text-proposition-${selection.id}`}>
-                                {propositionText}
-                              </p>
-                            ) : null;
-                          })()}
+                          {selection.reason && (
+                            <p className={styles.propositionText} data-testid={`text-proposition-${selection.id}`}>
+                              {selection.reason}
+                            </p>
+                          )}
                         </div>
-                        {/* Only show price for ADMIN and RELATIONS_EVS */}
                         {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
                           <div className={styles.propositionPrice} data-testid={`text-workshop-price-${selection.id}`}>
-                            {formatCurrency((selection.workshop?.priceCents || 0) * selection.qty)}
+                            {formatCurrency(selection.workshop?.priceCents || 0)}
                           </div>
                         )}
                       </div>
@@ -1009,47 +973,17 @@ export default function FicheDetail({ ficheId }) {
                   </div>
                 ))}
               </div>
-              
-              {/* Only show total for ADMIN and RELATIONS_EVS */}
+
               {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
                 <div className={styles.totalSection}>
                   <div className={styles.totalItem}>
                     <label className={styles.totalLabel}>Total</label>
                     <p className={styles.totalValue} data-testid="text-total-amount">
-                      {formatCurrency(
-                        fiche.selections?.reduce((sum, s) => 
-                          sum + (s.workshop?.priceCents || 0) * s.qty, 0
-                        ) || 0
-                      )}
+                      {formatCurrency(totalAmount)}
                     </p>
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Pièces jointes */}
-          {fiche.attachments?.length > 0 && (
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                Pièces jointes
-              </h2>
-              <div className={styles.content}>
-                {fiche.attachments.map((attachment) => (
-                  <div key={attachment.id} className={styles.infoGrid}>
-                    <div className={styles.infoItem}>
-                      <FileText className={styles.actionIcon} />
-                      <p className={styles.infoValue}>{attachment.filename}</p>
-                    </div>
-                    <div className={styles.infoItem}>
-                      <button className={styles.commentButton} data-testid={`button-download-${attachment.id}`}>
-                        <Download className={styles.actionIcon} />
-                        Télécharger
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
@@ -1161,19 +1095,15 @@ export default function FicheDetail({ ficheId }) {
                     <input
                       type="checkbox"
                       className={styles.checkbox}
-                      checked={fundsTransferred}
-                      onChange={(e) => setFundsTransferred(e.target.checked)}
+                      checked={advancePaymentSent}
+                      onChange={(e) => setAdvancePaymentSent(e.target.checked)}
                       data-testid="checkbox-funds-transferred"
                     />
                     <span className={styles.checkboxLabel}>
                       Est-ce que 70% des fonds ont été transférés à l'organisme assigné ?
-                      {fiche.selections?.length > 0 && (
+                      {totalAmount > 0 && (
                         <span className={styles.amountInfo}>
-                          {' '}(70% du budget est {formatCurrency(
-                            fiche.selections?.reduce((sum, s) => 
-                              sum + (s.workshop?.priceCents || 0) * s.qty, 0
-                            ) * 0.7 || 0
-                          )})
+                          {' '}(70% du budget est {formatCurrency(totalAmount * 0.7 || 0)})
                         </span>
                       )}
                     </span>
@@ -1185,7 +1115,7 @@ export default function FicheDetail({ ficheId }) {
                   <button
                     className={styles.validateContractButton}
                     onClick={() => handleContractVerification('validate')}
-                    disabled={!contractSigned || !fundsTransferred || transitionMutation.isPending}
+                    disabled={!contractSigned || !advancePaymentSent || transitionMutation.isPending}
                     data-testid="button-validate-contract"
                   >
                     <CheckCircle className={styles.buttonIcon} />
@@ -1203,7 +1133,7 @@ export default function FicheDetail({ ficheId }) {
                   </button>
                 </div>
 
-                {(!contractSigned || !fundsTransferred) && (
+                {(!contractSigned || !advancePaymentSent) && (
                   <div className={styles.validationNote}>
                     <p className={styles.noteText}>
                       Les deux vérifications doivent être cochées pour pouvoir valider le contrat.

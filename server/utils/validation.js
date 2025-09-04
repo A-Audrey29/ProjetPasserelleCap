@@ -8,13 +8,9 @@ export const loginSchema = z.object({
 export const ficheCreationSchema = z.object({
   familyId: z.string().min(1, 'Famille requise'),
   description: z.string().optional(),
-  workshops: z.array(z.object({
-    workshopId: z.string(),
-    qty: z.number().min(1)
-  })).min(1, 'Au moins un atelier doit être sélectionné'),
   // JSON form data fields
   referentData: z.any().optional(),
-  familyDetailedData: z.any().optional(), 
+  familyDetailedData: z.any().optional(),
   childrenData: z.any().optional(),
   workshopPropositions: z.any().optional(),
   familyConsent: z.boolean().optional()

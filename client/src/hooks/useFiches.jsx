@@ -23,18 +23,9 @@ export function useFiches(filters = {}) {
 
   const createFicheMutation = useMutation({
     mutationFn: async (ficheData) => {
-      // First create/update family if needed
-      let familyId = ficheData.familyId;
-      
-      if (!familyId && ficheData.family?.code) {
-        const familyResponse = await apiRequest('POST', '/api/families', ficheData.family);
-        const family = await familyResponse.json();
-        familyId = family.id;
-      }
-
       // Prepare detailed form data
       const requestData = {
-        familyId,
+        familyId: ficheData.familyId,
         description: ficheData.description,
         workshops: ficheData.workshops,
         referentData: ficheData.referentData,
@@ -47,15 +38,8 @@ export function useFiches(filters = {}) {
       
       // Create the fiche with all detailed form data
       const response = await apiRequest('POST', '/api/fiches', requestData);
-      
-      const fiche = await response.json();
 
-      // Add attachments if any
-      if (ficheData.attachments?.length > 0) {
-        for (const attachment of ficheData.attachments) {
-          await apiRequest('POST', `/api/fiches/${fiche.id}/attachments`, attachment);
-        }
-      }
+      const fiche = await response.json();
 
       return fiche;
     },

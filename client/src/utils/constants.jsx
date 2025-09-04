@@ -44,13 +44,6 @@ export const OBJECTIVE_LABELS = {
   OBJ3: 'Dynamiques par le sport'
 };
 
-// File upload constraints
-export const FILE_UPLOAD = {
-  MAX_SIZE: 10 * 1024 * 1024, // 10MB
-  ALLOWED_TYPES: ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
-  ALLOWED_EXTENSIONS: ['.pdf', '.jpg', '.jpeg', '.png']
-};
-
 // API endpoints
 export const API_ENDPOINTS = {
   AUTH: {
@@ -65,21 +58,18 @@ export const API_ENDPOINTS = {
     UPDATE: (id) => `/api/fiches/${id}`,
     TRANSITION: (id) => `/api/fiches/${id}/transition`,
     ASSIGN: (id) => `/api/fiches/${id}/assign`,
-    COMMENTS: (id) => `/api/fiches/${id}/comments`,
-    ATTACHMENTS: (id) => `/api/fiches/${id}/attachments`
+    COMMENTS: (id) => `/api/fiches/${id}/comments`
   },
   REFERENCE: {
     EPSI: '/api/epsi',
     ORGANIZATIONS: '/api/organizations',
     WORKSHOPS: '/api/workshops',
-    OBJECTIVES: '/api/objectives',
-    FAMILIES: '/api/families'
+    OBJECTIVES: '/api/objectives'
   },
   ADMIN: {
     USERS: '/api/admin/users',
     STATS: '/api/admin/stats'
   },
-  UPLOADS: '/api/uploads',
   DASHBOARD: {
     STATS: '/api/dashboard/stats'
   },

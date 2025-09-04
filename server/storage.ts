@@ -1,18 +1,13 @@
 import {
-  epcis, users, organizations, families, children, workshopObjectives, workshops,
-  ficheNavettes, ficheWorkshopSelections, contracts, payments, fieldVerifications,
-  finalReports, attachments, auditLogs, comments,
+  epcis, users, organizations, workshopObjectives, workshops,
+  ficheNavettes, auditLogs, comments,
   type Epci, type InsertEpci, type User, type InsertUser, type Organization,
-  type InsertOrganization, type Family, type InsertFamily, type Child, type InsertChild,
-  type WorkshopObjective, type InsertWorkshopObjective, type Workshop, type InsertWorkshop,
-  type FicheNavette, type InsertFicheNavette, type FicheWorkshopSelection,
-  type InsertFicheWorkshopSelection, type Contract, type InsertContract,
-  type Payment, type InsertPayment, type FieldVerification, type InsertFieldVerification,
-  type FinalReport, type InsertFinalReport, type Attachment, type InsertAttachment,
+  type InsertOrganization, type WorkshopObjective, type InsertWorkshopObjective, type Workshop, type InsertWorkshop,
+  type FicheNavette, type InsertFicheNavette,
   type AuditLog, type InsertAuditLog, type Comment, type InsertComment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, like, inArray } from "drizzle-orm";
+import { eq, and, or, desc, asc, like } from "drizzle-orm";
 
 export interface IStorage {
   // EPCIs
@@ -38,20 +33,6 @@ export interface IStorage {
   updateOrganization(id: string, org: Partial<InsertOrganization>): Promise<Organization>;
   deleteOrganization(id: string): Promise<void>;
 
-  // Families
-  getAllFamilies(): Promise<Family[]>;
-  getFamily(id: string): Promise<Family | undefined>;
-  getFamilyByCode(code: string): Promise<Family | undefined>;
-  createFamily(family: InsertFamily): Promise<Family>;
-  updateFamily(id: string, family: Partial<InsertFamily>): Promise<Family>;
-  deleteFamily(id: string): Promise<void>;
-
-  // Children
-  getChildrenByFamily(familyId: string): Promise<Child[]>;
-  createChild(child: InsertChild): Promise<Child>;
-  updateChild(id: string, child: Partial<InsertChild>): Promise<Child>;
-  deleteChild(id: string): Promise<void>;
-
   // Workshop Objectives
   getAllWorkshopObjectives(): Promise<WorkshopObjective[]>;
   getWorkshopObjective(id: string): Promise<WorkshopObjective | undefined>;
@@ -63,7 +44,6 @@ export interface IStorage {
   getAllWorkshops(): Promise<Workshop[]>;
   getWorkshop(id: string): Promise<Workshop | undefined>;
   getWorkshopsByObjective(objectiveId: string): Promise<Workshop[]>;
-  getWorkshopsByOrganization(orgId: string): Promise<Workshop[]>;
   createWorkshop(workshop: InsertWorkshop): Promise<Workshop>;
   updateWorkshop(id: string, workshop: Partial<InsertWorkshop>): Promise<Workshop>;
   deleteWorkshop(id: string): Promise<void>;
@@ -80,36 +60,6 @@ export interface IStorage {
   createFiche(fiche: InsertFicheNavette): Promise<FicheNavette>;
   updateFiche(id: string, fiche: Partial<InsertFicheNavette>): Promise<FicheNavette>;
   deleteFiche(id: string): Promise<void>;
-
-  // Fiche Workshop Selections
-  getFicheSelections(ficheId: string): Promise<FicheWorkshopSelection[]>;
-  createFicheSelection(selection: InsertFicheWorkshopSelection): Promise<FicheWorkshopSelection>;
-  deleteFicheSelections(ficheId: string): Promise<void>;
-
-  // Contracts
-  getContract(ficheId: string): Promise<Contract | undefined>;
-  createContract(contract: InsertContract): Promise<Contract>;
-  updateContract(ficheId: string, contract: Partial<InsertContract>): Promise<Contract>;
-
-  // Payments
-  getPayments(ficheId: string): Promise<Payment[]>;
-  createPayment(payment: InsertPayment): Promise<Payment>;
-  updatePayment(id: string, payment: Partial<InsertPayment>): Promise<Payment>;
-
-  // Field Verifications
-  getFieldVerification(ficheId: string): Promise<FieldVerification | undefined>;
-  createFieldVerification(verification: InsertFieldVerification): Promise<FieldVerification>;
-  updateFieldVerification(ficheId: string, verification: Partial<InsertFieldVerification>): Promise<FieldVerification>;
-
-  // Final Reports
-  getFinalReport(ficheId: string): Promise<FinalReport | undefined>;
-  createFinalReport(report: InsertFinalReport): Promise<FinalReport>;
-  updateFinalReport(ficheId: string, report: Partial<InsertFinalReport>): Promise<FinalReport>;
-
-  // Attachments
-  getAttachments(ficheId: string): Promise<Attachment[]>;
-  createAttachment(attachment: InsertAttachment): Promise<Attachment>;
-  deleteAttachment(id: string): Promise<void>;
 
   // Audit Logs
   getAuditLogs(entityId?: string, entity?: string): Promise<AuditLog[]>;
@@ -181,10 +131,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(organizations).orderBy(asc(organizations.name));
   }
 
-  async getOrganization(id: string): Promise<Organization | undefined> {
-    const [org] = await db.select().from(organizations).where(eq(organizations.id, id));
-    return org || undefined;
-  }
+    async getOrganization(id: string): Promise<Organization | undefined> {
+      const [org] = await db.select().from(organizations).where(eq(organizations.orgId, id));
+      return org || undefined;
+    }
 
   async getOrganizationsByEpci(epciId: string): Promise<Organization[]> {
     return await db.select().from(organizations).where(eq(organizations.epciId, epciId)).orderBy(asc(organizations.name));
@@ -195,62 +145,14 @@ export class DatabaseStorage implements IStorage {
     return org;
   }
 
-  async updateOrganization(id: string, insertOrg: Partial<InsertOrganization>): Promise<Organization> {
-    const [org] = await db.update(organizations).set(insertOrg).where(eq(organizations.id, id)).returning();
-    return org;
-  }
+    async updateOrganization(id: string, insertOrg: Partial<InsertOrganization>): Promise<Organization> {
+      const [org] = await db.update(organizations).set(insertOrg).where(eq(organizations.orgId, id)).returning();
+      return org;
+    }
 
-  async deleteOrganization(id: string): Promise<void> {
-    await db.delete(organizations).where(eq(organizations.id, id));
-  }
-
-  // Families
-  async getAllFamilies(): Promise<Family[]> {
-    return await db.select().from(families).orderBy(asc(families.code));
-  }
-
-  async getFamily(id: string): Promise<Family | undefined> {
-    const [family] = await db.select().from(families).where(eq(families.id, id));
-    return family || undefined;
-  }
-
-  async getFamilyByCode(code: string): Promise<Family | undefined> {
-    const [family] = await db.select().from(families).where(eq(families.code, code));
-    return family || undefined;
-  }
-
-  async createFamily(insertFamily: InsertFamily): Promise<Family> {
-    const [family] = await db.insert(families).values(insertFamily).returning();
-    return family;
-  }
-
-  async updateFamily(id: string, insertFamily: Partial<InsertFamily>): Promise<Family> {
-    const [family] = await db.update(families).set(insertFamily).where(eq(families.id, id)).returning();
-    return family;
-  }
-
-  async deleteFamily(id: string): Promise<void> {
-    await db.delete(families).where(eq(families.id, id));
-  }
-
-  // Children
-  async getChildrenByFamily(familyId: string): Promise<Child[]> {
-    return await db.select().from(children).where(eq(children.familyId, familyId));
-  }
-
-  async createChild(insertChild: InsertChild): Promise<Child> {
-    const [child] = await db.insert(children).values(insertChild).returning();
-    return child;
-  }
-
-  async updateChild(id: string, insertChild: Partial<InsertChild>): Promise<Child> {
-    const [child] = await db.update(children).set(insertChild).where(eq(children.id, id)).returning();
-    return child;
-  }
-
-  async deleteChild(id: string): Promise<void> {
-    await db.delete(children).where(eq(children.id, id));
-  }
+    async deleteOrganization(id: string): Promise<void> {
+      await db.delete(organizations).where(eq(organizations.orgId, id));
+    }
 
   // Workshop Objectives
   async getAllWorkshopObjectives(): Promise<WorkshopObjective[]> {
@@ -290,14 +192,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(workshops).where(eq(workshops.objectiveId, objectiveId));
   }
 
-  async getWorkshopsByOrganization(orgId: string): Promise<Workshop[]> {
-    return await db.select().from(workshops).where(eq(workshops.orgId, orgId));
-  }
-
-  async createWorkshop(insertWorkshop: InsertWorkshop): Promise<Workshop> {
-    const [workshop] = await db.insert(workshops).values(insertWorkshop).returning();
-    return workshop;
-  }
+    async createWorkshop(insertWorkshop: InsertWorkshop): Promise<Workshop> {
+      const [workshop] = await db.insert(workshops).values(insertWorkshop).returning();
+      return workshop;
+    }
 
   async updateWorkshop(id: string, insertWorkshop: Partial<InsertWorkshop>): Promise<Workshop> {
     const [workshop] = await db.update(workshops).set(insertWorkshop).where(eq(workshops.id, id)).returning();
@@ -316,24 +214,14 @@ export class DatabaseStorage implements IStorage {
     evsUserId?: string;
     search?: string;
   }): Promise<FicheNavette[]> {
-    let query = db.select().from(ficheNavettes);
+    let query: any = db.select().from(ficheNavettes);
     
     const conditions = [];
     if (filters?.state) conditions.push(eq(ficheNavettes.state, filters.state as any));
     if (filters?.assignedOrgId) conditions.push(eq(ficheNavettes.assignedOrgId, filters.assignedOrgId));
     if (filters?.emitterId) conditions.push(eq(ficheNavettes.emitterId, filters.emitterId));
     if (filters?.evsUserId) {
-      // Join with organizations to filter by user_id
-      // Include fiches assigned to EVS user in ASSIGNED_EVS and ACCEPTED_EVS states
-      query = query
-        .innerJoin(organizations, eq(ficheNavettes.assignedOrgId, organizations.id));
-      conditions.push(and(
-        eq(organizations.userId, filters.evsUserId),
-        or(
-          eq(ficheNavettes.state, 'ASSIGNED_EVS' as any),
-          eq(ficheNavettes.state, 'ACCEPTED_EVS' as any)
-        )
-      ));
+      // Filtering by EVS user is currently not implemented since organizations do not track user assignments
     }
     if (filters?.search) {
       conditions.push(
@@ -369,101 +257,9 @@ export class DatabaseStorage implements IStorage {
   async deleteFiche(id: string): Promise<void> {
     await db.delete(ficheNavettes).where(eq(ficheNavettes.id, id));
   }
-
-  // Fiche Workshop Selections
-  async getFicheSelections(ficheId: string): Promise<FicheWorkshopSelection[]> {
-    return await db.select().from(ficheWorkshopSelections).where(eq(ficheWorkshopSelections.ficheId, ficheId));
-  }
-
-  async createFicheSelection(insertSelection: InsertFicheWorkshopSelection): Promise<FicheWorkshopSelection> {
-    const [selection] = await db.insert(ficheWorkshopSelections).values(insertSelection).returning();
-    return selection;
-  }
-
-  async deleteFicheSelections(ficheId: string): Promise<void> {
-    await db.delete(ficheWorkshopSelections).where(eq(ficheWorkshopSelections.ficheId, ficheId));
-  }
-
-  // Contracts
-  async getContract(ficheId: string): Promise<Contract | undefined> {
-    const [contract] = await db.select().from(contracts).where(eq(contracts.ficheId, ficheId));
-    return contract || undefined;
-  }
-
-  async createContract(insertContract: InsertContract): Promise<Contract> {
-    const [contract] = await db.insert(contracts).values(insertContract).returning();
-    return contract;
-  }
-
-  async updateContract(ficheId: string, insertContract: Partial<InsertContract>): Promise<Contract> {
-    const [contract] = await db.update(contracts).set(insertContract).where(eq(contracts.ficheId, ficheId)).returning();
-    return contract;
-  }
-
-  // Payments
-  async getPayments(ficheId: string): Promise<Payment[]> {
-    return await db.select().from(payments).where(eq(payments.ficheId, ficheId));
-  }
-
-  async createPayment(insertPayment: InsertPayment): Promise<Payment> {
-    const [payment] = await db.insert(payments).values(insertPayment).returning();
-    return payment;
-  }
-
-  async updatePayment(id: string, insertPayment: Partial<InsertPayment>): Promise<Payment> {
-    const [payment] = await db.update(payments).set(insertPayment).where(eq(payments.id, id)).returning();
-    return payment;
-  }
-
-  // Field Verifications
-  async getFieldVerification(ficheId: string): Promise<FieldVerification | undefined> {
-    const [verification] = await db.select().from(fieldVerifications).where(eq(fieldVerifications.ficheId, ficheId));
-    return verification || undefined;
-  }
-
-  async createFieldVerification(insertVerification: InsertFieldVerification): Promise<FieldVerification> {
-    const [verification] = await db.insert(fieldVerifications).values(insertVerification).returning();
-    return verification;
-  }
-
-  async updateFieldVerification(ficheId: string, insertVerification: Partial<InsertFieldVerification>): Promise<FieldVerification> {
-    const [verification] = await db.update(fieldVerifications).set(insertVerification).where(eq(fieldVerifications.ficheId, ficheId)).returning();
-    return verification;
-  }
-
-  // Final Reports
-  async getFinalReport(ficheId: string): Promise<FinalReport | undefined> {
-    const [report] = await db.select().from(finalReports).where(eq(finalReports.ficheId, ficheId));
-    return report || undefined;
-  }
-
-  async createFinalReport(insertReport: InsertFinalReport): Promise<FinalReport> {
-    const [report] = await db.insert(finalReports).values(insertReport).returning();
-    return report;
-  }
-
-  async updateFinalReport(ficheId: string, insertReport: Partial<InsertFinalReport>): Promise<FinalReport> {
-    const [report] = await db.update(finalReports).set(insertReport).where(eq(finalReports.ficheId, ficheId)).returning();
-    return report;
-  }
-
-  // Attachments
-  async getAttachments(ficheId: string): Promise<Attachment[]> {
-    return await db.select().from(attachments).where(eq(attachments.ficheId, ficheId)).orderBy(desc(attachments.createdAt));
-  }
-
-  async createAttachment(insertAttachment: InsertAttachment): Promise<Attachment> {
-    const [attachment] = await db.insert(attachments).values(insertAttachment).returning();
-    return attachment;
-  }
-
-  async deleteAttachment(id: string): Promise<void> {
-    await db.delete(attachments).where(eq(attachments.id, id));
-  }
-
   // Audit Logs
   async getAuditLogs(entityId?: string, entity?: string): Promise<AuditLog[]> {
-    let query = db.select().from(auditLogs);
+      let query: any = db.select().from(auditLogs);
     
     const conditions = [];
     if (entityId) conditions.push(eq(auditLogs.entityId, entityId));

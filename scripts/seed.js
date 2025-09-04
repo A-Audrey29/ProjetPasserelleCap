@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { db } from '../server/db.ts';
-import { 
-  users, epcis, organizations, families, children, workshopObjectives, 
-  workshops, ficheNavettes, ficheWorkshopSelections, auditLogs, comments
+import {
+  users, epcis, organizations, workshopObjectives,
+  workshops, ficheNavettes, auditLogs, comments
 } from '../shared/schema.ts';
 
 const SALT_ROUNDS = 12;
@@ -19,12 +19,9 @@ async function main() {
     console.log('🗑️  Cleaning existing data...');
     await db.delete(comments);
     await db.delete(auditLogs);
-    await db.delete(ficheWorkshopSelections);
     await db.delete(ficheNavettes);
     await db.delete(workshops);
     await db.delete(workshopObjectives);
-    await db.delete(children);
-    await db.delete(families);
     await db.delete(users);
     await db.delete(organizations);
     await db.delete(epcis);
@@ -330,99 +327,76 @@ async function main() {
       }
     ]).returning();
 
-    // Seed Families
-    console.log('👨‍👩‍👧‍👦 Creating families...');
-    const familiesData = await db.insert(families).values([
+    // Predefined family data used within fiche records
+    const familySeedData = [
       {
-        code: 'FAM-456',
-        address: '12 rue de la Liberté, 75012 Paris',
-        phone: '01 42 34 56 78',
-        email: 'famille.martin@email.fr',
-        mother: 'Catherine Martin',
-        father: 'Philippe Martin',
-        notes: 'Famille monoparentale avec deux enfants en difficulté scolaire'
+        id: 'FAM-456',
+        detailed: {
+          code: 'FAM-456',
+          adresse: '12 rue de la Liberté, 75012 Paris',
+          telephonePortable: '01 42 34 56 78',
+          email: 'famille.martin@email.fr',
+          mother: 'Catherine Martin',
+          father: 'Philippe Martin',
+          notes: 'Famille monoparentale avec deux enfants en difficulté scolaire'
+        },
+        children: [
+          { firstName: 'Lucas', birthDate: new Date('2015-03-15'), level: 'CE2' },
+          { firstName: 'Emma', birthDate: new Date('2017-09-20'), level: 'CP' }
+        ]
       },
       {
-        code: 'FAM-789',
-        address: '8 avenue des Roses, 69003 Lyon',
-        phone: '04 78 12 34 56',
-        email: 'dubois.famille@gmail.com',
-        mother: 'Sarah Dubois',
-        father: null,
-        guardian: 'Grand-mère: Jeanne Dubois',
-        notes: 'Mère seule avec trois enfants, besoin d\'accompagnement parental'
+        id: 'FAM-789',
+        detailed: {
+          code: 'FAM-789',
+          adresse: '8 avenue des Roses, 69003 Lyon',
+          telephonePortable: '04 78 12 34 56',
+          email: 'dubois.famille@gmail.com',
+          mother: 'Sarah Dubois',
+          guardian: 'Grand-mère: Jeanne Dubois',
+          notes: "Mère seule avec trois enfants, besoin d'accompagnement parental"
+        },
+        children: [
+          { firstName: 'Thomas', birthDate: new Date('2014-01-10'), level: 'CM1' },
+          { firstName: 'Léa', birthDate: new Date('2016-06-05'), level: 'CE1' },
+          { firstName: 'Noah', birthDate: new Date('2018-11-12'), level: 'Maternelle' }
+        ]
       },
       {
-        code: 'FAM-123',
-        address: '25 place du Marché, 13005 Marseille',
-        phone: '04 91 65 43 21',
-        email: 'garcia.family@outlook.fr',
-        mother: 'Maria Garcia',
-        father: 'Carlos Garcia',
-        notes: 'Famille d\'origine étrangère, difficultés d\'intégration'
+        id: 'FAM-123',
+        detailed: {
+          code: 'FAM-123',
+          adresse: '25 place du Marché, 13005 Marseille',
+          telephonePortable: '04 91 65 43 21',
+          email: 'garcia.family@outlook.fr',
+          mother: 'Maria Garcia',
+          father: 'Carlos Garcia',
+          notes: "Famille d'origine étrangère, difficultés d'intégration"
+        },
+        children: [
+          { firstName: 'Sofia', birthDate: new Date('2013-08-25'), level: '6ème' },
+          { firstName: 'Diego', birthDate: new Date('2015-12-03'), level: 'CE2' }
+        ]
       }
-    ]).returning();
-
-    // Seed Children
-    console.log('👶 Creating children...');
-    await db.insert(children).values([
-      // Famille Martin
-      {
-        familyId: familiesData[0].id,
-        firstName: 'Lucas',
-        birthDate: new Date('2015-03-15'),
-        level: 'CE2'
-      },
-      {
-        familyId: familiesData[0].id,
-        firstName: 'Emma',
-        birthDate: new Date('2017-09-20'),
-        level: 'CP'
-      },
-      // Famille Dubois
-      {
-        familyId: familiesData[1].id,
-        firstName: 'Thomas',
-        birthDate: new Date('2014-01-10'),
-        level: 'CM1'
-      },
-      {
-        familyId: familiesData[1].id,
-        firstName: 'Léa',
-        birthDate: new Date('2016-06-05'),
-        level: 'CE1'
-      },
-      {
-        familyId: familiesData[1].id,
-        firstName: 'Noah',
-        birthDate: new Date('2018-11-12'),
-        level: 'Maternelle'
-      },
-      // Famille Garcia
-      {
-        familyId: familiesData[2].id,
-        firstName: 'Sofia',
-        birthDate: new Date('2013-08-25'),
-        level: '6ème'
-      },
-      {
-        familyId: familiesData[2].id,
-        firstName: 'Diego',
-        birthDate: new Date('2015-12-03'),
-        level: 'CE2'
-      }
-    ]);
+    ];
 
     // Seed Demo Fiches
     console.log('📋 Creating demo fiches...');
+    const workshopsData = await db.select().from(workshops);
     const fichesData = await db.insert(ficheNavettes).values([
       {
         ref: 'FN-2024-001',
         state: 'SUBMITTED_TO_FEVES',
         emitterId: usersData[1].id, // Marie Dupont (EMETTEUR)
-        familyId: familiesData[0].id,
+        familyId: familySeedData[0].id,
         orgId: orgsData[0].id,
         description: 'Famille monoparentale avec deux enfants en difficulté scolaire. Besoin d\'accompagnement pour améliorer la communication et établir des routines éducatives.',
+        familyDetailedData: familySeedData[0].detailed,
+        childrenData: familySeedData[0].children,
+        workshopPropositions: {
+          [workshopsData[0].id]: 'Communication parent-enfant',
+          [workshopsData[3].id]: 'Ateliers famille'
+        },
         createdAt: new Date('2024-01-15T09:30:00Z'),
         updatedAt: new Date('2024-01-15T14:20:00Z')
       },
@@ -430,10 +404,16 @@ async function main() {
         ref: 'FN-2024-002',
         state: 'EVS_ACCEPTED',
         emitterId: usersData[1].id,
-        familyId: familiesData[1].id,
+        familyId: familySeedData[1].id,
         assignedOrgId: orgsData[1].id,
         orgId: orgsData[0].id,
         description: 'Mère seule avec trois enfants, demande d\'accompagnement pour gestion du stress parental et activités en famille.',
+        familyDetailedData: familySeedData[1].detailed,
+        childrenData: familySeedData[1].children,
+        workshopPropositions: {
+          [workshopsData[1].id]: 'Gestion des émotions',
+          [workshopsData[6].id]: 'Sport collectif famille'
+        },
         createdAt: new Date('2024-01-12T10:15:00Z'),
         updatedAt: new Date('2024-01-18T16:30:00Z')
       },
@@ -441,60 +421,20 @@ async function main() {
         ref: 'FN-2024-003',
         state: 'CLOSED',
         emitterId: usersData[1].id,
-        familyId: familiesData[2].id,
+        familyId: familySeedData[2].id,
         assignedOrgId: orgsData[2].id,
         epsiId: epcisData[1].id,
         description: 'Famille d\'origine étrangère, besoin d\'accompagnement pour l\'intégration et la communication intergénérationnelle.',
+        familyDetailedData: familySeedData[2].detailed,
+        childrenData: familySeedData[2].children,
+        workshopPropositions: {
+          [workshopsData[4].id]: 'Médiation familiale',
+          [workshopsData[5].id]: 'Dialogue intergénérationnel'
+        },
         createdAt: new Date('2024-01-08T08:45:00Z'),
         updatedAt: new Date('2024-01-25T17:00:00Z')
       }
     ]).returning();
-
-    // Seed Workshop Selections for demo fiches
-    console.log('🎨 Creating workshop selections...');
-    const workshopsData = await db.select().from(workshops);
-    
-    // Fiche 1 selections
-    await db.insert(ficheWorkshopSelections).values([
-      {
-        ficheId: fichesData[0].id,
-        workshopId: workshopsData[0].id, // Atelier communication parent-enfant
-        qty: 1
-      },
-      {
-        ficheId: fichesData[0].id,
-        workshopId: workshopsData[3].id, // Ateliers famille
-        qty: 1
-      }
-    ]);
-
-    // Fiche 2 selections
-    await db.insert(ficheWorkshopSelections).values([
-      {
-        ficheId: fichesData[1].id,
-        workshopId: workshopsData[1].id, // Gestion des émotions
-        qty: 1
-      },
-      {
-        ficheId: fichesData[1].id,
-        workshopId: workshopsData[6].id, // Sport collectif famille
-        qty: 1
-      }
-    ]);
-
-    // Fiche 3 selections
-    await db.insert(ficheWorkshopSelections).values([
-      {
-        ficheId: fichesData[2].id,
-        workshopId: workshopsData[4].id, // Médiation familiale
-        qty: 1
-      },
-      {
-        ficheId: fichesData[2].id,
-        workshopId: workshopsData[5].id, // Dialogue intergénérationnel
-        qty: 1
-      }
-    ]);
 
     // Seed Demo Comments
     console.log('💬 Creating demo comments...');
@@ -562,7 +502,6 @@ async function main() {
     console.log(`- ${objectivesData.length} Workshop Objectives`);
     console.log(`- ${workshopsData.length} Workshops`);
     console.log(`- ${usersData.length} Users`);
-    console.log(`- ${familiesData.length} Families`);
     console.log(`- ${fichesData.length} Demo Fiches`);
 
   } catch (error) {
