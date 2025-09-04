@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 
 class EmailService {
+  private transporter: nodemailer.Transporter;
+
   constructor() {
     // Create transporter with O2Switch configuration - try standard port 587 with STARTTLS
     this.transporter = nodemailer.createTransport({
@@ -36,11 +38,11 @@ class EmailService {
   /**
    * Send email notification for EVS assignment
    */
-  async sendEvsAssignmentNotification({ contactEmail, contactName, orgName, ficheId }) {
-    const mailOptions = {
+  async sendEvsAssignmentNotification({ contactEmail, contactName, orgName, ficheId }: { contactEmail: string; contactName?: string; orgName?: string; ficheId: string; }) {
+    const mailOptions: nodemailer.SendMailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME
+        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
       },
       to: contactEmail,
       subject: 'Nouvelle fiche CAP assignée',
@@ -94,24 +96,24 @@ class EmailService {
       `
     };
 
-    try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('EVS Assignment email sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
-    } catch (error) {
-      console.error('Failed to send EVS Assignment email:', error);
-      return { success: false, error: error.message };
-    }
+      try {
+        const result = await this.transporter.sendMail(mailOptions);
+        console.log('EVS Assignment email sent successfully:', result.messageId);
+        return { success: true, messageId: result.messageId };
+      } catch (error: any) {
+        console.error('Failed to send EVS Assignment email:', error);
+        return { success: false, error: error.message };
+      }
   }
 
   /**
    * Send email notification when fiche is returned to emitter
    */
-  async sendEmitterReturnNotification({ emitterEmail, emitterName, ficheId, reason }) {
-    const mailOptions = {
+  async sendEmitterReturnNotification({ emitterEmail, emitterName, ficheId, reason }: { emitterEmail: string; emitterName?: string; ficheId: string; reason?: string; }) {
+    const mailOptions: nodemailer.SendMailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME
+        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
       },
       to: emitterEmail,
       subject: 'Fiche CAP renvoyée pour modification',
@@ -165,16 +167,16 @@ class EmailService {
       `
     };
 
-    try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('Emitter Return email sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
-    } catch (error) {
-      console.error('Failed to send Emitter Return email:', error);
-      return { success: false, error: error.message };
+      try {
+        const result = await this.transporter.sendMail(mailOptions);
+        console.log('Emitter Return email sent successfully:', result.messageId);
+        return { success: true, messageId: result.messageId };
+      } catch (error: any) {
+        console.error('Failed to send Emitter Return email:', error);
+        return { success: false, error: error.message };
+      }
     }
   }
-}
 
 // Export singleton instance
 export default new EmailService();

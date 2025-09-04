@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import {
   UserCheck,
@@ -35,21 +35,6 @@ const mapFamilyFromApi = (src = {}) => ({
   adresse: src.adresse ?? src.address ?? "",
   telephonePortable: src.telephonePortable ?? src.phone ?? "",
   telephoneFixe: src.telephoneFixe ?? src.landline ?? src.phone2 ?? "",
-});
-
-const mapFamilyToApi = (ui = {}) => ({
-  code: ui.code || undefined,
-  email: ui.email || undefined,
-  mother: ui.mother || undefined,
-  father: ui.father || undefined,
-  tiers: ui.tiers || undefined,
-  lienAvecEnfants: ui.lienAvecEnfants || undefined,
-  autoriteParentale: ui.autoriteParentale || undefined,
-  situationFamiliale: ui.situationFamiliale || undefined,
-  situationSocioProfessionnelle: ui.situationSocioProfessionnelle || undefined,
-  address: ui.adresse || undefined,
-  phone: ui.telephonePortable || undefined,
-  landline: ui.telephoneFixe || undefined,
 });
 
 export default function FicheForm({
@@ -102,8 +87,6 @@ export default function FicheForm({
         niveauScolaire: "",
       },
     ],
-    workshops: [],
-    attachments: [],
     descriptionSituation: "",
     workshopPropositions: {},
   });
@@ -150,12 +133,6 @@ export default function FicheForm({
             : ""),
         niveauScolaire: child.niveauScolaire || child.level || "",
       })),
-      workshops:
-        initialData.selections?.map((s) => ({
-          workshopId: s.workshopId,
-          qty: s.qty,
-        })) || [],
-      attachments: initialData.attachments || [],
       referent: initialData.referentData
         ? {
             lastName: initialData.referentData.lastName || "",
@@ -202,69 +179,6 @@ export default function FicheForm({
       }));
     }
   }, [user, initialData]);
-
-  // File upload mutation
-  const uploadMutation = useMutation({
-    mutationFn: async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await apiRequest("POST", "/api/uploads", formData);
-      return response.json();
-    },
-  });
-
-  const handleWorkshopToggle = (workshopId, isSelected) => {
-    setFormData((prev) => ({
-      ...prev,
-      workshops: isSelected
-        ? [...prev.workshops, { workshopId, qty: 1 }]
-        : prev.workshops.filter((w) => w.workshopId !== workshopId),
-    }));
-  };
-
-  const handleWorkshopQtyChange = (workshopId, qty) => {
-    setFormData((prev) => ({
-      ...prev,
-      workshops: prev.workshops.map((w) =>
-        w.workshopId === workshopId ? { ...w, qty: parseInt(qty) || 1 } : w,
-      ),
-    }));
-  };
-
-  const handleFileSelect = async (event) => {
-    const files = Array.from(event.target.files);
-
-    for (const file of files) {
-      try {
-        const uploadResult = await uploadMutation.mutateAsync(file);
-        setFormData((prev) => ({
-          ...prev,
-          attachments: [
-            ...prev.attachments,
-            {
-              name: uploadResult.name,
-              url: uploadResult.url,
-              mime: uploadResult.mime,
-              size: uploadResult.size,
-            },
-          ],
-        }));
-      } catch (error) {
-        toast({
-          title: "Erreur de téléchargement",
-          description: `Impossible de télécharger ${file.name}`,
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleRemoveAttachment = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index),
-    }));
-  };
 
   // Multi-step form steps
   const steps = [
@@ -721,9 +635,8 @@ export default function FicheForm({
     return {
       id: objective.order || objective.id,
       title: objective.name,
-      // keep the existing technical id format used elsewhere in your form
       workshops: filteredWorkshops.map((w) => ({
-        id: `workshop_${objective.order || objective.id}_${w.id}`,
+        id: w.id,
         name: w.name,
         objective: w.description,
       })),
@@ -1279,42 +1192,21 @@ export default function FicheForm({
       const isAdmin = userRole === "ADMIN";
       const isDraft = currentState === "DRAFT";
 
-      // Create minimal family data (even if incomplete for non-draft saves)
-      // Family: map only fields that actually exist in formData.family
-      const familyData = mapFamilyToApi(formData.family);
-
       // Build a dynamic mapping from the technical form id → real DB id
-      const workshopIdMapping = {};
-      objectives.forEach((obj) => {
-        const orderOrId = obj.order || obj.id;
-        workshopsList
-          .filter((w) => w.objectiveId === obj.id)
-          .forEach((w) => {
-            const technicalId = `workshop_${orderOrId}_${w.id}`;
-            workshopIdMapping[technicalId] = w.id;
-          });
-      });
-
-      // Only keep propositions that have a non-empty value; qty defaults to 1 here
-      const workshopsForSave = Object.entries(
-        formData.workshopPropositions || {},
-      )
-        .filter(([_, v]) => (v ?? "").toString().trim())
-        .map(([technicalId]) => ({
-          workshopId: workshopIdMapping[technicalId] || technicalId,
-          qty: 1,
-        }));
+      const cleanPropositions = Object.fromEntries(
+        Object.entries(formData.workshopPropositions || {}).filter(
+          ([_, v]) => (v ?? "").toString().trim()
+        )
+      );
 
       const ficheData = {
         description: formData.descriptionSituation || "",
-        workshops: workshopsForSave,
         objectiveIds: (formData.objectives || []).map((obj) => obj.id || obj),
-        family: familyData,
         // Map form data to detailed JSON fields
         referentData: formData.referent,
         familyDetailedData: formData.family,
         childrenData: formData.children,
-        workshopPropositions: formData.workshopPropositions,
+        workshopPropositions: cleanPropositions,
         familyConsent: formData.familyConsent,
       };
 
@@ -1478,40 +1370,21 @@ export default function FicheForm({
           throw new Error("onSubmit prop is required to create a new fiche.");
         }
 
-        const wsIdMapping = {};
-        objectives.forEach((obj) => {
-          const orderOrId = obj.order || obj.id;
-          workshopsList
-            .filter((w) => w.objectiveId === obj.id)
-            .forEach((w) => {
-              const techId = `workshop_${orderOrId}_${w.id}`;
-              wsIdMapping[techId] = w.id;
-            });
-        });
-
-        const workshopSelections = Object.entries(
-          formData.workshopPropositions || {},
-        )
-          .filter(([_, v]) => (v ?? "").toString().trim())
-          .map(([technicalId, qty]) => ({
-            workshopId: wsIdMapping[technicalId] || technicalId,
-            qty: parseInt(qty) || 1,
-          }));
+        const cleanPropositions = Object.fromEntries(
+          Object.entries(formData.workshopPropositions || {}).filter(
+            ([_, v]) => (v ?? "").toString().trim()
+          )
+        );
 
         const ficheData = {
           familyId: formData.familyId,
           description:
             formData.description || formData.descriptionSituation || "",
-          workshops: workshopSelections,
-          // Include family data for dynamic creation
-          family: formData.familyId
-            ? undefined
-            : mapFamilyToApi(formData.family),
           // Map form data to detailed JSON fields
           referentData: formData.referent,
           familyDetailedData: formData.family,
           childrenData: formData.children,
-          workshopPropositions: formData.workshopPropositions,
+          workshopPropositions: cleanPropositions,
           familyConsent: formData.familyConsent,
         };
 
@@ -1734,41 +1607,15 @@ export default function FicheForm({
               ([_, value]) => value?.trim(),
             ).length > 0 ? (
               Object.entries(formData.workshopPropositions || {}).map(
-                ([technicalId, proposition]) => {
+                ([workshopId, proposition]) => {
                   if (!proposition?.trim()) return null;
-
-                  // Build dynamic technicalId -> real workshop.id mapping (same scheme as the form)
-                  const norm = (v) =>
-                    String(v ?? "")
-                      .replace(/[^a-z0-9]/gi, "")
-                      .toLowerCase();
-
-                  const wsIdMapping = {};
-                  objectives.forEach((obj) => {
-                    const orderOrId = obj.order || obj.id;
-                    workshopsList
-                      .filter((w) => {
-                        const wo = norm(w.objectiveId);
-                        return (
-                          wo === norm(obj.id) ||
-                          (obj.order != null && wo === norm(obj.order))
-                        );
-                      })
-                      .forEach((w) => {
-                        const techId = `workshop_${orderOrId}_${w.id}`;
-                        wsIdMapping[techId] = w.id;
-                      });
-                  });
-
-                  const actualWorkshopId =
-                    wsIdMapping[technicalId] || technicalId;
                   const workshop = workshopsList?.find(
-                    (w) => w.id === actualWorkshopId,
+                    (w) => w.id === workshopId,
                   );
                   const workshopName =
-                    workshop?.name || `Atelier ${technicalId}`;
+                    workshop?.name || `Atelier ${workshopId}`;
                   return (
-                    <div key={technicalId} className={styles.propositionReview}>
+                    <div key={workshopId} className={styles.propositionReview}>
                       <h4>{workshopName}</h4>
                       <p>{proposition}</p>
                     </div>
