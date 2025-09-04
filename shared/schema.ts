@@ -77,7 +77,6 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   ref: text("ref").notNull().unique(),
   state: ficheStateEnum("state").notNull().default("DRAFT"),
   emitterId: varchar("emitter_id").notNull(),
-  familyId: varchar("family_id").notNull(),
   assignedOrgId: varchar("assigned_org_id"),
   description: text("description"),
   

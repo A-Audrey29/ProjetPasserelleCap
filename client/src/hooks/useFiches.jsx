@@ -25,7 +25,6 @@ export function useFiches(filters = {}) {
     mutationFn: async (ficheData) => {
       // Prepare detailed form data
       const requestData = {
-        familyId: ficheData.familyId,
         description: ficheData.description,
         workshops: ficheData.workshops,
         referentData: ficheData.referentData,
