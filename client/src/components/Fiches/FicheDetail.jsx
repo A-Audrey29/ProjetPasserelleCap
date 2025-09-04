@@ -23,6 +23,22 @@ import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'wouter';
 import styles from './FicheDetail.module.css';
 
+// Normalize family data coming from different API shapes
+const mapFamilyFromApi = (src = {}) => ({
+  code: src.code ?? '',
+  email: src.email ?? '',
+  mother: src.mother ?? '',
+  father: src.father ?? '',
+  tiers: src.tiers ?? '',
+  lienAvecEnfants: src.lienAvecEnfants ?? '',
+  autoriteParentale: src.autoriteParentale ?? '',
+  situationFamiliale: src.situationFamiliale ?? '',
+  situationSocioProfessionnelle: src.situationSocioProfessionnelle ?? '',
+  adresse: src.adresse ?? src.address ?? '',
+  telephonePortable: src.telephonePortable ?? src.phone ?? '',
+  telephoneFixe: src.telephoneFixe ?? src.landline ?? src.phone2 ?? ''
+});
+
 export default function FicheDetail({ ficheId }) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -112,6 +128,11 @@ export default function FicheDetail({ ficheId }) {
     (sum, s) => sum + (s.workshop?.priceCents || 0),
     0
   );
+
+  // Normalize family information for display
+  const family = fiche
+    ? mapFamilyFromApi(fiche.familyDetailedData || fiche.family || {})
+    : null;
 
   // Comment mutation
   const addCommentMutation = useMutation({
@@ -800,7 +821,7 @@ export default function FicheDetail({ ficheId }) {
           </div>
 
           {/* Family Information */}
-          {(fiche.familyDetailedData || fiche.family) && (
+          {(fiche?.familyDetailedData || fiche?.family) && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Informations Famille
@@ -812,31 +833,31 @@ export default function FicheDetail({ ficheId }) {
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Code famille</label>
                       <p className={styles.infoValue} data-testid="text-family-code">
-                        {fiche.familyDetailedData?.code || fiche.family.code || 'N/A'}
+                        {family?.code || 'N/A'}
                       </p>
                     </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Adresse</label>
                       <p className={styles.infoValue} data-testid="text-family-address">
-                        {fiche.familyDetailedData?.adresse || fiche.family.address || 'N/A'}
+                        {family?.adresse || 'N/A'}
                       </p>
                     </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Téléphone portable</label>
                       <p className={styles.infoValue} data-testid="text-family-mobile">
-                        {fiche.familyDetailedData?.telephonePortable || fiche.family.phone || 'N/A'}
+                        {family?.telephonePortable || 'N/A'}
                       </p>
                     </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Téléphone fixe</label>
                       <p className={styles.infoValue} data-testid="text-family-phone">
-                        {fiche.familyDetailedData?.telephoneFixe || 'N/A'}
+                        {family?.telephoneFixe || 'N/A'}
                       </p>
                     </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Email</label>
                       <p className={styles.infoValue} data-testid="text-family-email">
-                        {fiche.familyDetailedData?.email || fiche.family.email || 'N/A'}
+                        {family?.email || 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -848,31 +869,31 @@ export default function FicheDetail({ ficheId }) {
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Mère</label>
                       <p className={styles.infoValue} data-testid="text-family-mother">
-                        {fiche.familyDetailedData?.mother || fiche.family.mother || 'N/A'}
+                        {family?.mother || 'N/A'}
                       </p>
                     </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Père</label>
                       <p className={styles.infoValue} data-testid="text-family-father">
-                        {fiche.familyDetailedData?.father || fiche.family.father || 'N/A'}
+                        {family?.father || 'N/A'}
                       </p>
                     </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Tiers</label>
                       <p className={styles.infoValue} data-testid="text-family-tiers">
-                        {fiche.familyDetailedData?.tiers || fiche.family.tiers || 'N/A'}
+                        {family?.tiers || 'N/A'}
                       </p>
                     </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Lien avec les enfants</label>
                       <p className={styles.infoValue} data-testid="text-family-link">
-                        {fiche.familyDetailedData?.lienAvecEnfants || fiche.family.lienAvecEnfants || 'N/A'}
+                        {family?.lienAvecEnfants || 'N/A'}
                       </p>
                     </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Autorité parentale</label>
                       <p className={styles.infoValue} data-testid="text-family-authority">
-                        {fiche.familyDetailedData?.autoriteParentale || fiche.family.autoriteParentale || 'N/A'}
+                        {family?.autoriteParentale || 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -884,13 +905,13 @@ export default function FicheDetail({ ficheId }) {
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Situation familiale</label>
                       <p className={styles.infoValue} data-testid="text-family-situation">
-                        {fiche.familyDetailedData?.situationFamiliale || fiche.family.situationFamiliale || 'N/A'}
+                        {family?.situationFamiliale || 'N/A'}
                       </p>
                     </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Situation socio-professionnelle</label>
                       <p className={styles.infoValue} data-testid="text-family-sociopro">
-                        {fiche.familyDetailedData?.situationSocioProfessionnelle || fiche.family.situationSocioProfessionnelle || 'N/A'}
+                        {family?.situationSocioProfessionnelle || 'N/A'}
                       </p>
                     </div>
                   </div>
