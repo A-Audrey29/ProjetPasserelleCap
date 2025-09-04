@@ -388,7 +388,6 @@ async function main() {
         ref: 'FN-2024-001',
         state: 'SUBMITTED_TO_FEVES',
         emitterId: usersData[1].id, // Marie Dupont (EMETTEUR)
-        familyId: familySeedData[0].id,
         orgId: orgsData[0].id,
         description: 'Famille monoparentale avec deux enfants en difficulté scolaire. Besoin d\'accompagnement pour améliorer la communication et établir des routines éducatives.',
         familyDetailedData: familySeedData[0].detailed,
@@ -404,7 +403,6 @@ async function main() {
         ref: 'FN-2024-002',
         state: 'EVS_ACCEPTED',
         emitterId: usersData[1].id,
-        familyId: familySeedData[1].id,
         assignedOrgId: orgsData[1].id,
         orgId: orgsData[0].id,
         description: 'Mère seule avec trois enfants, demande d\'accompagnement pour gestion du stress parental et activités en famille.',
@@ -421,7 +419,6 @@ async function main() {
         ref: 'FN-2024-003',
         state: 'CLOSED',
         emitterId: usersData[1].id,
-        familyId: familySeedData[2].id,
         assignedOrgId: orgsData[2].id,
         epsiId: epcisData[1].id,
         description: 'Famille d\'origine étrangère, besoin d\'accompagnement pour l\'intégration et la communication intergénérationnelle.',

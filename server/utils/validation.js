@@ -6,7 +6,6 @@ export const loginSchema = z.object({
 });
 
 export const ficheCreationSchema = z.object({
-  familyId: z.string().min(1, 'Famille requise'),
   description: z.string().optional(),
   // JSON form data fields
   referentData: z.any().optional(),

@@ -271,7 +271,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/fiches', requireAuth, requireRole('ADMIN', 'EMETTEUR', 'RELATIONS_EVS'), validateRequest(ficheCreationSchema), auditMiddleware('create', 'FicheNavette'), async (req, res) => {
     try {
       const {
-        familyId,
         description,
         referentData,
         familyDetailedData,
@@ -291,7 +290,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fiche = await storage.createFiche({
         ref,
         emitterId: req.user.userId,
-        familyId,
         description,
         state: 'DRAFT',
         referentData: referentData || null,
@@ -791,15 +789,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate basic stats
       const activeFiches = allFiches.filter(f => !['CLOSED', 'ARCHIVED'].includes(f.state)).length;
       const pendingAssignment = allFiches.filter(f => f.state === 'SUBMITTED_TO_FEVES').length;
-      const uniqueFamilies = new Set(allFiches.map(f => f.familyId));
-      
+
       // Calculate total budget from workshops (not implemented, default 0)
       let totalBudget = 0;
-      
+
       const stats = {
         activeFiches,
         pendingAssignment,
-        familiesHelped: uniqueFamilies.size,
+        familiesHelped: allFiches.length,
         totalBudget
       };
 
