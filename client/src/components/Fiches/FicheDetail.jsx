@@ -25,7 +25,6 @@ import styles from './FicheDetail.module.css';
 
 // Normalize family data coming from different API shapes
 const mapFamilyFromApi = (src = {}) => ({
-  code: src.code ?? '',
   email: src.email ?? '',
   mother: src.mother ?? '',
   father: src.father ?? '',
@@ -830,12 +829,6 @@ export default function FicheDetail({ ficheId }) {
                 <div className={styles.familySection}>
                   <h3 className={styles.sectionSubtitle}>Informations de base</h3>
                   <div className={styles.infoGrid}>
-                    <div className={styles.infoItem}>
-                      <label className={styles.infoLabel}>Code famille</label>
-                      <p className={styles.infoValue} data-testid="text-family-code">
-                        {family?.code || 'N/A'}
-                      </p>
-                    </div>
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Adresse</label>
                       <p className={styles.infoValue} data-testid="text-family-address">
