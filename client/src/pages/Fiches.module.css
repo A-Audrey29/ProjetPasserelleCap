@@ -46,7 +46,7 @@
 }
 
 .createButton {
-  background-color: var(--color-accent);
+  background-color: #3b4b61;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -59,7 +59,7 @@
 }
 
 .createButton:hover {
-  background-color: var(--color-accent-hover);
+  background-color: #2f3d4f;
   transform: translateY(-1px);
 }
 

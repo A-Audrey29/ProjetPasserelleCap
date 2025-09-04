@@ -108,6 +108,42 @@ export default function Fiches() {
     return new Date(dateString).toLocaleDateString('fr-FR');
   };
 
+  const getGuardianName = (fiche) => {
+    const family = fiche.family;
+    const familyData = fiche.familyDetailedData;
+
+    if (!family && !familyData) return 'Nom non disponible';
+
+    if (familyData?.autoriteParentale) {
+      const authority = familyData.autoriteParentale
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+      switch (authority) {
+        case 'mere':
+          return familyData.mother || family?.mother || 'Nom non disponible';
+        case 'pere':
+          return familyData.father || family?.father || 'Nom non disponible';
+        case 'tiers':
+          return (
+            familyData.tiers ||
+            family?.guardian ||
+            family?.tiers ||
+            'Nom non disponible'
+          );
+        default:
+          break;
+      }
+    }
+
+    if (family?.mother) return family.mother;
+    if (family?.father) return family.father;
+    if (family?.guardian) return family.guardian;
+
+    return 'Nom non disponible';
+  };
+
   return (
     <div className={styles.fichesContainer}>
       <Header />
@@ -207,32 +243,7 @@ export default function Fiches() {
                     </div>
 
                     <div className={styles.ficheInfo}>
-                      <h3 className={styles.familyName}>
-                        {(() => {
-                          const family = fiche.family;
-                          const familyData = fiche.familyDetailedData;
-                          
-                          if (!family && !familyData) return 'Nom non disponible';
-                          
-                          // Check if autoriteParentale exists in familyDetailedData
-                          if (familyData?.autoriteParentale) {
-                            if (familyData.autoriteParentale === 'Mère') {
-                              return familyData.mother || family?.mother || 'Nom non disponible';
-                            } else if (familyData.autoriteParentale === 'Père') {
-                              return familyData.father || family?.father || 'Nom non disponible';
-                            } else if (familyData.autoriteParentale === 'Tiers') {
-                              return familyData.tiers || family?.guardian || 'Nom non disponible';
-                            }
-                          }
-                          
-                          // Fallback: display available parent names from family table
-                          if (family?.mother) return family.mother;
-                          if (family?.father) return family.father;
-                          if (family?.guardian) return family.guardian;
-                          
-                          return 'Nom non disponible';
-                        })()}
-                      </h3>
+                      <h3 className={styles.familyName}>{getGuardianName(fiche)}</h3>
                       
                       <div className={styles.ficheDetails}>
                         <div className={styles.detailItem}>
