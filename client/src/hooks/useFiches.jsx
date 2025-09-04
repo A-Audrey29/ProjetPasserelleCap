@@ -26,7 +26,6 @@ export function useFiches(filters = {}) {
       // Prepare detailed form data
       const requestData = {
         description: ficheData.description,
-        workshops: ficheData.workshops,
         referentData: ficheData.referentData,
         familyDetailedData: ficheData.familyDetailedData,
         childrenData: ficheData.childrenData,
