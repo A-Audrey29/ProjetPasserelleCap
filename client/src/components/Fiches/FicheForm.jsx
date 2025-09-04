@@ -6,11 +6,8 @@ import {
   Users,
   Baby,
   Target,
-  Paperclip,
-  Save,
   Send,
   Plus,
-  X,
   Edit,
   Check,
   Trash2,
@@ -23,6 +20,37 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useFiches } from "@/hooks/useFiches";
 import styles from "./FicheForm.module.css";
+
+// --- utils (module scope) ---
+const mapFamilyFromApi = (src = {}) => ({
+  code: src.code ?? "",
+  email: src.email ?? "",
+  mother: src.mother ?? "",
+  father: src.father ?? "",
+  tiers: src.tiers ?? "",
+  lienAvecEnfants: src.lienAvecEnfants ?? "",
+  autoriteParentale: src.autoriteParentale ?? "",
+  situationFamiliale: src.situationFamiliale ?? "",
+  situationSocioProfessionnelle: src.situationSocioProfessionnelle ?? "",
+  adresse: src.adresse ?? src.address ?? "",
+  telephonePortable: src.telephonePortable ?? src.phone ?? "",
+  telephoneFixe: src.telephoneFixe ?? src.landline ?? src.phone2 ?? "",
+});
+
+const mapFamilyToApi = (ui = {}) => ({
+  code: ui.code || undefined,
+  email: ui.email || undefined,
+  mother: ui.mother || undefined,
+  father: ui.father || undefined,
+  tiers: ui.tiers || undefined,
+  lienAvecEnfants: ui.lienAvecEnfants || undefined,
+  autoriteParentale: ui.autoriteParentale || undefined,
+  situationFamiliale: ui.situationFamiliale || undefined,
+  situationSocioProfessionnelle: ui.situationSocioProfessionnelle || undefined,
+  address: ui.adresse || undefined,
+  phone: ui.telephonePortable || undefined,
+  landline: ui.telephoneFixe || undefined,
+});
 
 export default function FicheForm({
   initialData = null,
@@ -54,8 +82,7 @@ export default function FicheForm({
     description: "",
     family: {
       code: "",
-      address: "",
-      phone: "",
+      // UI canonical (French):
       email: "",
       mother: "",
       father: "",
@@ -81,8 +108,6 @@ export default function FicheForm({
     workshopPropositions: {},
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   // Queries for reference data
 
   const { data: objectives = [] } = useQuery({
@@ -90,101 +115,74 @@ export default function FicheForm({
     enabled: true,
   });
 
-  const { data: workshops = [] } = useQuery({
+  const { data: workshopsList = [] } = useQuery({
     queryKey: ["/api/workshops"],
     enabled: true,
   });
 
-  const { data: families = [] } = useQuery({
-    queryKey: ["/api/families"],
-    enabled: true,
-  });
-
-  // Group workshops by objective
-  const workshopsByObjective = objectives.reduce((acc, objective) => {
-    acc[objective.id] = workshops.filter((w) => w.objectiveId === objective.id);
-    return acc;
-  }, {});
-
   // Initialize form with existing data
   useEffect(() => {
-    if (initialData) {
-      console.log("Initializing form with data:", initialData);
+    if (!initialData) return;
 
-      // Extract family data from familyDetailedData JSON field or family object
-      const familyData =
-        initialData.familyDetailedData || initialData.family || {};
+    console.log("Initializing form with data:", initialData);
 
-      // Extract children data from childrenData JSON field or children array
-      const childrenData =
-        initialData.childrenData || initialData.children || [];
+    // 1) pull raw data once
+    const familyData =
+      initialData.familyDetailedData || initialData.family || {};
 
-      setFormData((prev) => ({
-        ...prev,
-        familyId: initialData.familyId || "",
-        description: initialData.description || "",
-        family: {
-          ...prev.family,
-          code: familyData.code || "",
-          address: familyData.address || "",
-          phone: familyData.phone || "",
-          email: familyData.email || "",
-          mother: familyData.mother || "",
-          father: familyData.father || "",
-          tiers: familyData.tiers || "",
-          lienAvecEnfants: familyData.lienAvecEnfants || "",
-          autoriteParentale: familyData.autoriteParentale || "",
-          situationFamiliale: familyData.situationFamiliale || "",
-          situationSocioProfessionnelle:
-            familyData.situationSocioProfessionnelle || "",
-          adresse: familyData.adresse || "",
-          telephonePortable: familyData.telephonePortable || "",
-          telephoneFixe: familyData.telephoneFixe || "",
-        },
-        children: childrenData.map((child) => ({
-          name: child.name || child.firstName || "",
-          dateNaissance:
-            child.dateNaissance ||
-            (child.birthDate
-              ? new Date(child.birthDate).toISOString().split("T")[0]
-              : ""),
-          niveauScolaire: child.niveauScolaire || child.level || "",
-        })),
-        workshops:
-          initialData.selections?.map((s) => ({
-            workshopId: s.workshopId,
-            qty: s.qty,
-          })) || [],
-        attachments: initialData.attachments || [],
-        referent: initialData.referentData
+    const childrenData = initialData.childrenData || initialData.children || [];
+
+    // 2) set state using the mapper
+    setFormData((prev) => ({
+      ...prev,
+      familyId: initialData.familyId || "",
+      description: initialData.description || "",
+      family: {
+        ...prev.family,
+        ...mapFamilyFromApi(familyData),
+      },
+      children: childrenData.map((child) => ({
+        name: child.name || child.firstName || "",
+        dateNaissance:
+          child.dateNaissance ||
+          (child.birthDate
+            ? new Date(child.birthDate).toISOString().split("T")[0]
+            : ""),
+        niveauScolaire: child.niveauScolaire || child.level || "",
+      })),
+      workshops:
+        initialData.selections?.map((s) => ({
+          workshopId: s.workshopId,
+          qty: s.qty,
+        })) || [],
+      attachments: initialData.attachments || [],
+      referent: initialData.referentData
+        ? {
+            lastName: initialData.referentData.lastName || "",
+            firstName: initialData.referentData.firstName || "",
+            structure: initialData.referentData.structure || "",
+            phone: initialData.referentData.phone || "",
+            email: initialData.referentData.email || "",
+            requestDate:
+              initialData.referentData.requestDate || prev.referent.requestDate,
+          }
+        : initialData.emitter
           ? {
-              lastName: initialData.referentData.lastName || "",
-              firstName: initialData.referentData.firstName || "",
-              structure: initialData.referentData.structure || "",
-              phone: initialData.referentData.phone || "",
-              email: initialData.referentData.email || "",
-              requestDate:
-                initialData.referentData.requestDate ||
-                prev.referent.requestDate,
+              lastName: initialData.emitter.lastName || "",
+              firstName: initialData.emitter.firstName || "",
+              structure: initialData.emitter.structure || "",
+              phone: initialData.emitter.phone || "",
+              email: initialData.emitter.email || "",
+              requestDate: initialData.createdAt
+                ? new Date(initialData.createdAt).toISOString().split("T")[0]
+                : prev.referent.requestDate,
             }
-          : initialData.emitter
-            ? {
-                lastName: initialData.emitter.lastName || "",
-                firstName: initialData.emitter.firstName || "",
-                structure: initialData.emitter.structure || "",
-                phone: initialData.emitter.phone || "",
-                email: initialData.emitter.email || "",
-                requestDate: initialData.createdAt
-                  ? new Date(initialData.createdAt).toISOString().split("T")[0]
-                  : prev.referent.requestDate,
-              }
-            : prev.referent,
-        descriptionSituation:
-          initialData.description || initialData.descriptionSituation || "",
-        workshopPropositions: initialData.workshopPropositions || {},
-        familyConsent: initialData.familyConsent || false,
-      }));
-    }
+          : prev.referent,
+      descriptionSituation:
+        initialData.description || initialData.descriptionSituation || "",
+      workshopPropositions: initialData.workshopPropositions || {},
+      familyConsent: initialData.familyConsent || false,
+    }));
   }, [initialData]);
 
   // Auto-populate referent fields when user data becomes available
@@ -214,46 +212,6 @@ export default function FicheForm({
       return response.json();
     },
   });
-
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleFamilyChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      family: {
-        ...prev.family,
-        [field]: value,
-      },
-    }));
-  };
-
-  const handleAddChild = () => {
-    setFormData((prev) => ({
-      ...prev,
-      children: [...prev.children, { firstName: "", birthDate: "", level: "" }],
-    }));
-  };
-
-  const handleChildChange = (index, field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      children: prev.children.map((child, i) =>
-        i === index ? { ...child, [field]: value } : child,
-      ),
-    }));
-  };
-
-  const handleRemoveChild = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      children: prev.children.filter((_, i) => i !== index),
-    }));
-  };
 
   const handleWorkshopToggle = (workshopId, isSelected) => {
     setFormData((prev) => ({
@@ -308,52 +266,6 @@ export default function FicheForm({
     }));
   };
 
-  const calculateTotal = () => {
-    return formData.workshops.reduce((total, selection) => {
-      const workshop = workshops.find((w) => w.id === selection.workshopId);
-      return total + (workshop?.priceCents || 0) * selection.qty;
-    }, 0);
-  };
-
-  // Format currency helper function
-  const formatCurrency = (amountInCents) => {
-    if (!amountInCents) return "0,00 €";
-    return `${(amountInCents / 100).toFixed(2).replace(".", ",")} €`;
-  };
-
-  const handleSubmit = async (isDraft = false) => {
-    setIsSubmitting(true);
-
-    try {
-      const submitData = {
-        ...formData,
-        isDraft,
-      };
-
-      if (isDraft && onSaveDraft) {
-        await onSaveDraft(submitData);
-      } else if (onSubmit) {
-        await onSubmit(submitData);
-      }
-
-      toast({
-        title: isDraft ? "Brouillon sauvegardé" : "Fiche envoyée",
-        description: isDraft
-          ? "La fiche a été sauvegardée en brouillon"
-          : "La fiche a été envoyée à FEVES",
-        variant: "default",
-      });
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // Multi-step form steps
   const steps = [
     {
@@ -393,9 +305,6 @@ export default function FicheForm({
       allowedRoles: ["ADMIN", "EMETTEUR", "RELATIONS_EVS"],
     },
   ];
-
-  const currentStepData = steps[currentStep];
-  const userRole = user?.user?.role || user?.role;
 
   // Handle référent data validation
   const handleValidateReferent = () => {
@@ -453,8 +362,9 @@ export default function FicheForm({
     } = formData.family;
 
     // Au moins un des trois (mère, père, tiers) doit être rempli
-    const hasParentInfo =
-      mother?.trim?.() || "" || father?.trim?.() || "" || tiers?.trim?.() || "";
+    const hasParentInfo = Boolean(
+      (mother || "").trim() || (father || "").trim() || (tiers || "").trim(),
+    );
     if (!hasParentInfo) {
       toast({
         title: "Erreur de validation",
@@ -796,17 +706,26 @@ export default function FicheForm({
 
   // Build objectives data dynamically from database
   const objectivesData = objectives.map((objective) => {
-    // Normalize IDs for matching (remove dashes from objective.id)
-    const normalizedObjectiveId = objective.id.replace(/-/g, "");
-    const filteredWorkshops = workshops.filter((workshop) => workshop.objectiveId === normalizedObjectiveId);
-    
+    const norm = (v) =>
+      String(v ?? "")
+        .replace(/[^a-z0-9]/gi, "")
+        .toLowerCase();
+    const filteredWorkshops = workshopsList.filter((w) => {
+      const wo = norm(w.objectiveId);
+      return (
+        wo === norm(objective.id) ||
+        (objective.order != null && wo === norm(objective.order))
+      );
+    });
+
     return {
       id: objective.order || objective.id,
       title: objective.name,
-      workshops: filteredWorkshops.map((workshop) => ({
-        id: `workshop_${objective.order || objective.id}_${workshop.id}`,
-        name: workshop.name,
-        objective: workshop.description,
+      // keep the existing technical id format used elsewhere in your form
+      workshops: filteredWorkshops.map((w) => ({
+        id: `workshop_${objective.order || objective.id}_${w.id}`,
+        name: w.name,
+        objective: w.description,
       })),
     };
   });
@@ -1361,40 +1280,30 @@ export default function FicheForm({
       const isDraft = currentState === "DRAFT";
 
       // Create minimal family data (even if incomplete for non-draft saves)
-      const familyData = {
-        lastName: formData.family?.lastName || "",
-        firstName: formData.family?.firstName || "",
-        birthDate: formData.family?.birthDate || "",
-        birthPlace: formData.family?.birthPlace || "",
-        nationality: formData.family?.nationality || "",
-        lienAvecEnfants: formData.family?.lienAvecEnfants || "",
-        autoriteParentale: formData.family?.autoriteParentale || "",
-        situationFamiliale: formData.family?.situationFamiliale || "",
-        situationSocioProfessionnelle:
-          formData.family?.situationSocioProfessionnelle || "",
-        telephonePortable: formData.family?.telephonePortable || "",
-        telephoneFixe: formData.family?.telephoneFixe || "",
-        email: formData.family?.email || "",
-        address: formData.family?.adresse || "",
-      };
+      // Family: map only fields that actually exist in formData.family
+      const familyData = mapFamilyToApi(formData.family);
 
-      // Transform workshop propositions
-      // Create dynamic mapping from form technical IDs to actual database workshop IDs
+      // Build a dynamic mapping from the technical form id → real DB id
       const workshopIdMapping = {};
-      workshops.forEach((workshop) => {
-        // Map form IDs like "workshop_1_obj1-003" to actual workshop IDs like "obj1-003"
-        const formId = `workshop_${objectives.find(obj => obj.id.replace(/-/g, "") === workshop.objectiveId)?.order || 1}_${workshop.id}`;
-        workshopIdMapping[formId] = workshop.id;
+      objectives.forEach((obj) => {
+        const orderOrId = obj.order || obj.id;
+        workshopsList
+          .filter((w) => w.objectiveId === obj.id)
+          .forEach((w) => {
+            const technicalId = `workshop_${orderOrId}_${w.id}`;
+            workshopIdMapping[technicalId] = w.id;
+          });
       });
 
-      const workshopsForSave = formData.workshopPropositions
-        ? Object.entries(formData.workshopPropositions).map(
-            ([technicalId, _]) => ({
-              workshopId: workshopIdMapping[technicalId] || technicalId,
-              qty: 1,
-            }),
-          )
-        : [];
+      // Only keep propositions that have a non-empty value; qty defaults to 1 here
+      const workshopsForSave = Object.entries(
+        formData.workshopPropositions || {},
+      )
+        .filter(([_, v]) => (v ?? "").toString().trim())
+        .map(([technicalId]) => ({
+          workshopId: workshopIdMapping[technicalId] || technicalId,
+          qty: 1,
+        }));
 
       const ficheData = {
         description: formData.descriptionSituation || "",
@@ -1523,6 +1432,22 @@ export default function FicheForm({
     }
   };
 
+  const normalizeError = (e) => {
+    if (e?.response) {
+      // axios-like or fetch wrapper with response
+      return new Error(
+        `HTTP ${e.response.status} ${e.response.statusText || ""} ` +
+          `${typeof e.response.data === "string" ? e.response.data : JSON.stringify(e.response.data || {})}`,
+      );
+    }
+    if (e instanceof Error) return e;
+    try {
+      return new Error(JSON.stringify(e));
+    } catch {
+      return new Error(String(e));
+    }
+  };
+
   const handleTransmit = async () => {
     if (!validateAllSteps()) {
       toast({
@@ -1549,46 +1474,39 @@ export default function FicheForm({
           },
         });
       } else {
-        // If it's a new fiche, create it as draft first, then transition it
-        // Transform workshopPropositions to workshops array format
-        // Map technical form IDs to actual database workshop IDs
-        const workshopIdMapping = {
-          workshop_1_1: "0ae9279f-9d7a-4778-875a-3ed84ee9d1b1", // Atelier communication parent-enfant
-          workshop_1_2: "bca25252-1dcf-4e35-b426-7374b79bafe1", // Gestion des émotions
-          workshop_1_3: "102d9611-e264-42a9-aca8-0da0a73956ba", // Techniques éducatives positives
-          workshop_2_1: "0c28af6d-e911-4c98-b5b2-10d9c585d3bb", // Ateliers famille
-          workshop_2_2: "3f48eed0-f7a0-4cc5-85d4-f2feb39371e7", // Dialogue intergénérationnel
-          workshop_2_3: "69ab54c3-a222-4fce-b6d4-1fe56fbf046f", // Médiation familiale
-          workshop_3_1: "475e5207-044a-4ef0-a285-a1350f049ef7", // Jeux coopératifs
-          workshop_3_2: "c09e5c74-a78b-4da8-9e48-1a4e7e28b58a", // Randonnée familiale
-          workshop_3_3: "0b7fbcb2-6d56-48fe-ad97-07a5f9fb5293", // Sport collectif famille
-        };
+        if (!onSubmit) {
+          throw new Error("onSubmit prop is required to create a new fiche.");
+        }
 
-        const workshops = formData.workshopPropositions
-          ? Object.entries(formData.workshopPropositions).map(
-              ([technicalId, qty]) => ({
-                workshopId: workshopIdMapping[technicalId] || technicalId,
-                qty: parseInt(qty) || 1,
-              }),
-            )
-          : [];
+        const wsIdMapping = {};
+        objectives.forEach((obj) => {
+          const orderOrId = obj.order || obj.id;
+          workshopsList
+            .filter((w) => w.objectiveId === obj.id)
+            .forEach((w) => {
+              const techId = `workshop_${orderOrId}_${w.id}`;
+              wsIdMapping[techId] = w.id;
+            });
+        });
+
+        const workshopSelections = Object.entries(
+          formData.workshopPropositions || {},
+        )
+          .filter(([_, v]) => (v ?? "").toString().trim())
+          .map(([technicalId, qty]) => ({
+            workshopId: wsIdMapping[technicalId] || technicalId,
+            qty: parseInt(qty) || 1,
+          }));
 
         const ficheData = {
           familyId: formData.familyId,
           description:
             formData.description || formData.descriptionSituation || "",
-          workshops: workshops,
+          workshops: workshopSelections,
           // Include family data for dynamic creation
           family: formData.familyId
             ? undefined
-            : {
-                code: `FAM_${Date.now()}`, // Generate a unique family code
-                mother: formData.family.mother,
-                father: formData.family.father,
-                phone: formData.family.telephonePortable,
-                email: formData.family.email,
-                address: formData.family.adresse,
-              },
+            : mapFamilyToApi(formData.family),
           // Map form data to detailed JSON fields
           referentData: formData.referent,
           familyDetailedData: formData.family,
@@ -1601,14 +1519,15 @@ export default function FicheForm({
         const newFiche = await onSubmit(ficheData);
 
         if (!newFiche || !newFiche.id) {
-          throw new Error("Fiche creation failed - no ID returned");
+          // Don’t hard-crash; allow transition + redirect fallback to list.
+          console.warn("onSubmit returned no id. Value was:", newFiche);
+        } else {
+          ficheId = newFiche.id;
         }
 
-        ficheId = newFiche.id;
-
         // Then transition it to SUBMITTED_TO_CD
-        const transitionResult = await transitionFiche({
-          id: newFiche.id,
+        await transitionFiche({
+          id: ficheId || newFiche?.id,
           newState: "SUBMITTED_TO_CD",
           metadata: {
             transmittedBy: user?.user?.id || user?.id,
@@ -1626,9 +1545,15 @@ export default function FicheForm({
 
       // Redirect to fiche detail page after successful submission
       setTimeout(() => {
-        window.location.href = `/fiches/${ficheId}`;
+        // If we didn’t get an id, fall back to the list page instead of throwing.
+        if (ficheId) {
+          window.location.href = `/fiches/${ficheId}`;
+        } else {
+          window.location.href = `/fiches`;
+        }
       }, 2000);
-    } catch (error) {
+    } catch (err) {
+      const error = normalizeError(err, "handleTransmit");
       console.error("Transmission error:", error);
       toast({
         title: "Erreur de transmission",
@@ -1697,30 +1622,19 @@ export default function FicheForm({
             Informations famille
           </h3>
           <div className={styles.reviewContent}>
-            {formData.family.lastName && (
+            {formData.family.mother && (
               <p>
-                <strong>Nom :</strong> {formData.family.lastName}
+                <strong>Mère :</strong> {formData.family.mother}
               </p>
             )}
-            {formData.family.firstName && (
+            {formData.family.father && (
               <p>
-                <strong>Prénom :</strong> {formData.family.firstName}
+                <strong>Père :</strong> {formData.family.father}
               </p>
             )}
-            {formData.family.birthDate && (
+            {formData.family.tiers && (
               <p>
-                <strong>Date de naissance :</strong> {formData.family.birthDate}
-              </p>
-            )}
-            {formData.family.birthPlace && (
-              <p>
-                <strong>Lieu de naissance :</strong>{" "}
-                {formData.family.birthPlace}
-              </p>
-            )}
-            {formData.family.nationality && (
-              <p>
-                <strong>Nationalité :</strong> {formData.family.nationality}
+                <strong>Tiers :</strong> {formData.family.tiers}
               </p>
             )}
             {formData.family.lienAvecEnfants && (
@@ -1783,13 +1697,13 @@ export default function FicheForm({
               <div key={index} className={styles.childReview}>
                 <h4>Enfant {index + 1}</h4>
                 <p>
-                  <strong>Prénom :</strong> {child.firstName}
+                  <strong>Nom et Prénom :</strong> {child.name}
                 </p>
                 <p>
-                  <strong>Date de naissance :</strong> {child.birthDate}
+                  <strong>Date de naissance :</strong> {child.dateNaissance}
                 </p>
                 <p>
-                  <strong>Niveau scolaire :</strong> {child.level}
+                  <strong>Niveau scolaire :</strong> {child.niveauScolaire}
                 </p>
               </div>
             ))}
@@ -1803,7 +1717,9 @@ export default function FicheForm({
             Identification des besoins de la famille
           </h3>
           <div className={styles.reviewContent}>
-            <p>{formData.description || "Aucune description fournie"}</p>
+            <p>
+              {formData.descriptionSituation || "Aucune description fournie"}
+            </p>
           </div>
         </div>
 
@@ -1821,29 +1737,36 @@ export default function FicheForm({
                 ([technicalId, proposition]) => {
                   if (!proposition?.trim()) return null;
 
-                  // Map technical form IDs to actual database workshop IDs
-                  const workshopIdMapping = {
-                    workshop_1_1: "1", // Gestion du temps et de l'organisation familiale
-                    workshop_1_2: "2", // Communication entre parents et enfants
-                    workshop_1_3: "3", // Atelier sur les méthodes d'apprentissage à la maison
-                    workshop_1_4: "4", // Soutien émotionnel et la motivation scolaire
-                    workshop_2_1: "5", // La parole des aînés : une richesse pour l'éducation
-                    workshop_2_2: "6", // Mieux se comprendre pour mieux s'entraider
-                    workshop_2_3: "7", // Soutien scolaire et méthodes familiales d'apprentissage
-                    workshop_2_4: "8", // Renforcer la motivation scolaire par le dialogue
-                    workshop_3_1: "9", // Pratique d'activité physique
-                    workshop_3_2: "10", // Atelier découverte Sport/Étude
-                    workshop_3_3: "11", // Atelier challenge famille
-                  };
+                  // Build dynamic technicalId -> real workshop.id mapping (same scheme as the form)
+                  const norm = (v) =>
+                    String(v ?? "")
+                      .replace(/[^a-z0-9]/gi, "")
+                      .toLowerCase();
+
+                  const wsIdMapping = {};
+                  objectives.forEach((obj) => {
+                    const orderOrId = obj.order || obj.id;
+                    workshopsList
+                      .filter((w) => {
+                        const wo = norm(w.objectiveId);
+                        return (
+                          wo === norm(obj.id) ||
+                          (obj.order != null && wo === norm(obj.order))
+                        );
+                      })
+                      .forEach((w) => {
+                        const techId = `workshop_${orderOrId}_${w.id}`;
+                        wsIdMapping[techId] = w.id;
+                      });
+                  });
 
                   const actualWorkshopId =
-                    workshopIdMapping[technicalId] || technicalId;
-                  const workshop = workshops?.find(
+                    wsIdMapping[technicalId] || technicalId;
+                  const workshop = workshopsList?.find(
                     (w) => w.id === actualWorkshopId,
                   );
                   const workshopName =
                     workshop?.name || `Atelier ${technicalId}`;
-
                   return (
                     <div key={technicalId} className={styles.propositionReview}>
                       <h4>{workshopName}</h4>
