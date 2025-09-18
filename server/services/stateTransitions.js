@@ -1,5 +1,6 @@
 import { storage } from '../storage.ts';
 import { logAction } from './auditLogger.js';
+import notificationService from './notificationService.js';
 
 // Define valid state transitions by role
 const STATE_TRANSITIONS = {
@@ -62,6 +63,15 @@ export async function transitionFicheState(ficheId, newState, userId, metadata =
     newState: newState,
     ...metadata
   });
+
+  // Send automatic email notifications
+  await notificationService.sendStateTransitionNotification(
+    updatedFiche, 
+    fiche.state, 
+    newState, 
+    userId, 
+    metadata
+  );
 
   return updatedFiche;
 }
