@@ -61,7 +61,7 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   // changement du port 5000 pour 3000 pour le faire tourner en local
-  const port = parseInt(process.env.PORT || '3000', 10); 
+  const port = parseInt(process.env.PORT || '5000', 10); 
   server.listen({
     port,
     // host: "0.0.0.0", changement d'adresse pour le faire tourner en local
