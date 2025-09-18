@@ -661,7 +661,74 @@ class EmailService {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+   * Test de la connexion SMTP
+   */
+  async testConnection(): Promise<boolean> {
+    try {
+      await this.transporter.verify();
+      console.log('✅ Connexion SMTP vérifiée avec succès');
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur de connexion SMTP:', error);
+      return false;
+    }
   }
+
+  /**
+   * Envoi d'un email de test simple
+   */
+  async sendTestEmail(to?: string): Promise<void> {
+    const testEmail = to || 'admin@passerelle-cap.com';
+    
+    await this.transporter.sendMail({
+      from: {
+        name: 'Passerelle CAP - Test',
+        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+      },
+      to: testEmail,
+      subject: '🧪 Test Configuration SMTP - Passerelle CAP',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #3B4B61;">Test Configuration SMTP</h2>
+          <p>Félicitations ! Votre configuration SMTP Breavo fonctionne parfaitement.</p>
+          <p>Le système de notifications automatiques de <strong>Passerelle CAP</strong> est maintenant opérationnel.</p>
+          <div style="background: #F5F6F7; padding: 15px; margin: 20px 0; border-radius: 5px;">
+            <h3 style="color: #6A8B74; margin-top: 0;">Notifications configurées :</h3>
+            <ul>
+              <li>Soumission au CD</li>
+              <li>Validation par le CD</li>
+              <li>Refus par le CD</li>
+              <li>Assignation EVS</li>
+              <li>Acceptation/Refus EVS</li>
+              <li>Signature contrat</li>
+              <li>Activité terminée</li>
+              <li>Contrôle terrain validé</li>
+            </ul>
+          </div>
+          <p style="color: #8C4A4A;"><em>Email envoyé automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</em></p>
+        </div>
+      `,
+      text: `Test Configuration SMTP - Passerelle CAP
+
+Félicitations ! Votre configuration SMTP Breavo fonctionne parfaitement.
+Le système de notifications automatiques de Passerelle CAP est maintenant opérationnel.
+
+Notifications configurées :
+- Soumission au CD
+- Validation par le CD
+- Refus par le CD
+- Assignation EVS
+- Acceptation/Refus EVS
+- Signature contrat
+- Activité terminée
+- Contrôle terrain validé
+
+Email envoyé automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`
+    });
+  }
+}
 
 // Export singleton instance
 export default new EmailService();
