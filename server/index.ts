@@ -64,8 +64,8 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || '5000', 10); 
   server.listen({
     port,
-    // host: "0.0.0.0", changement d'adresse pour le faire tourner en local
-    host: "127.0.0.1",
+    host: "0.0.0.0",// changement d'adresse pour le faire tourner en local
+   // host: "127.0.0.1",
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
