@@ -16,7 +16,7 @@
 .loadingSpinner {
   width: 2rem;
   height: 2rem;
-  border: 2px solid #3B4B61;
+  border: 2px solid rgb(var(--primary));
   border-top: 2px solid transparent;
   border-radius: 50%;
   margin-bottom: 1rem;
@@ -47,8 +47,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
   border-radius: 8px;
   padding: 0.5rem 1rem;
   flex: 1;
@@ -56,7 +56,7 @@
 }
 
 .searchIcon {
-  color: #9CA3AF;
+  color: rgb(var(--muted-foreground));
 }
 
 .searchInput {
@@ -68,10 +68,10 @@
 
 .filterSelect {
   padding: 0.5rem 1rem;
-  border: 1px solid #E5E7EB;
+  border: 1px solid rgb(var(--border));
   border-radius: 8px;
-  background: white;
-  color: #3B4B61;
+  background: rgb(var(--card));
+  color: rgb(var(--foreground));
   min-width: 150px;
 }
 
@@ -85,7 +85,7 @@
 /* Form card */
 .formCard {
   margin-bottom: 2rem;
-  background: white;
+  background: rgb(var(--card));
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -99,7 +99,7 @@
 }
 
 .statCard {
-  background: white;
+  background: rgb(var(--card));
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -112,19 +112,19 @@
 .statNumber {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #3B4B61;
+  color: rgb(var(--foreground));
   margin-bottom: 0.25rem;
 }
 
 .statLabel {
   font-size: 0.875rem;
-  color: #6B7280;
+  color: rgb(var(--muted-foreground));
   text-align: center;
 }
 
 /* Table */
 .tableContainer {
-  background: white;
+  background: rgb(var(--card));
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -136,28 +136,28 @@
 }
 
 .table thead {
-  background: #F9FAFB;
+  background: rgb(var(--accent));
 }
 
 .table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #3B4B61;
+  color: rgb(var(--foreground));
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid rgb(var(--border));
 }
 
 .table td {
   padding: 1rem;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid rgb(var(--border));
   vertical-align: middle;
 }
 
 .table tr:hover {
-  background: #F9FAFB;
+  background: rgb(var(--accent));
 }
 
 /* User cell */
@@ -168,13 +168,13 @@
 
 .userName {
   font-weight: 500;
-  color: #3B4B61;
+  color: rgb(var(--foreground));
   margin-bottom: 0.125rem;
 }
 
 .userPhone {
   font-size: 0.875rem;
-  color: #6B7280;
+  color: rgb(var(--muted-foreground));
 }
 
 /* Role badges */
@@ -189,33 +189,33 @@
 }
 
 .roleAdmin {
-  background: rgba(140, 74, 74, 0.1);
-  color: #8C4A4A;
+  background: rgba(var(--destructive-rgb), 0.1);
+  color: rgb(var(--destructive));
 }
 
 .roleSuivi {
-  background: rgba(59, 75, 97, 0.1);
-  color: #3B4B61;
+  background: rgba(var(--primary-rgb), 0.1);
+  color: rgb(var(--primary));
 }
 
 .roleEmetteur {
-  background: rgba(106, 139, 116, 0.1);
-  color: #6A8B74;
+  background: rgba(var(--success-rgb), 0.1);
+  color: rgb(var(--success));
 }
 
 .roleRelations {
-  background: rgba(217, 160, 102, 0.1);
-  color: #D9A066;
+  background: rgba(var(--warning-rgb), 0.1);
+  color: rgb(var(--warning));
 }
 
 .roleEvs {
-  background: #EBF5FF;
-  color: #1E40AF;
+  background: rgb(var(--accent));
+  color: rgb(var(--accent-foreground));
 }
 
 .roleCd {
-  background: #F3F4F6;
-  color: #6B7280;
+  background: rgb(var(--muted));
+  color: rgb(var(--muted-foreground));
 }
 
 /* Status badges */
@@ -228,13 +228,13 @@
 }
 
 .statusActive {
-  background: rgba(106, 139, 116, 0.1);
-  color: #6A8B74;
+  background: rgba(var(--success-rgb), 0.1);
+  color: rgb(var(--success));
 }
 
 .statusInactive {
-  background: rgba(140, 74, 74, 0.1);
-  color: #8C4A4A;
+  background: rgba(var(--destructive-rgb), 0.1);
+  color: rgb(var(--destructive));
 }
 
 /* Actions */
@@ -247,7 +247,7 @@
 .actionButton {
   padding: 0.5rem;
   background: transparent;
-  border: 1px solid #E5E7EB;
+  border: 1px solid rgb(var(--border));
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -257,8 +257,8 @@
 }
 
 .actionButton:hover {
-  background: #F9FAFB;
-  border-color: #3B4B61;
+  background: rgb(var(--accent));
+  border-color: rgb(var(--primary));
 }
 
 .actionButton:disabled {
@@ -267,29 +267,29 @@
 }
 
 .actionActivate {
-  border-color: #6A8B74;
-  color: #6A8B74;
+  border-color: rgb(var(--success));
+  color: rgb(var(--success));
 }
 
 .actionActivate:hover {
-  background: rgba(106, 139, 116, 0.1);
+  background: rgba(var(--success-rgb), 0.1);
 }
 
 .actionDeactivate {
-  border-color: #8C4A4A;
-  color: #8C4A4A;
+  border-color: rgb(var(--destructive));
+  color: rgb(var(--destructive));
 }
 
 .actionDeactivate:hover {
-  background: rgba(140, 74, 74, 0.1);
+  background: rgba(var(--destructive-rgb), 0.1);
 }
 
 /* Empty state */
 .emptyState {
   text-align: center;
   padding: 3rem;
-  color: #6B7280;
-  background: white;
+  color: rgb(var(--muted-foreground));
+  background: rgb(var(--card));
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }

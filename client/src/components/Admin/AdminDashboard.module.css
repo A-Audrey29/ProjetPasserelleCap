@@ -8,7 +8,7 @@
 .tabsNavigation {
   display: flex;
   gap: 0.25rem;
-  border-bottom: 2px solid #E5E7EB;
+  border-bottom: 2px solid rgb(var(--border));
   margin-bottom: 2rem;
   padding: 0;
 }
@@ -20,7 +20,7 @@
   padding: 0.875rem 1.5rem;
   background: transparent;
   border: none;
-  color: #6B7280;
+  color: rgb(var(--muted-foreground));
   font-family: 'Source Sans Pro', sans-serif;
   font-size: 0.95rem;
   font-weight: 500;
@@ -31,14 +31,14 @@
 }
 
 .tabButton:hover {
-  color: #3B4B61;
-  background: #F9FAFB;
+  color: rgb(var(--foreground));
+  background: rgb(var(--accent));
 }
 
 .tabActive {
-  color: #3B4B61;
-  background: white;
-  border-bottom-color: #3B4B61;
+  color: rgb(var(--foreground));
+  background: rgb(var(--card));
+  border-bottom-color: rgb(var(--primary));
   font-weight: 600;
 }
 
@@ -162,13 +162,13 @@
 }
 
 .moduleIcon.success {
-  background-color: rgba(106, 139, 116, 0.1);
-  color: #6A8B74;
+  background-color: rgba(var(--success-rgb), 0.1);
+  color: rgb(var(--success));
 }
 
 .moduleIcon.warning {
-  background-color: rgba(217, 160, 102, 0.1);
-  color: #D9A066;
+  background-color: rgba(var(--warning-rgb), 0.1);
+  color: rgb(var(--warning));
 }
 
 .moduleIcon.accent {
@@ -182,8 +182,8 @@
 }
 
 .moduleIcon.destructive {
-  background-color: rgba(140, 74, 74, 0.1);
-  color: #8C4A4A;
+  background-color: rgba(var(--destructive-rgb), 0.1);
+  color: rgb(var(--destructive));
 }
 
 .moduleTitle {
@@ -209,11 +209,11 @@
 }
 
 .moduleStat.success {
-  color: #6A8B74;
+  color: rgb(var(--success));
 }
 
 .moduleStat.warning {
-  color: #D9A066;
+  color: rgb(var(--warning));
 }
 
 .moduleStat.accent {
@@ -225,7 +225,7 @@
 }
 
 .moduleStat.destructive {
-  color: #8C4A4A;
+  color: rgb(var(--destructive));
 }
 
 /* Recent Activity */
