@@ -44,7 +44,7 @@ export default function Header() {
       roles: ['CD']
     },
     {
-      href: '/administration',
+      href: '/admin',
       label: 'Administration',
       roles: ['ADMIN']
     },
