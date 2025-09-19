@@ -4,6 +4,52 @@
   padding: 0;
 }
 
+/* Tabs Navigation */
+.tabsNavigation {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 2px solid #E5E7EB;
+  margin-bottom: 2rem;
+  padding: 0;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: #6B7280;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  border-radius: 6px 6px 0 0;
+}
+
+.tabButton:hover {
+  color: #3B4B61;
+  background: #F9FAFB;
+}
+
+.tabActive {
+  color: #3B4B61;
+  background: white;
+  border-bottom-color: #3B4B61;
+  font-weight: 600;
+}
+
+.tabIcon {
+  transition: color 0.2s ease;
+}
+
+.tabContent {
+  min-height: 500px;
+}
+
 .dashboardHeader {
   margin-bottom: 1.5rem;
 }
