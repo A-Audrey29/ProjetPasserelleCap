@@ -1,12 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'wouter';
 import { 
   Users, 
-  Building, 
   Building2, 
-  Target, 
-  Cog, 
-  ShieldCheck,
   Plus,
   LayoutGrid
 } from 'lucide-react';
@@ -49,49 +44,24 @@ export default function AdminDashboard() {
 
   const adminModules = [
     {
+      id: 'users',
       title: 'Utilisateurs',
       description: 'Gestion des comptes utilisateurs et attribution des rôles',
       icon: Users,
-      href: '/admin/users',
+      action: () => setActiveTab('users'),
       stat: `${stats.totalUsers || 0} utilisateurs actifs`,
       color: 'primary',
       testId: 'card-users'
     },
     {
+      id: 'structures',
       title: 'EVS/CS',
       description: 'Gestion des Espaces de Vie Sociale et Centres Sociaux',
       icon: Building2,
-      href: '/admin/organizations',
+      action: () => setActiveTab('structures'),
       stat: `${stats.totalOrganizations || 0} organisations`,
       color: 'warning',
       testId: 'card-organizations'
-    },
-    {
-      title: 'Ateliers',
-      description: 'Configuration des ateliers et objectifs pédagogiques',
-      icon: Target,
-      href: '/admin/workshops',
-      stat: `${stats.totalWorkshops || 0} ateliers disponibles`,
-      color: 'accent',
-      testId: 'card-workshops'
-    },
-    {
-      title: 'Paramètres',
-      description: 'Configuration générale et modèles de documents',
-      icon: Cog,
-      href: '/admin/settings',
-      stat: 'Configuration système',
-      color: 'muted',
-      testId: 'card-settings'
-    },
-    {
-      title: 'Audit',
-      description: 'Consultation des logs d\'audit et traçabilité',
-      icon: ShieldCheck,
-      href: '/admin/audit',
-      stat: `${stats.auditEntries || 0} entrées`,
-      color: 'destructive',
-      testId: 'card-audit'
     }
   ];
 
@@ -130,51 +100,42 @@ export default function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className={styles.quickActions}>
-        <Link href="/admin/users/new">
-          <button className={styles.actionButton} data-testid="button-new-user">
-            <Plus className={styles.icon} />
-            Nouvel utilisateur
-          </button>
-        </Link>
-        <Link href="/admin/organizations/new">
-          <button className={`${styles.actionButton} ${styles.actionButtonSecondary}`} data-testid="button-new-organization">
-            <Plus className={styles.icon} />
-            Nouvelle organisation
-          </button>
-        </Link>
-        <Link href="/admin/workshops/new">
-          <button className={`${styles.actionButton} ${styles.actionButtonSecondary}`} data-testid="button-new-workshop">
-            <Plus className={styles.icon} />
-            Nouvel atelier
-          </button>
-        </Link>
+        <button className={styles.actionButton} onClick={() => setActiveTab('users')} data-testid="button-new-user">
+          <Plus className={styles.icon} />
+          Nouvel utilisateur
+        </button>
+        <button className={`${styles.actionButton} ${styles.actionButtonSecondary}`} onClick={() => setActiveTab('structures')} data-testid="button-new-organization">
+          <Plus className={styles.icon} />
+          Nouvelle organisation
+        </button>
       </div>
 
       {/* Admin Modules Grid */}
       <div className={styles.modulesGrid}>
-        {adminModules.map((module) => {
+        {adminModules.filter(module => module.action !== 'disabled').map((module) => {
           const Icon = module.icon;
           
           return (
-            <Link key={module.href} href={module.href}>
-              <div 
-                className={styles.moduleCard}
-                data-testid={module.testId}
-              >
-                <div className={styles.moduleHeader}>
-                  <div className={`${styles.moduleIcon} ${styles[module.color]}`}>
-                    <Icon className={styles.iconLarge} />
-                  </div>
-                  <h3 className={styles.moduleTitle}>{module.title}</h3>
+            <div
+              key={module.id}
+              className={styles.moduleCard}
+              onClick={() => module.action && module.action()}
+              data-testid={module.testId}
+              style={{ cursor: module.action ? 'pointer' : 'default' }}
+            >
+              <div className={styles.moduleHeader}>
+                <div className={`${styles.moduleIcon} ${styles[module.color]}`}>
+                  <Icon className={styles.iconLarge} />
                 </div>
-                <p className={styles.moduleDescription}>
-                  {module.description}
-                </p>
-                <div className={`${styles.moduleStat} ${styles[module.color]}`}>
-                  {module.stat}
-                </div>
+                <h3 className={styles.moduleTitle}>{module.title}</h3>
               </div>
-            </Link>
+              <p className={styles.moduleDescription}>
+                {module.description}
+              </p>
+              <div className={`${styles.moduleStat} ${styles[module.color]}`}>
+                {module.stat}
+              </div>
+            </div>
           );
         })}
       </div>
