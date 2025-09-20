@@ -17,6 +17,64 @@ import { requireAuth, requireRole, requireFicheAccess } from './middleware/rbac.
 import { auditMiddleware } from './services/auditLogger.js';
 import { transitionFicheState, getValidTransitions } from './services/stateTransitions.js';
 import emailService from './services/emailService.js';
+
+// CSV parsing utility functions (inspired from seed.ts)
+function parseCsv(content: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < content.length; i++) {
+    const char = content[i];
+    
+    if (inQuotes) {
+      if (char === '"') {
+        if (content[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        row.push(current);
+        current = '';
+      } else if (char === '\n') {
+        row.push(current);
+        rows.push(row);
+        row = [];
+        current = '';
+      } else if (char === '\r') {
+        // ignore
+      } else {
+        current += char;
+      }
+    }
+  }
+  
+  if (current.length > 0 || row.length > 0) {
+    row.push(current);
+    rows.push(row);
+  }
+  
+  return rows;
+}
+
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+interface CsvRow {
+  [key: string]: string;
+}
+
 import { 
   validateRequest, 
   loginSchema, 
@@ -43,6 +101,22 @@ const upload = multer({
       cb(null, true);
     } else {
       cb(new Error('Type de fichier non autorisé'), false);
+    }
+  }
+});
+
+// Configure multer for CSV uploads
+const uploadCSV = multer({
+  dest: uploadsDir,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ['text/csv', 'application/csv', 'text/plain'];
+    if (allowedMimes.includes(file.mimetype) || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Seuls les fichiers CSV sont autorisés'), false);
     }
   }
 });
@@ -513,6 +587,175 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get organizations error:', error);
       res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Import organizations from CSV
+  app.post('/api/organizations/import', requireAuth, requireRole('ADMIN'), uploadCSV.single('csvFile'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Aucun fichier fourni' 
+        });
+      }
+
+      const csvContent = fs.readFileSync(req.file.path, 'utf8');
+      const rows = parseCsv(csvContent);
+      
+      if (rows.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Le fichier CSV est vide' 
+        });
+      }
+
+      const headers = rows[0].map(h => h.trim());
+      const dataRows = rows.slice(1);
+
+      // Validate required columns
+      const requiredColumns = ['Nom', 'EPCI'];
+      const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+      if (missingColumns.length > 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `Colonnes obligatoires manquantes : ${missingColumns.join(', ')}` 
+        });
+      }
+
+      const results = {
+        success: true,
+        processed: 0,
+        imported: 0,
+        skipped: 0,
+        errors: [] as string[]
+      };
+
+      const organizations: any[] = [];
+      const epciNames = new Set<string>();
+
+      for (let i = 0; i < dataRows.length; i++) {
+        const row = dataRows[i];
+        const orgData: CsvRow = {};
+        
+        headers.forEach((header, index) => {
+          orgData[header] = (row[index] || '').trim();
+        });
+
+        results.processed++;
+        const lineNum = i + 2; // +2 for header and 0-based index
+
+        // Skip empty rows
+        if (!orgData['Nom'] && !orgData['EPCI']) {
+          results.skipped++;
+          continue;
+        }
+
+        // Validate required fields
+        if (!orgData['Nom']) {
+          results.errors.push(`Ligne ${lineNum} : Le nom de la structure est obligatoire`);
+          continue;
+        }
+
+        if (!orgData['EPCI']) {
+          results.errors.push(`Ligne ${lineNum} : L'EPCI est obligatoire`);
+          continue;
+        }
+
+        // Validate email if provided
+        if (orgData['Contacts'] && !validateEmail(orgData['Contacts'])) {
+          results.errors.push(`Ligne ${lineNum} : Format email invalide (${orgData['Contacts']})`);
+          continue;
+        }
+
+        // Check if organization already exists (simplified check - will catch duplicates during insert)
+        // Note: We'll rely on database uniqueness constraints for duplicate detection
+
+        epciNames.add(orgData['EPCI']);
+        organizations.push({
+          name: orgData['Nom'],
+          contactName: orgData['Nom prénom de la Directrice'] || null,
+          contactEmail: orgData['Contacts'] || null,
+          contactPhone: orgData['Téléphone'] || null,
+          contact: [orgData['Adresse'], orgData['Ville']].filter(Boolean).join(', ') || null,
+          epci: orgData['EPCI'],
+          lineNumber: lineNum
+        });
+      }
+
+      if (organizations.length === 0) {
+        return res.json({
+          ...results,
+          message: 'Aucune structure valide à importer'
+        });
+      }
+
+      // Get or create EPCIs
+      const existingEpcis = await storage.getAllEpcis();
+      const existingEpciNames = new Set(existingEpcis.map(e => e.name));
+      const newEpciNames = Array.from(epciNames).filter(name => !existingEpciNames.has(name));
+      
+      let epcisInserted: any[] = [];
+      if (newEpciNames.length > 0) {
+        // Create EPCIs one by one
+        for (const epciName of newEpciNames) {
+          try {
+            const newEpci = await storage.createEpci({ name: epciName });
+            epcisInserted.push(newEpci);
+          } catch (error: any) {
+            console.error(`Failed to create EPCI ${epciName}:`, error);
+          }
+        }
+      }
+
+      // Build EPCI map
+      const allEpcis = [...existingEpcis, ...epcisInserted];
+      const epciMap = new Map(allEpcis.map(e => [e.name, e.id]));
+
+      // Insert organizations
+      for (const org of organizations) {
+        const epciId = epciMap.get(org.epci);
+        if (!epciId) {
+          results.errors.push(`Ligne ${org.lineNumber} : EPCI '${org.epci}' non trouvé`);
+          continue;
+        }
+
+        try {
+          await storage.createOrganization({
+            name: org.name,
+            contactName: org.contactName,
+            contactEmail: org.contactEmail,
+            contactPhone: org.contactPhone,
+            contact: org.contact,
+            epci: org.epci,
+            epciId: epciId
+          });
+          results.imported++;
+        } catch (error: any) {
+          results.errors.push(`Ligne ${org.lineNumber} : Erreur lors de l'insertion - ${error.message}`);
+        }
+      }
+
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({
+        ...results,
+        message: `Import terminé : ${results.imported} structures importées, ${results.errors.length} erreurs`
+      });
+
+    } catch (error: any) {
+      console.error('CSV import error:', error);
+      
+      // Clean up file if it exists
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur lors de l\'import : ' + error.message 
+      });
     }
   });
 
