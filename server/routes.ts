@@ -613,13 +613,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const headers = rows[0].map(h => h.trim());
       const dataRows = rows.slice(1);
 
+      // Debug: Log headers to understand what we're receiving
+      console.log('Headers received:', headers);
+      console.log('Headers JSON:', JSON.stringify(headers));
+
       // Validate required columns
       const requiredColumns = ['Nom', 'EPCI'];
       const missingColumns = requiredColumns.filter(col => !headers.includes(col));
       if (missingColumns.length > 0) {
+        console.log('Missing columns check:', {
+          headers,
+          requiredColumns,
+          missingColumns,
+          headersExact: headers.map(h => `"${h}" (length: ${h.length})`)
+        });
         return res.status(400).json({ 
           success: false, 
-          message: `Colonnes obligatoires manquantes : ${missingColumns.join(', ')}` 
+          message: `Colonnes obligatoires manquantes : ${missingColumns.join(', ')}. Headers reçus : ${headers.join(', ')}` 
         });
       }
 
