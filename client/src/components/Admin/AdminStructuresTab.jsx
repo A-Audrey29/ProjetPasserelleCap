@@ -5,6 +5,7 @@ import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { useStructures, useEPCIs } from '@/hooks/useStructures';
 import StructureForm from './StructureForm';
+import ImportCSVModal from './ImportCSVModal';
 import styles from './AdminStructuresTab.module.css';
 
 export default function AdminStructuresTab() {
@@ -141,6 +142,12 @@ export default function AdminStructuresTab() {
           />
         </Card>
       )}
+
+      {/* Modal d'import CSV */}
+      <ImportCSVModal 
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+      />
 
       {/* Statistiques */}
       <div className={styles.statsRow}>
