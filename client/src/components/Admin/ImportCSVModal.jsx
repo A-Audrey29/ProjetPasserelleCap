@@ -211,7 +211,11 @@ export default function ImportCSVModal({ isOpen, onClose }) {
                   </div>
                   <div className={styles.statItem}>
                     <span className={styles.statNumber}>{results.imported || 0}</span>
-                    <span className={styles.statLabel}>Importées</span>
+                    <span className={styles.statLabel}>Nouvelles structures</span>
+                  </div>
+                  <div className={styles.statItem}>
+                    <span className={styles.statNumber}>{results.updated || 0}</span>
+                    <span className={styles.statLabel}>Mises à jour</span>
                   </div>
                   <div className={styles.statItem}>
                     <span className={styles.statNumber}>{results.skipped || 0}</span>

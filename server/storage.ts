@@ -33,6 +33,8 @@ export interface IStorage {
   createOrganization(org: InsertOrganization): Promise<Organization>;
   updateOrganization(id: string, org: Partial<InsertOrganization>): Promise<Organization>;
   deleteOrganization(id: string): Promise<void>;
+  findOrganizationByNameAndEpci(name: string, epciId: string): Promise<Organization | undefined>;
+  upsertOrganization(org: InsertOrganization): Promise<{ organization: Organization, isNew: boolean }>;
 
   // Workshop Objectives
   getAllWorkshopObjectives(): Promise<WorkshopObjective[]>;
@@ -157,6 +159,37 @@ export class DatabaseStorage implements IStorage {
 
     async deleteOrganization(id: string): Promise<void> {
       await db.delete(organizations).where(eq(organizations.orgId, id));
+    }
+
+    async findOrganizationByNameAndEpci(name: string, epciId: string): Promise<Organization | undefined> {
+      const [org] = await db.select().from(organizations)
+        .where(and(eq(organizations.name, name), eq(organizations.epciId, epciId)));
+      return org || undefined;
+    }
+
+    async upsertOrganization(insertOrg: InsertOrganization): Promise<{ organization: Organization, isNew: boolean }> {
+      // Check if organization already exists
+      const existing = await this.findOrganizationByNameAndEpci(insertOrg.name, insertOrg.epciId);
+      
+      if (existing) {
+        // Update existing organization
+        const [updated] = await db.update(organizations)
+          .set({
+            contact: insertOrg.contact,
+            contactName: insertOrg.contactName,
+            contactEmail: insertOrg.contactEmail,
+            contactPhone: insertOrg.contactPhone,
+            epci: insertOrg.epci
+          })
+          .where(eq(organizations.orgId, existing.orgId))
+          .returning();
+        
+        return { organization: updated, isNew: false };
+      } else {
+        // Create new organization
+        const [created] = await db.insert(organizations).values(insertOrg).returning();
+        return { organization: created, isNew: true };
+      }
     }
 
   // Workshop Objectives

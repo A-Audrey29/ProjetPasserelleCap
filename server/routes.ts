@@ -627,6 +627,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         processed: 0,
         imported: 0,
+        updated: 0,
         skipped: 0,
         errors: [] as string[]
       };
@@ -712,7 +713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allEpcis = [...existingEpcis, ...epcisInserted];
       const epciMap = new Map(allEpcis.map(e => [e.name, e.id]));
 
-      // Insert organizations
+      // Insert or update organizations
       for (const org of organizations) {
         const epciId = epciMap.get(org.epci);
         if (!epciId) {
@@ -721,7 +722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         try {
-          await storage.createOrganization({
+          const result = await storage.upsertOrganization({
             name: org.name,
             contactName: org.contactName,
             contactEmail: org.contactEmail,
@@ -730,9 +731,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             epci: org.epci,
             epciId: epciId
           });
-          results.imported++;
+          
+          if (result.isNew) {
+            results.imported++;
+          } else {
+            results.updated++;
+          }
         } catch (error: any) {
-          results.errors.push(`Ligne ${org.lineNumber} : Erreur lors de l'insertion - ${error.message}`);
+          results.errors.push(`Ligne ${org.lineNumber} : Erreur lors de l'opération - ${error.message}`);
         }
       }
 
@@ -741,7 +747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         ...results,
-        message: `Import terminé : ${results.imported} structures importées, ${results.errors.length} erreurs`
+        message: `Import terminé : ${results.imported} nouvelles structures, ${results.updated} mises à jour, ${results.errors.length} erreurs`
       });
 
     } catch (error: any) {
