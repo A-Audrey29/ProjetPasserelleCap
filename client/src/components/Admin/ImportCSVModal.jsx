@@ -44,16 +44,23 @@ export default function ImportCSVModal({ isOpen, onClose }) {
     if (!file) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('csvFile', file);
 
     try {
-      const result = await apiRequest('/api/organizations/import', {
+      const formData = new FormData();
+      formData.append('csvFile', file);
+      
+      const response = await fetch('/api/organizations/import', {
         method: 'POST',
         body: formData,
-        // Don't set Content-Type header - let browser set it with boundary for FormData
-        headers: {}
+        credentials: 'include'
       });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`${response.status}: ${text}`);
+      }
+
+      const result = await response.json();
 
       setResults(result);
 
