@@ -20,6 +20,14 @@ import emailService from './services/emailService.js';
 
 // CSV parsing utility functions (inspired from seed.ts)
 function parseCsv(content: string): string[][] {
+  // Auto-detect delimiter by checking first line
+  const firstLine = content.split('\n')[0];
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  const semicolonCount = (firstLine.match(/;/g) || []).length;
+  const delimiter = semicolonCount > commaCount ? ';' : ',';
+  
+  console.log(`CSV delimiter detected: "${delimiter}" (commas: ${commaCount}, semicolons: ${semicolonCount})`);
+  
   const rows: string[][] = [];
   let row: string[] = [];
   let current = '';
@@ -42,7 +50,7 @@ function parseCsv(content: string): string[][] {
     } else {
       if (char === '"') {
         inQuotes = true;
-      } else if (char === ',') {
+      } else if (char === delimiter) {
         row.push(current);
         current = '';
       } else if (char === '\n') {
