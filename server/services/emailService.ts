@@ -1,48 +1,24 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
-
   constructor() {
-    // Create transporter with O2Switch configuration - try standard port 587 with STARTTLS
-    this.transporter = nodemailer.createTransport({
-      host: 'mail.fevesguadeloupeetsaintmartin.org',
-      port: 587, // Standard submission port with STARTTLS
-      secure: false, // Start with no encryption, then upgrade
-      requireTLS: true, // Require STARTTLS encryption
-      auth: {
-        user: process.env.SMTP_USERNAME,
-        pass: process.env.SMTP_PASSWORD
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      // Extended timeouts for slower servers
-      connectionTimeout: 30000,
-      greetingTimeout: 15000,
-      socketTimeout: 30000,
-      debug: true,
-      logger: true
-    });
-
-    // Verify connection configuration on startup
-    this.transporter.verify((error, success) => {
-      if (error) {
-        console.error('SMTP Configuration Error:', error);
-      } else {
-        console.log('SMTP Server ready to send emails');
-      }
-    });
+    // Configure SendGrid API key
+    if (process.env.SENDGRID_API_KEY) {
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      console.log('SendGrid configured successfully');
+    } else {
+      console.error('SENDGRID_API_KEY not found in environment variables');
+    }
   }
 
   /**
    * Send email notification for EVS assignment
    */
   async sendEvsAssignmentNotification({ contactEmail, contactName, orgName, ficheId }: { contactEmail: string; contactName?: string; orgName?: string; ficheId: string; }) {
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: contactEmail,
       subject: 'Nouvelle fiche CAP assignée',
@@ -62,7 +38,7 @@ class EmailService {
           <p>Veuillez vous connecter à la plateforme Passerelle CAP pour consulter les détails de cette fiche et commencer l'accompagnement.</p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.FRONTEND_URL || 'https://passerelle-cap.replit.app'}" 
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" 
                style="background-color: #6A8B74; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
               Accéder à la plateforme
             </a>
@@ -88,7 +64,7 @@ class EmailService {
         
         Veuillez vous connecter à la plateforme Passerelle CAP pour consulter les détails.
         
-        Lien : ${process.env.FRONTEND_URL || 'https://passerelle-cap.replit.app'}
+        Lien : ${process.env.FRONTEND_URL || 'http://localhost:5173'}
         
         ---
         Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.
@@ -97,9 +73,9 @@ class EmailService {
     };
 
       try {
-        const result = await this.transporter.sendMail(mailOptions);
-        console.log('EVS Assignment email sent successfully:', result.messageId);
-        return { success: true, messageId: result.messageId };
+        const result = await sgMail.send(mailOptions);
+        console.log('EVS Assignment email sent successfully:', result[0].statusCode);
+        return { success: true, messageId: result[0].headers['x-message-id'] };
       } catch (error: any) {
         console.error('Failed to send EVS Assignment email:', error);
         return { success: false, error: error.message };
@@ -110,10 +86,10 @@ class EmailService {
    * Send email notification when fiche is returned to emitter
    */
   async sendEmitterReturnNotification({ emitterEmail, emitterName, ficheId, reason }: { emitterEmail: string; emitterName?: string; ficheId: string; reason?: string; }) {
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: emitterEmail,
       subject: 'Fiche CAP renvoyée pour modification',
@@ -159,7 +135,7 @@ class EmailService {
         
         Veuillez vous connecter à la plateforme pour voir les commentaires et effectuer les modifications.
         
-        Lien : ${process.env.FRONTEND_URL || 'https://passerelle-cap.replit.app'}
+        Lien : ${process.env.FRONTEND_URL || 'http://localhost:5173'}
         
         ---
         Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.
@@ -168,9 +144,9 @@ class EmailService {
     };
 
       try {
-        const result = await this.transporter.sendMail(mailOptions);
-        console.log('Emitter Return email sent successfully:', result.messageId);
-        return { success: true, messageId: result.messageId };
+        const result = await sgMail.send(mailOptions);
+        console.log('Emitter Return email sent successfully:', result[0].statusCode);
+        return { success: true, messageId: result[0].headers['x-message-id'] };
       } catch (error: any) {
         console.error('Failed to send Emitter Return email:', error);
         return { success: false, error: error.message };
@@ -181,10 +157,10 @@ class EmailService {
    * Send email notification when fiche is submitted to CD
    */
   async sendSubmittedToCdNotification({ cdEmails, emitterName, ficheId, ficheRef }: { cdEmails: string[]; emitterName?: string; ficheId: string; ficheRef: string; }) {
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: cdEmails.join(','),
       subject: 'Nouvelle fiche CAP soumise pour validation',
@@ -221,9 +197,9 @@ class EmailService {
     };
 
     try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('CD submission notification sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
+      const result = await sgMail.send(mailOptions);
+      console.log('CD submission notification sent successfully:', result[0].statusCode);
+      return { success: true, messageId: result[0].headers['x-message-id'] };
     } catch (error: any) {
       console.error('Failed to send CD submission notification:', error);
       return { success: false, error: error.message };
@@ -234,10 +210,10 @@ class EmailService {
    * Send email notification when fiche is submitted to FEVES
    */
   async sendSubmittedToFevesNotification({ fevesEmails, emitterName, ficheId, ficheRef }: { fevesEmails: string[]; emitterName?: string; ficheId: string; ficheRef: string; }) {
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - CD',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP validée par le CD - À traiter',
@@ -274,9 +250,9 @@ class EmailService {
     };
 
     try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('FEVES submission notification sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
+      const result = await sgMail.send(mailOptions);
+      console.log('FEVES submission notification sent successfully:', result[0].statusCode);
+      return { success: true, messageId: result[0].headers['x-message-id'] };
     } catch (error: any) {
       console.error('Failed to send FEVES submission notification:', error);
       return { success: false, error: error.message };
@@ -287,10 +263,10 @@ class EmailService {
    * Send email notification when CD rejects fiche (back to emitter)
    */
   async sendCdRejectionNotification({ emitterEmail, emitterName, ficheId, ficheRef, reason }: { emitterEmail: string; emitterName?: string; ficheId: string; ficheRef: string; reason?: string; }) {
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - CD',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: emitterEmail,
       subject: 'Fiche CAP renvoyée par le Conseil Départemental',
@@ -327,9 +303,9 @@ class EmailService {
     };
 
     try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('CD rejection notification sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
+      const result = await sgMail.send(mailOptions);
+      console.log('CD rejection notification sent successfully:', result[0].statusCode);
+      return { success: true, messageId: result[0].headers['x-message-id'] };
     } catch (error: any) {
       console.error('Failed to send CD rejection notification:', error);
       return { success: false, error: error.message };
@@ -340,10 +316,10 @@ class EmailService {
    * Send email notification when EVS accepts assignment
    */
   async sendEvsAcceptanceNotification({ fevesEmails, evsOrgName, ficheId, ficheRef }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; }) {
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP acceptée par l\'EVS',
@@ -380,9 +356,9 @@ class EmailService {
     };
 
     try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('EVS acceptance notification sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
+      const result = await sgMail.send(mailOptions);
+      console.log('EVS acceptance notification sent successfully:', result[0].statusCode);
+      return { success: true, messageId: result[0].headers['x-message-id'] };
     } catch (error: any) {
       console.error('Failed to send EVS acceptance notification:', error);
       return { success: false, error: error.message };
@@ -393,10 +369,10 @@ class EmailService {
    * Send email notification when EVS rejects assignment
    */
   async sendEvsRejectionNotification({ fevesEmails, evsOrgName, ficheId, ficheRef, reason }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; reason?: string; }) {
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP refusée par l\'EVS - Réassignation nécessaire',
@@ -434,9 +410,9 @@ class EmailService {
     };
 
     try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('EVS rejection notification sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
+      const result = await sgMail.send(mailOptions);
+      console.log('EVS rejection notification sent successfully:', result[0].statusCode);
+      return { success: true, messageId: result[0].headers['x-message-id'] };
     } catch (error: any) {
       console.error('Failed to send EVS rejection notification:', error);
       return { success: false, error: error.message };
@@ -450,10 +426,10 @@ class EmailService {
     const formattedAmount = totalAmount ? (totalAmount / 100).toFixed(2) : 'Non spécifié';
     const advanceAmount = totalAmount ? ((totalAmount * 0.7) / 100).toFixed(2) : 'Non calculé';
 
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: cdEmails.join(','),
       subject: 'Contrat CAP signé - Acompte de 70% à verser',
@@ -492,9 +468,9 @@ class EmailService {
     };
 
     try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('Contract signed notification sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
+      const result = await sgMail.send(mailOptions);
+      console.log('Contract signed notification sent successfully:', result[0].headers['x-message-id']);
+      return { success: true, messageId: result[0].headers['x-message-id'] };
     } catch (error: any) {
       console.error('Failed to send contract signed notification:', error);
       return { success: false, error: error.message };
@@ -505,10 +481,10 @@ class EmailService {
    * Send email notification when activity is completed (field check needed)
    */
   async sendActivityCompletedNotification({ fevesEmails, evsOrgName, ficheId, ficheRef }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; }) {
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Activité CAP terminée - Contrôle terrain requis',
@@ -545,9 +521,9 @@ class EmailService {
     };
 
     try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('Activity completed notification sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
+      const result = await sgMail.send(mailOptions);
+      console.log('Activity completed notification sent successfully:', result[0].headers['x-message-id']);
+      return { success: true, messageId: result[0].headers['x-message-id'] };
     } catch (error: any) {
       console.error('Failed to send activity completed notification:', error);
       return { success: false, error: error.message };
@@ -562,10 +538,10 @@ class EmailService {
     const remainingAmount = totalAmount ? ((totalAmount * 0.3) / 100).toFixed(2) : 'Non calculé';
     
     // Email to CD for final payment
-    const cdMailOptions: nodemailer.SendMailOptions = {
+    const cdMailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: cdEmails.join(','),
       subject: 'Contrôle terrain validé - Solde de 30% à verser',
@@ -604,10 +580,10 @@ class EmailService {
     };
 
     // Email to FEVES for information
-    const fevesMailOptions: nodemailer.SendMailOptions = {
+    const fevesMailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Contrôle terrain validé - Fiche en attente de clôture',
@@ -645,16 +621,16 @@ class EmailService {
 
     try {
       // Send to CD first
-      const cdResult = await this.transporter.sendMail(cdMailOptions);
-      console.log('Field check completed notification sent to CD:', cdResult.messageId);
+      const cdResult = await sgMail.send(cdMailOptions);
+      console.log('Field check completed notification sent to CD:', cdResult[0].statusCode);
 
       // Send to FEVES
-      const fevesResult = await this.transporter.sendMail(fevesMailOptions);
-      console.log('Field check completed notification sent to FEVES:', fevesResult.messageId);
+      const fevesResult = await sgMail.send(fevesMailOptions);
+      console.log('Field check completed notification sent to FEVES:', fevesResult[0].statusCode);
 
       return { 
         success: true, 
-        messageId: { cd: cdResult.messageId, feves: fevesResult.messageId }
+        messageId: { cd: cdResult[0].headers['x-message-id'], feves: fevesResult[0].headers['x-message-id'] }
       };
     } catch (error: any) {
       console.error('Failed to send field check completed notifications:', error);
@@ -667,11 +643,16 @@ class EmailService {
    */
   async testConnection(): Promise<boolean> {
     try {
-      await this.transporter.verify();
-      console.log('✅ Connexion SMTP vérifiée avec succès');
-      return true;
+      // SendGrid doesn't have a verify method, so we'll just test if the API key is configured
+      if (process.env.SENDGRID_API_KEY) {
+        console.log('✅ SendGrid API key configured successfully');
+        return true;
+      } else {
+        console.error('❌ SendGrid API key not found');
+        return false;
+      }
     } catch (error) {
-      console.error('❌ Erreur de connexion SMTP:', error);
+      console.error('❌ Erreur de configuration SendGrid:', error);
       return false;
     }
   }
@@ -682,10 +663,10 @@ class EmailService {
   async sendTestEmail(to?: string): Promise<void> {
     const testEmail = to || 'admin@passerelle-cap.com';
     
-    await this.transporter.sendMail({
+    await sgMail.send({
       from: {
         name: 'Passerelle CAP - Test',
-        address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || ''
+        email: 'noreply@passerellecap.fr'
       },
       to: testEmail,
       subject: '🧪 Test Configuration SMTP - Passerelle CAP',
