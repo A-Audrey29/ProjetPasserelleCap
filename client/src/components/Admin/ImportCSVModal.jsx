@@ -151,6 +151,7 @@ export default function ImportCSVModal({ isOpen, onClose }) {
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
+                data-testid="csv-upload-zone"
               >
                 {file ? (
                   <div className={styles.fileSelected}>
@@ -163,6 +164,7 @@ export default function ImportCSVModal({ isOpen, onClose }) {
                       variant="outline" 
                       size="sm"
                       onClick={() => setFile(null)}
+                      data-testid="change-file-button"
                     >
                       Changer de fichier
                     </Button>
@@ -179,7 +181,10 @@ export default function ImportCSVModal({ isOpen, onClose }) {
                       className={styles.fileInput}
                       data-testid="csv-file-input"
                     />
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      data-testid="choose-file-button"
+                    >
                       Choisir un fichier
                     </Button>
                   </div>
@@ -195,7 +200,7 @@ export default function ImportCSVModal({ isOpen, onClose }) {
                 ) : (
                   <AlertCircle size={24} className={styles.errorIcon} />
                 )}
-                <h3>{results.message}</h3>
+                <h3 data-testid="import-result-message">{results.message}</h3>
               </div>
 
               {results.success && (
@@ -254,7 +259,7 @@ export default function ImportCSVModal({ isOpen, onClose }) {
               <Button 
                 onClick={handleImport}
                 disabled={!file || isUploading}
-                data-testid="start-import"
+                data-testid="button-import-csv-confirm"
               >
                 {isUploading ? 'Importation...' : 'Importer'}
               </Button>
