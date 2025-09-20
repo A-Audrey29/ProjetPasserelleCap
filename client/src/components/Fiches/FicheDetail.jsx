@@ -92,6 +92,14 @@ export default function FicheDetail({ ficheId }) {
   // Query for organizations by selected EPCI
   const { data: epciOrganizations = [] } = useQuery({
     queryKey: ['/api/epcis', selectedEpciId, 'organizations'],
+    queryFn: async ({ queryKey }) => {
+      const [, epciId] = queryKey;
+      const response = await fetch(`/api/epcis/${epciId}/organizations`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch organizations by EPCI');
+      return response.json();
+    },
     enabled: !!selectedEpciId && (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche?.state === 'SUBMITTED_TO_FEVES'
   });
 
