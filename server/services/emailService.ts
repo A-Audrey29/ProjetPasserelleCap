@@ -5,7 +5,8 @@ class EmailService {
     // Configure SendGrid API key
     if (process.env.SENDGRID_API_KEY) {
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      console.log('SendGrid configured successfully');
+      sgMail.setDataResidency('eu'); // Résidence des données dans l'UE
+      console.log('SendGrid configured successfully with EU data residency');
     } else {
       console.error('SENDGRID_API_KEY not found in environment variables');
     }
@@ -18,7 +19,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: contactEmail,
       subject: 'Nouvelle fiche CAP assignée',
@@ -89,7 +90,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: emitterEmail,
       subject: 'Fiche CAP renvoyée pour modification',
@@ -160,7 +161,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: cdEmails.join(','),
       subject: 'Nouvelle fiche CAP soumise pour validation',
@@ -213,7 +214,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - CD',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP validée par le CD - À traiter',
@@ -266,7 +267,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - CD',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: emitterEmail,
       subject: 'Fiche CAP renvoyée par le Conseil Départemental',
@@ -319,7 +320,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP acceptée par l\'EVS',
@@ -372,7 +373,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP refusée par l\'EVS - Réassignation nécessaire',
@@ -429,7 +430,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: cdEmails.join(','),
       subject: 'Contrat CAP signé - Acompte de 70% à verser',
@@ -484,7 +485,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Activité CAP terminée - Contrôle terrain requis',
@@ -541,7 +542,7 @@ class EmailService {
     const cdMailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: cdEmails.join(','),
       subject: 'Contrôle terrain validé - Solde de 30% à verser',
@@ -583,7 +584,7 @@ class EmailService {
     const fevesMailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Contrôle terrain validé - Fiche en attente de clôture',
@@ -666,7 +667,7 @@ class EmailService {
     await sgMail.send({
       from: {
         name: 'Passerelle CAP - Test',
-        email: 'noreply@passerellecap.fr'
+        email: 'studio.makeawave@gmail.com'
       },
       to: testEmail,
       subject: '🧪 Test Configuration SMTP - Passerelle CAP',

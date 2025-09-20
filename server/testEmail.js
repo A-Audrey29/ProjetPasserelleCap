@@ -5,13 +5,14 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function testSendGrid() {
   console.log('🧪 Testing SendGrid configuration...');
+console.log('📧 Using verified sender: studio.makeawave@gmail.com');
   
   const msg = {
     from: {
       name: 'Passerelle CAP - Test',
-      email: 'noreply@passerellecap.fr'
+      email: 'studio.makeawave@gmail.com'
     },
-    to: 'test@example.com', // This will show in SendGrid Activity but won't be delivered
+    to: 'studio.makeawave@gmail.com', // Utilisation de votre email vérifié
     subject: '🧪 Test Configuration SendGrid - Passerelle CAP',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
