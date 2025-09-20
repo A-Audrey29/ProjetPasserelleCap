@@ -5,8 +5,7 @@ class EmailService {
     // Configure SendGrid API key
     if (process.env.SENDGRID_API_KEY) {
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      sgMail.setDataResidency('eu'); // Résidence des données dans l'UE
-      console.log('SendGrid configured successfully with EU data residency');
+      console.log('SendGrid configured successfully');
     } else {
       console.error('SENDGRID_API_KEY not found in environment variables');
     }
