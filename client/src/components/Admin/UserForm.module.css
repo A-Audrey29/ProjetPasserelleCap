@@ -18,7 +18,7 @@
   background-color: white;
   border-radius: 12px;
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -172,42 +172,55 @@
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+  margin-top: 1rem;
 }
 
 .actions button {
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   font-size: 0.875rem;
-  border-radius: 6px;
+  font-weight: 500;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 120px;
+  justify-content: center;
 }
 
 .actions button[type="submit"] {
-  background-color: var(--color-primary);
+  background-color: #3b4b61;
   color: white;
   border: none;
+  box-shadow: 0 2px 4px rgba(59, 75, 97, 0.2);
 }
 
 .actions button[type="submit"]:hover {
-  background-color: var(--color-accent-hover);
+  background-color: #2c3a4a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 75, 97, 0.25);
 }
 
 .actions button[type="submit"]:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(59, 75, 97, 0.1);
 }
 
 .actions button[type="button"] {
   background-color: white;
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
 }
 
 .actions button[type="button"]:hover {
-  background-color: var(--color-accent-light);
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
 }
 
 .saveIcon {
