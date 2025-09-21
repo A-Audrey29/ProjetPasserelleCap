@@ -846,6 +846,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { password, ...userData } = req.body;
 
+      // Pre-check: Verify email uniqueness
+      if (userData.email) {
+        const existingUser = await storage.getUserByEmail(userData.email);
+        if (existingUser) {
+          return res.status(409).json({ 
+            message: 'Cette adresse email est déjà utilisée par un autre utilisateur' 
+          });
+        }
+      }
+
       if (userData.role === 'EVS_CS') {
         if (!userData.orgId) {
           return res.status(400).json({ message: "L'organisation est requise pour le rôle EVS/CS" });
@@ -866,6 +876,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(user);
     } catch (error) {
       console.error('Create user error:', error);
+      
+      // Robust check for unique constraint violations across different DB engines
+      const isUniqueViolation = 
+        error?.code === '23505' || // Postgres
+        error?.code === 'SQLITE_CONSTRAINT' || 
+        error?.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+        error?.code === 'ER_DUP_ENTRY' || 
+        error?.errno === 1062 || // MySQL
+        /duplicate|unique constraint|constraint failed|users?_email/i.test(error?.message || '');
+
+      if (isUniqueViolation) {
+        return res.status(409).json({ 
+          message: 'Cette adresse email est déjà utilisée par un autre utilisateur' 
+        });
+      }
+      
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });
@@ -879,6 +905,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existing = await storage.getUser(id);
       if (!existing) {
         return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      }
+
+      // Pre-check: Verify email uniqueness if email is being changed
+      if (updateData.email && updateData.email !== existing.email) {
+        const existingUser = await storage.getUserByEmail(updateData.email);
+        if (existingUser) {
+          return res.status(409).json({ 
+            message: 'Cette adresse email est déjà utilisée par un autre utilisateur' 
+          });
+        }
       }
 
       // If password is provided, hash it
@@ -908,6 +944,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(user);
     } catch (error) {
       console.error('Update user error:', error);
+      
+      // Robust check for unique constraint violations across different DB engines
+      const isUniqueViolation = 
+        error?.code === '23505' || // Postgres
+        error?.code === 'SQLITE_CONSTRAINT' || 
+        error?.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+        error?.code === 'ER_DUP_ENTRY' || 
+        error?.errno === 1062 || // MySQL
+        /duplicate|unique constraint|constraint failed|users?_email/i.test(error?.message || '');
+
+      if (isUniqueViolation) {
+        return res.status(409).json({ 
+          message: 'Cette adresse email est déjà utilisée par un autre utilisateur' 
+        });
+      }
+      
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });
