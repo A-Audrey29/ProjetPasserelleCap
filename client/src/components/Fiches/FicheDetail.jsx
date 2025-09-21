@@ -407,7 +407,7 @@ export default function FicheDetail({ ficheId }) {
     }
 
     try {
-      const selectedOrg = epciOrganizations.find(org => org.id === selectedEvscsId);
+      const selectedOrg = epciOrganizations.find(org => org.orgId === selectedEvscsId);
       
       if (action === 'validate') {
         // Advance to next state and send notification to EVS/CS
@@ -427,7 +427,7 @@ export default function FicheDetail({ ficheId }) {
           orgId: selectedEvscsId,
           orgName: selectedOrg?.name,
           contactEmail: selectedOrg?.contactEmail,
-          contactName: selectedOrg?.contactPersonName
+          contactName: selectedOrg?.contactName
         });
         
         toast({
@@ -1377,10 +1377,9 @@ export default function FicheDetail({ ficheId }) {
                       >
                         <option value="">-- Choisir une structure --</option>
                         {epciOrganizations
-                          .filter(org => org.type === 'EVS' || org.type === 'CS')
                           .map((org) => (
-                            <option key={org.id} value={org.id}>
-                              {org.name} ({org.type})
+                            <option key={org.orgId} value={org.orgId}>
+                              {org.name}
                             </option>
                           ))}
                       </select>
@@ -1394,7 +1393,7 @@ export default function FicheDetail({ ficheId }) {
                     <div className={styles.confirmationText}>
                       <p className={styles.confirmationMessage} data-testid="text-transmission-confirmation">
                         Transmettre cette fiche à la structure : <strong>
-                          {epciOrganizations.find(org => org.id === selectedEvscsId)?.name}
+                          {epciOrganizations.find(org => org.orgId === selectedEvscsId)?.name}
                         </strong>
                       </p>
                     </div>
@@ -1515,13 +1514,13 @@ export default function FicheDetail({ ficheId }) {
               {organizations
                 .map((org) => (
                   <div 
-                    key={org.id}
-                    className={`${styles.organizationItem} ${selectedOrgId === org.id ? styles.selected : ''}`}
-                    onClick={() => setSelectedOrgId(org.id)}
-                    data-testid={`org-option-${org.id}`}
+                    key={org.orgId}
+                    className={`${styles.organizationItem} ${selectedOrgId === org.orgId ? styles.selected : ''}`}
+                    onClick={() => setSelectedOrgId(org.orgId)}
+                    data-testid={`org-option-${org.orgId}`}
                   >
                     <h4 className={styles.orgName}>{org.name}</h4>
-                    <p className={styles.orgType}>{org.type}</p>
+                    <p className={styles.orgInfo}>{org.contact || 'Organisation'}</p>
                   </div>
                 ))}
             </div>
