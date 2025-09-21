@@ -4,6 +4,7 @@ import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { useStructures, useEPCIs } from '@/hooks/useStructures';
+import { useToast } from '@/hooks/use-toast';
 import StructureForm from './StructureForm';
 import ImportCSVModal from './ImportCSVModal';
 import styles from './AdminStructuresTab.module.css';
@@ -14,6 +15,8 @@ export default function AdminStructuresTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [epciFilter, setEpciFilter] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
+
+  const { toast } = useToast();
 
   const { 
     structures, 
@@ -45,8 +48,17 @@ export default function AdminStructuresTab() {
     try {
       await createStructure(data);
       setShowCreateForm(false);
+      toast({
+        title: "Structure créée",
+        description: `La structure "${data.name}" a été créée avec succès.`,
+      });
     } catch (error) {
       console.error('Erreur lors de la création:', error);
+      toast({
+        title: "Erreur de création",
+        description: "Impossible de créer la structure. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -54,17 +66,36 @@ export default function AdminStructuresTab() {
     try {
       await updateStructure({ id: editingStructure.orgId, data });
       setEditingStructure(null);
+      toast({
+        title: "Structure modifiée",
+        description: `La structure "${data.name}" a été modifiée avec succès.`,
+      });
     } catch (error) {
       console.error('Erreur lors de la modification:', error);
+      toast({
+        title: "Erreur de modification",
+        description: "Impossible de modifier la structure. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDeleteStructure = async (structureId) => {
+    const structureToDelete = structures.find(s => s.orgId === structureId);
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette structure ?')) {
       try {
         await deleteStructure(structureId);
+        toast({
+          title: "Structure supprimée",
+          description: `La structure "${structureToDelete?.name}" a été supprimée avec succès.`,
+        });
       } catch (error) {
         console.error('Erreur lors de la suppression:', error);
+        toast({
+          title: "Erreur de suppression",
+          description: "Impossible de supprimer la structure. Veuillez réessayer.",
+          variant: "destructive",
+        });
       }
     }
   };

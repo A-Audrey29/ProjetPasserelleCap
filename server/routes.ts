@@ -598,6 +598,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update organization
+  app.put('/api/organizations/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedOrganization = await storage.updateOrganization(id, req.body);
+      res.json(updatedOrganization);
+    } catch (error) {
+      console.error('Update organization error:', error);
+      res.status(500).json({ message: 'Erreur lors de la modification de l\'organisation' });
+    }
+  });
+
   // Import organizations from CSV
   app.post('/api/organizations/import', requireAuth, requireRole('ADMIN'), uploadCSV.single('csvFile'), async (req, res) => {
     try {
