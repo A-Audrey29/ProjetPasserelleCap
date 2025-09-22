@@ -3,11 +3,13 @@ import {
   Users, 
   Building2, 
   Plus,
-  LayoutGrid
+  LayoutGrid,
+  Mail
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import AdminUsersTab from './AdminUsersTab';
 import AdminStructuresTab from './AdminStructuresTab';
+import AdminEmailsTab from './AdminEmailsTab';
 import styles from './AdminDashboard.module.css';
 
 export default function AdminDashboard() {
@@ -39,6 +41,12 @@ export default function AdminDashboard() {
       label: 'Structures', 
       icon: Building2,
       testId: 'tab-structures'
+    },
+    { 
+      id: 'emails', 
+      label: 'Emails', 
+      icon: Mail,
+      testId: 'tab-emails'
     }
   ];
 
@@ -180,6 +188,9 @@ export default function AdminDashboard() {
 
         {/* Onglet Structures */}
         {activeTab === 'structures' && <AdminStructuresTab />}
+
+        {/* Onglet Emails */}
+        {activeTab === 'emails' && <AdminEmailsTab />}
       </div>
     </div>
   );
