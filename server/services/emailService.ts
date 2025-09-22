@@ -15,9 +15,9 @@ class EmailService {
     // Configure SendGrid API key
     if (process.env.SENDGRID_API_KEY && !this.isInterceptMode) {
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      console.log('SendGrid configured successfully');
+      console.log('SendGrid configured for production sending');
     } else {
-      console.log(`Email interception mode enabled: ${this.isInterceptMode ? 'YES' : 'NO'}`);
+      console.log(`🚫 EMAIL INTERCEPTION ACTIVE - All emails will be logged to database instead of being sent!`);
     }
   }
 
