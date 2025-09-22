@@ -1,13 +1,72 @@
 import sgMail from '@sendgrid/mail';
+import { storage } from '../storage.js';
+import type { InsertEmailLog } from '@shared/schema';
 
 class EmailService {
+  private isInterceptMode: boolean;
+
   constructor() {
+    // Determine if we should intercept emails (development mode)
+    this.isInterceptMode = 
+      process.env.EMAIL_INTERCEPT === 'true' || 
+      process.env.NODE_ENV !== 'production' || 
+      !process.env.SENDGRID_API_KEY;
+
     // Configure SendGrid API key
-    if (process.env.SENDGRID_API_KEY) {
+    if (process.env.SENDGRID_API_KEY && !this.isInterceptMode) {
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
       console.log('SendGrid configured successfully');
     } else {
-      console.error('SENDGRID_API_KEY not found in environment variables');
+      console.log(`Email interception mode enabled: ${this.isInterceptMode ? 'YES' : 'NO'}`);
+    }
+  }
+
+  /**
+   * Central delivery method that handles both real sending and interception
+   */
+  private async deliver(mailOptions: any, meta: any = {}) {
+    const emailLog: InsertEmailLog = {
+      to: Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to],
+      cc: mailOptions.cc ? (Array.isArray(mailOptions.cc) ? mailOptions.cc : [mailOptions.cc]) : null,
+      bcc: mailOptions.bcc ? (Array.isArray(mailOptions.bcc) ? mailOptions.bcc : [mailOptions.bcc]) : null,
+      subject: mailOptions.subject,
+      text: mailOptions.text || null,
+      html: mailOptions.html,
+      meta: meta,
+      status: 'intercepted'
+    };
+
+    if (this.isInterceptMode) {
+      // In intercept mode, just log to database
+      try {
+        const log = await storage.createEmailLog(emailLog);
+        console.log(`📧 Email intercepted: ${mailOptions.subject} -> ${mailOptions.to} (ID: ${log.id})`);
+        return { success: true, intercepted: true, logId: log.id };
+      } catch (error: any) {
+        console.error('Failed to log intercepted email:', error);
+        return { success: false, error: error.message, intercepted: true };
+      }
+    } else {
+      // In production mode, send via SendGrid and log
+      try {
+        const result = await sgMail.send(mailOptions);
+        
+        // Log successful send
+        emailLog.status = 'sent';
+        emailLog.messageId = result[0].headers['x-message-id'];
+        await storage.createEmailLog(emailLog);
+        
+        console.log('Email sent successfully:', result[0].statusCode);
+        return { success: true, messageId: result[0].headers['x-message-id'], intercepted: false };
+      } catch (error: any) {
+        // Log error
+        emailLog.status = 'error';
+        emailLog.error = error.message;
+        await storage.createEmailLog(emailLog);
+        
+        console.error('Failed to send email:', error);
+        return { success: false, error: error.message, intercepted: false };
+      }
     }
   }
 
@@ -72,14 +131,14 @@ class EmailService {
       `
     };
 
-      try {
-        const result = await sgMail.send(mailOptions);
-        console.log('EVS Assignment email sent successfully:', result[0].statusCode);
-        return { success: true, messageId: result[0].headers['x-message-id'] };
-      } catch (error: any) {
-        console.error('Failed to send EVS Assignment email:', error);
-        return { success: false, error: error.message };
-      }
+    const meta = {
+      event: 'evs_assignment',
+      ficheId,
+      orgName,
+      contactEmail
+    };
+
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
@@ -143,15 +202,16 @@ class EmailService {
       `
     };
 
-      try {
-        const result = await sgMail.send(mailOptions);
-        console.log('Emitter Return email sent successfully:', result[0].statusCode);
-        return { success: true, messageId: result[0].headers['x-message-id'] };
-      } catch (error: any) {
-        console.error('Failed to send Emitter Return email:', error);
-        return { success: false, error: error.message };
-      }
-    }
+    const meta = {
+      event: 'emitter_return',
+      ficheId,
+      emitterEmail,
+      emitterName,
+      reason
+    };
+
+    return await this.deliver(mailOptions, meta);
+  }
 
   /**
    * Send email notification when fiche is submitted to CD
@@ -196,14 +256,15 @@ class EmailService {
       `
     };
 
-    try {
-      const result = await sgMail.send(mailOptions);
-      console.log('CD submission notification sent successfully:', result[0].statusCode);
-      return { success: true, messageId: result[0].headers['x-message-id'] };
-    } catch (error: any) {
-      console.error('Failed to send CD submission notification:', error);
-      return { success: false, error: error.message };
-    }
+    const meta = {
+      event: 'submitted_to_cd',
+      ficheId,
+      ficheRef,
+      emitterName,
+      cdEmails
+    };
+
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
@@ -249,14 +310,15 @@ class EmailService {
       `
     };
 
-    try {
-      const result = await sgMail.send(mailOptions);
-      console.log('FEVES submission notification sent successfully:', result[0].statusCode);
-      return { success: true, messageId: result[0].headers['x-message-id'] };
-    } catch (error: any) {
-      console.error('Failed to send FEVES submission notification:', error);
-      return { success: false, error: error.message };
-    }
+    const meta = {
+      event: 'submitted_to_feves',
+      ficheId,
+      ficheRef,
+      emitterName,
+      fevesEmails
+    };
+
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
@@ -302,14 +364,16 @@ class EmailService {
       `
     };
 
-    try {
-      const result = await sgMail.send(mailOptions);
-      console.log('CD rejection notification sent successfully:', result[0].statusCode);
-      return { success: true, messageId: result[0].headers['x-message-id'] };
-    } catch (error: any) {
-      console.error('Failed to send CD rejection notification:', error);
-      return { success: false, error: error.message };
-    }
+    const meta = {
+      event: 'cd_rejection',
+      ficheId,
+      ficheRef,
+      emitterEmail,
+      emitterName,
+      reason
+    };
+
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
@@ -355,14 +419,15 @@ class EmailService {
       `
     };
 
-    try {
-      const result = await sgMail.send(mailOptions);
-      console.log('EVS acceptance notification sent successfully:', result[0].statusCode);
-      return { success: true, messageId: result[0].headers['x-message-id'] };
-    } catch (error: any) {
-      console.error('Failed to send EVS acceptance notification:', error);
-      return { success: false, error: error.message };
-    }
+    const meta = {
+      event: 'evs_acceptance',
+      ficheId,
+      ficheRef,
+      evsOrgName,
+      fevesEmails
+    };
+
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
@@ -409,14 +474,16 @@ class EmailService {
       `
     };
 
-    try {
-      const result = await sgMail.send(mailOptions);
-      console.log('EVS rejection notification sent successfully:', result[0].statusCode);
-      return { success: true, messageId: result[0].headers['x-message-id'] };
-    } catch (error: any) {
-      console.error('Failed to send EVS rejection notification:', error);
-      return { success: false, error: error.message };
-    }
+    const meta = {
+      event: 'evs_rejection',
+      ficheId,
+      ficheRef,
+      evsOrgName,
+      fevesEmails,
+      reason
+    };
+
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
@@ -467,14 +534,16 @@ class EmailService {
       `
     };
 
-    try {
-      const result = await sgMail.send(mailOptions);
-      console.log('Contract signed notification sent successfully:', result[0].headers['x-message-id']);
-      return { success: true, messageId: result[0].headers['x-message-id'] };
-    } catch (error: any) {
-      console.error('Failed to send contract signed notification:', error);
-      return { success: false, error: error.message };
-    }
+    const meta = {
+      event: 'contract_signed',
+      ficheId,
+      ficheRef,
+      evsOrgName,
+      totalAmount,
+      cdEmails
+    };
+
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
@@ -520,14 +589,15 @@ class EmailService {
       `
     };
 
-    try {
-      const result = await sgMail.send(mailOptions);
-      console.log('Activity completed notification sent successfully:', result[0].headers['x-message-id']);
-      return { success: true, messageId: result[0].headers['x-message-id'] };
-    } catch (error: any) {
-      console.error('Failed to send activity completed notification:', error);
-      return { success: false, error: error.message };
-    }
+    const meta = {
+      event: 'activity_completed',
+      ficheId,
+      ficheRef,
+      evsOrgName,
+      fevesEmails
+    };
+
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
@@ -621,16 +691,30 @@ class EmailService {
 
     try {
       // Send to CD first
-      const cdResult = await sgMail.send(cdMailOptions);
-      console.log('Field check completed notification sent to CD:', cdResult[0].statusCode);
+      const cdMeta = {
+        event: 'field_check_completed_cd',
+        ficheId,
+        ficheRef,
+        evsOrgName,
+        totalAmount,
+        cdEmails
+      };
+      const cdResult = await this.deliver(cdMailOptions, cdMeta);
 
       // Send to FEVES
-      const fevesResult = await sgMail.send(fevesMailOptions);
-      console.log('Field check completed notification sent to FEVES:', fevesResult[0].statusCode);
+      const fevesMeta = {
+        event: 'field_check_completed_feves',
+        ficheId,
+        ficheRef,
+        evsOrgName,
+        fevesEmails
+      };
+      const fevesResult = await this.deliver(fevesMailOptions, fevesMeta);
 
       return { 
-        success: true, 
-        messageId: { cd: cdResult[0].headers['x-message-id'], feves: fevesResult[0].headers['x-message-id'] }
+        success: cdResult.success && fevesResult.success, 
+        cdResult,
+        fevesResult
       };
     } catch (error: any) {
       console.error('Failed to send field check completed notifications:', error);
@@ -663,7 +747,7 @@ class EmailService {
   async sendTestEmail(to?: string): Promise<void> {
     const testEmail = to || 'admin@passerelle-cap.com';
     
-    await sgMail.send({
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - Test',
         email: 'studio.makeawave@gmail.com'
@@ -707,7 +791,14 @@ Notifications configurées :
 - Contrôle terrain validé
 
 Email envoyé automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`
-    });
+    };
+
+    const meta = {
+      event: 'test_email',
+      testEmail
+    };
+
+    await this.deliver(mailOptions, meta);
   }
 }
 

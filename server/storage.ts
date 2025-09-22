@@ -1,13 +1,14 @@
 import {
   epcis, users, organizations, workshopObjectives, workshops,
-  ficheNavettes, auditLogs, comments,
+  ficheNavettes, auditLogs, comments, emailLogs,
   type Epci, type InsertEpci, type User, type InsertUser, type Organization,
   type InsertOrganization, type WorkshopObjective, type InsertWorkshopObjective, type Workshop, type InsertWorkshop,
   type FicheNavette, type InsertFicheNavette,
-  type AuditLog, type InsertAuditLog, type Comment, type InsertComment
+  type AuditLog, type InsertAuditLog, type Comment, type InsertComment,
+  type EmailLog, type InsertEmailLog
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, like } from "drizzle-orm";
+import { eq, and, or, desc, asc, like, count } from "drizzle-orm";
 
 export interface IStorage {
   // EPCIs
@@ -72,6 +73,20 @@ export interface IStorage {
   getComments(ficheId: string): Promise<Comment[]>;
   createComment(comment: InsertComment): Promise<Comment>;
   deleteComment(id: string): Promise<void>;
+
+  // Email Logs
+  getEmailLogs(filters?: {
+    status?: string;
+    search?: string;
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Promise<{ logs: EmailLog[], total: number }>;
+  getEmailLog(id: string): Promise<EmailLog | undefined>;
+  createEmailLog(emailLog: InsertEmailLog): Promise<EmailLog>;
+  updateEmailLog(id: string, emailLog: Partial<InsertEmailLog>): Promise<EmailLog>;
+  deleteEmailLog(id: string): Promise<void>;
+  deleteAllEmailLogs(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -327,6 +342,83 @@ export class DatabaseStorage implements IStorage {
 
   async deleteComment(id: string): Promise<void> {
     await db.delete(comments).where(eq(comments.id, id));
+  }
+
+  // Email Logs
+  async getEmailLogs(filters?: {
+    status?: string;
+    search?: string;
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Promise<{ logs: EmailLog[], total: number }> {
+    const { status, search, page = 1, size = 50, sort = 'createdAt:desc' } = filters || {};
+    
+    // Build where conditions
+    const conditions = [];
+    if (status) conditions.push(eq(emailLogs.status, status as any));
+    if (search) {
+      conditions.push(
+        or(
+          like(emailLogs.subject, `%${search}%`),
+          like(emailLogs.html, `%${search}%`)
+        )
+      );
+    }
+
+    // Parse sort
+    const [sortField, sortOrder] = sort.split(':');
+    const orderBy = sortOrder === 'asc' ? asc : desc;
+    const sortColumn = sortField === 'createdAt' ? emailLogs.createdAt :
+                      sortField === 'subject' ? emailLogs.subject :
+                      sortField === 'status' ? emailLogs.status :
+                      emailLogs.createdAt;
+
+    // Get total count
+    const [totalResult] = await db.select({ count: count() }).from(emailLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    const total = totalResult.count;
+
+    // Get paginated results
+    const offset = (page - 1) * size;
+    let query = db.select().from(emailLogs);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    const logs = await query
+      .orderBy(orderBy(sortColumn))
+      .limit(size)
+      .offset(offset);
+
+    return { logs, total };
+  }
+
+  async getEmailLog(id: string): Promise<EmailLog | undefined> {
+    const [log] = await db.select().from(emailLogs).where(eq(emailLogs.id, id));
+    return log || undefined;
+  }
+
+  async createEmailLog(insertEmailLog: InsertEmailLog): Promise<EmailLog> {
+    const [log] = await db.insert(emailLogs).values(insertEmailLog).returning();
+    return log;
+  }
+
+  async updateEmailLog(id: string, insertEmailLog: Partial<InsertEmailLog>): Promise<EmailLog> {
+    const [log] = await db.update(emailLogs)
+      .set({ ...insertEmailLog, updatedAt: new Date() })
+      .where(eq(emailLogs.id, id))
+      .returning();
+    return log;
+  }
+
+  async deleteEmailLog(id: string): Promise<void> {
+    await db.delete(emailLogs).where(eq(emailLogs.id, id));
+  }
+
+  async deleteAllEmailLogs(): Promise<void> {
+    await db.delete(emailLogs);
   }
 }
 

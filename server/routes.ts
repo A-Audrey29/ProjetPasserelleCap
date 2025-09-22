@@ -1167,6 +1167,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Email Logs routes
+  app.get('/api/admin/email-logs', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { status, search, page = '1', size = '50', sort = 'createdAt:desc' } = req.query;
+      const filters = {
+        status: status as string,
+        search: search as string,
+        page: parseInt(page as string),
+        size: parseInt(size as string),
+        sort: sort as string
+      };
+      
+      const result = await storage.getEmailLogs(filters);
+      res.json(result);
+    } catch (error) {
+      console.error('Get email logs error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.get('/api/admin/email-logs/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const emailLog = await storage.getEmailLog(id);
+      
+      if (!emailLog) {
+        return res.status(404).json({ message: 'Email log introuvable' });
+      }
+      
+      res.json(emailLog);
+    } catch (error) {
+      console.error('Get email log error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.patch('/api/admin/email-logs/:id', requireAuth, requireRole('ADMIN'), auditMiddleware('update', 'EmailLog'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!['intercepted', 'sent', 'viewed', 'archived', 'error'].includes(status)) {
+        return res.status(400).json({ message: 'Statut invalide' });
+      }
+      
+      const updates: any = { status };
+      if (status === 'viewed' && !req.body.viewedAt) {
+        updates.viewedAt = new Date();
+      }
+      
+      const updatedLog = await storage.updateEmailLog(id, updates);
+      res.json(updatedLog);
+    } catch (error) {
+      console.error('Update email log error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.post('/api/admin/email-logs/:id/mark-viewed', requireAuth, requireRole('ADMIN'), auditMiddleware('mark_viewed', 'EmailLog'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const updatedLog = await storage.updateEmailLog(id, {
+        status: 'viewed',
+        viewedAt: new Date()
+      });
+      
+      res.json(updatedLog);
+    } catch (error) {
+      console.error('Mark email viewed error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.delete('/api/admin/email-logs/:id', requireAuth, requireRole('ADMIN'), auditMiddleware('delete', 'EmailLog'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteEmailLog(id);
+      res.json({ message: 'Email log supprimé avec succès' });
+    } catch (error) {
+      console.error('Delete email log error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.delete('/api/admin/email-logs', requireAuth, requireRole('ADMIN'), auditMiddleware('delete_all', 'EmailLog'), async (req, res) => {
+    try {
+      await storage.deleteAllEmailLogs();
+      res.json({ message: 'Tous les email logs supprimés avec succès' });
+    } catch (error) {
+      console.error('Delete all email logs error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Admin Dashboard stats (including email logs count)
+  app.get('/api/admin/stats', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const allFiches = await storage.getAllFiches();
+      const allUsers = await storage.getAllUsers();
+      const emailLogsResult = await storage.getEmailLogs({ page: 1, size: 1 });
+      
+      const stats = {
+        totalFiches: allFiches.length,
+        activeFiches: allFiches.filter(f => !['CLOSED', 'ARCHIVED'].includes(f.state)).length,
+        totalUsers: allUsers.length,
+        totalEmailLogs: emailLogsResult.total,
+        interceptedEmails: emailLogsResult.total // In dev, all emails are intercepted
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Get admin stats error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

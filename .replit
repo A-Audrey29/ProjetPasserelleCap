@@ -35,6 +35,7 @@ args = "npm run dev"
 waitForPort = 5000
 
 [agent]
+expertMode = true
 
 [[ports]]
 localPort = 5000

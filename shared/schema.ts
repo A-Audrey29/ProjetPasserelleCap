@@ -11,6 +11,7 @@ export const ficheStateEnum = pgEnum("fiche_state", [
   "CONTRACT_SIGNED", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
   "FIELD_CHECK_DONE", "CLOSED", "ARCHIVED"
 ]);
+export const emailStatusEnum = pgEnum("email_status", ["intercepted", "sent", "viewed", "archived", "error"]);
 
 // Tables
 export const epcis = pgTable("epcis", {
@@ -153,6 +154,26 @@ export const comments = pgTable("comments", {
   ficheIdx: index("comments_fiche_idx").on(table.ficheId),
 }));
 
+export const emailLogs = pgTable("email_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  to: json("to").notNull(), // Array of recipient emails
+  cc: json("cc"), // Optional CC recipients
+  bcc: json("bcc"), // Optional BCC recipients
+  subject: text("subject").notNull(),
+  text: text("text"), // Plain text version
+  html: text("html").notNull(), // HTML version
+  meta: json("meta"), // { ficheId, ficheRef, event, triggerUserId, ... }
+  status: emailStatusEnum("status").notNull().default("intercepted"),
+  error: text("error"), // Error message if status is 'error'
+  messageId: text("message_id"), // SendGrid message ID when sent
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  viewedAt: timestamp("viewed_at"), // When marked as viewed
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  statusIdx: index("email_logs_status_idx").on(table.status),
+  createdAtIdx: index("email_logs_created_at_idx").on(table.createdAt),
+}));
+
 // Relations
 export const epcisRelations = relations(epcis, ({ many }) => ({
   organizations: many(organizations),
@@ -236,6 +257,12 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
   createdAt: true,
 });
 
+export const insertEmailLogSchema = createInsertSchema(emailLogs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type Epci = typeof epcis.$inferSelect;
 export type InsertEpci = z.infer<typeof insertEpciSchema>;
@@ -253,3 +280,5 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
+export type EmailLog = typeof emailLogs.$inferSelect;
+export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
