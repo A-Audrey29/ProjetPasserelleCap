@@ -1331,6 +1331,33 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
+          {/* Archive option for RELATIONS_EVS with CLOSED status */}
+          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'CLOSED' && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Gestion de la fiche
+              </h2>
+              
+              <div className={styles.cardContent}>
+                <p className={styles.statusText}>
+                  Cette fiche est maintenant fermée et peut être archivée si nécessaire.
+                </p>
+                
+                <div className={styles.actionButtonsGroup}>
+                  <button
+                    className={styles.archiveButton}
+                    onClick={() => handleRelationsEvsAction('archive')}
+                    disabled={transitionMutation.isPending}
+                    data-testid="button-relations-archive-closed"
+                  >
+                    <Archive className={styles.buttonIcon} />
+                    Archiver la fiche
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* EPCI Selection for RELATIONS_EVS with SUBMITTED_TO_FEVES status */}
           {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'SUBMITTED_TO_FEVES' && (
             <div className={styles.card}>
