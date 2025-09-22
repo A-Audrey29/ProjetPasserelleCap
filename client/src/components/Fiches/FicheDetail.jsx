@@ -397,7 +397,8 @@ export default function FicheDetail({ ficheId }) {
 
   // RELATIONS_EVS actions with EPCI selection
   const handleRelationsEvsAction = async (action) => {
-    if (!selectedEvscsId) {
+    // Only check for selectedEvscsId if action requires it (not for archive)
+    if ((action === 'validate' || action === 'return') && !selectedEvscsId) {
       toast({
         title: "Sélection requise",
         description: "Veuillez sélectionner une structure EVS/CS",
