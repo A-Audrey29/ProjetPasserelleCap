@@ -24,12 +24,21 @@ export default function AdminEmailsTab() {
 
   // Récupération des emails avec pagination et filtres
   const { data: emailsData, isLoading } = useQuery({
-    queryKey: ['/api/admin/email-logs', {
-      page: currentPage,
-      limit: itemsPerPage,
-      ...(statusFilter !== 'all' && { status: statusFilter }),
-      ...(searchTerm && { search: searchTerm })
-    }]
+    queryKey: ['/api/admin/email-logs', currentPage, statusFilter, searchTerm],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+        ...(searchTerm && { search: searchTerm })
+      });
+      
+      const response = await fetch(`/api/admin/email-logs?${params}`);
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    }
   });
 
   // Mutation pour marquer un email comme lu
