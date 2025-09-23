@@ -30,6 +30,7 @@ interface MigrationResult {
   workshopsUpdated: number;
   objectivesSkipped: number;
   workshopsSkipped: number;
+  warnings: string[];
   errors: string[];
 }
 
@@ -151,7 +152,8 @@ async function updateWorkshops(tx: any, result: MigrationResult): Promise<void> 
         
       if (existing.length === 0) {
         console.warn(`⚠️ Atelier ${workshop.id} n'existe pas en base, skip`);
-        result.errors.push(`Atelier ${workshop.id} introuvable`);
+        result.warnings.push(`Atelier ${workshop.id} introuvable - utiliser script d'initialisation pour l'ajouter`);
+        result.workshopsSkipped++;
         continue;
       }
 
@@ -209,6 +211,7 @@ async function recordMigration(tx: any, result: MigrationResult): Promise<void> 
       updated: result.workshopsUpdated,
       skipped: result.workshopsSkipped
     },
+    warnings: result.warnings,
     errors: result.errors,
     dryRun: false
   };
@@ -254,6 +257,7 @@ async function runMigration(): Promise<void> {
     workshopsUpdated: 0,
     objectivesSkipped: 0,
     workshopsSkipped: 0,
+    warnings: [],
     errors: []
   };
 
@@ -294,8 +298,13 @@ async function runMigration(): Promise<void> {
   console.log(`   • Ateliers mis à jour: ${result.workshopsUpdated}/${workshopData.length}`);
   console.log(`   • Ateliers déjà à jour: ${result.workshopsSkipped}/${workshopData.length}`);
   
+  if (result.warnings.length > 0) {
+    console.log(`   • Avertissements: ${result.warnings.length}`);
+    result.warnings.forEach(warning => console.log(`     - ${warning}`));
+  }
+  
   if (result.errors.length > 0) {
-    console.log(`   • Erreurs: ${result.errors.length}`);
+    console.log(`   • Erreurs critiques: ${result.errors.length}`);
     result.errors.forEach(error => console.log(`     - ${error}`));
   }
 

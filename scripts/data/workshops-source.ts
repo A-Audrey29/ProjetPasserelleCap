@@ -65,19 +65,25 @@ export const workshopData = [
     id: "obj2-002",
     objectiveId: "obj2",
     name: "Mieux se comprendre pour mieux s'entraider",
-    description: "Gérer les émotions liées à l'école.",
+    description: "Gérer les émotions liées à l'école (stress, frustration, anxiété) pour favoriser la réussite scolaire.",
   },
   {
     id: "obj2-003",
     objectiveId: "obj2",
     name: "Soutien scolaire et méthodes familiales d'apprentissage",
-    description: "Soutenir les enfants dans leur parcours.",
+    description: "Aider les parents à mieux accompagner leurs enfants dans leur parcours scolaire.",
   },
   {
     id: "obj2-004",
     objectiveId: "obj2",
+    name: "Les émotions, le moteur de la réussite scolaire",
+    description: "Apprendre à gérer les émotions liées à l’école (stress, frustration, anxiété) pour favoriser la réussite scolaire.",
+  },
+  {
+    id: "obj2-005",
+    objectiveId: "obj2",
     name: "Renforcer la motivation scolaire par le dialogue",
-    description: "Encourager la projection positive.",
+    description: "Encourager les enfants à se projeter positivement dans leur parcours scolaire.",
   },
 
   // Objective 3 workshops
@@ -85,18 +91,18 @@ export const workshopData = [
     id: "obj3-001",
     objectiveId: "obj3",
     name: "Pratique d'activité physique",
-    description: "Renforcer les liens familiaux par le bien-être physique et mental.",
+    description: "Renforcer les liens familiaux par l’amélioration du bien-être physique et mental des familles, par la promotion des valeurs du sport.",
   },
   {
     id: "obj3-002",
     objectiveId: "obj3",
     name: "Atelier découverte Sport/Étude",
-    description: "Comprendre l'impact du sport sur la motivation scolaire.",
+    description: "Aider les familles à comprendre l'impact du sport sur la gestion du stress scolaire, la concentration et la motivation",
   },
   {
     id: "obj3-003",
     objectiveId: "obj3",
     name: "Atelier challenge famille",
-    description: "Créer un événement sportif ludique inter-familles.",
+    description: "Créer un événement sportif ludique où les familles peuvent se confronter dans un esprit de camaraderie et de convivialité. Challenge inter-familles.",
   },
 ];
