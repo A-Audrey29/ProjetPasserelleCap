@@ -450,15 +450,15 @@
   min-height: 80px;
 }
 
-.workshopHeader {
+.workshopContainer {
   display: flex;
-  align-items: center;
-  margin-bottom: 0.75rem;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.workshopSelection {
-  display: flex;
-  align-items: center;
+.workshopContainer:last-child {
+  margin-bottom: 0;
 }
 
 .workshopCheckbox {
@@ -466,6 +466,8 @@
   height: 1.125rem;
   accent-color: #6A8B74;
   cursor: pointer;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
 }
 
 .workshopCheckbox:focus {

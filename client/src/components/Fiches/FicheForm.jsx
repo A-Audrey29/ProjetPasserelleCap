@@ -724,47 +724,45 @@ export default function FicheForm({
                 <h4 className={styles.workshopsSubtitle}>Ateliers proposés</h4>
 
                 {objective.workshops.map((workshop) => (
-                  <div key={workshop.id} className={styles.workshopItem}>
-                    <div className={styles.workshopHeader}>
-                      <div className={styles.workshopSelection}>
-                        <input
-                          type="checkbox"
-                          id={`select-${workshop.id}`}
-                          checked={selectedWorkshops[workshop.id] || false}
-                          onChange={() => toggleWorkshopSelection(workshop.id, objective.id)}
-                          className={styles.workshopCheckbox}
-                          data-testid={`checkbox-workshop-${workshop.id}`}
+                  <div key={workshop.id} className={styles.workshopContainer}>
+                    <input
+                      type="checkbox"
+                      id={`select-${workshop.id}`}
+                      checked={selectedWorkshops[workshop.id] || false}
+                      onChange={() => toggleWorkshopSelection(workshop.id, objective.id)}
+                      className={styles.workshopCheckbox}
+                      data-testid={`checkbox-workshop-${workshop.id}`}
+                    />
+                    
+                    <div className={styles.workshopItem}>
+                      <div className={styles.workshopInfo}>
+                        <h5 className={styles.workshopName}>{workshop.name}</h5>
+                        <p className={styles.workshopObjective}>
+                          <strong>Objectif :</strong> {workshop.objective}
+                        </p>
+                      </div>
+
+                      <div className={styles.workshopProposition}>
+                        <label
+                          className={styles.fieldLabel}
+                          htmlFor={`proposition-${workshop.id}`}
+                        >
+                          Proposition du référent
+                        </label>
+                        <textarea
+                          id={`proposition-${workshop.id}`}
+                          className={styles.fieldTextarea}
+                          value={
+                            formData.workshopPropositions?.[workshop.id] || ""
+                          }
+                          onChange={(e) =>
+                            updateWorkshopProposition(workshop.id, e.target.value)
+                          }
+                          placeholder="Décrivez votre proposition pour cet atelier..."
+                          rows={3}
+                          data-testid={`textarea-proposition-${workshop.id}`}
                         />
                       </div>
-                    </div>
-                    
-                    <div className={styles.workshopInfo}>
-                      <h5 className={styles.workshopName}>{workshop.name}</h5>
-                      <p className={styles.workshopObjective}>
-                        <strong>Objectif :</strong> {workshop.objective}
-                      </p>
-                    </div>
-
-                    <div className={styles.workshopProposition}>
-                      <label
-                        className={styles.fieldLabel}
-                        htmlFor={`proposition-${workshop.id}`}
-                      >
-                        Proposition du référent
-                      </label>
-                      <textarea
-                        id={`proposition-${workshop.id}`}
-                        className={styles.fieldTextarea}
-                        value={
-                          formData.workshopPropositions?.[workshop.id] || ""
-                        }
-                        onChange={(e) =>
-                          updateWorkshopProposition(workshop.id, e.target.value)
-                        }
-                        placeholder="Décrivez votre proposition pour cet atelier..."
-                        rows={3}
-                        data-testid={`textarea-proposition-${workshop.id}`}
-                      />
                     </div>
                   </div>
                 ))}
