@@ -450,6 +450,38 @@
   min-height: 80px;
 }
 
+.workshopHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.workshopSelection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workshopCheckbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #6A8B74;
+  cursor: pointer;
+}
+
+.workshopCheckbox:focus {
+  outline: 2px solid #6A8B74;
+  outline-offset: 2px;
+}
+
+.workshopCheckboxLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #3B4B61;
+  cursor: pointer;
+  user-select: none;
+}
+
 @media (min-width: 768px) {
   .workshopItem {
     flex-direction: row;

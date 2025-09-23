@@ -615,6 +615,7 @@ export default function FicheForm({
   );
 
   const [expandedObjectives, setExpandedObjectives] = useState({});
+  const [selectedWorkshops, setSelectedWorkshops] = useState({});
 
   // Build objectives data dynamically from database
   const objectivesData = objectives.map((objective) => {
@@ -658,6 +659,13 @@ export default function FicheForm({
     }));
   };
 
+  const toggleWorkshopSelection = (workshopId) => {
+    setSelectedWorkshops((prev) => ({
+      ...prev,
+      [workshopId]: !prev[workshopId],
+    }));
+  };
+
   const validateObjectivesStep = () => {
     // This step doesn't require validation as propositions are optional
     return true;
@@ -697,6 +705,25 @@ export default function FicheForm({
 
                 {objective.workshops.map((workshop) => (
                   <div key={workshop.id} className={styles.workshopItem}>
+                    <div className={styles.workshopHeader}>
+                      <div className={styles.workshopSelection}>
+                        <input
+                          type="checkbox"
+                          id={`select-${workshop.id}`}
+                          checked={selectedWorkshops[workshop.id] || false}
+                          onChange={() => toggleWorkshopSelection(workshop.id)}
+                          className={styles.workshopCheckbox}
+                          data-testid={`checkbox-workshop-${workshop.id}`}
+                        />
+                        <label 
+                          htmlFor={`select-${workshop.id}`}
+                          className={styles.workshopCheckboxLabel}
+                        >
+                          Sélectionner cet atelier
+                        </label>
+                      </div>
+                    </div>
+                    
                     <div className={styles.workshopInfo}>
                       <h5 className={styles.workshopName}>{workshop.name}</h5>
                       <p className={styles.workshopObjective}>

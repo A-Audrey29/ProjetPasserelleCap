@@ -102,7 +102,7 @@ export const workshopData = [
   {
     id: "obj3-003",
     objectiveId: "obj3",
-    name: "Atelier challenge famille",
-    description: "Créer un événement sportif ludique où les familles peuvent se confronter dans un esprit de camaraderie et de convivialité. Challenge inter-familles.",
+    name: "pratique physique",
+    description: "Activités de pleine nature (randonnées) pour favoriser l’estime de soi, les liens parents/enfants et savoir s’entraider pour franchir des obstacles",
   },
 ];
