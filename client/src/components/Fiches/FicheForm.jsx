@@ -1632,35 +1632,40 @@ export default function FicheForm({
           </div>
         </div>
 
-        {/* Workshop Propositions */}
+        {/* Selected Workshops */}
         <div className={styles.reviewSection}>
           <h3 className={styles.reviewSectionTitle}>
             <Target className={styles.reviewSectionIcon} />
-            Propositions d'ateliers
+            Ateliers sélectionnés
           </h3>
           <div className={styles.reviewContent}>
-            {Object.entries(formData.workshopPropositions || {}).filter(
-              ([_, value]) => value?.trim(),
-            ).length > 0 ? (
-              Object.entries(formData.workshopPropositions || {}).map(
-                ([workshopId, proposition]) => {
-                  if (!proposition?.trim()) return null;
-                  const workshop = workshopsList?.find(
-                    (w) => w.id === workshopId,
-                  );
-                  const workshopName =
-                    workshop?.name || `Atelier ${workshopId}`;
-                  return (
-                    <div key={workshopId} className={styles.propositionReview}>
-                      <h4>{workshopName}</h4>
-                      <p>{proposition}</p>
-                    </div>
-                  );
-                },
-              )
-            ) : (
-              <p>Aucune proposition d'atelier</p>
-            )}
+            {(() => {
+              // Get selected workshops (checkboxes are priority)
+              const selectedWorkshopIds = Object.keys(selectedWorkshops).filter(
+                id => selectedWorkshops[id]
+              );
+              
+              if (selectedWorkshopIds.length === 0) {
+                return <p>Aucun atelier sélectionné</p>;
+              }
+              
+              return selectedWorkshopIds.map(workshopId => {
+                const workshop = workshopsList?.find(w => w.id === workshopId);
+                const workshopName = workshop?.name || `Atelier ${workshopId}`;
+                const proposition = formData.workshopPropositions?.[workshopId]?.trim();
+                
+                return (
+                  <div key={workshopId} className={styles.propositionReview}>
+                    <h4>✅ {workshopName}</h4>
+                    {proposition ? (
+                      <p><strong>Atelier sélectionné avec proposition :</strong> {proposition}</p>
+                    ) : (
+                      <p><strong>Atelier sélectionné</strong></p>
+                    )}
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
 
