@@ -93,6 +93,9 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   // Workshop propositions from referent
   workshopPropositions: json("workshop_propositions"), // Store referent propositions for each workshop
   
+  // Workshop selections (checkboxes) - priority indicator
+  selectedWorkshops: json("selected_workshops"), // Store which workshops are selected (checked)
+  
   // Family consent
   familyConsent: boolean("family_consent").notNull().default(false),
   

@@ -158,6 +158,11 @@ export default function FicheForm({
       workshopPropositions: initialData.workshopPropositions || {},
       familyConsent: initialData.familyConsent || false,
     }));
+
+    // Initialize selectedWorkshops from saved data
+    if (initialData.selectedWorkshops) {
+      setSelectedWorkshops(initialData.selectedWorkshops);
+    }
   }, [initialData]);
 
   // Auto-populate referent fields when user data becomes available
@@ -1244,6 +1249,7 @@ export default function FicheForm({
         familyDetailedData: formData.family,
         childrenData: formData.children,
         workshopPropositions: cleanPropositions,
+        selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
         familyConsent: formData.familyConsent,
       };
 
@@ -1421,6 +1427,7 @@ export default function FicheForm({
           familyDetailedData: formData.family,
           childrenData: formData.children,
           workshopPropositions: cleanPropositions,
+          selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
           familyConsent: formData.familyConsent,
         };
 
