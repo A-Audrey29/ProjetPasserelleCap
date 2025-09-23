@@ -21,7 +21,7 @@ export const objectives = [
   {
     id: "obj3",
     code: "OBJ3",
-    name: "Renforcement des dynamiques familiales positives par le sport",
+    name: "Renforcement des dynamiques familiales positives par la pratique du sport",
     description: null,
     order: 3,
   },
