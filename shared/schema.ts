@@ -174,6 +174,17 @@ export const emailLogs = pgTable("email_logs", {
   createdAtIdx: index("email_logs_created_at_idx").on(table.createdAt),
 }));
 
+export const migrations = pgTable("migrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  checksum: text("checksum").notNull(),
+  metadata: json("metadata"),
+  executedAt: timestamp("executed_at").defaultNow().notNull(),
+}, (table) => ({
+  nameIdx: index("migrations_name_idx").on(table.name),
+  executedAtIdx: index("migrations_executed_at_idx").on(table.executedAt),
+}));
+
 // Relations
 export const epcisRelations = relations(epcis, ({ many }) => ({
   organizations: many(organizations),
@@ -263,6 +274,11 @@ export const insertEmailLogSchema = createInsertSchema(emailLogs).omit({
   updatedAt: true,
 });
 
+export const insertMigrationSchema = createInsertSchema(migrations).omit({
+  id: true,
+  executedAt: true,
+});
+
 // Types
 export type Epci = typeof epcis.$inferSelect;
 export type InsertEpci = z.infer<typeof insertEpciSchema>;
@@ -282,3 +298,5 @@ export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type EmailLog = typeof emailLogs.$inferSelect;
 export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
+export type Migration = typeof migrations.$inferSelect;
+export type InsertMigration = z.infer<typeof insertMigrationSchema>;
