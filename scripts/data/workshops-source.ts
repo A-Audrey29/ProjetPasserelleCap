@@ -65,7 +65,7 @@ export const workshopData = [
     id: "obj2-002",
     objectiveId: "obj2",
     name: "Mieux se comprendre pour mieux s'entraider",
-    description: "Gérer les émotions liées à l'école (stress, frustration, anxiété) pour favoriser la réussite scolaire.",
+    description: "Améliorer la communication entre parents, enfants et grands-parents pour renforcer le soutien scolaire.",
   },
   {
     id: "obj2-003",
