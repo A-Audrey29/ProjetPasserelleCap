@@ -452,7 +452,7 @@
 
 .workshopContainer {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
@@ -466,7 +466,6 @@
   height: 1.125rem;
   accent-color: #6A8B74;
   cursor: pointer;
-  margin-top: 0.25rem;
   flex-shrink: 0;
 }
 
