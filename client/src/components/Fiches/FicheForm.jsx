@@ -1640,16 +1640,36 @@ export default function FicheForm({
           </h3>
           <div className={styles.reviewContent}>
             {(() => {
-              // Get selected workshops (checkboxes are priority)
-              const selectedWorkshopIds = Object.keys(selectedWorkshops).filter(
-                id => selectedWorkshops[id]
-              );
+              // Utility function to get combined workshop selection
+              const getCombinedWorkshopSelection = () => {
+                // Get selected workshops (checkboxes are priority)
+                const selectedWorkshopIds = Object.keys(selectedWorkshops).filter(
+                  id => selectedWorkshops[id]
+                );
+                
+                // Fallback for existing fiches: if no checkboxes but propositions exist
+                const propositionWorkshopIds = Object.keys(formData.workshopPropositions || {}).filter(
+                  id => formData.workshopPropositions[id]?.trim()
+                );
+                
+                // Priority: selected workshops, fallback to propositions for backward compatibility
+                const finalWorkshopIds = selectedWorkshopIds.length > 0 
+                  ? selectedWorkshopIds 
+                  : propositionWorkshopIds;
+                
+                return {
+                  workshopIds: finalWorkshopIds,
+                  isLegacyMode: selectedWorkshopIds.length === 0 && propositionWorkshopIds.length > 0
+                };
+              };
               
-              if (selectedWorkshopIds.length === 0) {
+              const { workshopIds, isLegacyMode } = getCombinedWorkshopSelection();
+              
+              if (workshopIds.length === 0) {
                 return <p>Aucun atelier sélectionné</p>;
               }
               
-              return selectedWorkshopIds.map(workshopId => {
+              return workshopIds.map(workshopId => {
                 const workshop = workshopsList?.find(w => w.id === workshopId);
                 const workshopName = workshop?.name || `Atelier ${workshopId}`;
                 const proposition = formData.workshopPropositions?.[workshopId]?.trim();
@@ -1657,10 +1677,14 @@ export default function FicheForm({
                 return (
                   <div key={workshopId} className={styles.propositionReview}>
                     <h4>✅ {workshopName}</h4>
-                    {proposition ? (
-                      <p><strong>Atelier sélectionné avec proposition :</strong> {proposition}</p>
+                    {isLegacyMode ? (
+                      <p><strong>Atelier avec proposition :</strong> {proposition}</p>
                     ) : (
-                      <p><strong>Atelier sélectionné</strong></p>
+                      proposition ? (
+                        <p><strong>Atelier sélectionné avec proposition :</strong> {proposition}</p>
+                      ) : (
+                        <p><strong>Atelier sélectionné</strong></p>
+                      )
                     )}
                   </div>
                 );
