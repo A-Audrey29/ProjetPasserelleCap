@@ -659,11 +659,31 @@ export default function FicheForm({
     }));
   };
 
-  const toggleWorkshopSelection = (workshopId) => {
-    setSelectedWorkshops((prev) => ({
-      ...prev,
-      [workshopId]: !prev[workshopId],
-    }));
+  const toggleWorkshopSelection = (workshopId, objectiveId) => {
+    setSelectedWorkshops((prev) => {
+      const newSelected = { ...prev };
+      
+      // Si on sélectionne cet atelier
+      if (!prev[workshopId]) {
+        // Désélectionner tous les autres ateliers du même objectif
+        const currentObjectiveWorkshops = objectivesData
+          .find(obj => obj.id === objectiveId)?.workshops || [];
+        
+        currentObjectiveWorkshops.forEach(workshop => {
+          if (workshop.id !== workshopId) {
+            newSelected[workshop.id] = false;
+          }
+        });
+        
+        // Sélectionner l'atelier actuel
+        newSelected[workshopId] = true;
+      } else {
+        // Désélectionner l'atelier actuel
+        newSelected[workshopId] = false;
+      }
+      
+      return newSelected;
+    });
   };
 
   const validateObjectivesStep = () => {
@@ -711,16 +731,10 @@ export default function FicheForm({
                           type="checkbox"
                           id={`select-${workshop.id}`}
                           checked={selectedWorkshops[workshop.id] || false}
-                          onChange={() => toggleWorkshopSelection(workshop.id)}
+                          onChange={() => toggleWorkshopSelection(workshop.id, objective.id)}
                           className={styles.workshopCheckbox}
                           data-testid={`checkbox-workshop-${workshop.id}`}
                         />
-                        <label 
-                          htmlFor={`select-${workshop.id}`}
-                          className={styles.workshopCheckboxLabel}
-                        >
-                          Sélectionner cet atelier
-                        </label>
                       </div>
                     </div>
                     
