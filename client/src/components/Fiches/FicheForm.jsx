@@ -1399,6 +1399,16 @@ export default function FicheForm({
       return;
     }
 
+    // Check specifically for CAP documents
+    if (!formData.capDocuments || formData.capDocuments.length === 0) {
+      toast({
+        title: "Document requis",
+        description: "Vous devez télécharger la fiche navette CAP avant de transmettre.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!validateAllSteps()) {
       toast({
         title: "Erreur de validation",
@@ -1719,7 +1729,7 @@ export default function FicheForm({
         {/* CAP Documents Upload Section */}
         <div className={styles.reviewSection}>
           <FileUpload
-            title="Télécharger la fiche navette CAP"
+            title="Télécharger la fiche navette CAP *"
             onFilesChange={(files) => {
               setFormData((prev) => ({
                 ...prev,
@@ -1750,6 +1760,7 @@ export default function FicheForm({
             <span className={styles.consentText}>
               La famille a connaissance de la Fiche Navette et adhère à cet
               accompagnement.
+              <span className={styles.requiredAsterisk}> *</span>
             </span>
           </label>
         </div>

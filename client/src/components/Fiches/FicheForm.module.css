@@ -652,6 +652,12 @@
   font-weight: 500;
 }
 
+.requiredAsterisk {
+  color: #8C4A4A;
+  font-weight: bold;
+  margin-left: 0.25rem;
+}
+
 /* Spinner Animation for Loading State */
 .spinner {
   animation: spin 1s linear infinite;
