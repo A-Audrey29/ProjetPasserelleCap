@@ -39,12 +39,16 @@ export function canTransition(userRole, currentState, newState) {
 }
 
 export async function transitionFicheState(ficheId, newState, userId, metadata = {}) {
-  const fiche = await storage.getFiche(ficheId);
+  // Parallelize fiche and user retrieval
+  const [fiche, user] = await Promise.all([
+    storage.getFiche(ficheId),
+    storage.getUser(userId)
+  ]);
+  
   if (!fiche) {
     throw new Error('Fiche not found');
   }
 
-  const user = await storage.getUser(userId);
   if (!user) {
     throw new Error('User not found');
   }
@@ -57,22 +61,33 @@ export async function transitionFicheState(ficheId, newState, userId, metadata =
   // Perform the transition
   const updatedFiche = await storage.updateFiche(ficheId, { state: newState, ...metadata });
 
-  // Log the transition
-  await logAction(userId, 'state_transition', 'FicheNavette', ficheId, {
-    oldState: fiche.state,
-    newState: newState,
-    ...metadata
+  // Start background tasks without blocking the response
+  const backgroundTasks = Promise.all([
+    // Log the transition
+    logAction(userId, 'state_transition', 'FicheNavette', ficheId, {
+      oldState: fiche.state,
+      newState: newState,
+      ...metadata
+    }),
+    // Send automatic email notifications (non-blocking)
+    notificationService.sendStateTransitionNotification(
+      updatedFiche, 
+      fiche.state, 
+      newState, 
+      userId, 
+      metadata
+    ).catch(error => {
+      // Log email errors but don't fail the transition
+      console.error('Email notification failed for fiche', ficheId, ':', error);
+    })
+  ]).catch(error => {
+    // Log background task errors but don't fail the transition
+    console.error('Background tasks failed for fiche', ficheId, ':', error);
   });
 
-  // Send automatic email notifications
-  await notificationService.sendStateTransitionNotification(
-    updatedFiche, 
-    fiche.state, 
-    newState, 
-    userId, 
-    metadata
-  );
-
+  // Don't await background tasks - let them run async
+  // This allows the HTTP response to return immediately
+  
   return updatedFiche;
 }
 
