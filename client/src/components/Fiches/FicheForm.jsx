@@ -1389,6 +1389,16 @@ export default function FicheForm({
   };
 
   const handleTransmit = async () => {
+    // Check specifically for family consent first
+    if (!formData.familyConsent) {
+      toast({
+        title: "Consentement requis",
+        description: "Vous devez cocher la case de consentement de la famille avant de transmettre la fiche.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!validateAllSteps()) {
       toast({
         title: "Erreur de validation",
