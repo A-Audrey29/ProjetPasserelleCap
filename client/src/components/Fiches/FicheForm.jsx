@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronRight,
   Archive,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,7 +48,7 @@ export default function FicheForm({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { transitionFiche } = useFiches();
+  const { transitionFiche, isTransitioning } = useFiches();
 
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(0);
@@ -1767,11 +1768,16 @@ export default function FicheForm({
             <button
               type="button"
               onClick={handleTransmit}
+              disabled={isTransitioning}
               className={`${styles.button} ${styles.buttonPrimary}`}
               data-testid="button-transmit"
             >
-              <Send className={styles.buttonIcon} />
-              Transmettre
+              {isTransitioning ? (
+                <Loader2 className={`${styles.buttonIcon} ${styles.spinner}`} />
+              ) : (
+                <Send className={styles.buttonIcon} />
+              )}
+              {isTransitioning ? 'Transmission en cours...' : 'Transmettre'}
             </button>
 
             {/* Admin-only actions - only show if user is ADMIN and fiche exists */}

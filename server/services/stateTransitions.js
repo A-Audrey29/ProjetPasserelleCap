@@ -62,12 +62,14 @@ export async function transitionFicheState(ficheId, newState, userId, metadata =
   const updatedFiche = await storage.updateFiche(ficheId, { state: newState, ...metadata });
 
   // Start background tasks without blocking the response
-  const backgroundTasks = Promise.all([
+  void Promise.allSettled([
     // Log the transition
     logAction(userId, 'state_transition', 'FicheNavette', ficheId, {
       oldState: fiche.state,
       newState: newState,
       ...metadata
+    }).catch(error => {
+      console.error('Audit logging failed for fiche', ficheId, ':', error);
     }),
     // Send automatic email notifications (non-blocking)
     notificationService.sendStateTransitionNotification(
@@ -77,16 +79,9 @@ export async function transitionFicheState(ficheId, newState, userId, metadata =
       userId, 
       metadata
     ).catch(error => {
-      // Log email errors but don't fail the transition
       console.error('Email notification failed for fiche', ficheId, ':', error);
     })
-  ]).catch(error => {
-    // Log background task errors but don't fail the transition
-    console.error('Background tasks failed for fiche', ficheId, ':', error);
-  });
-
-  // Don't await background tasks - let them run async
-  // This allows the HTTP response to return immediately
+  ]);
   
   return updatedFiche;
 }

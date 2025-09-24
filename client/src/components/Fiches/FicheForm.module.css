@@ -651,3 +651,17 @@
   color: #3B4B61;
   font-weight: 500;
 }
+
+/* Spinner Animation for Loading State */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
