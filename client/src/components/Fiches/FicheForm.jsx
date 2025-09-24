@@ -305,6 +305,7 @@ export default function FicheForm({
     clearFieldError('referent.structure');
     clearFieldError('referent.phone');
     clearFieldError('referent.email');
+    clearFieldError('referent.requestDate');
     
     if (!formData.referent.lastName?.trim()) {
       setFieldError('referent.lastName', 'Le nom est obligatoire');
@@ -328,6 +329,11 @@ export default function FicheForm({
     
     if (!formData.referent.email?.trim()) {
       setFieldError('referent.email', 'L\'email est obligatoire');
+      isValid = false;
+    }
+    
+    if (!formData.referent.requestDate?.trim()) {
+      setFieldError('referent.requestDate', 'La date de la demande est obligatoire');
       isValid = false;
     }
     
@@ -420,6 +426,13 @@ export default function FicheForm({
 
   const removeChild = (index) => {
     if (formData.children.length > 1) {
+      // Clear all children errors to avoid stale/misapplied errors after reindexing
+      Object.keys(validationErrors).forEach(key => {
+        if (key.startsWith('children.')) {
+          clearFieldError(key);
+        }
+      });
+      
       setFormData((prev) => ({
         ...prev,
         children: prev.children.filter((_, i) => i !== index),
@@ -485,12 +498,13 @@ export default function FicheForm({
             id="description-situation"
             className={`${styles.fieldTextarea} ${getFieldError('descriptionSituation') ? styles.fieldWithError : ''}`}
             value={formData.descriptionSituation}
-            onChange={(e) =>
+            onChange={(e) => {
               setFormData((prev) => ({
                 ...prev,
                 descriptionSituation: e.target.value,
-              }))
-            }
+              }));
+              clearFieldError('descriptionSituation');
+            }}
             placeholder="Décrivez la situation familiale, les difficultés rencontrées, les besoins identifiés..."
             rows={8}
             data-testid="textarea-description-situation"
@@ -570,9 +584,10 @@ export default function FicheForm({
                 type="text"
                 className={`${styles.fieldInput} ${getFieldError(`children.${index}.name`) ? styles.fieldWithError : ''}`}
                 value={child.name}
-                onChange={(e) =>
-                  updateChildField(index, "name", e.target.value)
-                }
+                onChange={(e) => {
+                  updateChildField(index, "name", e.target.value);
+                  clearFieldError(`children.${index}.name`);
+                }}
                 placeholder="Nom et prénom de l'enfant"
                 data-testid={`input-child-name-${index}`}
               />
@@ -592,9 +607,10 @@ export default function FicheForm({
                   type="date"
                   className={`${styles.fieldInput} ${getFieldError(`children.${index}.dateNaissance`) ? styles.fieldWithError : ''}`}
                   value={child.dateNaissance}
-                  onChange={(e) =>
-                    updateChildField(index, "dateNaissance", e.target.value)
-                  }
+                  onChange={(e) => {
+                    updateChildField(index, "dateNaissance", e.target.value);
+                    clearFieldError(`children.${index}.dateNaissance`);
+                  }}
                   data-testid={`input-child-birth-${index}`}
                 />
                 <ErrorMessage error={getFieldError(`children.${index}.dateNaissance`)} fieldPath={`children.${index}.dateNaissance`} />
@@ -611,9 +627,10 @@ export default function FicheForm({
                   type="text"
                   className={`${styles.fieldInput} ${getFieldError(`children.${index}.niveauScolaire`) ? styles.fieldWithError : ''}`}
                   value={child.niveauScolaire}
-                  onChange={(e) =>
-                    updateChildField(index, "niveauScolaire", e.target.value)
-                  }
+                  onChange={(e) => {
+                    updateChildField(index, "niveauScolaire", e.target.value);
+                    clearFieldError(`children.${index}.niveauScolaire`);
+                  }}
                   placeholder="Ex: CP, CE1, 6ème, Maternelle..."
                   data-testid={`input-child-level-${index}`}
                 />
@@ -878,9 +895,12 @@ export default function FicheForm({
             <input
               id="family-mother"
               type="text"
-              className={styles.fieldInput}
+              className={`${styles.fieldInput} ${getFieldError('family.parentInfo') ? styles.fieldWithError : ''}`}
               value={formData.family.mother}
-              onChange={(e) => updateFamilyField("mother", e.target.value)}
+              onChange={(e) => {
+                updateFamilyField("mother", e.target.value);
+                clearFieldError('family.parentInfo');
+              }}
               placeholder="Nom et prénom de la mère"
               data-testid="input-family-mother"
             />
@@ -892,9 +912,12 @@ export default function FicheForm({
             <input
               id="family-father"
               type="text"
-              className={styles.fieldInput}
+              className={`${styles.fieldInput} ${getFieldError('family.parentInfo') ? styles.fieldWithError : ''}`}
               value={formData.family.father}
-              onChange={(e) => updateFamilyField("father", e.target.value)}
+              onChange={(e) => {
+                updateFamilyField("father", e.target.value);
+                clearFieldError('family.parentInfo');
+              }}
               placeholder="Nom et prénom du père"
               data-testid="input-family-father"
             />
@@ -908,44 +931,53 @@ export default function FicheForm({
           <input
             id="family-tiers"
             type="text"
-            className={styles.fieldInput}
+            className={`${styles.fieldInput} ${getFieldError('family.parentInfo') ? styles.fieldWithError : ''}`}
             value={formData.family.tiers}
-            onChange={(e) => updateFamilyField("tiers", e.target.value)}
+            onChange={(e) => {
+              updateFamilyField("tiers", e.target.value);
+              clearFieldError('family.parentInfo');
+            }}
             placeholder="Nom et prénom du tiers"
             data-testid="input-family-tiers"
           />
         </div>
+        <ErrorMessage error={getFieldError('family.parentInfo')} fieldPath="family.parentInfo" />
 
         {formData.family.tiers && (
           <div className={styles.formField}>
             <label className={styles.fieldLabel} htmlFor="family-lien">
-              Lien avec l'enfant (les enfants) *
+              Lien avec l'enfant (les enfants)
+              <span className={styles.requiredAsterisk}> *</span>
             </label>
             <input
               id="family-lien"
               type="text"
-              className={styles.fieldInput}
+              className={`${styles.fieldInput} ${getFieldError('family.lienAvecEnfants') ? styles.fieldWithError : ''}`}
               value={formData.family.lienAvecEnfants}
-              onChange={(e) =>
-                updateFamilyField("lienAvecEnfants", e.target.value)
-              }
+              onChange={(e) => {
+                updateFamilyField("lienAvecEnfants", e.target.value);
+                clearFieldError('family.lienAvecEnfants');
+              }}
               placeholder="Ex: Grand-mère, Oncle, Tuteur légal..."
               data-testid="input-family-lien"
             />
+            <ErrorMessage error={getFieldError('family.lienAvecEnfants')} fieldPath="family.lienAvecEnfants" />
           </div>
         )}
 
         <div className={styles.formField}>
           <label className={styles.fieldLabel} htmlFor="family-autorite">
-            Autorité parentale *
+            Autorité parentale
+            <span className={styles.requiredAsterisk}> *</span>
           </label>
           <select
             id="family-autorite"
-            className={styles.fieldSelect}
+            className={`${styles.fieldSelect} ${getFieldError('family.autoriteParentale') ? styles.fieldWithError : ''}`}
             value={formData.family.autoriteParentale}
-            onChange={(e) =>
-              updateFamilyField("autoriteParentale", e.target.value)
-            }
+            onChange={(e) => {
+              updateFamilyField("autoriteParentale", e.target.value);
+              clearFieldError('family.autoriteParentale');
+            }}
             data-testid="select-family-autorite"
           >
             <option value="">Sélectionner...</option>
@@ -953,40 +985,47 @@ export default function FicheForm({
             <option value="pere">Père</option>
             <option value="tiers">Tiers</option>
           </select>
+          <ErrorMessage error={getFieldError('family.autoriteParentale')} fieldPath="family.autoriteParentale" />
         </div>
 
         <div className={styles.formField}>
           <label className={styles.fieldLabel} htmlFor="family-situation">
-            Situation familiale *
+            Situation familiale
+            <span className={styles.requiredAsterisk}> *</span>
           </label>
           <input
             id="family-situation"
             type="text"
-            className={styles.fieldInput}
+            className={`${styles.fieldInput} ${getFieldError('family.situationFamiliale') ? styles.fieldWithError : ''}`}
             value={formData.family.situationFamiliale}
-            onChange={(e) =>
-              updateFamilyField("situationFamiliale", e.target.value)
-            }
+            onChange={(e) => {
+              updateFamilyField("situationFamiliale", e.target.value);
+              clearFieldError('family.situationFamiliale');
+            }}
             placeholder="Ex: Famille monoparentale, Couple, Séparés..."
             data-testid="input-family-situation"
           />
+          <ErrorMessage error={getFieldError('family.situationFamiliale')} fieldPath="family.situationFamiliale" />
         </div>
 
         <div className={styles.formField}>
           <label className={styles.fieldLabel} htmlFor="family-socio">
-            Situation socio-professionnelle *
+            Situation socio-professionnelle
+            <span className={styles.requiredAsterisk}> *</span>
           </label>
           <input
             id="family-socio"
             type="text"
-            className={styles.fieldInput}
+            className={`${styles.fieldInput} ${getFieldError('family.situationSocioProfessionnelle') ? styles.fieldWithError : ''}`}
             value={formData.family.situationSocioProfessionnelle}
-            onChange={(e) =>
-              updateFamilyField("situationSocioProfessionnelle", e.target.value)
-            }
+            onChange={(e) => {
+              updateFamilyField("situationSocioProfessionnelle", e.target.value);
+              clearFieldError('family.situationSocioProfessionnelle');
+            }}
             placeholder="Ex: Demandeur d'emploi, Salarié, RSA..."
             data-testid="input-family-socio"
           />
+          <ErrorMessage error={getFieldError('family.situationSocioProfessionnelle')} fieldPath="family.situationSocioProfessionnelle" />
         </div>
 
         <div className={styles.formField}>
@@ -1007,19 +1046,22 @@ export default function FicheForm({
         <div className={styles.formGrid}>
           <div className={styles.formField}>
             <label className={styles.fieldLabel} htmlFor="family-mobile">
-              Téléphone portable *
+              Téléphone portable
+              <span className={styles.requiredAsterisk}> *</span>
             </label>
             <input
               id="family-mobile"
               type="tel"
-              className={styles.fieldInput}
+              className={`${styles.fieldInput} ${getFieldError('family.telephonePortable') ? styles.fieldWithError : ''}`}
               value={formData.family.telephonePortable}
-              onChange={(e) =>
-                updateFamilyField("telephonePortable", e.target.value)
-              }
+              onChange={(e) => {
+                updateFamilyField("telephonePortable", e.target.value);
+                clearFieldError('family.telephonePortable');
+              }}
               placeholder="06 12 34 56 78"
               data-testid="input-family-mobile"
             />
+            <ErrorMessage error={getFieldError('family.telephonePortable')} fieldPath="family.telephonePortable" />
           </div>
           <div className={styles.formField}>
             <label className={styles.fieldLabel} htmlFor="family-landline">
@@ -1108,7 +1150,10 @@ export default function FicheForm({
               type="text"
               className={`${styles.fieldInput} ${getFieldError('referent.lastName') ? styles.fieldWithError : ''}`}
               value={formData.referent.lastName}
-              onChange={(e) => updateReferentField("lastName", e.target.value)}
+              onChange={(e) => {
+                updateReferentField("lastName", e.target.value);
+                clearFieldError('referent.lastName');
+              }}
               disabled={!isReferentEditable}
               data-testid="input-referent-lastname"
             />
@@ -1123,7 +1168,10 @@ export default function FicheForm({
               type="text"
               className={`${styles.fieldInput} ${getFieldError('referent.firstName') ? styles.fieldWithError : ''}`}
               value={formData.referent.firstName}
-              onChange={(e) => updateReferentField("firstName", e.target.value)}
+              onChange={(e) => {
+                updateReferentField("firstName", e.target.value);
+                clearFieldError('referent.firstName');
+              }}
               disabled={!isReferentEditable}
               data-testid="input-referent-firstname"
             />
@@ -1140,7 +1188,10 @@ export default function FicheForm({
             type="text"
             className={`${styles.fieldInput} ${getFieldError('referent.structure') ? styles.fieldWithError : ''}`}
             value={formData.referent.structure}
-            onChange={(e) => updateReferentField("structure", e.target.value)}
+            onChange={(e) => {
+              updateReferentField("structure", e.target.value);
+              clearFieldError('referent.structure');
+            }}
             disabled={!isReferentEditable}
             data-testid="input-referent-structure"
           />
@@ -1157,7 +1208,10 @@ export default function FicheForm({
               type="tel"
               className={`${styles.fieldInput} ${getFieldError('referent.phone') ? styles.fieldWithError : ''}`}
               value={formData.referent.phone}
-              onChange={(e) => updateReferentField("phone", e.target.value)}
+              onChange={(e) => {
+                updateReferentField("phone", e.target.value);
+                clearFieldError('referent.phone');
+              }}
               disabled={!isReferentEditable}
               data-testid="input-referent-phone"
             />
@@ -1172,7 +1226,10 @@ export default function FicheForm({
               type="email"
               className={`${styles.fieldInput} ${getFieldError('referent.email') ? styles.fieldWithError : ''}`}
               value={formData.referent.email}
-              onChange={(e) => updateReferentField("email", e.target.value)}
+              onChange={(e) => {
+                updateReferentField("email", e.target.value);
+                clearFieldError('referent.email');
+              }}
               disabled={!isReferentEditable}
               data-testid="input-referent-email"
             />
@@ -1187,12 +1244,16 @@ export default function FicheForm({
           <input
             id="referent-date"
             type="date"
-            className={styles.fieldInput}
+            className={`${styles.fieldInput} ${getFieldError('referent.requestDate') ? styles.fieldWithError : ''}`}
             value={formData.referent.requestDate}
-            onChange={(e) => updateReferentField("requestDate", e.target.value)}
+            onChange={(e) => {
+              updateReferentField("requestDate", e.target.value);
+              clearFieldError('referent.requestDate');
+            }}
             disabled={!isReferentEditable}
             data-testid="input-referent-date"
           />
+          <ErrorMessage error={getFieldError('referent.requestDate')} fieldPath="referent.requestDate" />
         </div>
 
         <div className={styles.buttonContainer}>
