@@ -658,6 +658,27 @@
   margin-left: 0.25rem;
 }
 
+/* Error Message Styles */
+.errorMessage {
+  color: #8C4A4A;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.errorIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
+.fieldWithError {
+  border-color: #8C4A4A !important;
+  box-shadow: 0 0 0 1px #8C4A4A;
+}
+
 /* Spinner Animation for Loading State */
 .spinner {
   animation: spin 1s linear infinite;

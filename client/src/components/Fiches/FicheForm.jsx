@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Archive,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -54,6 +55,9 @@ export default function FicheForm({
   const [currentStep, setCurrentStep] = useState(0);
   const [isReferentEditable, setIsReferentEditable] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
+  
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Form state with référent data - Initialize with empty strings to prevent controlled/uncontrolled issues
   const [formData, setFormData] = useState({
@@ -257,17 +261,77 @@ export default function FicheForm({
     }));
   };
 
+  // Validation error helpers
+  const setFieldError = (fieldPath, message) => {
+    setValidationErrors((prev) => ({
+      ...prev,
+      [fieldPath]: message,
+    }));
+  };
+
+  const clearFieldError = (fieldPath) => {
+    setValidationErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[fieldPath];
+      return newErrors;
+    });
+  };
+
+  const clearAllErrors = () => {
+    setValidationErrors({});
+  };
+
+  const getFieldError = (fieldPath) => {
+    return validationErrors[fieldPath];
+  };
+
+  // Error message component
+  const ErrorMessage = ({ error, fieldPath }) => {
+    if (!error) return null;
+    return (
+      <div className={styles.errorMessage} data-testid={`error-${fieldPath}`}>
+        <AlertCircle className={styles.errorIcon} />
+        <span>{error}</span>
+      </div>
+    );
+  };
+
   const validateReferentStep = () => {
-    if (!formData.referent.lastName || !formData.referent.firstName) {
-      return false;
+    let isValid = true;
+    
+    // Clear previous errors for referent fields
+    clearFieldError('referent.lastName');
+    clearFieldError('referent.firstName');
+    clearFieldError('referent.structure');
+    clearFieldError('referent.phone');
+    clearFieldError('referent.email');
+    
+    if (!formData.referent.lastName?.trim()) {
+      setFieldError('referent.lastName', 'Le nom est obligatoire');
+      isValid = false;
     }
-    if (!formData.referent.structure) {
-      return false;
+    
+    if (!formData.referent.firstName?.trim()) {
+      setFieldError('referent.firstName', 'Le prénom est obligatoire');
+      isValid = false;
     }
-    if (!formData.referent.phone || !formData.referent.email) {
-      return false;
+    
+    if (!formData.referent.structure?.trim()) {
+      setFieldError('referent.structure', 'La structure est obligatoire');
+      isValid = false;
     }
-    return true;
+    
+    if (!formData.referent.phone?.trim()) {
+      setFieldError('referent.phone', 'Le téléphone est obligatoire');
+      isValid = false;
+    }
+    
+    if (!formData.referent.email?.trim()) {
+      setFieldError('referent.email', 'L\'email est obligatoire');
+      isValid = false;
+    }
+    
+    return isValid;
   };
 
   const validateFamilyStep = () => {
@@ -281,71 +345,54 @@ export default function FicheForm({
       situationSocioProfessionnelle,
       telephonePortable,
     } = formData.family;
+    
+    let isValid = true;
+    
+    // Clear previous family errors
+    clearFieldError('family.parentInfo');
+    clearFieldError('family.lienAvecEnfants');
+    clearFieldError('family.autoriteParentale');
+    clearFieldError('family.situationFamiliale');
+    clearFieldError('family.situationSocioProfessionnelle');
+    clearFieldError('family.telephonePortable');
 
     // Au moins un des trois (mère, père, tiers) doit être rempli
     const hasParentInfo = Boolean(
       (mother || "").trim() || (father || "").trim() || (tiers || "").trim(),
     );
     if (!hasParentInfo) {
-      toast({
-        title: "Erreur de validation",
-        description:
-          "Veuillez renseigner au moins l'un des champs : Mère, Père ou Tiers",
-        variant: "destructive",
-      });
-      return false;
+      setFieldError('family.parentInfo', 'Veuillez renseigner au moins l\'un des champs : Mère, Père ou Tiers');
+      isValid = false;
     }
 
     // Si tiers est rempli, le lien avec les enfants est obligatoire
     if ((tiers?.trim?.() || "") && !(lienAvecEnfants?.trim?.() || "")) {
-      toast({
-        title: "Erreur de validation",
-        description:
-          "Le champ 'Lien avec l'enfant (les enfants)' est obligatoire lorsque 'Tiers' est renseigné",
-        variant: "destructive",
-      });
-      return false;
+      setFieldError('family.lienAvecEnfants', 'Le lien avec l\'enfant est obligatoire lorsque "Tiers" est renseigné');
+      isValid = false;
     }
 
     // Champs obligatoires
     if (!autoriteParentale) {
-      toast({
-        title: "Erreur de validation",
-        description: "Veuillez sélectionner l'autorité parentale",
-        variant: "destructive",
-      });
-      return false;
+      setFieldError('family.autoriteParentale', 'Veuillez sélectionner l\'autorité parentale');
+      isValid = false;
     }
 
     if (!(situationFamiliale?.trim?.() || "")) {
-      toast({
-        title: "Erreur de validation",
-        description: "Le champ 'Situation familiale' est obligatoire",
-        variant: "destructive",
-      });
-      return false;
+      setFieldError('family.situationFamiliale', 'La situation familiale est obligatoire');
+      isValid = false;
     }
 
     if (!(situationSocioProfessionnelle?.trim?.() || "")) {
-      toast({
-        title: "Erreur de validation",
-        description:
-          "Le champ 'Situation socio-professionnelle' est obligatoire",
-        variant: "destructive",
-      });
-      return false;
+      setFieldError('family.situationSocioProfessionnelle', 'La situation socio-professionnelle est obligatoire');
+      isValid = false;
     }
 
     if (!(telephonePortable?.trim?.() || "")) {
-      toast({
-        title: "Erreur de validation",
-        description: "Le champ 'Téléphone portable' est obligatoire",
-        variant: "destructive",
-      });
-      return false;
+      setFieldError('family.telephonePortable', 'Le téléphone portable est obligatoire');
+      isValid = false;
     }
 
-    return true;
+    return isValid;
   };
 
   const updateChildField = (index, field, value) => {
@@ -381,47 +428,42 @@ export default function FicheForm({
   };
 
   const validateChildrenStep = () => {
+    let isValid = true;
+    
+    // Clear previous child errors
+    for (let i = 0; i < formData.children.length; i++) {
+      clearFieldError(`children.${i}.name`);
+      clearFieldError(`children.${i}.dateNaissance`);
+      clearFieldError(`children.${i}.niveauScolaire`);
+    }
+    
     for (let i = 0; i < formData.children.length; i++) {
       const child = formData.children[i];
 
       if (!child.name.trim()) {
-        toast({
-          title: "Erreur de validation",
-          description: `Le nom de l'enfant ${i + 1} est obligatoire`,
-          variant: "destructive",
-        });
-        return false;
+        setFieldError(`children.${i}.name`, `Le nom de l'enfant ${i + 1} est obligatoire`);
+        isValid = false;
       }
 
       if (!child.dateNaissance) {
-        toast({
-          title: "Erreur de validation",
-          description: `La date de naissance de l'enfant ${i + 1} est obligatoire`,
-          variant: "destructive",
-        });
-        return false;
+        setFieldError(`children.${i}.dateNaissance`, `La date de naissance de l'enfant ${i + 1} est obligatoire`);
+        isValid = false;
       }
 
       if (!child.niveauScolaire.trim()) {
-        toast({
-          title: "Erreur de validation",
-          description: `Le niveau scolaire de l'enfant ${i + 1} est obligatoire`,
-          variant: "destructive",
-        });
-        return false;
+        setFieldError(`children.${i}.niveauScolaire`, `Le niveau scolaire de l'enfant ${i + 1} est obligatoire`);
+        isValid = false;
       }
     }
 
-    return true;
+    return isValid;
   };
 
   const validateBesoinStep = () => {
+    clearFieldError('descriptionSituation');
+    
     if (!formData.descriptionSituation.trim()) {
-      toast({
-        title: "Erreur de validation",
-        description: "La description de la situation est obligatoire",
-        variant: "destructive",
-      });
+      setFieldError('descriptionSituation', 'La description de la situation est obligatoire');
       return false;
     }
     return true;
@@ -441,7 +483,7 @@ export default function FicheForm({
           </label>
           <textarea
             id="description-situation"
-            className={styles.fieldTextarea}
+            className={`${styles.fieldTextarea} ${getFieldError('descriptionSituation') ? styles.fieldWithError : ''}`}
             value={formData.descriptionSituation}
             onChange={(e) =>
               setFormData((prev) => ({
@@ -453,6 +495,7 @@ export default function FicheForm({
             rows={8}
             data-testid="textarea-description-situation"
           />
+          <ErrorMessage error={getFieldError('descriptionSituation')} fieldPath="descriptionSituation" />
         </div>
 
         <div className={styles.buttonContainer}>
@@ -525,7 +568,7 @@ export default function FicheForm({
               <input
                 id={`child-name-${index}`}
                 type="text"
-                className={styles.fieldInput}
+                className={`${styles.fieldInput} ${getFieldError(`children.${index}.name`) ? styles.fieldWithError : ''}`}
                 value={child.name}
                 onChange={(e) =>
                   updateChildField(index, "name", e.target.value)
@@ -533,6 +576,7 @@ export default function FicheForm({
                 placeholder="Nom et prénom de l'enfant"
                 data-testid={`input-child-name-${index}`}
               />
+              <ErrorMessage error={getFieldError(`children.${index}.name`)} fieldPath={`children.${index}.name`} />
             </div>
 
             <div className={styles.formGrid}>
@@ -546,13 +590,14 @@ export default function FicheForm({
                 <input
                   id={`child-birth-${index}`}
                   type="date"
-                  className={styles.fieldInput}
+                  className={`${styles.fieldInput} ${getFieldError(`children.${index}.dateNaissance`) ? styles.fieldWithError : ''}`}
                   value={child.dateNaissance}
                   onChange={(e) =>
                     updateChildField(index, "dateNaissance", e.target.value)
                   }
                   data-testid={`input-child-birth-${index}`}
                 />
+                <ErrorMessage error={getFieldError(`children.${index}.dateNaissance`)} fieldPath={`children.${index}.dateNaissance`} />
               </div>
               <div className={styles.formField}>
                 <label
@@ -564,7 +609,7 @@ export default function FicheForm({
                 <input
                   id={`child-level-${index}`}
                   type="text"
-                  className={styles.fieldInput}
+                  className={`${styles.fieldInput} ${getFieldError(`children.${index}.niveauScolaire`) ? styles.fieldWithError : ''}`}
                   value={child.niveauScolaire}
                   onChange={(e) =>
                     updateChildField(index, "niveauScolaire", e.target.value)
@@ -572,6 +617,7 @@ export default function FicheForm({
                   placeholder="Ex: CP, CE1, 6ème, Maternelle..."
                   data-testid={`input-child-level-${index}`}
                 />
+                <ErrorMessage error={getFieldError(`children.${index}.niveauScolaire`)} fieldPath={`children.${index}.niveauScolaire`} />
               </div>
             </div>
           </div>
@@ -1060,12 +1106,13 @@ export default function FicheForm({
             <input
               id="referent-lastName"
               type="text"
-              className={styles.fieldInput}
+              className={`${styles.fieldInput} ${getFieldError('referent.lastName') ? styles.fieldWithError : ''}`}
               value={formData.referent.lastName}
               onChange={(e) => updateReferentField("lastName", e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-lastname"
             />
+            <ErrorMessage error={getFieldError('referent.lastName')} fieldPath="referent.lastName" />
           </div>
           <div className={styles.formField}>
             <label className={styles.fieldLabel} htmlFor="referent-firstName">
@@ -1074,12 +1121,13 @@ export default function FicheForm({
             <input
               id="referent-firstName"
               type="text"
-              className={styles.fieldInput}
+              className={`${styles.fieldInput} ${getFieldError('referent.firstName') ? styles.fieldWithError : ''}`}
               value={formData.referent.firstName}
               onChange={(e) => updateReferentField("firstName", e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-firstname"
             />
+            <ErrorMessage error={getFieldError('referent.firstName')} fieldPath="referent.firstName" />
           </div>
         </div>
 
@@ -1090,12 +1138,13 @@ export default function FicheForm({
           <input
             id="referent-structure"
             type="text"
-            className={styles.fieldInput}
+            className={`${styles.fieldInput} ${getFieldError('referent.structure') ? styles.fieldWithError : ''}`}
             value={formData.referent.structure}
             onChange={(e) => updateReferentField("structure", e.target.value)}
             disabled={!isReferentEditable}
             data-testid="input-referent-structure"
           />
+          <ErrorMessage error={getFieldError('referent.structure')} fieldPath="referent.structure" />
         </div>
 
         <div className={styles.formGrid}>
@@ -1106,12 +1155,13 @@ export default function FicheForm({
             <input
               id="referent-phone"
               type="tel"
-              className={styles.fieldInput}
+              className={`${styles.fieldInput} ${getFieldError('referent.phone') ? styles.fieldWithError : ''}`}
               value={formData.referent.phone}
               onChange={(e) => updateReferentField("phone", e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-phone"
             />
+            <ErrorMessage error={getFieldError('referent.phone')} fieldPath="referent.phone" />
           </div>
           <div className={styles.formField}>
             <label className={styles.fieldLabel} htmlFor="referent-email">
@@ -1120,12 +1170,13 @@ export default function FicheForm({
             <input
               id="referent-email"
               type="email"
-              className={styles.fieldInput}
+              className={`${styles.fieldInput} ${getFieldError('referent.email') ? styles.fieldWithError : ''}`}
               value={formData.referent.email}
               onChange={(e) => updateReferentField("email", e.target.value)}
               disabled={!isReferentEditable}
               data-testid="input-referent-email"
             />
+            <ErrorMessage error={getFieldError('referent.email')} fieldPath="referent.email" />
           </div>
         </div>
 
@@ -1389,31 +1440,34 @@ export default function FicheForm({
   };
 
   const handleTransmit = async () => {
+    // Clear all previous errors before validation
+    clearAllErrors();
+    
+    let hasErrors = false;
+
     // Check specifically for family consent first
     if (!formData.familyConsent) {
-      toast({
-        title: "Consentement requis",
-        description: "Vous devez cocher la case de consentement de la famille avant de transmettre la fiche.",
-        variant: "destructive",
-      });
-      return;
+      setFieldError('familyConsent', 'Vous devez cocher la case de consentement de la famille avant de transmettre la fiche');
+      hasErrors = true;
     }
 
     // Check specifically for CAP documents
     if (!formData.capDocuments || formData.capDocuments.length === 0) {
-      toast({
-        title: "Document requis",
-        description: "Vous devez télécharger la fiche navette CAP avant de transmettre.",
-        variant: "destructive",
-      });
-      return;
+      setFieldError('capDocuments', 'Vous devez télécharger la fiche navette CAP avant de transmettre');
+      hasErrors = true;
     }
 
-    if (!validateAllSteps()) {
+    // Run all step validations to show field-specific errors
+    const referentValid = validateReferentStep();
+    const familyValid = validateFamilyStep();
+    const childrenValid = validateChildrenStep();
+    const besoinValid = validateBesoinStep();
+
+    if (hasErrors || !referentValid || !familyValid || !childrenValid || !besoinValid) {
+      // Optionally show a general toast for UX
       toast({
         title: "Erreur de validation",
-        description:
-          "Veuillez remplir tous les champs obligatoires. Vérifiez particulièrement les champs Structure et Téléphone dans l'étape Référent.",
+        description: "Veuillez corriger les erreurs indiquées sous les champs concernés.",
         variant: "destructive",
       });
       return;
@@ -1740,6 +1794,7 @@ export default function FicheForm({
             acceptedFormats={['.pdf', '.jpg', '.jpeg', '.png']}
             maxFileSize={10 * 1024 * 1024} // 10MB
           />
+          <ErrorMessage error={getFieldError('capDocuments')} fieldPath="capDocuments" />
         </div>
 
         {/* Family Consent Checkbox */}
@@ -1763,6 +1818,7 @@ export default function FicheForm({
               <span className={styles.requiredAsterisk}> *</span>
             </span>
           </label>
+          <ErrorMessage error={getFieldError('familyConsent')} fieldPath="familyConsent" />
         </div>
 
         {/* Action Buttons */}
