@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useFiches } from "@/hooks/useFiches";
+import FileUpload from "@/components/FileUpload/FileUpload";
 import styles from "./FicheForm.module.css";
 
 // --- utils (module scope) ---
@@ -88,6 +89,7 @@ export default function FicheForm({
     ],
     descriptionSituation: "",
     workshopPropositions: {},
+    capDocuments: [],
   });
 
   // Queries for reference data
@@ -156,6 +158,7 @@ export default function FicheForm({
       descriptionSituation:
         initialData.description || initialData.descriptionSituation || "",
       workshopPropositions: initialData.workshopPropositions || {},
+      capDocuments: initialData.capDocuments || [],
       familyConsent: initialData.familyConsent || false,
     }));
 
@@ -1251,6 +1254,7 @@ export default function FicheForm({
         workshopPropositions: cleanPropositions,
         selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
         familyConsent: formData.familyConsent,
+        capDocuments: formData.capDocuments, // Save CAP documents
       };
 
       // For draft fiches or admin users, save as draft
@@ -1429,6 +1433,7 @@ export default function FicheForm({
           workshopPropositions: cleanPropositions,
           selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
           familyConsent: formData.familyConsent,
+          capDocuments: formData.capDocuments, // Save CAP documents
         };
 
         // Create the fiche as DRAFT
@@ -1698,6 +1703,22 @@ export default function FicheForm({
               });
             })()}
           </div>
+        </div>
+
+        {/* CAP Documents Upload Section */}
+        <div className={styles.reviewSection}>
+          <FileUpload
+            title="Télécharger la fiche navette CAP"
+            onFilesChange={(files) => {
+              setFormData((prev) => ({
+                ...prev,
+                capDocuments: files,
+              }));
+            }}
+            initialFiles={formData.capDocuments || []}
+            acceptedFormats={['.pdf', '.jpg', '.jpeg', '.png']}
+            maxFileSize={10 * 1024 * 1024} // 10MB
+          />
         </div>
 
         {/* Family Consent Checkbox */}

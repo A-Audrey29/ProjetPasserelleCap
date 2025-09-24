@@ -358,6 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData,
         childrenData,
         workshopPropositions,
+        capDocuments,
         familyConsent
       } = req.validatedData;
 
@@ -378,6 +379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData: familyDetailedData || null,
         childrenData: childrenData || null,
         workshopPropositions: workshopPropositions || null,
+        capDocuments: capDocuments || null,
         familyConsent: familyConsent || false
       });
 
@@ -413,6 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData, 
         childrenData, 
         workshopPropositions,
+        capDocuments,
         familyConsent,
         ...otherFields 
       } = req.body;
@@ -424,6 +427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData: familyDetailedData || null,
         childrenData: childrenData || null,
         workshopPropositions: workshopPropositions || null,
+        capDocuments: capDocuments || null,
         familyConsent: familyConsent || false
       };
 

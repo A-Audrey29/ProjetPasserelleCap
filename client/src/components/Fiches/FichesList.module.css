@@ -138,9 +138,25 @@
   vertical-align: middle;
 }
 
+.refContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .refCode {
   font-family: ui-monospace, SFMono-Regular, 'Cascadia Code', 'Roboto Mono', monospace;
   font-size: 0.875rem;
+}
+
+.documentIcon {
+  color: rgb(var(--muted-foreground));
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.documentIcon:hover {
+  opacity: 1;
 }
 
 .orgName {

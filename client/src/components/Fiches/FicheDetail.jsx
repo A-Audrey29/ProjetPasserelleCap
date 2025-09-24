@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
+import DocumentsDisplay from '@/components/Documents/DocumentsDisplay';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -1007,6 +1008,22 @@ export default function FicheDetail({ ficheId }) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* CAP Documents Section */}
+          {fiche.capDocuments && fiche.capDocuments.length > 0 && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Documents CAP
+              </h2>
+              <div className={styles.cardContent}>
+                <DocumentsDisplay 
+                  documents={fiche.capDocuments}
+                  showTitle={false}
+                  showDownloadAll={true}
+                />
+              </div>
             </div>
           )}
 

@@ -1,0 +1,187 @@
+/* Documents Container */
+.documentsContainer {
+  margin: 16px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--background);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.downloadAllButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.downloadAllButton:hover {
+  background: var(--primary);
+  opacity: 0.9;
+}
+
+/* Documents List */
+.documentsList {
+  padding: 0;
+}
+
+.documentItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.2s;
+}
+
+.documentItem:last-child {
+  border-bottom: none;
+}
+
+.documentItem:hover {
+  background: var(--muted);
+}
+
+.documentInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+}
+
+.documentIcon {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.fileEmoji {
+  font-size: 18px;
+}
+
+.fileIconSvg {
+  display: none;
+  color: var(--muted-foreground);
+}
+
+/* Fallback if emojis don't work */
+@supports not (font-family: "Apple Color Emoji") {
+  .fileEmoji {
+    display: none;
+  }
+  .fileIconSvg {
+    display: block;
+  }
+}
+
+.documentDetails {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allow text truncation */
+  flex: 1;
+}
+
+.documentName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.documentSize {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  line-height: 1.2;
+}
+
+/* Document Actions */
+.documentActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actionButton:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-color: var(--accent);
+}
+
+.actionButton:active {
+  transform: scale(0.95);
+}
+
+/* Documents Count */
+.documentsCount {
+  padding: 8px 16px;
+  background: var(--muted);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .documentItem {
+    padding: 8px 12px;
+  }
+  
+  .documentInfo {
+    gap: 8px;
+  }
+  
+  .header {
+    padding: 8px 12px;
+  }
+  
+  .downloadAllButton {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .actionButton {
+    width: 28px;
+    height: 28px;
+  }
+}

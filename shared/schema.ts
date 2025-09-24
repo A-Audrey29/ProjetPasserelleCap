@@ -124,6 +124,9 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   // Total amount for calculations
   totalAmount: integer("total_amount"), // in cents
   
+  // CAP documents uploaded with fiche
+  capDocuments: json("cap_documents"), // Store array of uploaded CAP documents
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { Eye, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, RefreshCw, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import styles from './FichesList.module.css';
@@ -96,9 +96,19 @@ export default function FichesList({
                 data-testid={`row-fiche-${fiche.id}`}
               >
                 <td className={styles.tableCell}>
-                  <span className={styles.refCode} data-testid={`text-ref-${fiche.id}`}>
-                    {fiche.ref}
-                  </span>
+                  <div className={styles.refContainer}>
+                    <span className={styles.refCode} data-testid={`text-ref-${fiche.id}`}>
+                      {fiche.ref}
+                    </span>
+                    {fiche.capDocuments && fiche.capDocuments.length > 0 && (
+                      <FileText 
+                        className={styles.documentIcon} 
+                        size={14}
+                        title={`${fiche.capDocuments.length} document${fiche.capDocuments.length > 1 ? 's' : ''} CAP`}
+                        data-testid={`icon-documents-${fiche.id}`}
+                      />
+                    )}
+                  </div>
                 </td>
                 <td className={styles.tableCell}>
                   <span data-testid={`text-family-${fiche.id}`}>
