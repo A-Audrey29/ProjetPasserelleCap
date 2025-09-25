@@ -1387,3 +1387,25 @@
   }
 }
 
+/* Workshop proposition review - adapted from FicheForm */
+.propositionReview {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.propositionReview h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #D9A066;
+}
+
+.propositionReview p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #374151;
+}
+

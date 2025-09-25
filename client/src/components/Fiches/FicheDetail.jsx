@@ -122,20 +122,51 @@ export default function FicheDetail({ ficheId }) {
     enabled: !!fiche
   });
 
-  const selectedWorkshops = fiche && workshopsList.length > 0
-    ? Object.entries(fiche.workshopPropositions || {})
-        .filter(([_, v]) => (v ?? '').toString().trim())
-        .map(([workshopId, reason]) => {
-          const workshop = workshopsList.find((w) => w.id === workshopId);
-          return workshop ? { id: workshopId, workshop, reason } : null;
-        })
-        .filter(Boolean)
-    : [];
+  // Workshop selection logic - robust version with legacy fallback
+  const getCombinedWorkshopSelection = () => {
+    if (!fiche) return { workshopIds: [], isLegacyMode: false };
+    
+    // Primary: use workshopPropositions to determine selected workshops
+    const propositionWorkshopIds = Object.keys(fiche.workshopPropositions || {}).filter(
+      id => fiche.workshopPropositions[id] !== undefined && fiche.workshopPropositions[id] !== null
+    );
+    
+    // Legacy fallback for older fiches
+    let legacyWorkshopIds = [];
+    if (propositionWorkshopIds.length === 0) {
+      // Try various legacy field names
+      const legacySources = [
+        fiche.selectedWorkshops,
+        fiche.workshops, 
+        fiche.workshopSelections
+      ];
+      
+      for (const source of legacySources) {
+        if (source && typeof source === 'object') {
+          legacyWorkshopIds = Object.keys(source).filter(
+            id => source[id] === true || (typeof source[id] === 'string' && source[id].trim())
+          );
+          if (legacyWorkshopIds.length > 0) break;
+        }
+      }
+    }
+    
+    const finalWorkshopIds = propositionWorkshopIds.length > 0 
+      ? propositionWorkshopIds 
+      : legacyWorkshopIds;
+    
+    return {
+      workshopIds: finalWorkshopIds.map(String), // Normalize to strings for consistency
+      isLegacyMode: propositionWorkshopIds.length === 0 && legacyWorkshopIds.length > 0
+    };
+  };
 
-  const totalAmount = selectedWorkshops.reduce(
-    (sum, s) => sum + (s.workshop?.priceCents || 0),
-    0
-  );
+  const { workshopIds, isLegacyMode } = getCombinedWorkshopSelection();
+
+  const totalAmount = workshopIds.reduce((sum, workshopId) => {
+    const workshop = workshopsList?.find(w => String(w.id) === String(workshopId));
+    return sum + (workshop?.priceCents || 0);
+  }, 0);
 
   // Normalize family information for display
   const family = fiche
@@ -956,58 +987,75 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
-          {selectedWorkshops.length > 0 && (
+          {/* Ateliers sélectionnés - adapted from FicheForm review section */}
+          {workshopIds.length > 0 && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Ateliers sélectionnés
               </h2>
-              <div className={styles.workshopSelections}>
-                {selectedWorkshops.map((selection) => (
-                  <div key={selection.id} className={styles.workshopItem} data-testid={`workshop-${selection.id}`}>
-                    <div className={styles.workshopHierarchy}>
-                      <div className={styles.objectiveLevel}>
-                        <span className={styles.objectiveCode} data-testid={`text-objective-code-${selection.id}`}>
-                          {selection.workshop?.objective?.code}
-                        </span>
-                        <span className={styles.objectiveName} data-testid={`text-objective-name-${selection.id}`}>
-                          {selection.workshop?.objective?.name}
-                        </span>
-                      </div>
-                      <div className={styles.workshopLevel}>
-                        <h3 className={styles.workshopName} data-testid={`text-workshop-name-${selection.id}`}>
-                          {selection.workshop?.name}
-                        </h3>
-                      </div>
-                      <div className={styles.propositionLevel}>
-                        <div className={styles.propositionContent}>
-                          <span className={styles.propositionLabel}>Proposition du référent</span>
-                          {selection.reason && (
-                            <p className={styles.propositionText} data-testid={`text-proposition-${selection.id}`}>
-                              {selection.reason}
-                            </p>
-                          )}
-                        </div>
-                        {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
-                          <div className={styles.propositionPrice} data-testid={`text-workshop-price-${selection.id}`}>
-                            {formatCurrency(selection.workshop?.priceCents || 0)}
-                          </div>
-                        )}
-                      </div>
+              <div className={styles.cardContent}>
+                {workshopIds.map(workshopId => {
+                  const workshop = workshopsList?.find(w => String(w.id) === String(workshopId));
+                  const workshopName = workshop?.name || `Atelier ${workshopId}`;
+                  const proposition = fiche.workshopPropositions?.[workshopId]?.trim();
+                  
+                  return (
+                    <div key={workshopId} className={styles.propositionReview} data-testid={`workshop-${workshopId}`}>
+                      <h4 data-testid={`text-workshop-name-${workshopId}`}>✅ {workshopName}</h4>
+                      {workshop?.objective && (
+                        <p style={{ fontSize: '0.75rem', color: '#6B7280', marginBottom: '0.25rem' }}>
+                          <strong>{workshop.objective.code}</strong> - {workshop.objective.name}
+                        </p>
+                      )}
+                      {isLegacyMode ? (
+                        proposition && (
+                          <p data-testid={`text-proposition-${workshopId}`}>
+                            <strong>Atelier avec proposition :</strong> {proposition}
+                          </p>
+                        )
+                      ) : (
+                        proposition ? (
+                          <p data-testid={`text-proposition-${workshopId}`}>
+                            <strong>Atelier sélectionné avec proposition :</strong> {proposition}
+                          </p>
+                        ) : (
+                          <p><strong>Atelier sélectionné</strong></p>
+                        )
+                      )}
+                      {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && workshop?.priceCents && (
+                        <p style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '0.25rem' }} data-testid={`text-workshop-price-${workshopId}`}>
+                          <strong>Prix :</strong> {formatCurrency(workshop.priceCents)}
+                        </p>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  );
+                })}
 
-              {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
-                <div className={styles.totalSection}>
-                  <div className={styles.totalItem}>
-                    <label className={styles.totalLabel}>Total</label>
-                    <p className={styles.totalValue} data-testid="text-total-amount">
-                      {formatCurrency(totalAmount)}
+                {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && totalAmount > 0 && (
+                  <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#F3F4F6', borderRadius: '4px' }}>
+                    <p style={{ margin: 0, fontWeight: 'bold' }} data-testid="text-total-amount">
+                      <strong>Total :</strong> {formatCurrency(totalAmount)}
                     </p>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Nombre de participants - adapted from FicheForm review section */}
+          {fiche.participantsCount && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Nombre de participants
+              </h2>
+              <div className={styles.cardContent}>
+                <p data-testid="text-participants-count">
+                  <strong>Nombre de participants :</strong> {fiche.participantsCount} personne{fiche.participantsCount > 1 ? 's' : ''}
+                </p>
+                <p style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+                  Nombre de personnes de la fiche navette qui participeront aux ateliers sélectionnés
+                </p>
+              </div>
             </div>
           )}
 
