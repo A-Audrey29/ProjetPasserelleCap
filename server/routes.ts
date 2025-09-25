@@ -363,11 +363,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } = req.validatedData;
 
 
-      // Generate reference number
-      const year = new Date().getFullYear();
+      // Generate reference number with year-month-counter format
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed, pad to 2 digits
+      const monthPrefix = `FN-${year}-${month}`;
+      
       const existingFiches = await storage.getAllFiches();
-      const count = existingFiches.filter(f => f.ref.startsWith(`FN-${year}`)).length + 1;
-      const ref = `FN-${year}-${count.toString().padStart(3, '0')}`;
+      const count = existingFiches.filter(f => f.ref.startsWith(monthPrefix)).length + 1;
+      const ref = `${monthPrefix}-${count.toString().padStart(3, '0')}`;
 
       // Create fiche with all detailed data
       const fiche = await storage.createFiche({
