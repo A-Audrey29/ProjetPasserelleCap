@@ -1571,7 +1571,7 @@ export default function FicheForm({
         ficheId = initialData.id;
         await transitionFiche({
           id: initialData.id,
-          newState: "SUBMITTED_TO_CD",
+          newState: "SUBMITTED_TO_FEVES",
           metadata: {
             transmittedBy: user?.user?.id || user?.id,
             transmissionDate: new Date().toISOString(),
@@ -1612,10 +1612,10 @@ export default function FicheForm({
           ficheId = newFiche.id;
         }
 
-        // Then transition it to SUBMITTED_TO_CD
+        // Then transition it to SUBMITTED_TO_FEVES (nouveau workflow)
         await transitionFiche({
           id: ficheId || newFiche?.id,
-          newState: "SUBMITTED_TO_CD",
+          newState: "SUBMITTED_TO_FEVES",
           metadata: {
             transmittedBy: user?.user?.id || user?.id,
             transmissionDate: new Date().toISOString(),
@@ -1626,7 +1626,7 @@ export default function FicheForm({
       toast({
         title: "Fiche Validée!",
         description:
-          "La fiche a été transmise avec succès au Conseil Départemental pour validation.",
+          "La fiche a été transmise avec succès à FEVES pour traitement.",
         variant: "success",
       });
 
