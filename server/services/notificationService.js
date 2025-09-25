@@ -30,12 +30,16 @@ class NotificationService {
       switch (newState) {
         
         case 'SUBMITTED_TO_CD':
+          // Legacy case - kept for existing fiches only
           await this.notifySubmittedToCd(fiche, emitterName);
           break;
           
         case 'SUBMITTED_TO_FEVES':
-          if (oldState === 'SUBMITTED_TO_CD') {
-            // Validation par le CD
+          if (oldState === 'DRAFT') {
+            // Émetteur transmet directement à FEVES (nouveau workflow)
+            await this.notifySubmittedToFeves(fiche, emitterName);
+          } else if (oldState === 'SUBMITTED_TO_CD') {
+            // Validation par le CD (legacy workflow)
             await this.notifySubmittedToFeves(fiche, emitterName);
           }
           break;

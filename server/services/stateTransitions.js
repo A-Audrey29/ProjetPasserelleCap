@@ -5,7 +5,7 @@ import notificationService from './notificationService.js';
 // Define valid state transitions by role
 const STATE_TRANSITIONS = {
   EMETTEUR: {
-    DRAFT: ['SUBMITTED_TO_CD']
+    DRAFT: ['SUBMITTED_TO_FEVES']
   },
   CD: {
     SUBMITTED_TO_CD: ['SUBMITTED_TO_FEVES', 'ARCHIVED', 'DRAFT']
