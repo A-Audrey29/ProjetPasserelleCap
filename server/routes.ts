@@ -370,7 +370,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const monthPrefix = `FN-${year}-${month}`;
       
       const existingFiches = await storage.getAllFiches();
-      const count = existingFiches.filter(f => f.ref.startsWith(monthPrefix)).length + 1;
+      // Only count fiches with the NEW format (FN-YYYY-MM-XXX) to avoid collision with legacy format (FN-YYYY-XXX)
+      const newFormatRegex = new RegExp(`^FN-${year}-${month}-\\d{3}$`);
+      const count = existingFiches.filter(f => typeof f.ref === 'string' && newFormatRegex.test(f.ref)).length + 1;
       const ref = `${monthPrefix}-${count.toString().padStart(3, '0')}`;
 
       // Create fiche with all detailed data
