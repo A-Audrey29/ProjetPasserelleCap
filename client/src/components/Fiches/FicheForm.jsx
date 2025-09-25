@@ -94,6 +94,7 @@ export default function FicheForm({
     ],
     descriptionSituation: "",
     workshopPropositions: {},
+    participantsCount: 1, // Default number of participants for workshops
     capDocuments: [],
   });
 
@@ -163,6 +164,7 @@ export default function FicheForm({
       descriptionSituation:
         initialData.description || initialData.descriptionSituation || "",
       workshopPropositions: initialData.workshopPropositions || {},
+      participantsCount: initialData.participantsCount || 1,
       capDocuments: initialData.capDocuments || [],
       familyConsent: initialData.familyConsent || false,
     }));
@@ -842,6 +844,29 @@ export default function FicheForm({
             )}
           </div>
         ))}
+
+        {/* Participants Count Section */}
+        <div className={styles.participantsSection}>
+          <label className={styles.fieldLabel} htmlFor="participantsCount">
+            Nombre de participants
+          </label>
+          <select
+            id="participantsCount"
+            value={formData.participantsCount}
+            onChange={(e) => setFormData(prev => ({ ...prev, participantsCount: parseInt(e.target.value) }))}
+            className={styles.fieldSelect}
+            data-testid="select-participants-count"
+          >
+            {[...Array(10)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {i + 1} participant{i + 1 > 1 ? 's' : ''}
+              </option>
+            ))}
+          </select>
+          <p className={styles.fieldHint}>
+            Nombre de personnes de la fiche navette qui participeront aux ateliers sélectionnés
+          </p>
+        </div>
 
         <div className={styles.buttonContainer}>
           <button

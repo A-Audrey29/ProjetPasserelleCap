@@ -489,6 +489,30 @@
   }
 }
 
+/* Participants Count Styles */
+.participantsSection {
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1.5rem;
+}
+
+.participantsSection .fieldLabel {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.participantsSection .fieldHint {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0.5rem 0 0 0;
+  line-height: 1.4;
+}
+
 /* Review Step Styles */
 .reviewSection {
   background-color: #F5F6F7;
