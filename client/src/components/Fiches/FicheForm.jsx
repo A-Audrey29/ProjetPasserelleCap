@@ -761,8 +761,15 @@ export default function FicheForm({
   };
 
   const validateObjectivesStep = () => {
-    // This step doesn't require validation as propositions are optional
-    return true;
+    let isValid = true;
+    
+    // Validate participants count - now required
+    if (!formData.participantsCount || formData.participantsCount < 1 || formData.participantsCount > 10) {
+      setFieldError('participantsCount', 'Le nombre de participants doit être compris entre 1 et 10');
+      isValid = false;
+    }
+    
+    return isValid;
   };
 
   const renderObjectivesStep = () => (
@@ -863,6 +870,7 @@ export default function FicheForm({
               </option>
             ))}
           </select>
+          <ErrorMessage error={getFieldError('participantsCount')} fieldPath="participantsCount" />
           <p className={styles.fieldHint}>
             Nombre de personnes de la fiche navette qui participeront aux ateliers sélectionnés
           </p>
