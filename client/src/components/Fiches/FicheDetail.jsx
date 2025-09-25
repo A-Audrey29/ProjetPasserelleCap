@@ -122,42 +122,28 @@ export default function FicheDetail({ ficheId }) {
     enabled: !!fiche
   });
 
-  // Workshop selection logic - robust version with legacy fallback
+  // Workshop selection logic - SAME AS FORM (selectedWorkshops priority)
   const getCombinedWorkshopSelection = () => {
     if (!fiche) return { workshopIds: [], isLegacyMode: false };
     
-    // Primary: use workshopPropositions to determine selected workshops
-    const propositionWorkshopIds = Object.keys(fiche.workshopPropositions || {}).filter(
-      id => fiche.workshopPropositions[id] !== undefined && fiche.workshopPropositions[id] !== null
+    // Get selected workshops (checkboxes are priority) - SAME LOGIC AS FORM
+    const selectedWorkshopIds = Object.keys(fiche.selectedWorkshops || {}).filter(
+      id => fiche.selectedWorkshops[id]
     );
     
-    // Legacy fallback for older fiches
-    let legacyWorkshopIds = [];
-    if (propositionWorkshopIds.length === 0) {
-      // Try various legacy field names
-      const legacySources = [
-        fiche.selectedWorkshops,
-        fiche.workshops, 
-        fiche.workshopSelections
-      ];
-      
-      for (const source of legacySources) {
-        if (source && typeof source === 'object') {
-          legacyWorkshopIds = Object.keys(source).filter(
-            id => source[id] === true || (typeof source[id] === 'string' && source[id].trim())
-          );
-          if (legacyWorkshopIds.length > 0) break;
-        }
-      }
-    }
+    // Fallback for existing fiches: if no checkboxes but propositions exist
+    const propositionWorkshopIds = Object.keys(fiche.workshopPropositions || {}).filter(
+      id => fiche.workshopPropositions[id]?.trim()
+    );
     
-    const finalWorkshopIds = propositionWorkshopIds.length > 0 
-      ? propositionWorkshopIds 
-      : legacyWorkshopIds;
+    // Priority: selected workshops, fallback to propositions for backward compatibility
+    const finalWorkshopIds = selectedWorkshopIds.length > 0 
+      ? selectedWorkshopIds 
+      : propositionWorkshopIds;
     
     return {
       workshopIds: finalWorkshopIds.map(String), // Normalize to strings for consistency
-      isLegacyMode: propositionWorkshopIds.length === 0 && legacyWorkshopIds.length > 0
+      isLegacyMode: selectedWorkshopIds.length === 0 && propositionWorkshopIds.length > 0
     };
   };
 
