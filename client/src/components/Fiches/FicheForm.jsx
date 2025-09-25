@@ -1391,6 +1391,7 @@ export default function FicheForm({
         childrenData: formData.children,
         workshopPropositions: cleanPropositions,
         selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
+        participantsCount: formData.participantsCount, // Save participants count for workshops
         familyConsent: formData.familyConsent,
         capDocuments: formData.capDocuments, // Save CAP documents
       };
@@ -1588,6 +1589,7 @@ export default function FicheForm({
           childrenData: formData.children,
           workshopPropositions: cleanPropositions,
           selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
+          participantsCount: formData.participantsCount, // Save participants count for workshops
           familyConsent: formData.familyConsent,
           capDocuments: formData.capDocuments, // Save CAP documents
         };
