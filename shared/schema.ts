@@ -96,6 +96,9 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   // Workshop selections (checkboxes) - priority indicator
   selectedWorkshops: json("selected_workshops"), // Store which workshops are selected (checked)
   
+  // Number of participants for workshops
+  participantsCount: integer("participants_count").default(1), // Number of people from the fiche who will participate in workshops (1-10)
+  
   // Family consent
   familyConsent: boolean("family_consent").notNull().default(false),
   
