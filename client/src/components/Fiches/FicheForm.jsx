@@ -862,7 +862,6 @@ export default function FicheForm({
             value={formData.participantsCount}
             onChange={(e) => {
               const value = parseInt(e.target.value) || 1; // Default to 1 if NaN
-              console.log('[ParticipantsCount] onChange:', { rawValue: e.target.value, parsedValue: value });
               setFormData(prev => ({ ...prev, participantsCount: value }));
             }}
             className={styles.fieldSelect}
