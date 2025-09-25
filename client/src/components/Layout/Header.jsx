@@ -33,11 +33,12 @@ export default function Header() {
       label: 'Valider et transmettre les fiches',
       roles: ['ADMIN', 'RELATIONS_EVS']
     },
-    {
-      href: '/fiches?state=SUBMITTED_TO_CD',
-      label: 'Fiches en attente de validations',
-      roles: ['CD']
-    },
+    // Commenté temporairement - CD n'a plus de droits de validation (nouveau workflow DRAFT → SUBMITTED_TO_FEVES)
+    // {
+    //   href: '/fiches?state=SUBMITTED_TO_CD',
+    //   label: 'Fiches en attente de validations',
+    //   roles: ['CD']
+    // },
     {
       href: '/fiches',
       label: 'Consulter les Fiches',
