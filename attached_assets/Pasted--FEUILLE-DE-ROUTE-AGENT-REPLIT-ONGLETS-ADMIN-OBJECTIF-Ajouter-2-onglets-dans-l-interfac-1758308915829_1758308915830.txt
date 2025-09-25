@@ -1,0 +1,947 @@
+# 📋 FEUILLE DE ROUTE AGENT REPLIT - ONGLETS ADMIN
+
+## 🎯 OBJECTIF
+Ajouter 2 onglets dans l'interface Admin : **Gestion des Utilisateurs** et **Gestion des Structures** avec formulaires CRUD complets.
+
+## ⚠️ RÈGLES CRITIQUES À RESPECTER
+```
+1. CSS MODULES UNIQUEMENT - Jamais de Tailwind
+2. Couleurs : #3B4B61 (primary), #F5F6F7 (background), #6A8B74 (success)
+3. Pattern existant : TanStack Query + React Hook Form + Zod
+4. Réutiliser le code existant au maximum
+5. Data-testid sur tous les éléments interactifs
+```
+
+---
+
+## 📦 PHASE 1 : SYSTÈME D'ONGLETS (45 min)
+
+### 1.1 Modifier `client/src/components/Admin/AdminDashboard.jsx`
+
+```javascript
+// INSTRUCTIONS POUR L'AGENT :
+// 1. Ajouter un état pour gérer l'onglet actif
+// 2. Créer une navigation par onglets
+// 3. Afficher le contenu conditionnel selon l'onglet
+
+// Structure attendue :
+import { useState } from 'react';
+import { LayoutGrid, Users, Building2 } from 'lucide-react';
+import styles from './AdminDashboard.module.css';
+
+// Importer les nouveaux composants d'onglets
+import UsersTab from './UsersTab';
+import StructuresTab from './StructuresTab';
+
+function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState('overview');
+  
+  const tabs = [
+    { id: 'overview', label: 'Vue d\'ensemble', icon: LayoutGrid },
+    { id: 'users', label: 'Utilisateurs', icon: Users },
+    { id: 'structures', label: 'Structures', icon: Building2 }
+  ];
+  
+  return (
+    <div className={styles.container}>
+      {/* Navigation onglets */}
+      <div className={styles.tabsHeader}>
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+            data-testid={`tab-${tab.id}`}
+          >
+            <tab.icon size={18} />
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+      
+      {/* Contenu des onglets */}
+      <div className={styles.tabContent}>
+        {activeTab === 'overview' && (
+          // Garder le contenu existant de la vue d'ensemble
+          <div>...</div>
+        )}
+        {activeTab === 'users' && <UsersTab />}
+        {activeTab === 'structures' && <StructuresTab />}
+      </div>
+    </div>
+  );
+}
+```
+
+### 1.2 Créer les styles `AdminDashboard.module.css`
+
+```css
+/* AJOUTER ces styles au fichier existant */
+
+.tabsHeader {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid #E5E7EB;
+  margin-bottom: 2rem;
+  padding: 0;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: #6B7280;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tabButton:hover {
+  color: #3B4B61;
+  background: #F9FAFB;
+}
+
+.tabActive {
+  color: #3B4B61;
+  border-bottom-color: #3B4B61;
+  font-weight: 600;
+}
+
+.tabContent {
+  padding: 1.5rem 0;
+  min-height: 500px;
+}
+```
+
+---
+
+## 📦 PHASE 2 : ONGLET UTILISATEURS (1h30)
+
+### 2.1 Créer `client/src/components/Admin/UsersTab.jsx`
+
+```javascript
+// INSTRUCTIONS POUR L'AGENT :
+// 1. Créer un composant avec liste et formulaire
+// 2. Réutiliser le pattern de UserForm.jsx existant
+// 3. Ajouter fonctionnalités : recherche, tri, pagination
+
+import { useState } from 'react';
+import { Plus, Search, Mail, Edit2, Trash2, Key } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import styles from './UsersTab.module.css';
+import Button from '../common/Button';
+import Card from '../common/Card';
+import Input from '../common/Input';
+
+function UsersTab() {
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const queryClient = useQueryClient();
+
+  // Récupérer la liste des utilisateurs
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['/api/admin/users'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/users', {
+        credentials: 'include'
+      });
+      return response.json();
+    }
+  });
+
+  // Récupérer la liste des organisations pour le select
+  const { data: organizations = [] } = useQuery({
+    queryKey: ['/api/organizations'],
+    queryFn: async () => {
+      const response = await fetch('/api/organizations', {
+        credentials: 'include'
+      });
+      return response.json();
+    }
+  });
+
+  // Mutation pour créer un utilisateur
+  const createUser = useMutation({
+    mutationFn: async (userData) => {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(userData)
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/admin/users']);
+      setShowCreateForm(false);
+    }
+  });
+
+  // Filtrer les utilisateurs selon la recherche
+  const filteredUsers = users.filter(user => 
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.lastName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className={styles.container}>
+      {/* En-tête avec actions */}
+      <div className={styles.header}>
+        <div className={styles.searchBox}>
+          <Search size={18} />
+          <Input
+            type="text"
+            placeholder="Rechercher un utilisateur..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={styles.searchInput}
+            data-testid="users-search"
+          />
+        </div>
+        <Button 
+          onClick={() => setShowCreateForm(true)}
+          variant="primary"
+          data-testid="button-create-user"
+        >
+          <Plus size={18} />
+          Nouvel utilisateur
+        </Button>
+      </div>
+
+      {/* Formulaire de création/édition */}
+      {(showCreateForm || editingUser) && (
+        <Card className={styles.formCard}>
+          <UserFormInline
+            user={editingUser}
+            organizations={organizations}
+            onSubmit={(data) => {
+              if (editingUser) {
+                // updateUser.mutate(data)
+              } else {
+                createUser.mutate(data);
+              }
+            }}
+            onCancel={() => {
+              setShowCreateForm(false);
+              setEditingUser(null);
+            }}
+          />
+        </Card>
+      )}
+
+      {/* Liste des utilisateurs */}
+      <div className={styles.usersList}>
+        {isLoading ? (
+          <p>Chargement...</p>
+        ) : (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Structure</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map(user => (
+                <tr key={user.id} data-testid={`user-row-${user.id}`}>
+                  <td>{user.firstName} {user.lastName}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span className={styles.roleBadge}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>{user.orgName || '-'}</td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${user.isActive ? styles.active : styles.inactive}`}>
+                      {user.isActive ? 'Actif' : 'Inactif'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className={styles.actions}>
+                      <button
+                        className={styles.actionButton}
+                        onClick={() => setEditingUser(user)}
+                        data-testid={`edit-user-${user.id}`}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        className={styles.actionButton}
+                        data-testid={`reset-password-${user.id}`}
+                      >
+                        <Key size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Sous-composant formulaire inline
+function UserFormInline({ user, organizations, onSubmit, onCancel }) {
+  // Copier la logique de UserForm.jsx existant
+  // Adapter pour un formulaire inline
+  return (
+    <form onSubmit={handleSubmit} className={styles.inlineForm}>
+      {/* Champs du formulaire */}
+    </form>
+  );
+}
+
+export default UsersTab;
+```
+
+### 2.2 Créer `UsersTab.module.css`
+
+```css
+.container {
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  width: 300px;
+}
+
+.searchInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+}
+
+.table {
+  width: 100%;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table thead {
+  background: #F9FAFB;
+}
+
+.table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #3B4B61;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table td {
+  padding: 1rem;
+  border-top: 1px solid #E5E7EB;
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #EBF5FF;
+  color: #3B4B61;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.statusBadge.active {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.statusBadge.inactive {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  padding: 0.5rem;
+  background: transparent;
+  border: 1px solid #E5E7EB;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actionButton:hover {
+  background: #F9FAFB;
+  border-color: #3B4B61;
+}
+```
+
+---
+
+## 📦 PHASE 3 : ONGLET STRUCTURES (1h30)
+
+### 3.1 Créer `client/src/components/Admin/StructuresTab.jsx`
+
+```javascript
+// INSTRUCTIONS POUR L'AGENT :
+// 1. Utiliser l'API /api/organizations existante
+// 2. Afficher "Structures" dans l'UI mais utiliser organizations en backend
+// 3. Ajouter import CSV optionnel
+
+import { useState } from 'react';
+import { Plus, Search, Building2, Mail, Phone, MapPin, Upload } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import styles from './StructuresTab.module.css';
+import Button from '../common/Button';
+import Card from '../common/Card';
+import Input from '../common/Input';
+
+function StructuresTab() {
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingStructure, setEditingStructure] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const queryClient = useQueryClient();
+
+  // Récupérer les structures (organizations)
+  const { data: structures = [], isLoading } = useQuery({
+    queryKey: ['/api/organizations'],
+    queryFn: async () => {
+      const response = await fetch('/api/organizations', {
+        credentials: 'include'
+      });
+      return response.json();
+    }
+  });
+
+  // Récupérer les EPCI pour le select
+  const { data: epcis = [] } = useQuery({
+    queryKey: ['/api/epcis'],
+    queryFn: async () => {
+      const response = await fetch('/api/epcis', {
+        credentials: 'include'
+      });
+      return response.json();
+    }
+  });
+
+  // Mutation pour créer une structure
+  const createStructure = useMutation({
+    mutationFn: async (structureData) => {
+      const response = await fetch('/api/organizations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(structureData)
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/organizations']);
+      setShowCreateForm(false);
+    }
+  });
+
+  // Filtrer les structures
+  const filteredStructures = structures.filter(structure =>
+    structure.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    structure.epci?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    structure.contactEmail?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className={styles.container}>
+      {/* En-tête */}
+      <div className={styles.header}>
+        <div className={styles.searchBox}>
+          <Search size={18} />
+          <Input
+            type="text"
+            placeholder="Rechercher une structure..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={styles.searchInput}
+            data-testid="structures-search"
+          />
+        </div>
+        <div className={styles.headerActions}>
+          <Button
+            variant="secondary"
+            data-testid="button-import-csv"
+          >
+            <Upload size={18} />
+            Importer CSV
+          </Button>
+          <Button
+            onClick={() => setShowCreateForm(true)}
+            variant="primary"
+            data-testid="button-create-structure"
+          >
+            <Plus size={18} />
+            Nouvelle structure
+          </Button>
+        </div>
+      </div>
+
+      {/* Formulaire de création/édition */}
+      {(showCreateForm || editingStructure) && (
+        <Card className={styles.formCard}>
+          <h3>{editingStructure ? 'Modifier' : 'Créer'} une structure</h3>
+          <StructureForm
+            structure={editingStructure}
+            epcis={epcis}
+            onSubmit={(data) => {
+              if (editingStructure) {
+                // updateStructure.mutate(data)
+              } else {
+                createStructure.mutate(data);
+              }
+            }}
+            onCancel={() => {
+              setShowCreateForm(false);
+              setEditingStructure(null);
+            }}
+          />
+        </Card>
+      )}
+
+      {/* Grille des structures */}
+      <div className={styles.structuresGrid}>
+        {isLoading ? (
+          <p>Chargement...</p>
+        ) : filteredStructures.length === 0 ? (
+          <p>Aucune structure trouvée</p>
+        ) : (
+          filteredStructures.map(structure => (
+            <Card key={structure.orgId} className={styles.structureCard}>
+              <div className={styles.structureHeader}>
+                <Building2 size={20} color="#3B4B61" />
+                <h3>{structure.name}</h3>
+              </div>
+              
+              <div className={styles.structureInfo}>
+                {structure.contactEmail && (
+                  <div className={styles.infoRow}>
+                    <Mail size={16} />
+                    <span>{structure.contactEmail}</span>
+                  </div>
+                )}
+                {structure.contactPhone && (
+                  <div className={styles.infoRow}>
+                    <Phone size={16} />
+                    <span>{structure.contactPhone}</span>
+                  </div>
+                )}
+                {structure.epci && (
+                  <div className={styles.infoRow}>
+                    <MapPin size={16} />
+                    <span>{structure.epci}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.structureActions}>
+                <Button
+                  size="small"
+                  variant="secondary"
+                  onClick={() => setEditingStructure(structure)}
+                  data-testid={`edit-structure-${structure.orgId}`}
+                >
+                  Modifier
+                </Button>
+              </div>
+            </Card>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Formulaire de structure
+function StructureForm({ structure, epcis, onSubmit, onCancel }) {
+  // Implémenter le formulaire avec react-hook-form
+  // Copier le pattern de UserForm.jsx
+  return (
+    <form className={styles.form}>
+      {/* Champs : name, contact, contactEmail, contactPhone, epci */}
+    </form>
+  );
+}
+
+export default StructuresTab;
+```
+
+### 3.2 Créer `StructuresTab.module.css`
+
+```css
+.container {
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  width: 300px;
+}
+
+.structuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.structureCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.structureCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.structureHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.structureHeader h3 {
+  margin: 0;
+  color: #3B4B61;
+  font-size: 1.125rem;
+}
+
+.structureInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6B7280;
+  font-size: 0.875rem;
+}
+
+.infoRow svg {
+  color: #9CA3AF;
+}
+
+.structureActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #F3F4F6;
+}
+
+.formCard {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+```
+
+---
+
+## 📦 PHASE 4 : IMPORT CSV (Optionnel - 45 min)
+
+### 4.1 Créer `client/src/components/Admin/ImportCSV.jsx`
+
+```javascript
+// INSTRUCTIONS POUR L'AGENT :
+// Composant réutilisable pour import CSV
+// Utiliser Papa Parse (déjà dans le projet selon l'audit)
+
+import { useState } from 'react';
+import Papa from 'papaparse';
+import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react';
+import styles from './ImportCSV.module.css';
+import Button from '../common/Button';
+
+function ImportCSV({ onImport, entityName, template }) {
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState([]);
+  const [errors, setErrors] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+    setErrors([]);
+    
+    // Parser le fichier
+    Papa.parse(selectedFile, {
+      header: true,
+      skipEmptyLines: true,
+      preview: 5, // Prévisualiser 5 lignes
+      complete: (results) => {
+        setPreview(results.data);
+        if (results.errors.length > 0) {
+          setErrors(results.errors.map(e => e.message));
+        }
+      }
+    });
+  };
+
+  const handleImport = () => {
+    if (!file) return;
+    
+    setIsProcessing(true);
+    
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (results.errors.length === 0) {
+          onImport(results.data);
+          setFile(null);
+          setPreview([]);
+        } else {
+          setErrors(results.errors.map(e => 
+            `Ligne ${e.row}: ${e.message}`
+          ));
+        }
+        setIsProcessing(false);
+      }
+    });
+  };
+
+  const downloadTemplate = () => {
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `template_${entityName}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className={styles.container}>
+      {!file ? (
+        <div className={styles.uploadArea}>
+          <Upload size={32} color="#9CA3AF" />
+          <p>Glissez un fichier CSV ou</p>
+          <label className={styles.uploadButton}>
+            Parcourir
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileSelect}
+              className={styles.hiddenInput}
+            />
+          </label>
+          <button 
+            onClick={downloadTemplate}
+            className={styles.templateLink}
+          >
+            Télécharger le modèle CSV
+          </button>
+        </div>
+      ) : (
+        <div className={styles.previewArea}>
+          <div className={styles.fileInfo}>
+            <span>{file.name}</span>
+            <button 
+              onClick={() => {
+                setFile(null);
+                setPreview([]);
+                setErrors([]);
+              }}
+              className={styles.removeButton}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {errors.length > 0 && (
+            <div className={styles.errorBox}>
+              <AlertCircle size={18} />
+              <div>
+                {errors.map((error, i) => (
+                  <p key={i}>{error}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {preview.length > 0 && (
+            <div className={styles.preview}>
+              <h4>Aperçu des données</h4>
+              <table className={styles.previewTable}>
+                <thead>
+                  <tr>
+                    {Object.keys(preview[0]).map(key => (
+                      <th key={key}>{key}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.map((row, i) => (
+                    <tr key={i}>
+                      {Object.values(row).map((val, j) => (
+                        <td key={j}>{val}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className={styles.actions}>
+            <Button
+              variant="secondary"
+              onClick={() => setFile(null)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleImport}
+              disabled={errors.length > 0 || isProcessing}
+            >
+              {isProcessing ? 'Import...' : `Importer ${preview.length} lignes`}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ImportCSV;
+```
+
+---
+
+## ✅ CHECKLIST DE VALIDATION
+
+### Tests à effectuer après implémentation :
+
+1. **Navigation onglets**
+   - [ ] Les 3 onglets s'affichent correctement
+   - [ ] Le contenu change selon l'onglet actif
+   - [ ] L'onglet actif est visuellement distinct
+
+2. **Onglet Utilisateurs**
+   - [ ] Liste des utilisateurs s'affiche
+   - [ ] Recherche fonctionne
+   - [ ] Formulaire création ouvre/ferme
+   - [ ] Création d'utilisateur fonctionne
+   - [ ] Les rôles sont correctement affichés
+
+3. **Onglet Structures**
+   - [ ] Liste des structures s'affiche en grille
+   - [ ] Recherche fonctionne
+   - [ ] Formulaire création ouvre/ferme
+   - [ ] Création de structure fonctionne
+   - [ ] Import CSV ouvre la modal (optionnel)
+
+4. **Styles et UX**
+   - [ ] Couleurs respectent la charte (#3B4B61, #F5F6F7)
+   - [ ] Pas de classes Tailwind
+   - [ ] Tous les boutons ont un data-testid
+   - [ ] Responsive sur mobile/tablette
+
+---
+
+## 🚀 INSTRUCTIONS FINALES POUR L'AGENT
+
+```
+ORDRE D'IMPLÉMENTATION :
+1. Phase 1 : Système d'onglets (45 min)
+2. Phase 2 : Onglet Utilisateurs (1h30)
+3. Phase 3 : Onglet Structures (1h30)
+4. Phase 4 : Import CSV si temps disponible (45 min)
+
+RAPPELS IMPORTANTS :
+- NE PAS utiliser Tailwind CSS
+- TOUJOURS utiliser .module.css
+- RÉUTILISER le code existant (UserForm.jsx comme base)
+- TESTER chaque phase avant de passer à la suivante
+- Les structures = organizations dans la base de données
+
+COMMENCER PAR :
+1. Ouvrir AdminDashboard.jsx
+2. Ajouter le système d'onglets
+3. Créer UsersTab.jsx et StructuresTab.jsx vides
+4. Implémenter progressivement
+```
+
+Cette feuille de route est prête à être copiée-collée dans Replit ! L'agent aura toutes les instructions nécessaires pour implémenter les onglets de manière cohérente avec votre architecture existante.

@@ -1,0 +1,80 @@
+# Audit général du projet Passerelle CAP
+
+## Mission
+Tu vas ajouter plusieurs fonctionnalités à ce projet existant (gestion des structures, comptes utilisateurs, etc.). Avant toute implémentation, tu DOIS comprendre entièrement le projet pour t'y intégrer correctement sur le long terme.
+
+## Étape 1 : Architecture complète
+
+**Explore et documente :**
+- Structure des dossiers (client/, server/, shared/, etc.)
+- Technologies utilisées (frameworks, libraries, outils)
+- Organisation générale du code (MVC, composants, etc.)
+- Système de build et de déploiement
+
+## Étape 2 : Base de données complète
+
+**Analyse tout le schéma :**
+- ORM/système utilisé (Drizzle, Prisma, etc.)
+- Toutes les tables existantes avec leurs colonnes
+- Relations entre tables
+- Migrations et seeders
+- Conventions de nommage des tables/colonnes
+
+## Étape 3 : Patterns et conventions du projet
+
+**Comprends les standards :**
+- Structure des composants (dossiers, nommage)
+- Patterns de formulaires (validation, soumission, erreurs)
+- Gestion des listes/tableaux (tri, filtre, pagination)
+- Architecture des routes API (REST, structure des endpoints)
+- Système CSS/UI (classes, composants, thème)
+- Gestion d'état côté client (store, cache, hooks)
+
+## Étape 4 : Interface d'administration complète
+
+**Analyse l'écosystème admin :**
+- Capture d'écran de toute l'interface admin
+- Structure de navigation (onglets, sous-menus, breadcrumbs)
+- Système d'authentification et de permissions
+- Comment ajouter de nouveaux modules admin
+- Gestion des rôles utilisateurs
+
+## Étape 5 : Flux de données et API
+
+**Comprends l'architecture technique :**
+- Structure des endpoints API existants
+- Middlewares d'authentification et de validation
+- Gestion des erreurs (côté client et serveur)
+- Système de notifications/alertes
+- Patterns de requêtes (CRUD, pagination, filtres)
+
+## Étape 6 : Fonctionnalités futures à prévoir
+
+**Pour info, voici les modules qu'on va ajouter :**
+
+**Module Structures :**
+- Liste, création, modification des structures
+- Champs : nom, adresse, ville, EPCI, contact, email, type, activités
+- Import CSV
+
+**Module Comptes utilisateurs :**
+- Gestion des utilisateurs de la plateforme
+- Rôles et permissions
+- Profils utilisateurs
+
+**Autres modules potentiels :**
+- Statistiques et rapports
+- Paramètres système
+- Logs d'activité
+
+## Résultat attendu
+
+**Un guide complet de développement** contenant :
+1. **Architecture détaillée** - comment le projet fonctionne
+2. **Conventions de code** - standards à respecter pour tous les modules
+3. **Templates réutilisables** - patterns pour formulaires, listes, API
+4. **Plan d'intégration** - comment ajouter proprement de nouvelles fonctionnalités
+5. **Noms exacts** de tous les fichiers/dossiers/tables importants
+
+## Important
+Cet audit servira de référence pour toutes les futures implémentations. Sois exhaustif ! Ne modifie rien pour l'instant.

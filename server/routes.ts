@@ -17,6 +17,72 @@ import { requireAuth, requireRole, requireFicheAccess } from './middleware/rbac.
 import { auditMiddleware } from './services/auditLogger.js';
 import { transitionFicheState, getValidTransitions } from './services/stateTransitions.js';
 import emailService from './services/emailService.js';
+
+// CSV parsing utility functions (inspired from seed.ts)
+function parseCsv(content: string): string[][] {
+  // Auto-detect delimiter by checking first line
+  const firstLine = content.split('\n')[0];
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  const semicolonCount = (firstLine.match(/;/g) || []).length;
+  const delimiter = semicolonCount > commaCount ? ';' : ',';
+  
+  console.log(`CSV delimiter detected: "${delimiter}" (commas: ${commaCount}, semicolons: ${semicolonCount})`);
+  
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < content.length; i++) {
+    const char = content[i];
+    
+    if (inQuotes) {
+      if (char === '"') {
+        if (content[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === delimiter) {
+        row.push(current);
+        current = '';
+      } else if (char === '\n') {
+        row.push(current);
+        rows.push(row);
+        row = [];
+        current = '';
+      } else if (char === '\r') {
+        // ignore
+      } else {
+        current += char;
+      }
+    }
+  }
+  
+  if (current.length > 0 || row.length > 0) {
+    row.push(current);
+    rows.push(row);
+  }
+  
+  return rows;
+}
+
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+interface CsvRow {
+  [key: string]: string;
+}
+
 import { 
   validateRequest, 
   loginSchema, 
@@ -43,6 +109,22 @@ const upload = multer({
       cb(null, true);
     } else {
       cb(new Error('Type de fichier non autorisé'), false);
+    }
+  }
+});
+
+// Configure multer for CSV uploads
+const uploadCSV = multer({
+  dest: uploadsDir,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ['text/csv', 'application/csv', 'text/plain'];
+    if (allowedMimes.includes(file.mimetype) || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Seuls les fichiers CSV sont autorisés'), false);
     }
   }
 });
@@ -276,15 +358,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData,
         childrenData,
         workshopPropositions,
+        capDocuments,
         familyConsent
       } = req.validatedData;
 
 
-      // Generate reference number
-      const year = new Date().getFullYear();
+      // Generate reference number with year-month-counter format
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed, pad to 2 digits
+      const monthPrefix = `FN-${year}-${month}`;
+      
       const existingFiches = await storage.getAllFiches();
-      const count = existingFiches.filter(f => f.ref.startsWith(`FN-${year}`)).length + 1;
-      const ref = `FN-${year}-${count.toString().padStart(3, '0')}`;
+      // Only count fiches with the NEW format (FN-YYYY-MM-XXX) to avoid collision with legacy format (FN-YYYY-XXX)
+      const newFormatRegex = new RegExp(`^FN-${year}-${month}-\\d{3}$`);
+      const count = existingFiches.filter(f => typeof f.ref === 'string' && newFormatRegex.test(f.ref)).length + 1;
+      const ref = `${monthPrefix}-${count.toString().padStart(3, '0')}`;
 
       // Create fiche with all detailed data
       const fiche = await storage.createFiche({
@@ -296,6 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData: familyDetailedData || null,
         childrenData: childrenData || null,
         workshopPropositions: workshopPropositions || null,
+        capDocuments: capDocuments || null,
         familyConsent: familyConsent || false
       });
 
@@ -331,6 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData, 
         childrenData, 
         workshopPropositions,
+        capDocuments,
         familyConsent,
         ...otherFields 
       } = req.body;
@@ -342,6 +433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData: familyDetailedData || null,
         childrenData: childrenData || null,
         workshopPropositions: workshopPropositions || null,
+        capDocuments: capDocuments || null,
         familyConsent: familyConsent || false
       };
 
@@ -516,6 +608,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update organization
+  app.put('/api/organizations/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedOrganization = await storage.updateOrganization(id, req.body);
+      res.json(updatedOrganization);
+    } catch (error) {
+      console.error('Update organization error:', error);
+      res.status(500).json({ message: 'Erreur lors de la modification de l\'organisation' });
+    }
+  });
+
+  // Import organizations from CSV
+  app.post('/api/organizations/import', requireAuth, requireRole('ADMIN'), uploadCSV.single('csvFile'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Aucun fichier fourni' 
+        });
+      }
+
+      const csvContent = fs.readFileSync(req.file.path, 'utf8');
+      const rows = parseCsv(csvContent);
+      
+      if (rows.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Le fichier CSV est vide' 
+        });
+      }
+
+      const headers = rows[0].map(h => h.trim());
+      const dataRows = rows.slice(1);
+
+      // Debug: Log headers to understand what we're receiving
+      console.log('Headers received:', headers);
+      console.log('Headers JSON:', JSON.stringify(headers));
+
+      // Validate required columns
+      const requiredColumns = ['Nom', 'EPCI'];
+      const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+      if (missingColumns.length > 0) {
+        console.log('Missing columns check:', {
+          headers,
+          requiredColumns,
+          missingColumns,
+          headersExact: headers.map(h => `"${h}" (length: ${h.length})`)
+        });
+        return res.status(400).json({ 
+          success: false, 
+          message: `Colonnes obligatoires manquantes : ${missingColumns.join(', ')}. Headers reçus : ${headers.join(', ')}` 
+        });
+      }
+
+      const results = {
+        success: true,
+        processed: 0,
+        imported: 0,
+        updated: 0,
+        skipped: 0,
+        errors: [] as string[]
+      };
+
+      const organizations: any[] = [];
+      const epciNames = new Set<string>();
+
+      for (let i = 0; i < dataRows.length; i++) {
+        const row = dataRows[i];
+        const orgData: CsvRow = {};
+        
+        headers.forEach((header, index) => {
+          orgData[header] = (row[index] || '').trim();
+        });
+
+        results.processed++;
+        const lineNum = i + 2; // +2 for header and 0-based index
+
+        // Skip empty rows
+        if (!orgData['Nom'] && !orgData['EPCI']) {
+          results.skipped++;
+          continue;
+        }
+
+        // Validate required fields
+        if (!orgData['Nom']) {
+          results.errors.push(`Ligne ${lineNum} : Le nom de la structure est obligatoire`);
+          continue;
+        }
+
+        if (!orgData['EPCI']) {
+          results.errors.push(`Ligne ${lineNum} : L'EPCI est obligatoire`);
+          continue;
+        }
+
+        // Validate email if provided
+        if (orgData['Contacts'] && !validateEmail(orgData['Contacts'])) {
+          results.errors.push(`Ligne ${lineNum} : Format email invalide (${orgData['Contacts']})`);
+          continue;
+        }
+
+        // Check if organization already exists (simplified check - will catch duplicates during insert)
+        // Note: We'll rely on database uniqueness constraints for duplicate detection
+
+        epciNames.add(orgData['EPCI']);
+        organizations.push({
+          name: orgData['Nom'],
+          contactName: orgData['Nom prénom de la Directrice'] || null,
+          contactEmail: orgData['Contacts'] || null,
+          contactPhone: orgData['Téléphone'] || null,
+          contact: [orgData['Adresse'], orgData['Ville']].filter(Boolean).join(', ') || null,
+          epci: orgData['EPCI'],
+          lineNumber: lineNum
+        });
+      }
+
+      if (organizations.length === 0) {
+        return res.json({
+          ...results,
+          message: 'Aucune structure valide à importer'
+        });
+      }
+
+      // Get or create EPCIs
+      const existingEpcis = await storage.getAllEpcis();
+      const existingEpciNames = new Set(existingEpcis.map(e => e.name));
+      const newEpciNames = Array.from(epciNames).filter(name => !existingEpciNames.has(name));
+      
+      let epcisInserted: any[] = [];
+      if (newEpciNames.length > 0) {
+        // Create EPCIs one by one
+        for (const epciName of newEpciNames) {
+          try {
+            const newEpci = await storage.createEpci({ name: epciName });
+            epcisInserted.push(newEpci);
+          } catch (error: any) {
+            console.error(`Failed to create EPCI ${epciName}:`, error);
+          }
+        }
+      }
+
+      // Build EPCI map
+      const allEpcis = [...existingEpcis, ...epcisInserted];
+      const epciMap = new Map(allEpcis.map(e => [e.name, e.id]));
+
+      // Insert or update organizations
+      for (const org of organizations) {
+        const epciId = epciMap.get(org.epci);
+        if (!epciId) {
+          results.errors.push(`Ligne ${org.lineNumber} : EPCI '${org.epci}' non trouvé`);
+          continue;
+        }
+
+        try {
+          const result = await storage.upsertOrganization({
+            name: org.name,
+            contactName: org.contactName,
+            contactEmail: org.contactEmail,
+            contactPhone: org.contactPhone,
+            contact: org.contact,
+            epci: org.epci,
+            epciId: epciId
+          });
+          
+          if (result.isNew) {
+            results.imported++;
+          } else {
+            results.updated++;
+          }
+        } catch (error: any) {
+          results.errors.push(`Ligne ${org.lineNumber} : Erreur lors de l'opération - ${error.message}`);
+        }
+      }
+
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({
+        ...results,
+        message: `Import terminé : ${results.imported} nouvelles structures, ${results.updated} mises à jour, ${results.errors.length} erreurs`
+      });
+
+    } catch (error: any) {
+      console.error('CSV import error:', error);
+      
+      // Clean up file if it exists
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur lors de l\'import : ' + error.message 
+      });
+    }
+  });
+
   app.get('/api/workshops', requireAuth, async (req, res) => {
     try {
       const { objectiveId } = req.query;
@@ -567,6 +856,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { password, ...userData } = req.body;
 
+      // Pre-check: Verify email uniqueness
+      if (userData.email) {
+        const existingUser = await storage.getUserByEmail(userData.email);
+        if (existingUser) {
+          return res.status(409).json({ 
+            message: 'Cette adresse email est déjà utilisée par un autre utilisateur' 
+          });
+        }
+      }
+
       if (userData.role === 'EVS_CS') {
         if (!userData.orgId) {
           return res.status(400).json({ message: "L'organisation est requise pour le rôle EVS/CS" });
@@ -587,6 +886,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(user);
     } catch (error) {
       console.error('Create user error:', error);
+      
+      // Robust check for unique constraint violations across different DB engines
+      const isUniqueViolation = 
+        error?.code === '23505' || // Postgres
+        error?.code === 'SQLITE_CONSTRAINT' || 
+        error?.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+        error?.code === 'ER_DUP_ENTRY' || 
+        error?.errno === 1062 || // MySQL
+        /duplicate|unique constraint|constraint failed|users?_email/i.test(error?.message || '');
+
+      if (isUniqueViolation) {
+        return res.status(409).json({ 
+          message: 'Cette adresse email est déjà utilisée par un autre utilisateur' 
+        });
+      }
+      
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });
@@ -600,6 +915,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existing = await storage.getUser(id);
       if (!existing) {
         return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      }
+
+      // Pre-check: Verify email uniqueness if email is being changed
+      if (updateData.email && updateData.email !== existing.email) {
+        const existingUser = await storage.getUserByEmail(updateData.email);
+        if (existingUser) {
+          return res.status(409).json({ 
+            message: 'Cette adresse email est déjà utilisée par un autre utilisateur' 
+          });
+        }
       }
 
       // If password is provided, hash it
@@ -629,6 +954,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(user);
     } catch (error) {
       console.error('Update user error:', error);
+      
+      // Robust check for unique constraint violations across different DB engines
+      const isUniqueViolation = 
+        error?.code === '23505' || // Postgres
+        error?.code === 'SQLITE_CONSTRAINT' || 
+        error?.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+        error?.code === 'ER_DUP_ENTRY' || 
+        error?.errno === 1062 || // MySQL
+        /duplicate|unique constraint|constraint failed|users?_email/i.test(error?.message || '');
+
+      if (isUniqueViolation) {
+        return res.status(409).json({ 
+          message: 'Cette adresse email est déjà utilisée par un autre utilisateur' 
+        });
+      }
+      
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });
@@ -832,6 +1173,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       console.error('Get stats error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Admin Email Logs routes
+  app.get('/api/admin/email-logs', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { status, search, page = '1', size = '50', sort = 'createdAt:desc' } = req.query;
+      const filters = {
+        status: status as string,
+        search: search as string,
+        page: parseInt(page as string),
+        size: parseInt(size as string),
+        sort: sort as string
+      };
+      
+      const result = await storage.getEmailLogs(filters);
+      res.json(result);
+    } catch (error) {
+      console.error('Get email logs error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.get('/api/admin/email-logs/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const emailLog = await storage.getEmailLog(id);
+      
+      if (!emailLog) {
+        return res.status(404).json({ message: 'Email log introuvable' });
+      }
+      
+      res.json(emailLog);
+    } catch (error) {
+      console.error('Get email log error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.patch('/api/admin/email-logs/:id', requireAuth, requireRole('ADMIN'), auditMiddleware('update', 'EmailLog'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!['intercepted', 'sent', 'viewed', 'archived', 'error'].includes(status)) {
+        return res.status(400).json({ message: 'Statut invalide' });
+      }
+      
+      const updates: any = { status };
+      if (status === 'viewed' && !req.body.viewedAt) {
+        updates.viewedAt = new Date();
+      }
+      
+      const updatedLog = await storage.updateEmailLog(id, updates);
+      res.json(updatedLog);
+    } catch (error) {
+      console.error('Update email log error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.post('/api/admin/email-logs/:id/mark-viewed', requireAuth, requireRole('ADMIN'), auditMiddleware('mark_viewed', 'EmailLog'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const updatedLog = await storage.updateEmailLog(id, {
+        status: 'viewed',
+        viewedAt: new Date()
+      });
+      
+      res.json(updatedLog);
+    } catch (error) {
+      console.error('Mark email viewed error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.delete('/api/admin/email-logs/:id', requireAuth, requireRole('ADMIN'), auditMiddleware('delete', 'EmailLog'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteEmailLog(id);
+      res.json({ message: 'Email log supprimé avec succès' });
+    } catch (error) {
+      console.error('Delete email log error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  app.delete('/api/admin/email-logs', requireAuth, requireRole('ADMIN'), auditMiddleware('delete_all', 'EmailLog'), async (req, res) => {
+    try {
+      await storage.deleteAllEmailLogs();
+      res.json({ message: 'Tous les email logs supprimés avec succès' });
+    } catch (error) {
+      console.error('Delete all email logs error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Admin Dashboard stats (including email logs count)
+  app.get('/api/admin/stats', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const allFiches = await storage.getAllFiches();
+      const allUsers = await storage.getAllUsers();
+      const emailLogsResult = await storage.getEmailLogs({ page: 1, size: 1 });
+      
+      const stats = {
+        totalFiches: allFiches.length,
+        activeFiches: allFiches.filter(f => !['CLOSED', 'ARCHIVED'].includes(f.state)).length,
+        totalUsers: allUsers.length,
+        totalEmailLogs: emailLogsResult.total,
+        interceptedEmails: emailLogsResult.total // In dev, all emails are intercepted
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Get admin stats error:', error);
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });

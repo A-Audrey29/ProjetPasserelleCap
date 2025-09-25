@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
+import DocumentsDisplay from '@/components/Documents/DocumentsDisplay';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -92,6 +93,14 @@ export default function FicheDetail({ ficheId }) {
   // Query for organizations by selected EPCI
   const { data: epciOrganizations = [] } = useQuery({
     queryKey: ['/api/epcis', selectedEpciId, 'organizations'],
+    queryFn: async ({ queryKey }) => {
+      const [, epciId] = queryKey;
+      const response = await fetch(`/api/epcis/${epciId}/organizations`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch organizations by EPCI');
+      return response.json();
+    },
     enabled: !!selectedEpciId && (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche?.state === 'SUBMITTED_TO_FEVES'
   });
 
@@ -389,7 +398,8 @@ export default function FicheDetail({ ficheId }) {
 
   // RELATIONS_EVS actions with EPCI selection
   const handleRelationsEvsAction = async (action) => {
-    if (!selectedEvscsId) {
+    // Only check for selectedEvscsId if action requires it (not for archive)
+    if ((action === 'validate' || action === 'return') && !selectedEvscsId) {
       toast({
         title: "Sélection requise",
         description: "Veuillez sélectionner une structure EVS/CS",
@@ -399,7 +409,7 @@ export default function FicheDetail({ ficheId }) {
     }
 
     try {
-      const selectedOrg = epciOrganizations.find(org => org.id === selectedEvscsId);
+      const selectedOrg = epciOrganizations.find(org => org.orgId === selectedEvscsId);
       
       if (action === 'validate') {
         // Advance to next state and send notification to EVS/CS
@@ -419,7 +429,7 @@ export default function FicheDetail({ ficheId }) {
           orgId: selectedEvscsId,
           orgName: selectedOrg?.name,
           contactEmail: selectedOrg?.contactEmail,
-          contactName: selectedOrg?.contactPersonName
+          contactName: selectedOrg?.contactName
         });
         
         toast({
@@ -1001,6 +1011,22 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
+          {/* CAP Documents Section */}
+          {fiche.capDocuments && fiche.capDocuments.length > 0 && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Documents CAP
+              </h2>
+              <div className={styles.cardContent}>
+                <DocumentsDisplay 
+                  documents={fiche.capDocuments}
+                  showTitle={false}
+                  showDownloadAll={true}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Validation tracking for all fiches */}
           {(fiche.state === 'SUBMITTED_TO_CD' || fiche.state === 'SUBMITTED_TO_FEVES' || fiche.state === 'ASSIGNED_EVS' || fiche.state === 'ACCEPTED_EVS' || fiche.state === 'VALIDATED' || fiche.state === 'ARCHIVED') && (
             <div className={styles.card}>
@@ -1323,6 +1349,33 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
+          {/* Archive option for RELATIONS_EVS with CLOSED status */}
+          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'CLOSED' && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Gestion de la fiche
+              </h2>
+              
+              <div className={styles.cardContent}>
+                <p className={styles.statusText}>
+                  Cette fiche est maintenant fermée et peut être archivée si nécessaire.
+                </p>
+                
+                <div className={styles.actionButtonsGroup}>
+                  <button
+                    className={styles.archiveButton}
+                    onClick={() => handleRelationsEvsAction('archive')}
+                    disabled={transitionMutation.isPending}
+                    data-testid="button-relations-archive-closed"
+                  >
+                    <Archive className={styles.buttonIcon} />
+                    Archiver la fiche
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* EPCI Selection for RELATIONS_EVS with SUBMITTED_TO_FEVES status */}
           {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'SUBMITTED_TO_FEVES' && (
             <div className={styles.card}>
@@ -1369,10 +1422,9 @@ export default function FicheDetail({ ficheId }) {
                       >
                         <option value="">-- Choisir une structure --</option>
                         {epciOrganizations
-                          .filter(org => org.type === 'EVS' || org.type === 'CS')
                           .map((org) => (
-                            <option key={org.id} value={org.id}>
-                              {org.name} ({org.type})
+                            <option key={org.orgId} value={org.orgId}>
+                              {org.name}
                             </option>
                           ))}
                       </select>
@@ -1386,7 +1438,7 @@ export default function FicheDetail({ ficheId }) {
                     <div className={styles.confirmationText}>
                       <p className={styles.confirmationMessage} data-testid="text-transmission-confirmation">
                         Transmettre cette fiche à la structure : <strong>
-                          {epciOrganizations.find(org => org.id === selectedEvscsId)?.name}
+                          {epciOrganizations.find(org => org.orgId === selectedEvscsId)?.name}
                         </strong>
                       </p>
                     </div>
@@ -1507,13 +1559,13 @@ export default function FicheDetail({ ficheId }) {
               {organizations
                 .map((org) => (
                   <div 
-                    key={org.id}
-                    className={`${styles.organizationItem} ${selectedOrgId === org.id ? styles.selected : ''}`}
-                    onClick={() => setSelectedOrgId(org.id)}
-                    data-testid={`org-option-${org.id}`}
+                    key={org.orgId}
+                    className={`${styles.organizationItem} ${selectedOrgId === org.orgId ? styles.selected : ''}`}
+                    onClick={() => setSelectedOrgId(org.orgId)}
+                    data-testid={`org-option-${org.orgId}`}
                   >
                     <h4 className={styles.orgName}>{org.name}</h4>
-                    <p className={styles.orgType}>{org.type}</p>
+                    <p className={styles.orgInfo}>{org.contact || 'Organisation'}</p>
                   </div>
                 ))}
             </div>

@@ -11,6 +11,7 @@ export const ficheStateEnum = pgEnum("fiche_state", [
   "CONTRACT_SIGNED", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
   "FIELD_CHECK_DONE", "CLOSED", "ARCHIVED"
 ]);
+export const emailStatusEnum = pgEnum("email_status", ["intercepted", "sent", "viewed", "archived", "error"]);
 
 // Tables
 export const epcis = pgTable("epcis", {
@@ -92,6 +93,9 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   // Workshop propositions from referent
   workshopPropositions: json("workshop_propositions"), // Store referent propositions for each workshop
   
+  // Workshop selections (checkboxes) - priority indicator
+  selectedWorkshops: json("selected_workshops"), // Store which workshops are selected (checked)
+  
   // Family consent
   familyConsent: boolean("family_consent").notNull().default(false),
   
@@ -119,6 +123,9 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   
   // Total amount for calculations
   totalAmount: integer("total_amount"), // in cents
+  
+  // CAP documents uploaded with fiche
+  capDocuments: json("cap_documents"), // Store array of uploaded CAP documents
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -151,6 +158,37 @@ export const comments = pgTable("comments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   ficheIdx: index("comments_fiche_idx").on(table.ficheId),
+}));
+
+export const emailLogs = pgTable("email_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  to: json("to").notNull(), // Array of recipient emails
+  cc: json("cc"), // Optional CC recipients
+  bcc: json("bcc"), // Optional BCC recipients
+  subject: text("subject").notNull(),
+  text: text("text"), // Plain text version
+  html: text("html").notNull(), // HTML version
+  meta: json("meta"), // { ficheId, ficheRef, event, triggerUserId, ... }
+  status: emailStatusEnum("status").notNull().default("intercepted"),
+  error: text("error"), // Error message if status is 'error'
+  messageId: text("message_id"), // SendGrid message ID when sent
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  viewedAt: timestamp("viewed_at"), // When marked as viewed
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  statusIdx: index("email_logs_status_idx").on(table.status),
+  createdAtIdx: index("email_logs_created_at_idx").on(table.createdAt),
+}));
+
+export const migrations = pgTable("migrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  checksum: text("checksum").notNull(),
+  metadata: json("metadata"),
+  executedAt: timestamp("executed_at").defaultNow().notNull(),
+}, (table) => ({
+  nameIdx: index("migrations_name_idx").on(table.name),
+  executedAtIdx: index("migrations_executed_at_idx").on(table.executedAt),
 }));
 
 // Relations
@@ -236,6 +274,17 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
   createdAt: true,
 });
 
+export const insertEmailLogSchema = createInsertSchema(emailLogs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMigrationSchema = createInsertSchema(migrations).omit({
+  id: true,
+  executedAt: true,
+});
+
 // Types
 export type Epci = typeof epcis.$inferSelect;
 export type InsertEpci = z.infer<typeof insertEpciSchema>;
@@ -253,3 +302,7 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
+export type EmailLog = typeof emailLogs.$inferSelect;
+export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
+export type Migration = typeof migrations.$inferSelect;
+export type InsertMigration = z.infer<typeof insertMigrationSchema>;

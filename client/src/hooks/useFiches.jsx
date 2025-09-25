@@ -41,9 +41,20 @@ export function useFiches(filters = {}) {
 
       return fiche;
     },
-    onSuccess: () => {
-      // Invalidate all fiches queries (including parameterized ones)
-      queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
+    onSuccess: (newFiche) => {
+      // Set individual fiche data for immediate access
+      queryClient.setQueryData(['/api/fiches', newFiche.id], newFiche);
+      
+      // Invalidate only fiche lists, not individual fiche detail queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === '/api/fiches' && 
+          query.queryKey.length >= 2 && 
+          (query.queryKey[1] === '' || String(query.queryKey[1]).includes('='))
+      });
+      
+      // Invalidate dashboard stats as they might have changed
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
     }
   });
 
@@ -52,10 +63,17 @@ export function useFiches(filters = {}) {
       const response = await apiRequest('PATCH', `/api/fiches/${id}`, data);
       return response.json();
     },
-    onSuccess: (data) => {
-      // Invalidate all fiches queries (including parameterized ones)
-      queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
-      queryClient.setQueryData(['/api/fiches', data.id], data);
+    onSuccess: (updatedFiche) => {
+      // Update individual fiche data for immediate access
+      queryClient.setQueryData(['/api/fiches', updatedFiche.id], updatedFiche);
+      
+      // Invalidate only fiche lists, not individual fiche detail queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === '/api/fiches' && 
+          query.queryKey.length >= 2 && 
+          (query.queryKey[1] === '' || String(query.queryKey[1]).includes('='))
+      });
     }
   });
 
@@ -67,10 +85,20 @@ export function useFiches(filters = {}) {
       });
       return response.json();
     },
-    onSuccess: (data) => {
-      // Invalidate all fiches queries (including parameterized ones)
-      queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
-      queryClient.setQueryData(['/api/fiches', data.id], data);
+    onSuccess: (updatedFiche) => {
+      // Update individual fiche data for immediate access
+      queryClient.setQueryData(['/api/fiches', updatedFiche.id], updatedFiche);
+      
+      // Invalidate only fiche lists, not individual fiche detail queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === '/api/fiches' && 
+          query.queryKey.length >= 2 && 
+          (query.queryKey[1] === '' || String(query.queryKey[1]).includes('='))
+      });
+      
+      // Invalidate dashboard stats as state changes affect counts
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
     }
   });
 
@@ -81,10 +109,20 @@ export function useFiches(filters = {}) {
       });
       return response.json();
     },
-    onSuccess: (data) => {
-      // Invalidate all fiches queries (including parameterized ones)
-      queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
-      queryClient.setQueryData(['/api/fiches', data.id], data);
+    onSuccess: (updatedFiche) => {
+      // Update individual fiche data for immediate access
+      queryClient.setQueryData(['/api/fiches', updatedFiche.id], updatedFiche);
+      
+      // Invalidate only fiche lists, not individual fiche detail queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === '/api/fiches' && 
+          query.queryKey.length >= 2 && 
+          (query.queryKey[1] === '' || String(query.queryKey[1]).includes('='))
+      });
+      
+      // Invalidate dashboard stats as assignments affect counts
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
     }
   });
 
@@ -130,7 +168,7 @@ export function useFiche(id) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/fiches', id]);
+      queryClient.invalidateQueries({ queryKey: ['/api/fiches', id] });
     }
   });
 

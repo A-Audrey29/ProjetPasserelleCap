@@ -12,6 +12,12 @@ export const ficheCreationSchema = z.object({
   familyDetailedData: z.any().optional(),
   childrenData: z.any().optional(),
   workshopPropositions: z.any().optional(),
+  capDocuments: z.array(z.object({
+    url: z.string().url(),
+    name: z.string(),
+    size: z.number().min(0),
+    mime: z.string()
+  })).optional(),
   familyConsent: z.boolean().optional()
 });
 

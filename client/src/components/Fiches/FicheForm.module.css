@@ -450,6 +450,30 @@
   min-height: 80px;
 }
 
+.workshopContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.workshopContainer:last-child {
+  margin-bottom: 0;
+}
+
+.workshopCheckbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: #6A8B74;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.workshopCheckbox:focus {
+  outline: 2px solid #6A8B74;
+  outline-offset: 2px;
+}
+
 @media (min-width: 768px) {
   .workshopItem {
     flex-direction: row;
@@ -626,4 +650,45 @@
 .consentText {
   color: #3B4B61;
   font-weight: 500;
+}
+
+.requiredAsterisk {
+  color: #8C4A4A;
+  font-weight: bold;
+  margin-left: 0.25rem;
+}
+
+/* Error Message Styles */
+.errorMessage {
+  color: #8C4A4A;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.errorIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
+.fieldWithError {
+  border-color: #8C4A4A !important;
+  box-shadow: 0 0 0 1px #8C4A4A;
+}
+
+/* Spinner Animation for Loading State */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

@@ -1,5 +1,6 @@
 import { storage } from '../storage.ts';
 import { logAction } from './auditLogger.js';
+import notificationService from './notificationService.js';
 
 // Define valid state transitions by role
 const STATE_TRANSITIONS = {
@@ -38,12 +39,16 @@ export function canTransition(userRole, currentState, newState) {
 }
 
 export async function transitionFicheState(ficheId, newState, userId, metadata = {}) {
-  const fiche = await storage.getFiche(ficheId);
+  // Parallelize fiche and user retrieval
+  const [fiche, user] = await Promise.all([
+    storage.getFiche(ficheId),
+    storage.getUser(userId)
+  ]);
+  
   if (!fiche) {
     throw new Error('Fiche not found');
   }
 
-  const user = await storage.getUser(userId);
   if (!user) {
     throw new Error('User not found');
   }
@@ -56,13 +61,28 @@ export async function transitionFicheState(ficheId, newState, userId, metadata =
   // Perform the transition
   const updatedFiche = await storage.updateFiche(ficheId, { state: newState, ...metadata });
 
-  // Log the transition
-  await logAction(userId, 'state_transition', 'FicheNavette', ficheId, {
-    oldState: fiche.state,
-    newState: newState,
-    ...metadata
-  });
-
+  // Start background tasks without blocking the response
+  void Promise.allSettled([
+    // Log the transition
+    logAction(userId, 'state_transition', 'FicheNavette', ficheId, {
+      oldState: fiche.state,
+      newState: newState,
+      ...metadata
+    }).catch(error => {
+      console.error('Audit logging failed for fiche', ficheId, ':', error);
+    }),
+    // Send automatic email notifications (non-blocking)
+    notificationService.sendStateTransitionNotification(
+      updatedFiche, 
+      fiche.state, 
+      newState, 
+      userId, 
+      metadata
+    ).catch(error => {
+      console.error('Email notification failed for fiche', ficheId, ':', error);
+    })
+  ]);
+  
   return updatedFiche;
 }
 
