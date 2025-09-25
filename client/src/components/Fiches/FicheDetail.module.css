@@ -1409,3 +1409,45 @@
   color: #374151;
 }
 
+/* Review section styles - copied from FicheForm.module.css */
+.reviewSection {
+  background-color: #F5F6F7;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.reviewSectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reviewSectionIcon {
+  width: 1rem;
+  height: 1rem;
+  color: #6A8B74;
+}
+
+.reviewContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reviewContent p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #3B4B61;
+  line-height: 1.4;
+}
+
+.reviewContent strong {
+  color: #3B4B61;
+  margin-right: 0.25rem;
+}

@@ -13,7 +13,8 @@ import {
   Edit,
   RotateCcw,
   Archive,
-  Trash2
+  Trash2,
+  Target
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
@@ -973,60 +974,66 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
-          {/* Ateliers sélectionnés - adapted from FicheForm review section */}
-          {workshopIds.length > 0 && (
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                Ateliers sélectionnés
-              </h2>
-              <div className={styles.cardContent}>
-                {workshopIds.map(workshopId => {
-                  const workshop = workshopsList?.find(w => String(w.id) === String(workshopId));
+          {/* Selected Workshops - EXACT COPY from FicheForm.jsx lines 1818-1876 */}
+          <div className={styles.reviewSection}>
+            <h3 className={styles.reviewSectionTitle}>
+              <Target className={styles.reviewSectionIcon} />
+              Ateliers sélectionnés
+            </h3>
+            <div className={styles.reviewContent}>
+              {(() => {
+                // Utility function to get combined workshop selection
+                const getCombinedWorkshopSelection = () => {
+                  // Get selected workshops (checkboxes are priority)
+                  const selectedWorkshopIds = Object.keys(fiche.selectedWorkshops || {}).filter(
+                    id => fiche.selectedWorkshops[id]
+                  );
+                  
+                  // Fallback for existing fiches: if no checkboxes but propositions exist
+                  const propositionWorkshopIds = Object.keys(fiche.workshopPropositions || {}).filter(
+                    id => fiche.workshopPropositions[id]?.trim()
+                  );
+                  
+                  // Priority: selected workshops, fallback to propositions for backward compatibility
+                  const finalWorkshopIds = selectedWorkshopIds.length > 0 
+                    ? selectedWorkshopIds 
+                    : propositionWorkshopIds;
+                  
+                  return {
+                    workshopIds: finalWorkshopIds,
+                    isLegacyMode: selectedWorkshopIds.length === 0 && propositionWorkshopIds.length > 0
+                  };
+                };
+                
+                const { workshopIds, isLegacyMode } = getCombinedWorkshopSelection();
+                
+                if (workshopIds.length === 0) {
+                  return <p>Aucun atelier sélectionné</p>;
+                }
+                
+                return workshopIds.map(workshopId => {
+                  const workshop = workshopsList?.find(w => w.id === workshopId);
                   const workshopName = workshop?.name || `Atelier ${workshopId}`;
                   const proposition = fiche.workshopPropositions?.[workshopId]?.trim();
                   
                   return (
-                    <div key={workshopId} className={styles.propositionReview} data-testid={`workshop-${workshopId}`}>
-                      <h4 data-testid={`text-workshop-name-${workshopId}`}>✅ {workshopName}</h4>
-                      {workshop?.objective && (
-                        <p style={{ fontSize: '0.75rem', color: '#6B7280', marginBottom: '0.25rem' }}>
-                          <strong>{workshop.objective.code}</strong> - {workshop.objective.name}
-                        </p>
-                      )}
+                    <div key={workshopId} className={styles.propositionReview}>
+                      <h4>✅ {workshopName}</h4>
                       {isLegacyMode ? (
-                        proposition && (
-                          <p data-testid={`text-proposition-${workshopId}`}>
-                            <strong>Atelier avec proposition :</strong> {proposition}
-                          </p>
-                        )
+                        <p><strong>Atelier avec proposition :</strong> {proposition}</p>
                       ) : (
                         proposition ? (
-                          <p data-testid={`text-proposition-${workshopId}`}>
-                            <strong>Atelier sélectionné avec proposition :</strong> {proposition}
-                          </p>
+                          <p><strong>Atelier sélectionné avec proposition :</strong> {proposition}</p>
                         ) : (
                           <p><strong>Atelier sélectionné</strong></p>
                         )
                       )}
-                      {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && workshop?.priceCents && (
-                        <p style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '0.25rem' }} data-testid={`text-workshop-price-${workshopId}`}>
-                          <strong>Prix :</strong> {formatCurrency(workshop.priceCents)}
-                        </p>
-                      )}
                     </div>
                   );
-                })}
-
-                {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && totalAmount > 0 && (
-                  <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#F3F4F6', borderRadius: '4px' }}>
-                    <p style={{ margin: 0, fontWeight: 'bold' }} data-testid="text-total-amount">
-                      <strong>Total :</strong> {formatCurrency(totalAmount)}
-                    </p>
-                  </div>
-                )}
-              </div>
+                });
+              })()}
             </div>
-          )}
+          </div>
 
           {/* Nombre de participants - adapted from FicheForm review section */}
           {fiche.participantsCount && (
