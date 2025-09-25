@@ -1605,13 +1605,6 @@ export default function FicheForm({
           capDocuments: formData.capDocuments, // Save CAP documents
         };
 
-        console.log('[Transmit] ficheData before submission:', {
-          participantsCount: ficheData.participantsCount,
-          participantsCountType: typeof ficheData.participantsCount,
-          isNaN: isNaN(ficheData.participantsCount),
-          workshopPropositions: Object.keys(ficheData.workshopPropositions || {}).length,
-          capDocuments: ficheData.capDocuments?.length || 0
-        });
 
         // Create the fiche as DRAFT
         const newFiche = await onSubmit(ficheData);

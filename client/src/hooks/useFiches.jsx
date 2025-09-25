@@ -30,7 +30,10 @@ export function useFiches(filters = {}) {
         familyDetailedData: ficheData.familyDetailedData,
         childrenData: ficheData.childrenData,
         workshopPropositions: ficheData.workshopPropositions,
-        familyConsent: ficheData.familyConsent
+        selectedWorkshops: ficheData.selectedWorkshops,
+        participantsCount: ficheData.participantsCount,
+        familyConsent: ficheData.familyConsent,
+        capDocuments: ficheData.capDocuments
       };
       
       
