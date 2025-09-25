@@ -358,6 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData,
         childrenData,
         workshopPropositions,
+        participantsCount,
         capDocuments,
         familyConsent
       } = req.validatedData;
@@ -385,6 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData: familyDetailedData || null,
         childrenData: childrenData || null,
         workshopPropositions: workshopPropositions || null,
+        participantsCount: participantsCount,
         capDocuments: capDocuments || null,
         familyConsent: familyConsent || false
       });
