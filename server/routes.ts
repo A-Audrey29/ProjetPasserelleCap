@@ -340,6 +340,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           (() => { try { return JSON.parse(fiche.childrenData); } catch { return null; } })() : fiche.childrenData,
         workshopPropositions: fiche.workshopPropositions && typeof fiche.workshopPropositions === 'string' ?
           (() => { try { return JSON.parse(fiche.workshopPropositions); } catch { return null; } })() : fiche.workshopPropositions,
+        selectedWorkshops: fiche.selectedWorkshops && typeof fiche.selectedWorkshops === 'string' ?
+          (() => { try { return JSON.parse(fiche.selectedWorkshops); } catch { return null; } })() : fiche.selectedWorkshops,
         validTransitions: getValidTransitions(req.ficheAccess.role, fiche.state)
       };
 
@@ -358,6 +360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData,
         childrenData,
         workshopPropositions,
+        selectedWorkshops,
         participantsCount,
         capDocuments,
         familyConsent
@@ -386,6 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData: familyDetailedData || null,
         childrenData: childrenData || null,
         workshopPropositions: workshopPropositions || null,
+        selectedWorkshops: selectedWorkshops || null,
         participantsCount: participantsCount,
         capDocuments: capDocuments || null,
         familyConsent: familyConsent || false
