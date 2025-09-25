@@ -1871,6 +1871,22 @@ export default function FicheForm({
           </div>
         </div>
 
+        {/* Participants Count */}
+        <div className={styles.reviewSection}>
+          <h3 className={styles.reviewSectionTitle}>
+            <Target className={styles.reviewSectionIcon} />
+            Nombre de participants
+          </h3>
+          <div className={styles.reviewContent}>
+            <p>
+              <strong>Nombre de participants :</strong> {formData.participantsCount || 1} personne{(formData.participantsCount || 1) > 1 ? 's' : ''}
+            </p>
+            <p style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+              Nombre de personnes de la fiche navette qui participeront aux ateliers sélectionnés
+            </p>
+          </div>
+        </div>
+
         {/* CAP Documents Upload Section */}
         <div className={styles.reviewSection}>
           <FileUpload
