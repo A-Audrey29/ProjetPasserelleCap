@@ -860,7 +860,11 @@ export default function FicheForm({
           <select
             id="participantsCount"
             value={formData.participantsCount}
-            onChange={(e) => setFormData(prev => ({ ...prev, participantsCount: parseInt(e.target.value) }))}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || 1; // Default to 1 if NaN
+              console.log('[ParticipantsCount] onChange:', { rawValue: e.target.value, parsedValue: value });
+              setFormData(prev => ({ ...prev, participantsCount: value }));
+            }}
             className={styles.fieldSelect}
             data-testid="select-participants-count"
           >
@@ -1601,6 +1605,14 @@ export default function FicheForm({
           familyConsent: formData.familyConsent,
           capDocuments: formData.capDocuments, // Save CAP documents
         };
+
+        console.log('[Transmit] ficheData before submission:', {
+          participantsCount: ficheData.participantsCount,
+          participantsCountType: typeof ficheData.participantsCount,
+          isNaN: isNaN(ficheData.participantsCount),
+          workshopPropositions: Object.keys(ficheData.workshopPropositions || {}).length,
+          capDocuments: ficheData.capDocuments?.length || 0
+        });
 
         // Create the fiche as DRAFT
         const newFiche = await onSubmit(ficheData);
