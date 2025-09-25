@@ -12,7 +12,7 @@ export const ficheCreationSchema = z.object({
   familyDetailedData: z.any().optional(),
   childrenData: z.any().optional(),
   workshopPropositions: z.any().optional(),
-  participantsCount: z.number().int().min(1).max(10).optional(),
+  participantsCount: z.number().int().min(1, 'Le nombre de participants doit être au minimum 1').max(10, 'Le nombre de participants ne peut dépasser 10'),
   capDocuments: z.array(z.object({
     url: z.string().url(),
     name: z.string(),
