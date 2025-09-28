@@ -41,7 +41,8 @@ export function useStructures() {
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       const response = await apiRequest('DELETE', `/api/organizations/${id}`);
-      return response.json();
+      // DELETE peut retourner une réponse vide, pas besoin de parser JSON
+      return response.ok ? { success: true } : { success: false };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/organizations'] });
