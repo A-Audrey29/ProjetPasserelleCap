@@ -626,6 +626,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete organization
+  app.delete('/api/organizations/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteOrganization(id);
+      res.status(200).end();
+    } catch (error) {
+      console.error('Delete organization error:', error);
+      res.status(500).json({ message: 'Erreur lors de la suppression de l\'organisation' });
+    }
+  });
+
   // Import organizations from CSV
   app.post('/api/organizations/import', requireAuth, requireRole('ADMIN'), uploadCSV.single('csvFile'), async (req, res) => {
     try {
