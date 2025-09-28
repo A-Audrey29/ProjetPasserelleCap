@@ -89,9 +89,9 @@ export default function ImportCSVModal({ isOpen, onClose }) {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `Nom,EPCI,Nom prénom de la Directrice,Contacts,Téléphone,Adresse,Ville
-"Exemple Structure","CA Basse-Terre","Jean Dupont","contact@exemple.fr","0590123456","123 rue Example","Basse-Terre"
-"Autre Structure","CA Pointe-à-Pitre","Marie Martin","marie@autre.fr","0590654321","456 avenue Test","Pointe-à-Pitre"`;
+    const csvContent = `Nom,EPCI,ContactName,ContactEmail,ContactPhone
+"Exemple Structure","CA Basse-Terre","Jean Dupont","contact@exemple.fr","0590123456"
+"Autre Structure","CA Pointe-à-Pitre","Marie Martin","marie@autre.fr","0590654321"`;
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -134,11 +134,9 @@ export default function ImportCSVModal({ isOpen, onClose }) {
                 <div className={styles.columnsList}>
                   <span className={styles.requiredColumn}>Nom*</span>
                   <span className={styles.requiredColumn}>EPCI*</span>
-                  <span className={styles.optionalColumn}>Nom prénom de la Directrice</span>
-                  <span className={styles.optionalColumn}>Contacts</span>
-                  <span className={styles.optionalColumn}>Téléphone</span>
-                  <span className={styles.optionalColumn}>Adresse</span>
-                  <span className={styles.optionalColumn}>Ville</span>
+                  <span className={styles.optionalColumn}>ContactName</span>
+                  <span className={styles.optionalColumn}>ContactEmail</span>
+                  <span className={styles.optionalColumn}>ContactPhone</span>
                 </div>
                 <Button 
                   variant="outline" 
