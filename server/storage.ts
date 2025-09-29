@@ -531,7 +531,7 @@ export class DatabaseStorage implements IStorage {
           .select({
             id: ficheNavettes.id,
             ref: ficheNavettes.ref,
-            familyName: ficheNavettes.description, // Extract family name from description
+            familyDetailedData: ficheNavettes.familyDetailedData,
             participantsCount: ficheNavettes.participantsCount
           })
           .from(ficheNavettes)
@@ -566,7 +566,7 @@ export class DatabaseStorage implements IStorage {
           fiches: fiches.map(f => ({
             id: f.id,
             ref: f.ref,
-            familyName: f.familyName?.split(' - ')[0] || 'Famille', // Extract family name
+            familyName: this.extractGuardianName(f.familyDetailedData),
             participantsCount: f.participantsCount
           }))
         };
@@ -574,6 +574,44 @@ export class DatabaseStorage implements IStorage {
     );
 
     return sessionsWithFiches;
+  }
+
+  // Helper function to extract guardian name from familyDetailedData
+  private extractGuardianName(familyDetailedData: any): string {
+    if (!familyDetailedData) return 'Famille';
+
+    try {
+      const familyData = typeof familyDetailedData === 'string' 
+        ? JSON.parse(familyDetailedData) 
+        : familyDetailedData;
+
+      if (familyData?.autoriteParentale) {
+        const authority = familyData.autoriteParentale
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+
+        switch (authority) {
+          case 'mere':
+            return familyData.mother || 'Famille';
+          case 'pere':
+            return familyData.father || 'Famille';
+          case 'tiers':
+            return familyData.tiers || familyData.guardian || 'Famille';
+          default:
+            break;
+        }
+      }
+
+      if (familyData?.mother) return familyData.mother;
+      if (familyData?.father) return familyData.father;
+      if (familyData?.guardian) return familyData.guardian;
+
+      return 'Famille';
+    } catch (error) {
+      console.error('Error extracting guardian name:', error);
+      return 'Famille';
+    }
   }
 
   // Update session contracts
