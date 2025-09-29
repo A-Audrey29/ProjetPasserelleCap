@@ -8,7 +8,7 @@ import {
   type EmailLog, type InsertEmailLog, type WorkshopEnrollment, type InsertWorkshopEnrollment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, like, count } from "drizzle-orm";
+import { eq, and, or, desc, asc, like, count, sql } from "drizzle-orm";
 
 export interface IStorage {
   // EPCIs
@@ -485,6 +485,95 @@ export class DatabaseStorage implements IStorage {
 
   async deleteWorkshopEnrollment(id: string): Promise<void> {
     await db.delete(workshopEnrollments).where(eq(workshopEnrollments.id, id));
+  }
+
+  // Get workshop sessions with role-based filtering and joined data
+  async getWorkshopSessions(userRole: string, userOrgId?: string): Promise<any[]> {
+    let query = db
+      .select({
+        id: workshopEnrollments.id,
+        workshopId: workshopEnrollments.workshopId,
+        evsId: workshopEnrollments.evsId,
+        participantCount: workshopEnrollments.participantCount,
+        sessionNumber: workshopEnrollments.sessionNumber,
+        isLocked: workshopEnrollments.isLocked,
+        contractSignedByEvs: workshopEnrollments.contractSignedByEVS,
+        contractSignedByCommune: workshopEnrollments.contractSignedByCommune,
+        contractCommuneUrl: workshopEnrollments.contractCommunePdfUrl,
+        activityDone: workshopEnrollments.activityDone,
+        createdAt: workshopEnrollments.createdAt,
+        // Workshop details
+        workshopName: workshops.name,
+        workshopMinCapacity: workshops.minCapacity,
+        workshopMaxCapacity: workshops.maxCapacity,
+        // EVS details
+        evsName: organizations.name
+      })
+      .from(workshopEnrollments)
+      .leftJoin(workshops, eq(workshopEnrollments.workshopId, workshops.id))
+      .leftJoin(organizations, eq(workshopEnrollments.evsId, organizations.orgId));
+
+    // Apply role-based filtering
+    if (userRole === 'EVS_CS' && userOrgId) {
+      query = query.where(eq(workshopEnrollments.evsId, userOrgId)) as any;
+    }
+    // ADMIN, RELATIONS_EVS, CD see all sessions
+
+    const sessions = await query.orderBy(
+      asc(workshops.name),
+      asc(workshopEnrollments.sessionNumber)
+    );
+
+    // Get associated fiches for each session
+    const sessionsWithFiches = await Promise.all(
+      sessions.map(async (session) => {
+        const fiches = await db
+          .select({
+            id: ficheNavettes.id,
+            ref: ficheNavettes.ref,
+            familyName: ficheNavettes.description, // Extract family name from description
+            participantsCount: ficheNavettes.participantsCount
+          })
+          .from(ficheNavettes)
+          .where(
+            and(
+              eq(ficheNavettes.assignedOrgId, session.evsId),
+              sql`JSON_EXTRACT(${ficheNavettes.selectedWorkshops}, '$."${session.workshopId}"') = true`
+            )
+          );
+
+        return {
+          id: session.id,
+          workshopId: session.workshopId,
+          sessionNumber: session.sessionNumber,
+          participantCount: session.participantCount,
+          isLocked: session.isLocked,
+          contractSignedByEvs: session.contractSignedByEvs,
+          contractSignedByCommune: session.contractSignedByCommune,
+          contractCommuneUrl: session.contractCommuneUrl,
+          activityDone: session.activityDone,
+          createdAt: session.createdAt,
+          workshop: {
+            id: session.workshopId,
+            name: session.workshopName,
+            minCapacity: session.workshopMinCapacity,
+            maxCapacity: session.workshopMaxCapacity
+          },
+          evs: {
+            id: session.evsId,
+            name: session.evsName
+          },
+          fiches: fiches.map(f => ({
+            id: f.id,
+            ref: f.ref,
+            familyName: f.familyName?.split(' - ')[0] || 'Famille', // Extract family name
+            participantsCount: f.participantsCount
+          }))
+        };
+      })
+    );
+
+    return sessionsWithFiches;
   }
 
   async getEnrollmentsByWorkshopAndEvs(workshopId: string, evsId: string): Promise<WorkshopEnrollment[]> {

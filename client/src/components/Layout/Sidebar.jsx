@@ -7,7 +7,8 @@ import {
   LogOut,
   Menu,
   X,
-  CheckCircle
+  CheckCircle,
+  BookOpen
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth.jsx';
@@ -38,6 +39,12 @@ export default function Sidebar() {
       roles: ['ADMIN', 'RELATIONS_EVS']
     },
     {
+      href: '/ateliers',
+      icon: BookOpen,
+      label: 'Gestion Ateliers',
+      roles: ['ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD']
+    },
+    {
       href: '/reports',
       icon: BarChart3,
       label: 'Rapports',
@@ -52,7 +59,7 @@ export default function Sidebar() {
   ];
 
   const visibleItems = navigationItems.filter(item => 
-    item.roles.includes(user?.role)
+    item.roles.includes(user?.user?.role || user?.role)
   );
 
   const isActive = (href) => {

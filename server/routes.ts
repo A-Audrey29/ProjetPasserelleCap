@@ -1290,6 +1290,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Workshop Sessions - Role-based access
+  app.get('/api/workshop-sessions', requireAuth, requireRole('ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD'), async (req, res) => {
+    try {
+      const userRole = req.user.role;
+      const userOrgId = req.user.orgId;
+
+      const sessions = await storage.getWorkshopSessions(userRole, userOrgId);
+      res.json(sessions);
+    } catch (error) {
+      console.error('Get workshop sessions error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
   // Admin Dashboard stats (including email logs count)
   app.get('/api/admin/stats', requireAuth, requireRole('ADMIN'), async (req, res) => {
     try {

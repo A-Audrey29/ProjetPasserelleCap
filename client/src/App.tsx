@@ -15,6 +15,7 @@ import Reports from "@/pages/Reports";
 import Contact from "@/pages/Contact";
 import Home from "@/pages/Home";
 import Fiches from "@/pages/Fiches";
+import Ateliers from "@/pages/Ateliers.jsx";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.jsx";
 
 function Router() {
@@ -72,6 +73,7 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/contact" component={Contact} />
           <Route path="/fiches" component={Fiches} />
+          <Route path="/ateliers" component={Ateliers} />
         </>
       ) : null}
       <Route component={NotFound} />
