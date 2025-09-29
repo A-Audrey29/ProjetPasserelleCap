@@ -538,7 +538,7 @@ export class DatabaseStorage implements IStorage {
           .where(
             and(
               eq(ficheNavettes.assignedOrgId, session.evsId),
-              sql`JSON_EXTRACT(${ficheNavettes.selectedWorkshops}, '$."${session.workshopId}"') = true`
+              sql`${ficheNavettes.selectedWorkshops}->>${session.workshopId} = 'true'`
             )
           );
 
