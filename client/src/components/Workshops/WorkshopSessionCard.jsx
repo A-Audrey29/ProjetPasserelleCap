@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Link } from 'wouter';
 import { queryClient, apiRequest } from '@/lib/queryClient';
@@ -13,6 +13,13 @@ export default function WorkshopSessionCard({ session }) {
   const [communePdfUrl, setCommunePdfUrl] = useState(session?.contractCommunePdfUrl || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Sync local state with server data when it changes
+  useEffect(() => {
+    setContractEvs(session?.contractSignedByEVS || false);
+    setContractCommune(session?.contractSignedByCommune || false);
+    setCommunePdfUrl(session?.contractCommunePdfUrl || null);
+  }, [session?.contractSignedByEVS, session?.contractSignedByCommune, session?.contractCommunePdfUrl]);
 
   // Calculate session state based on SERVER data, not local state
   const getSessionState = () => {
