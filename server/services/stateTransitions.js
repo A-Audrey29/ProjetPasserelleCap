@@ -29,28 +29,54 @@ async function createWorkshopEnrollments(fiche) {
     try {
       console.log(`🔄 Processing workshop ${workshopId}...`);
       
-      // Check if enrollment already exists for this combination
+      // Check existing enrollments for this workshop+EVS combination
       const existingEnrollments = await storage.getEnrollmentsByWorkshopAndEvs(workshopId, fiche.assignedOrgId);
       
-      // Determine session number (next available session for this workshop+EVS)
-      const sessionNumber = existingEnrollments.length + 1;
-
-      const enrollment = await storage.createWorkshopEnrollment({
-        ficheId: fiche.id,
-        workshopId: workshopId,
-        evsId: fiche.assignedOrgId,
-        participantCount: fiche.participantsCount || 1,
-        sessionNumber: sessionNumber,
-        isLocked: false,
-        contractSignedByEvs: false,
-        contractSignedByCommune: false,
-        activityDone: false,
-      });
+      // Look for an open session (not locked and activity not done)
+      const openSession = existingEnrollments.find(enrollment => 
+        !enrollment.isLocked && !enrollment.activityDone
+      );
+      
+      let enrollment;
+      const newParticipants = fiche.participantsCount || 1;
+      
+      if (openSession) {
+        // Found open session, increment participant count
+        console.log(`📈 Found open session ${openSession.sessionNumber}, adding ${newParticipants} participants (current: ${openSession.participantCount})`);
+        
+        enrollment = await storage.updateWorkshopEnrollment(openSession.id, {
+          participantCount: openSession.participantCount + newParticipants
+        });
+        
+        console.log(`✅ Updated enrollment ${enrollment.id} for workshop ${workshopId}, session ${enrollment.sessionNumber} - Total: ${enrollment.participantCount} participants`);
+      } else {
+        // No open session found, create new session
+        const maxSessionNumber = existingEnrollments.length > 0 
+          ? Math.max(...existingEnrollments.map(e => e.sessionNumber))
+          : 0;
+        const sessionNumber = maxSessionNumber + 1;
+        
+        console.log(`🆕 No open session found, creating session ${sessionNumber} with ${newParticipants} participants`);
+        
+        enrollment = await storage.createWorkshopEnrollment({
+          ficheId: fiche.id,
+          workshopId: workshopId,
+          evsId: fiche.assignedOrgId,
+          participantCount: newParticipants,
+          sessionNumber: sessionNumber,
+          isLocked: false,
+          contractSignedByEvs: false,
+          contractSignedByCommune: false,
+          activityDone: false,
+        });
+        
+        console.log(`✅ Created enrollment ${enrollment.id} for workshop ${workshopId}, session ${sessionNumber}`);
+      }
+      
       enrollments.push(enrollment);
-      console.log(`✅ Created enrollment ${enrollment.id} for workshop ${workshopId}, session ${sessionNumber}`);
       
       // ⚡ INLINE THRESHOLD CHECK: Immediately check and lock if threshold reached
-      await checkAndLockWorkshopSessions(workshopId);
+      await checkAndLockWorkshopSessions(workshopId, fiche.assignedOrgId);
       
     } catch (error) {
       console.error(`❌ Failed to create enrollment for workshop ${workshopId}:`, error);
@@ -61,8 +87,8 @@ async function createWorkshopEnrollments(fiche) {
 }
 
 // Helper function to check cumulative participants and auto-lock sessions when threshold reached
-async function checkAndLockWorkshopSessions(workshopId) {
-  console.log(`🔍 ENTERING checkAndLockWorkshopSessions for workshop ${workshopId}`);
+async function checkAndLockWorkshopSessions(workshopId, evsId) {
+  console.log(`🔍 ENTERING checkAndLockWorkshopSessions for workshop ${workshopId}, EVS ${evsId}`);
   try {
     // Get workshop details with capacity thresholds
     const workshop = await storage.getWorkshop(workshopId);
@@ -71,38 +97,38 @@ async function checkAndLockWorkshopSessions(workshopId) {
       return;
     }
 
-    // Calculate total participants across all sessions for this workshop
-    const allEnrollments = await storage.getWorkshopEnrollments({ workshopId });
-    const totalParticipants = allEnrollments.reduce((sum, enrollment) => sum + enrollment.participantCount, 0);
+    // Calculate total participants for this specific EVS and workshop
+    const evsEnrollments = await storage.getEnrollmentsByWorkshopAndEvs(workshopId, evsId);
+    const totalParticipants = evsEnrollments.reduce((sum, enrollment) => sum + enrollment.participantCount, 0);
 
-    console.log(`🔢 Workshop ${workshopId}: ${totalParticipants}/${workshop.minCapacity} participants (threshold: ${workshop.minCapacity})`);
+    console.log(`🔢 Workshop ${workshopId} (EVS ${evsId}): ${totalParticipants}/${workshop.minCapacity} participants (threshold: ${workshop.minCapacity})`);
 
     // Check if threshold is reached and lock sessions if needed
     if (totalParticipants >= workshop.minCapacity) {
-      const unlockedEnrollments = allEnrollments.filter(enrollment => !enrollment.isLocked);
+      const unlockedEnrollments = evsEnrollments.filter(enrollment => !enrollment.isLocked);
       
       if (unlockedEnrollments.length > 0) {
-        console.log(`🔒 THRESHOLD REACHED! Locking ${unlockedEnrollments.length} sessions for workshop ${workshopId}`);
+        console.log(`🔒 THRESHOLD REACHED! Locking ${unlockedEnrollments.length} sessions for workshop ${workshopId}, EVS ${evsId}`);
         
-        // Lock all sessions for this workshop
+        // Lock all sessions for this workshop and EVS
         const lockPromises = unlockedEnrollments.map(enrollment => 
           storage.updateWorkshopEnrollment(enrollment.id, { isLocked: true })
         );
         
         await Promise.all(lockPromises);
         
-        console.log(`✅ Locked ${unlockedEnrollments.length} sessions for workshop ${workshopId} (${totalParticipants} participants >= ${workshop.minCapacity} minimum)`);
+        console.log(`✅ Locked ${unlockedEnrollments.length} sessions for workshop ${workshopId}, EVS ${evsId} (${totalParticipants} participants >= ${workshop.minCapacity} minimum)`);
         
         // TODO: Trigger notification emails (will be implemented in Phase 2.4)
-        console.log(`📧 TODO: Send locking notifications for workshop ${workshopId}`);
+        console.log(`📧 TODO: Send locking notifications for workshop ${workshopId}, EVS ${evsId}`);
       } else {
-        console.log(`🔒 Workshop ${workshopId} sessions already locked`);
+        console.log(`🔒 Workshop ${workshopId} sessions already locked for EVS ${evsId}`);
       }
     } else {
-      console.log(`⏳ Workshop ${workshopId} below threshold (${totalParticipants}/${workshop.minCapacity})`);
+      console.log(`⏳ Workshop ${workshopId} below threshold for EVS ${evsId} (${totalParticipants}/${workshop.minCapacity})`);
     }
   } catch (error) {
-    console.error(`❌ Failed to check/lock sessions for workshop ${workshopId}:`, error);
+    console.error(`❌ Failed to check/lock sessions for workshop ${workshopId}, EVS ${evsId}:`, error);
   }
 }
 
