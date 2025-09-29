@@ -576,6 +576,20 @@ export class DatabaseStorage implements IStorage {
     return sessionsWithFiches;
   }
 
+  // Update session contracts
+  async updateSessionContracts(sessionId: string, contracts: {
+    contractSignedByEVS?: boolean;
+    contractSignedByCommune?: boolean;
+    contractCommunePdfUrl?: string | null;
+  }): Promise<void> {
+    await db.update(workshopEnrollments)
+      .set({
+        ...contracts,
+        updatedAt: new Date()
+      })
+      .where(eq(workshopEnrollments.id, sessionId));
+  }
+
   async getEnrollmentsByWorkshopAndEvs(workshopId: string, evsId: string): Promise<WorkshopEnrollment[]> {
     return await db.select().from(workshopEnrollments)
       .where(and(

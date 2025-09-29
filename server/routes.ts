@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { z } from 'zod';
 import { storage } from "./storage";
 import { 
   authenticateUser, 
@@ -91,6 +92,13 @@ import {
   commentSchema
 } from './utils/validation.js';
 
+// Add validation schema for contract updates
+const contractUpdateSchema = z.object({
+  contractSignedByEVS: z.boolean().optional(),
+  contractSignedByCommune: z.boolean().optional(),
+  contractCommunePdfUrl: z.string().nullable().optional()
+});
+
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -125,6 +133,31 @@ const uploadCSV = multer({
       cb(null, true);
     } else {
       cb(new Error('Seuls les fichiers CSV sont autorisés'), false);
+    }
+  }
+});
+
+// Configure multer for PDF contract uploads  
+const uploadContractPDF = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+      // Generate timestamp-based filename: contract_commune_YYYYMMDD_HHMMSS.pdf
+      const timestamp = new Date().toISOString().replace(/[:-]/g, '').replace(/\..+/, '').replace('T', '_');
+      const filename = `contract_commune_${timestamp}.pdf`;
+      cb(null, filename);
+    }
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Seuls les fichiers PDF sont autorisés'), false);
     }
   }
 });
@@ -1303,6 +1336,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });
+
+  // Upload commune contract PDF
+  app.post('/api/workshop-sessions/:sessionId/upload-contract', 
+    requireAuth, 
+    requireRole('ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD'), 
+    uploadContractPDF.single('contractFile'), 
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: 'Aucun fichier fourni' });
+        }
+
+        const { sessionId } = req.params;
+        const filename = req.file.filename;
+        const fileUrl = `/uploads/${filename}`;
+        
+        res.json({ 
+          success: true, 
+          filename,
+          url: fileUrl,
+          message: 'Fichier uploadé avec succès' 
+        });
+      } catch (error) {
+        console.error('Error uploading contract:', error);
+        res.status(500).json({ message: 'Erreur lors de l\'upload du contrat' });
+      }
+    }
+  );
+
+  // Update workshop session contracts
+  app.patch('/api/workshop-sessions/:sessionId/contracts', 
+    requireAuth, 
+    requireRole('ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD'),
+    validateRequest(contractUpdateSchema), 
+    async (req, res) => {
+      try {
+        const { sessionId } = req.params;
+        const { contractSignedByEVS, contractSignedByCommune, contractCommunePdfUrl } = req.validatedData;
+
+        // Build partial update object only with present fields
+        const updates = {};
+        if (contractSignedByEVS !== undefined) updates.contractSignedByEVS = contractSignedByEVS;
+        if (contractSignedByCommune !== undefined) updates.contractSignedByCommune = contractSignedByCommune;
+        if (contractCommunePdfUrl !== undefined) updates.contractCommunePdfUrl = contractCommunePdfUrl;
+
+        await storage.updateSessionContracts(sessionId, updates);
+
+        res.json({ 
+          success: true, 
+          message: 'Contrats mis à jour avec succès' 
+        });
+      } catch (error) {
+        console.error('Error updating session contracts:', error);
+        res.status(500).json({ message: 'Erreur lors de la mise à jour des contrats' });
+      }
+    }
+  );
 
   // Admin Dashboard stats (including email logs count)
   app.get('/api/admin/stats', requireAuth, requireRole('ADMIN'), async (req, res) => {

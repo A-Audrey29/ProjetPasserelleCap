@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Link } from 'wouter';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 import styles from './WorkshopSessionCard.module.css';
 
 export default function WorkshopSessionCard({ session }) {
-  const [contractEvs, setContractEvs] = useState(session?.contractSignedByEvs || false);
+  const { toast } = useToast();
+  const [contractEvs, setContractEvs] = useState(session?.contractSignedByEVS || false);
   const [contractCommune, setContractCommune] = useState(session?.contractSignedByCommune || false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [communePdfUrl, setCommunePdfUrl] = useState(session?.contractCommunePdfUrl || null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Calculate session state
   const getSessionState = () => {
@@ -20,31 +25,85 @@ export default function WorkshopSessionCard({ session }) {
   const isReady = sessionState === 'PRÊTE';
   const isInProgress = sessionState === 'EN COURS';
 
-  const handleFileUpload = (event) => {
+  const handleFileUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      if (file.type !== 'application/pdf') {
-        alert('Seuls les fichiers PDF sont acceptés');
-        return;
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: "Erreur",
+        description: "Seuls les fichiers PDF sont acceptés",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast({
+        title: "Erreur", 
+        description: "Le fichier ne doit pas dépasser 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('contractFile', file);
+
+      const response = await fetch(`/api/workshop-sessions/${session.id}/upload-contract`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB
-        alert('Le fichier ne doit pas dépasser 5MB');
-        return;
-      }
+
+      const result = await response.json();
+      setCommunePdfUrl(result.url);
       setUploadedFile(file);
+      
+      toast({
+        title: "Succès",
+        description: "Fichier uploadé avec succès"
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'upload du fichier",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // TODO: Implement save logic in next phase
-      console.log('Saving contract states:', { contractEvs, contractCommune, uploadedFile });
-      // Simulate save delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await apiRequest(`/api/workshop-sessions/${session.id}/contracts`, 'PATCH', {
+        contractSignedByEVS: contractEvs,
+        contractSignedByCommune: contractCommune,
+        contractCommunePdfUrl: communePdfUrl
+      });
+
+      // Invalidate cache to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/workshop-sessions'] });
+      
+      toast({
+        title: "Succès",
+        description: "Contrats mis à jour avec succès"
+      });
     } catch (error) {
       console.error('Error saving:', error);
-      alert('Erreur lors de la sauvegarde');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde",
+        variant: "destructive"
+      });
     } finally {
       setIsSaving(false);
     }
@@ -139,12 +198,26 @@ export default function WorkshopSessionCard({ session }) {
                 type="file"
                 accept=".pdf"
                 onChange={handleFileUpload}
-                disabled={isInProgress}
+                disabled={isInProgress || isUploading}
                 className={styles.fileInput}
                 data-testid={`input-file-commune-${session?.id}`}
               />
+              {isUploading && (
+                <span className={styles.uploadingText}>Upload en cours...</span>
+              )}
               {uploadedFile && (
                 <span className={styles.fileName}>{uploadedFile.name}</span>
+              )}
+              {!uploadedFile && communePdfUrl && (
+                <a 
+                  href={communePdfUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className={styles.pdfLink}
+                  data-testid={`link-commune-pdf-${session?.id}`}
+                >
+                  📄 Contrat commune (PDF)
+                </a>
               )}
             </div>
           </div>
@@ -152,7 +225,7 @@ export default function WorkshopSessionCard({ session }) {
           {/* Save Button */}
           <button
             onClick={handleSave}
-            disabled={isSaving || isInProgress}
+            disabled={isSaving || isInProgress || isUploading}
             className={styles.saveButton}
             data-testid={`button-save-${session?.id}`}
           >
