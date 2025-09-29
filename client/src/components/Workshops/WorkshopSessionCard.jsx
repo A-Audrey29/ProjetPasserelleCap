@@ -14,9 +14,9 @@ export default function WorkshopSessionCard({ session }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Calculate session state
+  // Calculate session state based on SERVER data, not local state
   const getSessionState = () => {
-    if (contractEvs && contractCommune) return 'EN COURS';
+    if (session?.contractSignedByEVS && session?.contractSignedByCommune) return 'EN COURS';
     if (session?.participantCount >= session?.workshop?.minCapacity) return 'PRÊTE';
     return 'EN ATTENTE';
   };

@@ -548,9 +548,9 @@ export class DatabaseStorage implements IStorage {
           sessionNumber: session.sessionNumber,
           participantCount: session.participantCount,
           isLocked: session.isLocked,
-          contractSignedByEvs: session.contractSignedByEvs,
+          contractSignedByEVS: session.contractSignedByEvs,
           contractSignedByCommune: session.contractSignedByCommune,
-          contractCommuneUrl: session.contractCommuneUrl,
+          contractCommunePdfUrl: session.contractCommuneUrl,
           activityDone: session.activityDone,
           createdAt: session.createdAt,
           workshop: {
