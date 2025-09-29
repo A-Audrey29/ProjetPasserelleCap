@@ -46,7 +46,6 @@ async function createWorkshopEnrollments(fiche) {
         contractSignedByCommune: false,
         activityDone: false,
       });
-
       enrollments.push(enrollment);
       console.log(`✅ Created enrollment ${enrollment.id} for workshop ${workshopId}, session ${sessionNumber}`);
       
