@@ -243,20 +243,30 @@ export const organizationsRelations = relations(organizations, ({ one, many }) =
   epci: one(epcis, { fields: [organizations.epciId], references: [epcis.id] }),
   users: many(users),
   assignedFiches: many(ficheNavettes),
+  enrollments: many(workshopEnrollments),
 }));
 
 export const workshopObjectivesRelations = relations(workshopObjectives, ({ many }) => ({
   workshops: many(workshops),
 }));
 
-export const workshopsRelations = relations(workshops, ({ one }) => ({
+export const workshopsRelations = relations(workshops, ({ one, many }) => ({
   objective: one(workshopObjectives, { fields: [workshops.objectiveId], references: [workshopObjectives.id] }),
+  enrollments: many(workshopEnrollments),
 }));
 
 export const ficheNavettesRelations = relations(ficheNavettes, ({ one, many }) => ({
   emitter: one(users, { fields: [ficheNavettes.emitterId], references: [users.id] }),
   assignedOrg: one(organizations, { fields: [ficheNavettes.assignedOrgId], references: [organizations.orgId] }),
   comments: many(comments),
+  enrollments: many(workshopEnrollments),
+}));
+
+// Relations pour workshop_enrollments  
+export const workshopEnrollmentsRelations = relations(workshopEnrollments, ({ one }) => ({
+  fiche: one(ficheNavettes, { fields: [workshopEnrollments.ficheId], references: [ficheNavettes.id] }),
+  workshop: one(workshops, { fields: [workshopEnrollments.workshopId], references: [workshops.id] }),
+  evsOrganization: one(organizations, { fields: [workshopEnrollments.evsId], references: [organizations.orgId] }),
 }));
 
 
@@ -291,7 +301,18 @@ export const insertWorkshopObjectiveSchema = createInsertSchema(workshopObjectiv
   createdAt: true,
 });
 
-export const insertWorkshopSchema = createInsertSchema(workshops);
+export const insertWorkshopSchema = createInsertSchema(workshops).extend({
+  minCapacity: z.number().int().min(1, "La capacité minimum doit être au moins 1").optional(),
+  maxCapacity: z.number().int().min(1, "La capacité maximum doit être au moins 1").optional(),
+}).refine((data) => {
+  if (data.minCapacity && data.maxCapacity) {
+    return data.maxCapacity >= data.minCapacity;
+  }
+  return true;
+}, {
+  message: "La capacité maximum doit être supérieure ou égale à la capacité minimum",
+  path: ["maxCapacity"],
+});
 
 export const insertFicheNavetteSchema = createInsertSchema(ficheNavettes).omit({
   id: true,
@@ -321,11 +342,14 @@ export const insertMigrationSchema = createInsertSchema(migrations).omit({
   executedAt: true,
 });
 
-// Schema pour workshop_enrollments  
+// Schema pour workshop_enrollments avec validation renforcée
 export const insertWorkshopEnrollmentSchema = createInsertSchema(workshopEnrollments).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  participantCount: z.number().int().min(1, "Le nombre de participants doit être au moins 1"),
+  sessionNumber: z.number().int().min(1, "Le numéro de session doit être au moins 1"),
 });
 
 // Types
