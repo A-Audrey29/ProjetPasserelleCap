@@ -1378,9 +1378,6 @@ export default function FicheForm({
 
   const handleSave = async () => {
     try {
-      console.log("Save clicked! Current user:", user);
-      console.log("Current form data:", formData);
-
       const userRole = user?.user?.role || user?.role;
       const currentState = initialData?.state || "DRAFT";
       const isAdmin = userRole === "ADMIN";
