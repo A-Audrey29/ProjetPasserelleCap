@@ -962,45 +962,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const updateData = req.body;
+      console.log(`DEBUG: PUT /api/admin/users/${id} - Request body:`, JSON.stringify(updateData, null, 2));
 
       const existing = await storage.getUser(id);
       if (!existing) {
+        console.log(`DEBUG: User ${id} not found`);
         return res.status(404).json({ message: 'Utilisateur non trouvé' });
       }
+      console.log(`DEBUG: Existing user:`, JSON.stringify(existing, null, 2));
 
       // Pre-check: Verify email uniqueness if email is being changed
       if (updateData.email && updateData.email !== existing.email) {
+        console.log(`DEBUG: Checking email uniqueness for: ${updateData.email}`);
         const existingUser = await storage.getUserByEmail(updateData.email);
         if (existingUser) {
+          console.log(`DEBUG: Email conflict found`);
           return res.status(409).json({ 
             message: 'Cette adresse email est déjà utilisée par un autre utilisateur' 
           });
         }
+        console.log(`DEBUG: Email is unique`);
       }
 
       // If password is provided, hash it
       if (updateData.password) {
+        console.log(`DEBUG: Hashing password`);
         updateData.passwordHash = await hashPassword(updateData.password);
         delete updateData.password;
+        console.log(`DEBUG: Password hashed and removed from updateData`);
       }
 
       const finalRole = updateData.role || existing.role;
       const finalOrgId = updateData.orgId !== undefined ? updateData.orgId : existing.orgId;
+      console.log(`DEBUG: Final role: ${finalRole}, Final orgId: ${finalOrgId}`);
 
       if (finalRole === 'EVS_CS') {
         if (!finalOrgId) {
+          console.log(`DEBUG: No orgId for EVS_CS role`);
           return res.status(400).json({ message: "L'organisation est requise pour le rôle EVS/CS" });
         }
+        console.log(`DEBUG: Checking organization ${finalOrgId}`);
         const org = await storage.getOrganization(finalOrgId);
+        console.log(`DEBUG: Organization lookup result:`, org);
         if (!org) {
+          console.log(`DEBUG: Organization ${finalOrgId} not found`);
           return res.status(400).json({ message: "Organisation invalide" });
         }
         updateData.orgId = finalOrgId;
+        console.log(`DEBUG: Organization validation passed`);
       } else if (updateData.role && updateData.role !== 'EVS_CS') {
         updateData.orgId = null;
+        console.log(`DEBUG: Cleared orgId for non-EVS_CS role`);
       }
 
+      console.log(`DEBUG: About to call storage.updateUser with:`, JSON.stringify(updateData, null, 2));
       const user = await storage.updateUser(id, updateData);
+      console.log(`DEBUG: storage.updateUser succeeded, result:`, user);
 
       res.json(user);
     } catch (error) {
