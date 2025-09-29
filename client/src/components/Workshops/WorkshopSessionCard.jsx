@@ -84,7 +84,7 @@ export default function WorkshopSessionCard({ session }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await apiRequest(`/api/workshop-sessions/${session.id}/contracts`, 'PATCH', {
+      await apiRequest('PATCH', `/api/workshop-sessions/${session.id}/contracts`, {
         contractSignedByEVS: contractEvs,
         contractSignedByCommune: contractCommune,
         contractCommunePdfUrl: communePdfUrl
