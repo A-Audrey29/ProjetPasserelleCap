@@ -1,11 +1,11 @@
 import {
   epcis, users, organizations, workshopObjectives, workshops,
-  ficheNavettes, auditLogs, comments, emailLogs,
+  ficheNavettes, auditLogs, comments, emailLogs, workshopEnrollments,
   type Epci, type InsertEpci, type User, type InsertUser, type Organization,
   type InsertOrganization, type WorkshopObjective, type InsertWorkshopObjective, type Workshop, type InsertWorkshop,
   type FicheNavette, type InsertFicheNavette,
   type AuditLog, type InsertAuditLog, type Comment, type InsertComment,
-  type EmailLog, type InsertEmailLog
+  type EmailLog, type InsertEmailLog, type WorkshopEnrollment, type InsertWorkshopEnrollment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, asc, like, count } from "drizzle-orm";
@@ -87,6 +87,19 @@ export interface IStorage {
   updateEmailLog(id: string, emailLog: Partial<InsertEmailLog>): Promise<EmailLog>;
   deleteEmailLog(id: string): Promise<void>;
   deleteAllEmailLogs(): Promise<void>;
+
+  // Workshop Enrollments
+  getWorkshopEnrollments(filters?: {
+    ficheId?: string;
+    workshopId?: string;
+    evsId?: string;
+    isLocked?: boolean;
+  }): Promise<WorkshopEnrollment[]>;
+  getWorkshopEnrollment(id: string): Promise<WorkshopEnrollment | undefined>;
+  createWorkshopEnrollment(enrollment: InsertWorkshopEnrollment): Promise<WorkshopEnrollment>;
+  updateWorkshopEnrollment(id: string, enrollment: Partial<InsertWorkshopEnrollment>): Promise<WorkshopEnrollment>;
+  deleteWorkshopEnrollment(id: string): Promise<void>;
+  getEnrollmentsByWorkshopAndEvs(workshopId: string, evsId: string): Promise<WorkshopEnrollment[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -419,6 +432,68 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAllEmailLogs(): Promise<void> {
     await db.delete(emailLogs);
+  }
+
+  // Workshop Enrollments
+  async getWorkshopEnrollments(filters?: {
+    ficheId?: string;
+    workshopId?: string;
+    evsId?: string;
+    isLocked?: boolean;
+  }): Promise<WorkshopEnrollment[]> {
+    const conditions = [];
+    
+    if (filters?.ficheId) {
+      conditions.push(eq(workshopEnrollments.ficheId, filters.ficheId));
+    }
+    if (filters?.workshopId) {
+      conditions.push(eq(workshopEnrollments.workshopId, filters.workshopId));
+    }
+    if (filters?.evsId) {
+      conditions.push(eq(workshopEnrollments.evsId, filters.evsId));
+    }
+    if (filters?.isLocked !== undefined) {
+      conditions.push(eq(workshopEnrollments.isLocked, filters.isLocked));
+    }
+
+    let query = db.select().from(workshopEnrollments);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(asc(workshopEnrollments.createdAt));
+  }
+
+  async getWorkshopEnrollment(id: string): Promise<WorkshopEnrollment | undefined> {
+    const [enrollment] = await db.select().from(workshopEnrollments).where(eq(workshopEnrollments.id, id));
+    return enrollment || undefined;
+  }
+
+  async createWorkshopEnrollment(insertEnrollment: InsertWorkshopEnrollment): Promise<WorkshopEnrollment> {
+    const [enrollment] = await db.insert(workshopEnrollments).values(insertEnrollment).returning();
+    return enrollment;
+  }
+
+  async updateWorkshopEnrollment(id: string, insertEnrollment: Partial<InsertWorkshopEnrollment>): Promise<WorkshopEnrollment> {
+    const [enrollment] = await db.update(workshopEnrollments)
+      .set({ ...insertEnrollment, updatedAt: new Date() })
+      .where(eq(workshopEnrollments.id, id))
+      .returning();
+    return enrollment;
+  }
+
+  async deleteWorkshopEnrollment(id: string): Promise<void> {
+    await db.delete(workshopEnrollments).where(eq(workshopEnrollments.id, id));
+  }
+
+  async getEnrollmentsByWorkshopAndEvs(workshopId: string, evsId: string): Promise<WorkshopEnrollment[]> {
+    return await db.select().from(workshopEnrollments)
+      .where(and(
+        eq(workshopEnrollments.workshopId, workshopId),
+        eq(workshopEnrollments.evsId, evsId)
+      ))
+      .orderBy(asc(workshopEnrollments.sessionNumber));
   }
 }
 
