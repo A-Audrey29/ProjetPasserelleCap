@@ -23,7 +23,8 @@ export default function WorkshopSessionCard({ session }) {
 
   // Calculate session state based on SERVER data, not local state
   const getSessionState = () => {
-    if (session?.contractSignedByEVS && session?.contractSignedByCommune) return 'EN COURS';
+    // EN COURS if EITHER contract is signed (EVS/CS OR Commune, not both)
+    if (session?.contractSignedByEVS || session?.contractSignedByCommune) return 'EN COURS';
     if (session?.participantCount >= session?.workshop?.minCapacity) return 'PRÊTE';
     return 'EN ATTENTE';
   };
@@ -112,13 +113,10 @@ export default function WorkshopSessionCard({ session }) {
       const response = await apiRequest('PATCH', `/api/workshop-sessions/${session.id}/contracts`, payload);
       console.log('Réponse reçue:', response.status, response.statusText);
 
-      // Invalidate cache to refresh the data
-      console.log('Invalidation du cache...');
-      await queryClient.invalidateQueries({ queryKey: ['/api/workshop-sessions'] });
-      console.log('Cache invalidé');
-
-      // Wait a bit for the refetch
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Force refetch to get updated data immediately
+      console.log('Refetch des données...');
+      await queryClient.refetchQueries({ queryKey: ['/api/workshop-sessions'] });
+      console.log('Données rafraîchies');
       
       console.log('État APRÈS sauvegarde:', {
         contractSignedByEVS: session?.contractSignedByEVS,
