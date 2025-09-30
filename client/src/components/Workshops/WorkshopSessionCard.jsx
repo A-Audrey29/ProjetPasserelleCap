@@ -174,7 +174,6 @@ export default function WorkshopSessionCard({ session }) {
             session.fiches.map((fiche) => (
               <div key={fiche.id} className={styles.ficheItem}>
                 <span className={styles.ficheRef}>#{fiche.ref}</span>
-                <span className={styles.ficheFamily}>({fiche.familyName})</span>
                 <span className={styles.ficheParticipants}>- {fiche.participantsCount} pers.</span>
                 <Link 
                   href={`/fiches/${fiche.id}`} 

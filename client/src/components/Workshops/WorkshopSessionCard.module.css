@@ -103,10 +103,6 @@
   color: rgb(var(--primary));
 }
 
-.ficheFamily {
-  color: rgb(var(--foreground));
-}
-
 .ficheParticipants {
   color: rgb(var(--muted-foreground));
 }
