@@ -1366,14 +1366,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Update workshop session contracts
-  app.patch('/api/workshop-sessions/:sessionId/contracts', 
-    requireAuth, 
+  app.patch('/api/workshop-sessions/:sessionId/contracts',
+    requireAuth,
     requireRole('ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD'),
-    validateRequest(contractUpdateSchema), 
+    validateRequest(contractUpdateSchema),
     async (req, res) => {
       try {
         const { sessionId } = req.params;
         const { contractSignedByEVS, contractSignedByCommune, contractCommunePdfUrl } = req.validatedData;
+
+        console.log('Update contracts request:', { sessionId, contractSignedByEVS, contractSignedByCommune, contractCommunePdfUrl });
 
         // Build partial update object only with present fields
         const updates = {};
@@ -1381,11 +1383,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (contractSignedByCommune !== undefined) updates.contractSignedByCommune = contractSignedByCommune;
         if (contractCommunePdfUrl !== undefined) updates.contractCommunePdfUrl = contractCommunePdfUrl;
 
+        console.log('Updates to apply:', updates);
+
         await storage.updateSessionContracts(sessionId, updates);
 
-        res.json({ 
-          success: true, 
-          message: 'Contrats mis à jour avec succès' 
+        console.log('Contracts updated successfully');
+
+        res.json({
+          success: true,
+          message: 'Contrats mis à jour avec succès'
         });
       } catch (error) {
         console.error('Error updating session contracts:', error);

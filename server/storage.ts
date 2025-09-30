@@ -620,12 +620,14 @@ export class DatabaseStorage implements IStorage {
     contractSignedByCommune?: boolean;
     contractCommunePdfUrl?: string | null;
   }): Promise<void> {
-    await db.update(workshopEnrollments)
+    console.log('Storage: Updating session contracts', { sessionId, contracts });
+    const result = await db.update(workshopEnrollments)
       .set({
         ...contracts,
         updatedAt: new Date()
       })
       .where(eq(workshopEnrollments.id, sessionId));
+    console.log('Storage: Update result', result);
   }
 
   async getEnrollmentsByWorkshopAndEvs(workshopId: string, evsId: string): Promise<WorkshopEnrollment[]> {

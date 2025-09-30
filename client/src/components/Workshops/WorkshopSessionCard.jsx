@@ -89,26 +89,53 @@ export default function WorkshopSessionCard({ session }) {
   };
 
   const handleSave = async () => {
+    console.log('=== DÉBUT SAUVEGARDE ===');
+    console.log('État AVANT sauvegarde:', {
+      sessionId: session.id,
+      contractEvs,
+      contractCommune,
+      communePdfUrl,
+      sessionStateAvant: sessionState,
+      isReadyAvant: isReady,
+      isInProgressAvant: isInProgress
+    });
+    
     setIsSaving(true);
     try {
-      await apiRequest('PATCH', `/api/workshop-sessions/${session.id}/contracts`, {
+      const payload = {
         contractSignedByEVS: contractEvs,
         contractSignedByCommune: contractCommune,
         contractCommunePdfUrl: communePdfUrl
-      });
+      };
+      console.log('Payload envoyé:', payload);
+      
+      const response = await apiRequest('PATCH', `/api/workshop-sessions/${session.id}/contracts`, payload);
+      console.log('Réponse reçue:', response.status, response.statusText);
 
       // Invalidate cache to refresh the data
-      queryClient.invalidateQueries({ queryKey: ['/api/workshop-sessions'] });
+      console.log('Invalidation du cache...');
+      await queryClient.invalidateQueries({ queryKey: ['/api/workshop-sessions'] });
+      console.log('Cache invalidé');
+
+      // Wait a bit for the refetch
+      await new Promise(resolve => setTimeout(resolve, 100));
       
+      console.log('État APRÈS sauvegarde:', {
+        contractSignedByEVS: session?.contractSignedByEVS,
+        contractSignedByCommune: session?.contractSignedByCommune,
+        sessionStateApres: getSessionState()
+      });
+
       toast({
         title: "Succès",
         description: "Contrats mis à jour avec succès"
       });
+      console.log('=== FIN SAUVEGARDE (succès) ===');
     } catch (error) {
-      console.error('Error saving:', error);
+      console.error('=== ERREUR SAUVEGARDE ===', error);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la sauvegarde",
+        description: error.message || "Erreur lors de la sauvegarde",
         variant: "destructive"
       });
     } finally {
