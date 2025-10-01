@@ -16,7 +16,6 @@ import { STATE_LABELS } from '../utils/constants';
 
 const STATE_COLORS = {
   'DRAFT': 'secondary',
-  'SUBMITTED_TO_CD': 'default',
   'SUBMITTED_TO_FEVES': 'default',
   'ASSIGNED_EVS': 'outline',
   'IN_PROGRESS': 'default',

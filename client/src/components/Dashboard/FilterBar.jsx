@@ -1,4 +1,5 @@
 import { Search, Filter } from 'lucide-react';
+import { STATE_LABELS } from '@/utils/constants';
 import styles from './FilterBar.module.css';
 
 export default function FilterBar({ 
@@ -50,12 +51,9 @@ export default function FilterBar({
             data-testid="select-state"
           >
             <option value="">Tous les états</option>
-            <option value="DRAFT">Brouillon</option>
-            <option value="SUBMITTED_TO_FEVES">Envoyé FEVES</option>
-            <option value="ASSIGNED_TO_EVS">Affecté EVS</option>
-            <option value="EVS_ACCEPTED">Accepté EVS</option>
-            <option value="CONTRACT_SIGNED">Contrat signé</option>
-            <option value="CLOSED">Clôturé</option>
+            {Object.entries(STATE_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
           </select>
         </div>
         
