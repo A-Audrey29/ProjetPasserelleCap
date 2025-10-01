@@ -1483,6 +1483,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // Get enrollments for a specific fiche
+  app.get('/api/enrollments/fiche/:ficheId',
+    requireAuth,
+    async (req, res) => {
+      try {
+        const { ficheId } = req.params;
+        
+        // Get enrollments for this fiche
+        const enrollments = await storage.getWorkshopEnrollments({ ficheId });
+        
+        res.json(enrollments);
+      } catch (error) {
+        console.error('Error fetching enrollments for fiche:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des inscriptions' });
+      }
+    }
+  );
+
   // Upload workshop report for an enrollment
   app.post('/api/enrollments/:enrollmentId/upload-report',
     requireAuth,
