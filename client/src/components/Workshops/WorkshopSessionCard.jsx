@@ -444,8 +444,8 @@ export default function WorkshopSessionCard({ session }) {
             <p>✓ Activité terminée - Bilans à uploader dans les fiches</p>
           </div>
 
-          {/* Control Section - Only for RELATIONS_EVS */}
-          {(user?.role === 'RELATIONS_EVS' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'ADMIN') && (
+          {/* Control Section - Only for RELATIONS_EVS and not yet validated */}
+          {(user?.role === 'RELATIONS_EVS' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'ADMIN') && !controlValidatedAt && (
             <div className={styles.controlSection}>
               <h4 className={styles.controlTitle}>Contrôle :</h4>
               
