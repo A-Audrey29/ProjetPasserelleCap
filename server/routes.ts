@@ -1510,6 +1510,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // Schedule control for workshop session
+  app.post('/api/workshop-sessions/:enrollmentId/schedule-control',
+    requireAuth,
+    requireRole('ADMIN', 'RELATIONS_EVS'),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+
+        // Get the enrollment to check conditions
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Inscription non trouvée' });
+        }
+
+        // Check if activity is done
+        if (!enrollment.activityDone) {
+          return res.status(400).json({ message: 'L\'activité doit être marquée comme terminée avant de programmer le contrôle' });
+        }
+
+        // Check if already scheduled
+        if (enrollment.controlScheduled) {
+          return res.status(400).json({ message: 'Le contrôle est déjà programmé pour cette session' });
+        }
+
+        // Schedule control for all enrollments of this session
+        const result = await storage.scheduleSessionControl(enrollmentId);
+
+        res.json({
+          success: true,
+          message: `Contrôle programmé pour ${result.updatedCount} inscription(s)`,
+          updatedCount: result.updatedCount
+        });
+      } catch (error) {
+        console.error('Error scheduling control:', error);
+        res.status(500).json({ message: 'Erreur lors de la programmation du contrôle' });
+      }
+    }
+  );
+
+  // Validate control for workshop session
+  app.post('/api/workshop-sessions/:enrollmentId/validate-control',
+    requireAuth,
+    requireRole('ADMIN', 'RELATIONS_EVS'),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+
+        // Get the enrollment to check conditions
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Inscription non trouvée' });
+        }
+
+        // Check if control is scheduled
+        if (!enrollment.controlScheduled) {
+          return res.status(400).json({ message: 'Le contrôle doit être programmé avant d\'être validé' });
+        }
+
+        // Check if already validated
+        if (enrollment.controlValidatedAt) {
+          return res.status(400).json({ message: 'Le contrôle est déjà validé pour cette session' });
+        }
+
+        // Validate control for all enrollments of this session
+        const result = await storage.validateSessionControl(enrollmentId);
+
+        res.json({
+          success: true,
+          message: `Contrôle validé pour ${result.updatedCount} inscription(s)`,
+          updatedCount: result.updatedCount
+        });
+      } catch (error) {
+        console.error('Error validating control:', error);
+        res.status(500).json({ message: 'Erreur lors de la validation du contrôle' });
+      }
+    }
+  );
+
   // Get enrollments for a specific fiche
   app.get('/api/enrollments/fiche/:ficheId',
     requireAuth,
