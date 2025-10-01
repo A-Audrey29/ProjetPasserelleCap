@@ -14,9 +14,13 @@ export default function WorkshopSessionCard({ session }) {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [communePdfUrl, setCommunePdfUrl] = useState(session?.contractCommunePdfUrl || null);
   const [activityDone, setActivityDone] = useState(session?.activityDone || false);
+  const [controlScheduled, setControlScheduled] = useState(session?.controlScheduled || false);
+  const [controlValidatedAt, setControlValidatedAt] = useState(session?.controlValidatedAt || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isMarkingDone, setIsMarkingDone] = useState(false);
+  const [isSchedulingControl, setIsSchedulingControl] = useState(false);
+  const [isValidatingControl, setIsValidatingControl] = useState(false);
 
   // Sync local state with server data when it changes
   useEffect(() => {
@@ -24,7 +28,9 @@ export default function WorkshopSessionCard({ session }) {
     setContractCommune(session?.contractSignedByCommune || false);
     setCommunePdfUrl(session?.contractCommunePdfUrl || null);
     setActivityDone(session?.activityDone || false);
-  }, [session?.contractSignedByEVS, session?.contractSignedByCommune, session?.contractCommunePdfUrl, session?.activityDone]);
+    setControlScheduled(session?.controlScheduled || false);
+    setControlValidatedAt(session?.controlValidatedAt || null);
+  }, [session?.contractSignedByEVS, session?.contractSignedByCommune, session?.contractCommunePdfUrl, session?.activityDone, session?.controlScheduled, session?.controlValidatedAt]);
 
   // Calculate session state based on SERVER data, not local state
   const getSessionState = () => {
@@ -174,6 +180,54 @@ export default function WorkshopSessionCard({ session }) {
     }
   };
 
+  const handleScheduleControl = async () => {
+    setIsSchedulingControl(true);
+    try {
+      await apiRequest('POST', `/api/workshop-sessions/${session.id}/schedule-control`, {});
+      
+      // Force refetch to get updated data immediately
+      await queryClient.refetchQueries({ queryKey: ['/api/workshop-sessions'] });
+      
+      toast({
+        title: "Succès",
+        description: "Contrôle programmé avec succès"
+      });
+    } catch (error) {
+      console.error('Error scheduling control:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la programmation du contrôle",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSchedulingControl(false);
+    }
+  };
+
+  const handleValidateControl = async () => {
+    setIsValidatingControl(true);
+    try {
+      await apiRequest('POST', `/api/workshop-sessions/${session.id}/validate-control`, {});
+      
+      // Force refetch to get updated data immediately
+      await queryClient.refetchQueries({ queryKey: ['/api/workshop-sessions'] });
+      
+      toast({
+        title: "Succès",
+        description: "Contrôle validé avec succès"
+      });
+    } catch (error) {
+      console.error('Error validating control:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la validation du contrôle",
+        variant: "destructive"
+      });
+    } finally {
+      setIsValidatingControl(false);
+    }
+  };
+
   return (
     <div className={styles.card} data-testid={`card-workshop-session-${session?.id}`}>
       {/* Header */}
@@ -225,7 +279,7 @@ export default function WorkshopSessionCard({ session }) {
       </div>
 
       {/* Historique Section - Show key events with dates */}
-      {(session?.contractSignedAt || session?.activityCompletedAt) && (
+      {(session?.contractSignedAt || session?.activityCompletedAt || session?.controlScheduled || session?.controlValidatedAt) && (
         <div className={styles.historySection}>
           <h4 className={styles.historyTitle}>Historique :</h4>
           <div className={styles.historyContent}>
@@ -246,6 +300,22 @@ export default function WorkshopSessionCard({ session }) {
             {session.activityCompletedAt && (
               <div className={styles.historyItem} data-testid={`history-activity-${session.id}`}>
                 ✓ Atelier terminé le {new Date(session.activityCompletedAt).toLocaleDateString('fr-FR')}
+              </div>
+            )}
+            {session.activityCompletedAt && session.controlScheduled && (
+              <div className={styles.historySeparator}>─────────────────────────</div>
+            )}
+            {session.controlScheduled && (
+              <div className={styles.historyItem} data-testid={`history-control-scheduled-${session.id}`}>
+                📅 Contrôle programmé
+              </div>
+            )}
+            {session.controlScheduled && session.controlValidatedAt && (
+              <div className={styles.historySeparator}>─────────────────────────</div>
+            )}
+            {session.controlValidatedAt && (
+              <div className={styles.historyItem} data-testid={`history-control-validated-${session.id}`}>
+                ✓ Contrôle validé le {new Date(session.controlValidatedAt).toLocaleDateString('fr-FR')}
               </div>
             )}
           </div>
@@ -358,9 +428,80 @@ export default function WorkshopSessionCard({ session }) {
 
       {/* Completed state for TERMINÉE */}
       {isDone && (
-        <div className={styles.completedNote}>
-          <p>✓ Activité terminée - Bilans à uploader dans les fiches</p>
-        </div>
+        <>
+          <div className={styles.completedNote}>
+            <p>✓ Activité terminée - Bilans à uploader dans les fiches</p>
+          </div>
+
+          {/* Control Section - Only for RELATIONS_EVS */}
+          {(user?.role === 'RELATIONS_EVS' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'ADMIN') && (
+            <div className={styles.controlSection}>
+              <h4 className={styles.controlTitle}>Contrôle :</h4>
+              
+              {/* Schedule Control */}
+              {!controlScheduled && (
+                <div className={styles.controlItem}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={false}
+                      disabled={true}
+                      data-testid={`checkbox-control-schedule-${session?.id}`}
+                    />
+                    <span>Programmer le contrôle</span>
+                  </label>
+                  <button
+                    onClick={handleScheduleControl}
+                    disabled={isSchedulingControl}
+                    className={styles.controlButton}
+                    data-testid={`button-schedule-control-${session?.id}`}
+                  >
+                    {isSchedulingControl ? 'En cours...' : 'Valider'}
+                  </button>
+                </div>
+              )}
+
+              {/* Validate Control - Only show if scheduled */}
+              {controlScheduled && !controlValidatedAt && (
+                <div className={styles.controlItem}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={false}
+                      disabled={true}
+                      data-testid={`checkbox-control-validate-${session?.id}`}
+                    />
+                    <span>Valider le contrôle</span>
+                  </label>
+                  <button
+                    onClick={handleValidateControl}
+                    disabled={isValidatingControl}
+                    className={styles.controlButton}
+                    data-testid={`button-validate-control-${session?.id}`}
+                  >
+                    {isValidatingControl ? 'En cours...' : 'Valider'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Control Badges for other roles */}
+          {(user?.role !== 'RELATIONS_EVS' && user?.user?.role !== 'RELATIONS_EVS' && user?.role !== 'ADMIN') && (
+            <div className={styles.controlBadgesSection}>
+              {controlScheduled && (
+                <div className={styles.controlBadge} data-testid={`badge-control-scheduled-${session?.id}`}>
+                  ✓ Contrôle programmé
+                </div>
+              )}
+              {controlValidatedAt && (
+                <div className={styles.controlBadge} data-testid={`badge-control-validated-${session?.id}`}>
+                  ✓ Contrôle validé
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

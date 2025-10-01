@@ -318,6 +318,75 @@
   margin: 0;
 }
 
+/* Control Section */
+.controlSection {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1.5rem;
+  margin-top: 1rem;
+}
+
+.controlTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 1rem;
+}
+
+.controlItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.controlItem .checkboxLabel {
+  flex: 1;
+}
+
+.controlButton {
+  padding: 0.5rem 1.5rem;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.controlButton:hover:not(:disabled) {
+  background: rgb(var(--primary));
+  opacity: 0.9;
+}
+
+.controlButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Control Badges for other roles */
+.controlBadgesSection {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.controlBadge {
+  padding: 0.5rem 1rem;
+  background: rgb(var(--success-bg));
+  color: rgb(var(--success-foreground));
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .card {
