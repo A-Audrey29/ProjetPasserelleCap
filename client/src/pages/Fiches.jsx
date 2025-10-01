@@ -98,11 +98,6 @@ export default function Fiches() {
     return 'Fiches navettes';
   };
 
-  const formatAmount = (amountCents) => {
-    if (!amountCents) return '0 €';
-    return `${(amountCents / 100).toFixed(2)} €`;
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('fr-FR');
@@ -255,15 +250,6 @@ export default function Fiches() {
                           <div className={styles.detailItem}>
                             <Building className={styles.detailIcon} />
                             <span>Assignée à: {fiche.assignedOrg.name}</span>
-                          </div>
-                        )}
-
-                        {/* Only show amount for ADMIN and RELATIONS_EVS */}
-                        {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
-                          <div className={styles.detailItem}>
-                            <span className={styles.amount}>
-                              Montant: {formatAmount(fiche.totalAmount)}
-                            </span>
                           </div>
                         )}
                       </div>

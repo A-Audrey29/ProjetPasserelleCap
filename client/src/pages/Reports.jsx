@@ -4,7 +4,7 @@ import { Download, Calendar, Filter, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import Header from '@/components/Layout/Header';
-import { formatDate, formatCurrency } from '@/utils/formatters';
+import { formatDate } from '@/utils/formatters';
 import styles from './Reports.module.css';
 
 export default function Reports() {
@@ -191,10 +191,6 @@ export default function Reports() {
                 <div className={styles.summaryLabel}>Familles aidées</div>
               </div>
               <div className={styles.summaryCard}>
-                <div className={styles.summaryValue}>{formatCurrency(reportData.summary.totalBudget * 100)}</div>
-                <div className={styles.summaryLabel}>Budget total</div>
-              </div>
-              <div className={styles.summaryCard}>
                 <div className={styles.summaryValue}>{reportData.summary.averageProcessingTime}j</div>
                 <div className={styles.summaryLabel}>Délai moyen</div>
               </div>
@@ -214,7 +210,6 @@ export default function Reports() {
                       <span className="font-medium text-foreground">{obj}</span>
                       <span className="text-sm text-muted-foreground ml-2">({data.count} fiches)</span>
                     </div>
-                    <span className="font-medium text-primary">{formatCurrency(data.budget * 100)}</span>
                   </div>
                 ))}
               </div>
@@ -229,7 +224,6 @@ export default function Reports() {
                     <tr className="border-b border-border">
                       <th className="text-left p-3 font-medium text-foreground">Organisation</th>
                       <th className="text-left p-3 font-medium text-foreground">Fiches traitées</th>
-                      <th className="text-left p-3 font-medium text-foreground">Budget géré</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -237,7 +231,6 @@ export default function Reports() {
                       <tr key={index} className="border-b border-border">
                         <td className="p-3 text-foreground">{org.name}</td>
                         <td className="p-3 text-foreground">{org.count}</td>
-                        <td className="p-3 text-foreground">{formatCurrency(org.budget * 100)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -253,7 +246,6 @@ export default function Reports() {
                   <div key={month.month} className="text-center p-3 bg-muted rounded-md">
                     <div className="font-medium text-foreground">{month.month}</div>
                     <div className="text-sm text-muted-foreground">{month.fiches} fiches</div>
-                    <div className="text-sm text-primary">{formatCurrency(month.budget * 100)}</div>
                   </div>
                 ))}
               </div>

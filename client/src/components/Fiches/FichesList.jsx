@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'wouter';
 import { Eye, RefreshCw, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
-import { formatDate, formatCurrency } from '@/utils/formatters';
+import { formatDate } from '@/utils/formatters';
 import styles from './FichesList.module.css';
 
 export default function FichesList({ 
@@ -83,7 +83,6 @@ export default function FichesList({
               <th className={styles.tableHeaderCell}>État</th>
               <th className={styles.tableHeaderCell}>EVS/CS</th>
               <th className={styles.tableHeaderCell}>EPSI</th>
-              <th className={styles.tableHeaderCell}>Montant</th>
               <th className={styles.tableHeaderCell}>Créé le</th>
               <th className={styles.tableHeaderCell}>Actions</th>
             </tr>
@@ -132,11 +131,6 @@ export default function FichesList({
                 <td className={styles.tableCell}>
                   <span data-testid={`text-epsi-${fiche.id}`}>
                     {fiche.epsi?.name || 'N/A'}
-                  </span>
-                </td>
-                <td className={styles.tableCell}>
-                  <span data-testid={`text-amount-${fiche.id}`}>
-                    {formatCurrency(fiche.totalAmount || 0)}
                   </span>
                 </td>
                 <td className={styles.tableCell}>

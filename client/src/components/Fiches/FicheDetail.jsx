@@ -19,7 +19,7 @@ import {
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
 import DocumentsDisplay from '@/components/Documents/DocumentsDisplay';
-import { formatDate, formatCurrency } from '@/utils/formatters';
+import { formatDate } from '@/utils/formatters';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'wouter';
@@ -166,11 +166,6 @@ export default function FicheDetail({ ficheId }) {
   };
 
   const { workshopIds, isLegacyMode } = getCombinedWorkshopSelection();
-
-  const totalAmount = workshopIds.reduce((sum, workshopId) => {
-    const workshop = workshopsList?.find(w => String(w.id) === String(workshopId));
-    return sum + (workshop?.priceCents || 0);
-  }, 0);
 
   // Normalize family information for display
   const family = fiche
@@ -1431,11 +1426,6 @@ export default function FicheDetail({ ficheId }) {
                     />
                     <span className={styles.checkboxLabel}>
                       Est-ce que 70% des fonds ont été transférés à l'organisme assigné ?
-                      {totalAmount > 0 && (
-                        <span className={styles.amountInfo}>
-                          {' '}(70% du budget est {formatCurrency(totalAmount * 0.7 || 0)})
-                        </span>
-                      )}
                     </span>
                   </label>
                 </div>
@@ -1607,9 +1597,7 @@ export default function FicheDetail({ ficheId }) {
                         data-testid="checkbox-remaining-payment-sent"
                       />
                       <span className={styles.checkboxText}>
-                        Le solde restant, 30% du Total à savoir <span className={styles.amountInfo}>
-                          {fiche.totalAmount ? (fiche.totalAmount * 0.3).toFixed(2) : '0.00'} €
-                        </span> a été versé à l'organisme désigné.
+                        Le solde restant (30% du Total) a été versé à l'organisme désigné.
                       </span>
                     </label>
                   </div>
