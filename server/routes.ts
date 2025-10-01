@@ -1408,6 +1408,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (contractSignedByEVS !== undefined) updates.contractSignedByEVS = contractSignedByEVS;
         if (contractSignedByCommune !== undefined) updates.contractSignedByCommune = contractSignedByCommune;
         if (contractCommunePdfUrl !== undefined) updates.contractCommunePdfUrl = contractCommunePdfUrl;
+        
+        // Add timestamp when contract is signed (either EVS or Commune)
+        if ((contractSignedByEVS && !updates.contractSignedAt) || (contractSignedByCommune && !updates.contractSignedAt)) {
+          updates.contractSignedAt = new Date();
+        }
 
         console.log('Updates to apply:', updates);
 

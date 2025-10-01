@@ -621,6 +621,7 @@ export class DatabaseStorage implements IStorage {
     contractSignedByEVS?: boolean;
     contractSignedByCommune?: boolean;
     contractCommunePdfUrl?: string | null;
+    contractSignedAt?: Date;
   }): Promise<void> {
     console.log('Storage: Updating session contracts', { sessionId, contracts });
     const result = await db.update(workshopEnrollments)
@@ -653,6 +654,7 @@ export class DatabaseStorage implements IStorage {
     const enrollments = await db.update(workshopEnrollments)
       .set({ 
         activityDone: true,
+        activityCompletedAt: new Date(),
         updatedAt: new Date()
       })
       .where(and(

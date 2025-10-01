@@ -92,9 +92,11 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
   contractSignedByEVS: boolean("contract_signed_by_evs").notNull().default(false),
   contractSignedByCommune: boolean("contract_signed_by_commune").notNull().default(false),
   contractCommunePdfUrl: text("contract_commune_pdf_url"), // URL du PDF uploadé si structure communale
+  contractSignedAt: timestamp("contract_signed_at"), // Date de signature du contrat
   
   // Suivi de l'activité
   activityDone: boolean("activity_done").notNull().default(false),
+  activityCompletedAt: timestamp("activity_completed_at"), // Date de marquage de l'activité terminée
   
   // Bilan d'atelier par famille
   reportUrl: text("report_url"), // URL du bilan uploadé pour cette famille
