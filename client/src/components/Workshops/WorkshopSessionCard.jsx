@@ -16,6 +16,8 @@ export default function WorkshopSessionCard({ session }) {
   const [activityDone, setActivityDone] = useState(session?.activityDone || false);
   const [controlScheduled, setControlScheduled] = useState(session?.controlScheduled || false);
   const [controlValidatedAt, setControlValidatedAt] = useState(session?.controlValidatedAt || null);
+  const [scheduleControlChecked, setScheduleControlChecked] = useState(false);
+  const [validateControlChecked, setValidateControlChecked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isMarkingDone, setIsMarkingDone] = useState(false);
@@ -31,6 +33,15 @@ export default function WorkshopSessionCard({ session }) {
     setControlScheduled(session?.controlScheduled || false);
     setControlValidatedAt(session?.controlValidatedAt || null);
   }, [session?.contractSignedByEVS, session?.contractSignedByCommune, session?.contractCommunePdfUrl, session?.activityDone, session?.controlScheduled, session?.controlValidatedAt]);
+
+  // Reset control checkboxes when server flags change
+  useEffect(() => {
+    setScheduleControlChecked(false);
+  }, [session?.controlScheduled]);
+
+  useEffect(() => {
+    setValidateControlChecked(false);
+  }, [session?.controlValidatedAt]);
 
   // Calculate session state based on SERVER data, not local state
   const getSessionState = () => {
@@ -444,15 +455,16 @@ export default function WorkshopSessionCard({ session }) {
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
-                      checked={false}
-                      disabled={true}
+                      checked={scheduleControlChecked}
+                      onChange={(e) => setScheduleControlChecked(e.target.checked)}
+                      disabled={false}
                       data-testid={`checkbox-control-schedule-${session?.id}`}
                     />
                     <span>Programmer le contrôle</span>
                   </label>
                   <button
                     onClick={handleScheduleControl}
-                    disabled={isSchedulingControl}
+                    disabled={isSchedulingControl || !scheduleControlChecked}
                     className={styles.controlButton}
                     data-testid={`button-schedule-control-${session?.id}`}
                   >
@@ -467,15 +479,16 @@ export default function WorkshopSessionCard({ session }) {
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
-                      checked={false}
-                      disabled={true}
+                      checked={validateControlChecked}
+                      onChange={(e) => setValidateControlChecked(e.target.checked)}
+                      disabled={false}
                       data-testid={`checkbox-control-validate-${session?.id}`}
                     />
                     <span>Valider le contrôle</span>
                   </label>
                   <button
                     onClick={handleValidateControl}
-                    disabled={isValidatingControl}
+                    disabled={isValidatingControl || !validateControlChecked}
                     className={styles.controlButton}
                     data-testid={`button-validate-control-${session?.id}`}
                   >
