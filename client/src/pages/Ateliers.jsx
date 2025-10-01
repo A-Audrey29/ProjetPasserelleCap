@@ -7,11 +7,26 @@ import styles from './Ateliers.module.css';
 
 export default function Ateliers() {
   const { user, isAuthenticated } = useAuth();
+  const [stateFilter, setStateFilter] = useState('TOUS');
 
   // Query workshop sessions with role-based filtering
   const { data: sessions = [], isLoading, error } = useQuery({
     queryKey: ['/api/workshop-sessions'],
     enabled: isAuthenticated
+  });
+
+  // Calculate session state (same logic as WorkshopSessionCard)
+  const getSessionState = (session) => {
+    if (session?.activityDone) return 'TERMINÉE';
+    if (session?.contractSignedByEVS || session?.contractSignedByCommune) return 'EN COURS';
+    if (session?.participantCount >= session?.workshop?.minCapacity) return 'PRÊTE';
+    return 'EN ATTENTE';
+  };
+
+  // Filter sessions based on selected state
+  const filteredSessions = sessions.filter((session) => {
+    if (stateFilter === 'TOUS') return true;
+    return getSessionState(session) === stateFilter;
   });
 
   if (isLoading) {
