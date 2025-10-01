@@ -228,7 +228,7 @@ export default function Fiches() {
                   <CardContent className={styles.cardContent}>
                     <div className={styles.cardHeader}>
                       <div className={styles.cardTitle}>
-                        <span className={styles.ficheRef}>#{fiche.id.slice(0, 8)}</span>
+                        <span className={styles.ficheRef}>#{fiche.ref}</span>
                         <Badge 
                           variant={STATE_COLORS[fiche.state] || 'default'}
                           className={styles.stateBadge}

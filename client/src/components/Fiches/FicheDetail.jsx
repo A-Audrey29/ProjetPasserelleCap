@@ -768,8 +768,8 @@ export default function FicheDetail({ ficheId }) {
             <h1 className={styles.pageTitle}>
               Fiche Navette CAP
             </h1>
-            <p className={styles.ficheRef} data-testid="text-fiche-id">
-              #{fiche.id}
+            <p className={styles.ficheRef} data-testid="text-fiche-ref">
+              #{fiche.ref}
             </p>
           </div>
           
