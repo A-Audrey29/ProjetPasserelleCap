@@ -502,7 +502,9 @@ export class DatabaseStorage implements IStorage {
         contractSignedByEvs: workshopEnrollments.contractSignedByEVS,
         contractSignedByCommune: workshopEnrollments.contractSignedByCommune,
         contractCommuneUrl: workshopEnrollments.contractCommunePdfUrl,
+        contractSignedAt: workshopEnrollments.contractSignedAt,
         activityDone: workshopEnrollments.activityDone,
+        activityCompletedAt: workshopEnrollments.activityCompletedAt,
         createdAt: workshopEnrollments.createdAt,
         // Workshop details
         workshopName: workshops.name,
@@ -553,7 +555,9 @@ export class DatabaseStorage implements IStorage {
           contractSignedByEVS: session.contractSignedByEvs,
           contractSignedByCommune: session.contractSignedByCommune,
           contractCommunePdfUrl: session.contractCommuneUrl,
+          contractSignedAt: session.contractSignedAt,
           activityDone: session.activityDone,
+          activityCompletedAt: session.activityCompletedAt,
           createdAt: session.createdAt,
           workshop: {
             id: session.workshopId,
