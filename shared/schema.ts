@@ -96,6 +96,11 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
   // Suivi de l'activité
   activityDone: boolean("activity_done").notNull().default(false),
   
+  // Bilan d'atelier par famille
+  reportUrl: text("report_url"), // URL du bilan uploadé pour cette famille
+  reportUploadedAt: timestamp("report_uploaded_at"), // Date d'upload du bilan
+  reportUploadedBy: varchar("report_uploaded_by"), // User ID qui a uploadé le bilan
+  
   // Timestamp pour audit
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

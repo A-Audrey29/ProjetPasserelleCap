@@ -3,28 +3,36 @@ import { ExternalLink } from 'lucide-react';
 import { Link } from 'wouter';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import styles from './WorkshopSessionCard.module.css';
 
 export default function WorkshopSessionCard({ session }) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [contractEvs, setContractEvs] = useState(session?.contractSignedByEVS || false);
   const [contractCommune, setContractCommune] = useState(session?.contractSignedByCommune || false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [communePdfUrl, setCommunePdfUrl] = useState(session?.contractCommunePdfUrl || null);
+  const [activityDone, setActivityDone] = useState(session?.activityDone || false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isMarkingDone, setIsMarkingDone] = useState(false);
 
   // Sync local state with server data when it changes
   useEffect(() => {
     setContractEvs(session?.contractSignedByEVS || false);
     setContractCommune(session?.contractSignedByCommune || false);
     setCommunePdfUrl(session?.contractCommunePdfUrl || null);
-  }, [session?.contractSignedByEVS, session?.contractSignedByCommune, session?.contractCommunePdfUrl]);
+    setActivityDone(session?.activityDone || false);
+  }, [session?.contractSignedByEVS, session?.contractSignedByCommune, session?.contractCommunePdfUrl, session?.activityDone]);
 
   // Calculate session state based on SERVER data, not local state
   const getSessionState = () => {
+    // TERMINÉE if activity is done
+    if (session?.activityDone) return 'TERMINÉE';
     // EN COURS if EITHER contract is signed (EVS/CS OR Commune, not both)
     if (session?.contractSignedByEVS || session?.contractSignedByCommune) return 'EN COURS';
+    // PRÊTE if minimum capacity reached
     if (session?.participantCount >= session?.workshop?.minCapacity) return 'PRÊTE';
     return 'EN ATTENTE';
   };
@@ -32,6 +40,7 @@ export default function WorkshopSessionCard({ session }) {
   const sessionState = getSessionState();
   const isReady = sessionState === 'PRÊTE';
   const isInProgress = sessionState === 'EN COURS';
+  const isDone = sessionState === 'TERMINÉE';
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -138,6 +147,30 @@ export default function WorkshopSessionCard({ session }) {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleMarkActivityDone = async () => {
+    setIsMarkingDone(true);
+    try {
+      const response = await apiRequest('POST', `/api/workshop-sessions/${session.id}/mark-activity-done`, {});
+      
+      // Force refetch to get updated data immediately
+      await queryClient.refetchQueries({ queryKey: ['/api/workshop-sessions'] });
+      
+      toast({
+        title: "Succès",
+        description: "Activité marquée comme terminée. Notification envoyée à FEVES."
+      });
+    } catch (error) {
+      console.error('Error marking activity done:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la mise à jour de l'activité",
+        variant: "destructive"
+      });
+    } finally {
+      setIsMarkingDone(false);
     }
   };
 
@@ -265,10 +298,40 @@ export default function WorkshopSessionCard({ session }) {
         </div>
       )}
 
-      {/* Disabled state for EN COURS */}
-      {isInProgress && (
-        <div className={styles.inProgressNote}>
-          <p>✓ Session en cours - Contrats signés</p>
+      {/* Activity Section - Only visible if EN COURS (contracts signed) */}
+      {isInProgress && !isDone && (
+        <div className={styles.activitySection}>
+          <h4 className={styles.activityTitle}>Activité :</h4>
+          
+          <div className={styles.activityItem}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={activityDone}
+                onChange={(e) => setActivityDone(e.target.checked)}
+                disabled={activityDone && user?.role !== 'ADMIN'}
+                data-testid={`checkbox-activity-done-${session?.id}`}
+              />
+              <span>Activité réalisée</span>
+            </label>
+          </div>
+
+          {/* Mark as Done Button */}
+          <button
+            onClick={handleMarkActivityDone}
+            disabled={isMarkingDone || activityDone}
+            className={styles.markDoneButton}
+            data-testid={`button-mark-done-${session?.id}`}
+          >
+            {isMarkingDone ? 'En cours...' : 'Marquer comme terminée'}
+          </button>
+        </div>
+      )}
+
+      {/* Completed state for TERMINÉE */}
+      {isDone && (
+        <div className={styles.completedNote}>
+          <p>✓ Activité terminée - Bilans à uploader dans les fiches</p>
         </div>
       )}
     </div>

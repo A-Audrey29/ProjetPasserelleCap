@@ -227,6 +227,60 @@
   margin: 0;
 }
 
+/* Activity Section */
+.activitySection {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.activityTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 1rem;
+}
+
+.activityItem {
+  margin-bottom: 1rem;
+}
+
+.markDoneButton {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.markDoneButton:hover:not(:disabled) {
+  background: rgb(var(--primary));
+  opacity: 0.9;
+}
+
+.markDoneButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.completedNote {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1rem;
+  text-align: center;
+  background: rgb(var(--success-bg));
+}
+
+.completedNote p {
+  color: rgb(var(--success-foreground));
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .card {

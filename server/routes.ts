@@ -18,6 +18,7 @@ import { requireAuth, requireRole, requireFicheAccess } from './middleware/rbac.
 import { auditMiddleware } from './services/auditLogger.js';
 import { transitionFicheState, getValidTransitions } from './services/stateTransitions.js';
 import emailService from './services/emailService.js';
+import notificationService from './services/notificationService.js';
 
 // CSV parsing utility functions (inspired from seed.ts)
 function parseCsv(content: string): string[][] {
@@ -147,6 +148,31 @@ const uploadContractPDF = multer({
       // Generate timestamp-based filename: contract_commune_YYYYMMDD_HHMMSS.pdf
       const timestamp = new Date().toISOString().replace(/[:-]/g, '').replace(/\..+/, '').replace('T', '_');
       const filename = `contract_commune_${timestamp}.pdf`;
+      cb(null, filename);
+    }
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Seuls les fichiers PDF sont autorisés'), false);
+    }
+  }
+});
+
+// Configure multer for workshop report PDF uploads
+const uploadReportPDF = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+      // Generate timestamp-based filename: report_YYYYMMDD_HHMMSS.pdf
+      const timestamp = new Date().toISOString().replace(/[:-]/g, '').replace(/\..+/, '').replace('T', '_');
+      const filename = `report_${timestamp}.pdf`;
       cb(null, filename);
     }
   }),
@@ -1396,6 +1422,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error('Error updating session contracts:', error);
         res.status(500).json({ message: 'Erreur lors de la mise à jour des contrats' });
+      }
+    }
+  );
+
+  // Mark workshop session as activity done
+  app.post('/api/workshop-sessions/:enrollmentId/mark-activity-done',
+    requireAuth,
+    requireRole('ADMIN', 'EVS_CS'),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+        const userId = req.user.userId;
+
+        // Get the enrollment to check ownership
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Inscription non trouvée' });
+        }
+
+        // Check if user is EVS_CS of this enrollment
+        if (req.user.role === 'EVS_CS' && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cette session' });
+        }
+
+        // Mark all enrollments of this session as activity done
+        const result = await storage.markSessionActivityDone(enrollmentId, userId);
+
+        // Get workshop and org details for notification
+        const workshop = await storage.getWorkshop(enrollment.workshopId);
+        const org = await storage.getOrganization(enrollment.evsId);
+
+        // Prepare session data for notification
+        const sessionData = {
+          id: enrollmentId,
+          sessionNumber: enrollment.sessionNumber,
+          participantCount: enrollment.participantCount,
+          workshop: workshop ? { name: workshop.name } : { name: 'Atelier' },
+          evs: org ? { name: org.name } : { name: 'Organisation' }
+        };
+
+        // Send notification to all RELATIONS_EVS users
+        await notificationService.notifyWorkshopActivityCompleted(
+          sessionData,
+          result.enrollments
+        ).catch(err => {
+          console.error('Failed to send notification:', err);
+          // Don't fail the request if notification fails
+        });
+
+        res.json({
+          success: true,
+          message: `Activité marquée comme terminée pour ${result.updatedCount} inscription(s)`,
+          updatedCount: result.updatedCount
+        });
+      } catch (error) {
+        console.error('Error marking activity done:', error);
+        res.status(500).json({ message: 'Erreur lors de la mise à jour de l\'activité' });
+      }
+    }
+  );
+
+  // Upload workshop report for an enrollment
+  app.post('/api/enrollments/:enrollmentId/upload-report',
+    requireAuth,
+    requireRole('ADMIN', 'EVS_CS'),
+    uploadReportPDF.single('reportFile'),
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: 'Aucun fichier fourni' });
+        }
+
+        const { enrollmentId } = req.params;
+        const userId = req.user.userId;
+
+        // Check if enrollment exists and activity is done
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Inscription non trouvée' });
+        }
+
+        if (!enrollment.activityDone) {
+          return res.status(400).json({ message: 'L\'activité doit être marquée comme terminée avant d\'uploader le bilan' });
+        }
+
+        // Check if user is EVS_CS of this enrollment
+        if (req.user.role === 'EVS_CS' && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à uploader le bilan pour cette inscription' });
+        }
+
+        const fileUrl = `/uploads/${req.file.filename}`;
+        const updatedEnrollment = await storage.uploadEnrollmentReport(enrollmentId, fileUrl, userId);
+
+        res.json({
+          success: true,
+          message: 'Bilan uploadé avec succès',
+          reportUrl: fileUrl,
+          enrollment: updatedEnrollment
+        });
+      } catch (error) {
+        console.error('Error uploading report:', error);
+        res.status(500).json({ message: 'Erreur lors de l\'upload du bilan' });
       }
     }
   );

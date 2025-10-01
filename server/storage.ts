@@ -100,6 +100,8 @@ export interface IStorage {
   updateWorkshopEnrollment(id: string, enrollment: Partial<InsertWorkshopEnrollment>): Promise<WorkshopEnrollment>;
   deleteWorkshopEnrollment(id: string): Promise<void>;
   getEnrollmentsByWorkshopAndEvs(workshopId: string, evsId: string): Promise<WorkshopEnrollment[]>;
+  markSessionActivityDone(sessionId: string, userId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
+  uploadEnrollmentReport(enrollmentId: string, reportUrl: string, userId: string): Promise<WorkshopEnrollment>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -637,6 +639,52 @@ export class DatabaseStorage implements IStorage {
         eq(workshopEnrollments.evsId, evsId)
       ))
       .orderBy(asc(workshopEnrollments.sessionNumber));
+  }
+
+  // Mark all enrollments of a session as activity done
+  async markSessionActivityDone(sessionId: string, userId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }> {
+    // Get the enrollment to find its session info
+    const enrollment = await this.getWorkshopEnrollment(sessionId);
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    // Update all enrollments with same (workshopId, evsId, sessionNumber)
+    const enrollments = await db.update(workshopEnrollments)
+      .set({ 
+        activityDone: true,
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(workshopEnrollments.workshopId, enrollment.workshopId),
+        eq(workshopEnrollments.evsId, enrollment.evsId),
+        eq(workshopEnrollments.sessionNumber, enrollment.sessionNumber)
+      ))
+      .returning();
+
+    return {
+      updatedCount: enrollments.length,
+      enrollments
+    };
+  }
+
+  // Upload report for a specific enrollment
+  async uploadEnrollmentReport(enrollmentId: string, reportUrl: string, userId: string): Promise<WorkshopEnrollment> {
+    const [enrollment] = await db.update(workshopEnrollments)
+      .set({
+        reportUrl,
+        reportUploadedAt: new Date(),
+        reportUploadedBy: userId,
+        updatedAt: new Date()
+      })
+      .where(eq(workshopEnrollments.id, enrollmentId))
+      .returning();
+
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    return enrollment;
   }
 }
 

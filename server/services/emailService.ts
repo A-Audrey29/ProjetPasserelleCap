@@ -800,6 +800,77 @@ Email envoyé automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${
 
     await this.deliver(mailOptions, meta);
   }
+
+  /**
+   * Send notification when a workshop activity is completed
+   */
+  async sendWorkshopActivityCompletedNotification({ fevesEmails, workshopName, sessionNumber, evsName, participantCount, ficheList, sessionId }: {
+    fevesEmails: string[];
+    workshopName: string;
+    sessionNumber: number;
+    evsName: string;
+    participantCount: number;
+    ficheList: string;
+    sessionId: string;
+  }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP - Ateliers',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: fevesEmails,
+      subject: `Atelier terminé - ${workshopName} (Session ${sessionNumber})`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #3B4B61;">Atelier terminé - Contrôle requis</h2>
+          
+          <p>Bonjour,</p>
+          
+          <p>L'atelier <strong>${workshopName}</strong> session <strong>${sessionNumber}</strong> à <strong>${evsName}</strong> est terminé et nécessite un contrôle.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #6A8B74; margin-top: 0;">Détails de la session</h3>
+            <p><strong>Atelier :</strong> ${workshopName}</p>
+            <p><strong>Numéro de session :</strong> ${sessionNumber}</p>
+            <p><strong>Organisation :</strong> ${evsName}</p>
+            <p><strong>Nombre de participants :</strong> ${participantCount}</p>
+            <p><strong>Fiches concernées :</strong> ${ficheList}</p>
+          </div>
+          
+          <p>Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers" 
+               style="background-color: #6A8B74; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Accéder aux ateliers
+            </a>
+          </div>
+        </div>
+      `,
+      text: `Atelier terminé - Contrôle requis
+
+L'atelier ${workshopName} session ${sessionNumber} à ${evsName} est terminé et nécessite un contrôle.
+
+Détails de la session :
+- Atelier : ${workshopName}
+- Numéro de session : ${sessionNumber}
+- Organisation : ${evsName}
+- Nombre de participants : ${participantCount}
+- Fiches concernées : ${ficheList}
+
+Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
+    };
+
+    const meta = {
+      event: 'workshop_activity_completed',
+      sessionId,
+      workshopName,
+      sessionNumber,
+      evsName
+    };
+
+    await this.deliver(mailOptions, meta);
+  }
 }
 
 // Export singleton instance

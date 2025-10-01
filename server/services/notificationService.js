@@ -224,6 +224,52 @@ class NotificationService {
   }
 
   /**
+   * Notification : Activité d'atelier terminée
+   */
+  async notifyWorkshopActivityCompleted(session, enrollments) {
+    try {
+      const fevesEmails = await this.getFevesEmails();
+      if (fevesEmails.length === 0) {
+        console.log('No FEVES emails found for workshop activity notification');
+        return;
+      }
+
+      // Get all fiches for this session
+      const ficheRefs = enrollments.map(e => e.ficheId);
+      const fiches = [];
+      for (const ficheId of ficheRefs) {
+        const fiche = await storage.getFiche(ficheId);
+        if (fiche) {
+          fiches.push(fiche);
+        }
+      }
+
+      // Prepare notification data
+      const workshopName = session.workshop?.name || 'Atelier';
+      const sessionNumber = session.sessionNumber;
+      const evsName = session.evs?.name || 'Organisation';
+      const participantCount = session.participantCount;
+      const ficheList = fiches.map(f => `#${f.ref}`).join(', ');
+
+      // Send email notification
+      await emailService.sendWorkshopActivityCompletedNotification({
+        fevesEmails,
+        workshopName,
+        sessionNumber,
+        evsName,
+        participantCount,
+        ficheList,
+        sessionId: session.id
+      });
+
+      console.log(`Workshop activity completion notification sent for ${workshopName} session ${sessionNumber}`);
+    } catch (error) {
+      console.error('Error sending workshop activity completed notification:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Récupère les emails des utilisateurs CD
    */
   async getCdEmails() {
