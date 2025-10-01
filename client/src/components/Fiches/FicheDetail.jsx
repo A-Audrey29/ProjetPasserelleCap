@@ -60,6 +60,9 @@ export default function FicheDetail({ ficheId }) {
   const [fieldCheckCompleted, setFieldCheckCompleted] = useState(false);
   const [finalReportSent, setFinalReportSent] = useState(false);
   const [remainingPaymentSent, setRemainingPaymentSent] = useState(false);
+  
+  // Workshop report upload state
+  const [uploadingReportFor, setUploadingReportFor] = useState(null);
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
@@ -121,6 +124,12 @@ export default function FicheDetail({ ficheId }) {
   const { data: workshopsList = [] } = useQuery({
     queryKey: ['/api/workshops'],
     enabled: !!fiche
+  });
+
+  // Query for workshop enrollments (for report upload/download)
+  const { data: workshopEnrollments = [] } = useQuery({
+    queryKey: ['/api/enrollments/fiche', ficheId],
+    enabled: !!ficheId
   });
 
   // Workshop selection logic - SAME AS FORM (selectedWorkshops priority)
@@ -411,6 +420,74 @@ export default function FicheDetail({ ficheId }) {
         description: error.message || "Impossible de clôturer la fiche",
         variant: "destructive"
       });
+    }
+  };
+
+  // Workshop report upload handler
+  const handleReportUpload = async (enrollmentId, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Prevent concurrent uploads
+    if (uploadingReportFor) return;
+
+    // Validate PDF by extension and common MIME types
+    const isPdf = file.name.toLowerCase().endsWith('.pdf') || 
+                  file.type === 'application/pdf' || 
+                  file.type === 'application/x-pdf';
+    
+    if (!isPdf) {
+      toast({
+        title: "Format invalide",
+        description: "Seuls les fichiers PDF sont acceptés",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "La taille maximale est de 5 MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingReportFor(enrollmentId);
+    try {
+      const formData = new FormData();
+      formData.append('reportFile', file);
+
+      const response = await fetch(`/api/enrollments/${enrollmentId}/upload-report`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erreur lors de l\'upload');
+      }
+
+      // Refetch enrollments to show updated report
+      await queryClient.refetchQueries({ queryKey: ['/api/enrollments/fiche', ficheId] });
+
+      toast({
+        title: "Succès",
+        description: "Bilan d'activité uploadé avec succès"
+      });
+    } catch (error) {
+      console.error('Error uploading report:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de l'upload du bilan",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingReportFor(null);
+      // Reset file input
+      event.target.value = '';
     }
   };
 
@@ -1034,6 +1111,89 @@ export default function FicheDetail({ ficheId }) {
               })()}
             </div>
           </div>
+
+          {/* Workshop Reports Section - Only show if there are enrollments */}
+          {workshopEnrollments.length > 0 && (
+            <div className={styles.reviewSection}>
+              <h3 className={styles.reviewSectionTitle}>
+                <Target className={styles.reviewSectionIcon} />
+                Bilans d'ateliers
+              </h3>
+              <div className={styles.reviewContent}>
+                {workshopEnrollments.map((enrollment) => {
+                  const workshop = workshopsList?.find(w => String(w.id) === String(enrollment.workshopId));
+                  const workshopName = workshop?.name || `Atelier ${enrollment.workshopId}`;
+                  const userRole = user?.role ?? user?.user?.role;
+                  const canUpload = userRole === 'EVS_CS' && enrollment.activityDone;
+                  const isUploading = uploadingReportFor === enrollment.id;
+
+                  return (
+                    <div key={enrollment.id} className={styles.workshopReportCard}>
+                      <div className={styles.workshopReportHeader}>
+                        <h4 className={styles.workshopReportTitle}>
+                          {workshopName} - Session {enrollment.sessionNumber}
+                        </h4>
+                        {!enrollment.activityDone && (
+                          <span className={styles.workshopPendingBadge}>En cours</span>
+                        )}
+                        {enrollment.activityDone && !enrollment.reportUrl && (
+                          <span className={styles.workshopReadyBadge}>Prêt pour bilan</span>
+                        )}
+                        {enrollment.reportUrl && (
+                          <span className={styles.workshopCompleteBadge}>Bilan disponible</span>
+                        )}
+                      </div>
+
+                      <div className={styles.workshopReportActions}>
+                        {/* Download button - visible if report exists */}
+                        {enrollment.reportUrl && (
+                          <a
+                            href={enrollment.reportUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.downloadReportButton}
+                            data-testid={`button-download-report-${enrollment.id}`}
+                          >
+                            Télécharger le bilan
+                          </a>
+                        )}
+
+                        {/* Upload button - only for EVS_CS after activity is done */}
+                        {canUpload && (
+                          <label 
+                            className={`${styles.uploadReportButton} ${isUploading ? styles.uploadDisabled : ''}`}
+                            aria-disabled={isUploading}
+                          >
+                            <input
+                              type="file"
+                              accept="application/pdf,.pdf"
+                              onChange={(e) => handleReportUpload(enrollment.id, e)}
+                              disabled={isUploading}
+                              className={styles.fileInput}
+                              data-testid={`input-upload-report-${enrollment.id}`}
+                            />
+                            {isUploading ? 'Upload en cours...' : enrollment.reportUrl ? 'Remplacer le bilan' : 'Uploader le bilan'}
+                          </label>
+                        )}
+
+                        {!canUpload && !enrollment.reportUrl && (
+                          <p className={styles.uploadHint}>
+                            Le bilan sera disponible après que l'activité soit marquée comme terminée
+                          </p>
+                        )}
+                      </div>
+
+                      {enrollment.reportUploadedAt && (
+                        <p className={styles.uploadInfo}>
+                          Uploadé le {formatDate(enrollment.reportUploadedAt)}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Nombre de participants - adapted from FicheForm review section */}
           {fiche.participantsCount && (
