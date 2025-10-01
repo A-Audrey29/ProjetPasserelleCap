@@ -1375,6 +1375,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const { sessionId } = req.params;
+        
+        // Check ownership for EVS_CS
+        const enrollment = await storage.getWorkshopEnrollment(sessionId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Session non trouvée' });
+        }
+        
+        if (req.user.role === 'EVS_CS' && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à uploader pour cette session' });
+        }
+
         const filename = req.file.filename;
         const fileUrl = `/uploads/${filename}`;
         
@@ -1403,14 +1414,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log('Update contracts request:', { sessionId, contractSignedByEVS, contractSignedByCommune, contractCommunePdfUrl });
 
+        // Get current enrollment to check if contractSignedAt already exists
+        const enrollment = await storage.getWorkshopEnrollment(sessionId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Session non trouvée' });
+        }
+
+        // Check if user is EVS_CS of this enrollment's organization
+        if (req.user.role === 'EVS_CS' && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cette session' });
+        }
+
         // Build partial update object only with present fields
         const updates = {};
         if (contractSignedByEVS !== undefined) updates.contractSignedByEVS = contractSignedByEVS;
         if (contractSignedByCommune !== undefined) updates.contractSignedByCommune = contractSignedByCommune;
         if (contractCommunePdfUrl !== undefined) updates.contractCommunePdfUrl = contractCommunePdfUrl;
         
-        // Add timestamp when contract is signed (either EVS or Commune)
-        if ((contractSignedByEVS && !updates.contractSignedAt) || (contractSignedByCommune && !updates.contractSignedAt)) {
+        // Add timestamp only if no date exists yet AND a contract is being signed
+        if (!enrollment.contractSignedAt && (contractSignedByEVS || contractSignedByCommune)) {
           updates.contractSignedAt = new Date();
         }
 

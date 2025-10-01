@@ -224,6 +224,34 @@ export default function WorkshopSessionCard({ session }) {
         </div>
       </div>
 
+      {/* Historique Section - Show key events with dates */}
+      {(session?.contractSignedAt || session?.activityCompletedAt) && (
+        <div className={styles.historySection}>
+          <h4 className={styles.historyTitle}>Historique :</h4>
+          <div className={styles.historyContent}>
+            {session.contractSignedAt && (
+              <div className={styles.historyItem} data-testid={`history-contract-${session.id}`}>
+                📋 Contrat signé {
+                  session.contractSignedByEVS && session.contractSignedByCommune 
+                    ? '(EVS/Commune)' 
+                    : session.contractSignedByEVS 
+                      ? 'EVS' 
+                      : 'Commune'
+                } le {new Date(session.contractSignedAt).toLocaleDateString('fr-FR')}
+              </div>
+            )}
+            {session.contractSignedAt && session.activityCompletedAt && (
+              <div className={styles.historySeparator}>─────────────────────────</div>
+            )}
+            {session.activityCompletedAt && (
+              <div className={styles.historyItem} data-testid={`history-activity-${session.id}`}>
+                ✓ Atelier terminé le {new Date(session.activityCompletedAt).toLocaleDateString('fr-FR')}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Contracts Section - Only visible if PRÊTE */}
       {isReady && (
         <div className={styles.contractsSection}>
