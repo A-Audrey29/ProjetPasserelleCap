@@ -30,12 +30,16 @@ class NotificationService {
       switch (newState) {
         
         case 'SUBMITTED_TO_CD':
+          // Legacy case - kept for existing fiches only
           await this.notifySubmittedToCd(fiche, emitterName);
           break;
           
         case 'SUBMITTED_TO_FEVES':
-          if (oldState === 'SUBMITTED_TO_CD') {
-            // Validation par le CD
+          if (oldState === 'DRAFT') {
+            // Émetteur transmet directement à FEVES (nouveau workflow)
+            await this.notifySubmittedToFeves(fiche, emitterName);
+          } else if (oldState === 'SUBMITTED_TO_CD') {
+            // Validation par le CD (legacy workflow)
             await this.notifySubmittedToFeves(fiche, emitterName);
           }
           break;
@@ -220,6 +224,52 @@ class NotificationService {
   }
 
   /**
+   * Notification : Activité d'atelier terminée
+   */
+  async notifyWorkshopActivityCompleted(session, enrollments) {
+    try {
+      const fevesEmails = await this.getFevesEmails();
+      if (fevesEmails.length === 0) {
+        console.log('No FEVES emails found for workshop activity notification');
+        return;
+      }
+
+      // Get all fiches for this session
+      const ficheRefs = enrollments.map(e => e.ficheId);
+      const fiches = [];
+      for (const ficheId of ficheRefs) {
+        const fiche = await storage.getFiche(ficheId);
+        if (fiche) {
+          fiches.push(fiche);
+        }
+      }
+
+      // Prepare notification data
+      const workshopName = session.workshop?.name || 'Atelier';
+      const sessionNumber = session.sessionNumber;
+      const evsName = session.evs?.name || 'Organisation';
+      const participantCount = session.participantCount;
+      const ficheList = fiches.map(f => `#${f.ref}`).join(', ');
+
+      // Send email notification
+      await emailService.sendWorkshopActivityCompletedNotification({
+        fevesEmails,
+        workshopName,
+        sessionNumber,
+        evsName,
+        participantCount,
+        ficheList,
+        sessionId: session.id
+      });
+
+      console.log(`Workshop activity completion notification sent for ${workshopName} session ${sessionNumber}`);
+    } catch (error) {
+      console.error('Error sending workshop activity completed notification:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Récupère les emails des utilisateurs CD
    */
   async getCdEmails() {
@@ -246,6 +296,35 @@ class NotificationService {
     } catch (error) {
       console.error('Error getting FEVES emails:', error);
       return [];
+    }
+  }
+
+  /**
+   * Notification: Tous les ateliers d'une fiche sont terminés, fiche clôturée
+   */
+  async notifyFicheAllWorkshopsCompleted(fiche) {
+    try {
+      // Get emails for RELATIONS_EVS and CD
+      const fevesEmails = await this.getFevesEmails();
+      const cdEmails = await this.getCdEmails();
+      const allEmails = [...fevesEmails, ...cdEmails];
+
+      if (allEmails.length === 0) {
+        console.log('No RELATIONS_EVS or CD emails found for fiche closure notification');
+        return;
+      }
+
+      // Send email notification
+      await emailService.sendFicheAllWorkshopsCompletedNotification({
+        emails: allEmails,
+        ficheRef: fiche.ref,
+        ficheId: fiche.id
+      });
+
+      console.log(`Fiche closure notification sent for ${fiche.ref} to ${allEmails.length} recipients`);
+    } catch (error) {
+      console.error('Error sending fiche closure notification:', error);
+      throw error;
     }
   }
 }

@@ -1,14 +1,14 @@
 import {
   epcis, users, organizations, workshopObjectives, workshops,
-  ficheNavettes, auditLogs, comments, emailLogs,
+  ficheNavettes, auditLogs, comments, emailLogs, workshopEnrollments,
   type Epci, type InsertEpci, type User, type InsertUser, type Organization,
   type InsertOrganization, type WorkshopObjective, type InsertWorkshopObjective, type Workshop, type InsertWorkshop,
   type FicheNavette, type InsertFicheNavette,
   type AuditLog, type InsertAuditLog, type Comment, type InsertComment,
-  type EmailLog, type InsertEmailLog
+  type EmailLog, type InsertEmailLog, type WorkshopEnrollment, type InsertWorkshopEnrollment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, like, count } from "drizzle-orm";
+import { eq, and, or, desc, asc, like, count, sql } from "drizzle-orm";
 
 export interface IStorage {
   // EPCIs
@@ -87,6 +87,23 @@ export interface IStorage {
   updateEmailLog(id: string, emailLog: Partial<InsertEmailLog>): Promise<EmailLog>;
   deleteEmailLog(id: string): Promise<void>;
   deleteAllEmailLogs(): Promise<void>;
+
+  // Workshop Enrollments
+  getWorkshopEnrollments(filters?: {
+    ficheId?: string;
+    workshopId?: string;
+    evsId?: string;
+    isLocked?: boolean;
+  }): Promise<WorkshopEnrollment[]>;
+  getWorkshopEnrollment(id: string): Promise<WorkshopEnrollment | undefined>;
+  createWorkshopEnrollment(enrollment: InsertWorkshopEnrollment): Promise<WorkshopEnrollment>;
+  updateWorkshopEnrollment(id: string, enrollment: Partial<InsertWorkshopEnrollment>): Promise<WorkshopEnrollment>;
+  deleteWorkshopEnrollment(id: string): Promise<void>;
+  getEnrollmentsByWorkshopAndEvs(workshopId: string, evsId: string): Promise<WorkshopEnrollment[]>;
+  markSessionActivityDone(sessionId: string, userId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
+  uploadEnrollmentReport(enrollmentId: string, reportUrl: string, userId: string): Promise<WorkshopEnrollment>;
+  scheduleSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
+  validateSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -419,6 +436,321 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAllEmailLogs(): Promise<void> {
     await db.delete(emailLogs);
+  }
+
+  // Workshop Enrollments
+  async getWorkshopEnrollments(filters?: {
+    ficheId?: string;
+    workshopId?: string;
+    evsId?: string;
+    isLocked?: boolean;
+  }): Promise<WorkshopEnrollment[]> {
+    const conditions = [];
+    
+    if (filters?.ficheId) {
+      conditions.push(eq(workshopEnrollments.ficheId, filters.ficheId));
+    }
+    if (filters?.workshopId) {
+      conditions.push(eq(workshopEnrollments.workshopId, filters.workshopId));
+    }
+    if (filters?.evsId) {
+      conditions.push(eq(workshopEnrollments.evsId, filters.evsId));
+    }
+    if (filters?.isLocked !== undefined) {
+      conditions.push(eq(workshopEnrollments.isLocked, filters.isLocked));
+    }
+
+    let query = db.select().from(workshopEnrollments);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(asc(workshopEnrollments.createdAt));
+  }
+
+  async getWorkshopEnrollment(id: string): Promise<WorkshopEnrollment | undefined> {
+    const [enrollment] = await db.select().from(workshopEnrollments).where(eq(workshopEnrollments.id, id));
+    return enrollment || undefined;
+  }
+
+  async createWorkshopEnrollment(insertEnrollment: InsertWorkshopEnrollment): Promise<WorkshopEnrollment> {
+    const [enrollment] = await db.insert(workshopEnrollments).values(insertEnrollment).returning();
+    return enrollment;
+  }
+
+  async updateWorkshopEnrollment(id: string, insertEnrollment: Partial<InsertWorkshopEnrollment>): Promise<WorkshopEnrollment> {
+    const [enrollment] = await db.update(workshopEnrollments)
+      .set({ ...insertEnrollment, updatedAt: new Date() })
+      .where(eq(workshopEnrollments.id, id))
+      .returning();
+    return enrollment;
+  }
+
+  async deleteWorkshopEnrollment(id: string): Promise<void> {
+    await db.delete(workshopEnrollments).where(eq(workshopEnrollments.id, id));
+  }
+
+  // Get workshop sessions with role-based filtering and joined data
+  async getWorkshopSessions(userRole: string, userOrgId?: string): Promise<any[]> {
+    let query = db
+      .select({
+        id: workshopEnrollments.id,
+        workshopId: workshopEnrollments.workshopId,
+        evsId: workshopEnrollments.evsId,
+        participantCount: workshopEnrollments.participantCount,
+        sessionNumber: workshopEnrollments.sessionNumber,
+        isLocked: workshopEnrollments.isLocked,
+        contractSignedByEvs: workshopEnrollments.contractSignedByEVS,
+        contractSignedByCommune: workshopEnrollments.contractSignedByCommune,
+        contractCommuneUrl: workshopEnrollments.contractCommunePdfUrl,
+        contractSignedAt: workshopEnrollments.contractSignedAt,
+        activityDone: workshopEnrollments.activityDone,
+        activityCompletedAt: workshopEnrollments.activityCompletedAt,
+        controlScheduled: workshopEnrollments.controlScheduled,
+        controlValidatedAt: workshopEnrollments.controlValidatedAt,
+        createdAt: workshopEnrollments.createdAt,
+        // Workshop details
+        workshopName: workshops.name,
+        workshopMinCapacity: workshops.minCapacity,
+        workshopMaxCapacity: workshops.maxCapacity,
+        // EVS details
+        evsName: organizations.name
+      })
+      .from(workshopEnrollments)
+      .leftJoin(workshops, eq(workshopEnrollments.workshopId, workshops.id))
+      .leftJoin(organizations, eq(workshopEnrollments.evsId, organizations.orgId));
+
+    // Apply role-based filtering
+    if (userRole === 'EVS_CS' && userOrgId) {
+      query = query.where(eq(workshopEnrollments.evsId, userOrgId)) as any;
+    }
+    // ADMIN, RELATIONS_EVS, CD see all sessions
+
+    const sessions = await query.orderBy(
+      asc(workshops.name),
+      asc(workshopEnrollments.sessionNumber)
+    );
+
+    // Get associated fiches for each session
+    const sessionsWithFiches = await Promise.all(
+      sessions.map(async (session) => {
+        const fiches = await db
+          .select({
+            id: ficheNavettes.id,
+            ref: ficheNavettes.ref,
+            familyDetailedData: ficheNavettes.familyDetailedData,
+            participantsCount: ficheNavettes.participantsCount
+          })
+          .from(ficheNavettes)
+          .where(
+            and(
+              eq(ficheNavettes.assignedOrgId, session.evsId),
+              sql`${ficheNavettes.selectedWorkshops}->>${session.workshopId} = 'true'`
+            )
+          );
+
+        return {
+          id: session.id,
+          workshopId: session.workshopId,
+          sessionNumber: session.sessionNumber,
+          participantCount: session.participantCount,
+          isLocked: session.isLocked,
+          contractSignedByEVS: session.contractSignedByEvs,
+          contractSignedByCommune: session.contractSignedByCommune,
+          contractCommunePdfUrl: session.contractCommuneUrl,
+          contractSignedAt: session.contractSignedAt,
+          activityDone: session.activityDone,
+          activityCompletedAt: session.activityCompletedAt,
+          controlScheduled: session.controlScheduled,
+          controlValidatedAt: session.controlValidatedAt,
+          createdAt: session.createdAt,
+          workshop: {
+            id: session.workshopId,
+            name: session.workshopName,
+            minCapacity: session.workshopMinCapacity,
+            maxCapacity: session.workshopMaxCapacity
+          },
+          evs: {
+            id: session.evsId,
+            name: session.evsName
+          },
+          fiches: fiches.map(f => ({
+            id: f.id,
+            ref: f.ref,
+            familyName: this.extractGuardianName(f.familyDetailedData),
+            participantsCount: f.participantsCount
+          }))
+        };
+      })
+    );
+
+    return sessionsWithFiches;
+  }
+
+  // Helper function to extract guardian name from familyDetailedData
+  private extractGuardianName(familyDetailedData: any): string {
+    if (!familyDetailedData) return 'Famille';
+
+    try {
+      const familyData = typeof familyDetailedData === 'string' 
+        ? JSON.parse(familyDetailedData) 
+        : familyDetailedData;
+
+      if (familyData?.autoriteParentale) {
+        const authority = familyData.autoriteParentale
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+
+        switch (authority) {
+          case 'mere':
+            return familyData.mother || 'Famille';
+          case 'pere':
+            return familyData.father || 'Famille';
+          case 'tiers':
+            return familyData.tiers || familyData.guardian || 'Famille';
+          default:
+            break;
+        }
+      }
+
+      if (familyData?.mother) return familyData.mother;
+      if (familyData?.father) return familyData.father;
+      if (familyData?.guardian) return familyData.guardian;
+
+      return 'Famille';
+    } catch (error) {
+      console.error('Error extracting guardian name:', error);
+      return 'Famille';
+    }
+  }
+
+  // Update session contracts
+  async updateSessionContracts(sessionId: string, contracts: {
+    contractSignedByEVS?: boolean;
+    contractSignedByCommune?: boolean;
+    contractCommunePdfUrl?: string | null;
+    contractSignedAt?: Date;
+  }): Promise<void> {
+    console.log('Storage: Updating session contracts', { sessionId, contracts });
+    const result = await db.update(workshopEnrollments)
+      .set({
+        ...contracts,
+        updatedAt: new Date()
+      })
+      .where(eq(workshopEnrollments.id, sessionId));
+    console.log('Storage: Update result', result);
+  }
+
+  async getEnrollmentsByWorkshopAndEvs(workshopId: string, evsId: string): Promise<WorkshopEnrollment[]> {
+    return await db.select().from(workshopEnrollments)
+      .where(and(
+        eq(workshopEnrollments.workshopId, workshopId),
+        eq(workshopEnrollments.evsId, evsId)
+      ))
+      .orderBy(asc(workshopEnrollments.sessionNumber));
+  }
+
+  // Mark all enrollments of a session as activity done
+  async markSessionActivityDone(sessionId: string, userId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }> {
+    // Get the enrollment to find its session info
+    const enrollment = await this.getWorkshopEnrollment(sessionId);
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    // Update all enrollments with same (workshopId, evsId, sessionNumber)
+    const enrollments = await db.update(workshopEnrollments)
+      .set({ 
+        activityDone: true,
+        activityCompletedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(workshopEnrollments.workshopId, enrollment.workshopId),
+        eq(workshopEnrollments.evsId, enrollment.evsId),
+        eq(workshopEnrollments.sessionNumber, enrollment.sessionNumber)
+      ))
+      .returning();
+
+    return {
+      updatedCount: enrollments.length,
+      enrollments
+    };
+  }
+
+  // Upload report for a specific enrollment
+  async uploadEnrollmentReport(enrollmentId: string, reportUrl: string, userId: string): Promise<WorkshopEnrollment> {
+    const [enrollment] = await db.update(workshopEnrollments)
+      .set({
+        reportUrl,
+        reportUploadedAt: new Date(),
+        reportUploadedBy: userId,
+        updatedAt: new Date()
+      })
+      .where(eq(workshopEnrollments.id, enrollmentId))
+      .returning();
+
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    return enrollment;
+  }
+
+  // Schedule control for all enrollments of a session
+  async scheduleSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }> {
+    // Get the enrollment to find its session info
+    const enrollment = await this.getWorkshopEnrollment(sessionId);
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    // Update all enrollments with same (workshopId, evsId, sessionNumber)
+    const enrollments = await db.update(workshopEnrollments)
+      .set({ 
+        controlScheduled: true,
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(workshopEnrollments.workshopId, enrollment.workshopId),
+        eq(workshopEnrollments.evsId, enrollment.evsId),
+        eq(workshopEnrollments.sessionNumber, enrollment.sessionNumber)
+      ))
+      .returning();
+
+    return {
+      updatedCount: enrollments.length,
+      enrollments
+    };
+  }
+
+  // Validate control for all enrollments of a session
+  async validateSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }> {
+    // Get the enrollment to find its session info
+    const enrollment = await this.getWorkshopEnrollment(sessionId);
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    // Update all enrollments with same (workshopId, evsId, sessionNumber)
+    const enrollments = await db.update(workshopEnrollments)
+      .set({ 
+        controlValidatedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(workshopEnrollments.workshopId, enrollment.workshopId),
+        eq(workshopEnrollments.evsId, enrollment.evsId),
+        eq(workshopEnrollments.sessionNumber, enrollment.sessionNumber)
+      ))
+      .returning();
+
+    return {
+      updatedCount: enrollments.length,
+      enrollments
+    };
   }
 }
 

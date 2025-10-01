@@ -1387,3 +1387,316 @@
   }
 }
 
+/* Workshop proposition review - adapted from FicheForm */
+.propositionReview {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.propositionReview h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #D9A066;
+}
+
+.propositionReview p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #374151;
+}
+
+/* Review section styles - copied from FicheForm.module.css */
+.reviewSection {
+  background-color: #F5F6F7;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.reviewSectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reviewSectionIcon {
+  width: 1rem;
+  height: 1rem;
+  color: #6A8B74;
+}
+
+.reviewContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reviewContent p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #3B4B61;
+  line-height: 1.4;
+}
+
+.reviewContent strong {
+  color: #3B4B61;
+  margin-right: 0.25rem;
+}
+
+/* Workshop Reports Section */
+.workshopReportCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.workshopReportHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.workshopReportTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin: 0;
+}
+
+.workshopPendingBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #D9A066;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.workshopReadyBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #6A8B74;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.workshopCompleteBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #3B4B61;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.workshopReportActions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.downloadReportButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #6A8B74;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.downloadReportButton:hover {
+  background-color: #5A7A64;
+}
+
+.uploadReportButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #3B4B61;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.uploadReportButton:hover {
+  background-color: #2A3A4F;
+}
+
+.uploadDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.uploadDisabled:hover {
+  background-color: #3B4B61;
+}
+
+.uploadReportButton input[disabled] {
+  cursor: not-allowed;
+}
+
+.fileInput {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.fileInput:disabled {
+  cursor: not-allowed;
+}
+
+.uploadHint {
+  font-size: 0.8rem;
+  color: #6B7280;
+  margin: 0;
+  font-style: italic;
+}
+
+.uploadInfo {
+  font-size: 0.75rem;
+  color: #6B7280;
+  margin: 0.5rem 0 0 0;
+}
+
+@media (max-width: 640px) {
+  .workshopReportHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .workshopReportActions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .downloadReportButton,
+  .uploadReportButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Close Workshops Section */
+.closeWorkshopsSection {
+  background-color: #F5F6F7;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 2px solid #D9A066;
+}
+
+.closeWorkshopsTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin: 0 0 1rem 0;
+}
+
+.closeWorkshopsContent {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.closeWorkshopsLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: #3B4B61;
+}
+
+.closeWorkshopsLabel input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+}
+
+.closeWorkshopsLabel input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.closeWorkshopsButton {
+  padding: 0.625rem 1.25rem;
+  background-color: #6A8B74;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeWorkshopsButton:hover:not(:disabled) {
+  background-color: #5A7A64;
+}
+
+.closeWorkshopsButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #6A8B74;
+}
+
+.closeWorkshopsHint {
+  font-size: 0.8rem;
+  color: #8C4A4A;
+  margin: 0.5rem 0 0 0;
+  font-style: italic;
+}
+
+/* Closed Badge Section */
+.closedBadgeSection {
+  background-color: #F5F6F7;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 2px solid #6A8B74;
+}
+
+.closedBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6A8B74;
+  padding: 0.75rem;
+  background-color: white;
+  border-radius: 6px;
+}

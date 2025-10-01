@@ -13,7 +13,8 @@ import {
   Edit,
   RotateCcw,
   Archive,
-  Trash2
+  Trash2,
+  Target
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
@@ -59,12 +60,23 @@ export default function FicheDetail({ ficheId }) {
   const [fieldCheckCompleted, setFieldCheckCompleted] = useState(false);
   const [finalReportSent, setFinalReportSent] = useState(false);
   const [remainingPaymentSent, setRemainingPaymentSent] = useState(false);
+  
+  // Workshop report upload state
+  const [uploadingReportFor, setUploadingReportFor] = useState(null);
+
+  // Close all workshops states
+  const [allWorkshopsCompleted, setAllWorkshopsCompleted] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
     queryKey: ['/api/fiches', ficheId],
     enabled: !!ficheId
   });
+
+  // Compute derived values after fiche is loaded
+  const userRole = user?.role ?? user?.user?.role;
+  const canCloseWorkshops = (userRole === 'EVS_CS' || userRole === 'ADMIN') && fiche?.state !== 'CLOTUREE';
 
   // Update states when fiche data loads
   useEffect(() => {
@@ -122,20 +134,43 @@ export default function FicheDetail({ ficheId }) {
     enabled: !!fiche
   });
 
-  const selectedWorkshops = fiche && workshopsList.length > 0
-    ? Object.entries(fiche.workshopPropositions || {})
-        .filter(([_, v]) => (v ?? '').toString().trim())
-        .map(([workshopId, reason]) => {
-          const workshop = workshopsList.find((w) => w.id === workshopId);
-          return workshop ? { id: workshopId, workshop, reason } : null;
-        })
-        .filter(Boolean)
-    : [];
+  // Query for workshop enrollments (for report upload/download)
+  const { data: workshopEnrollments = [] } = useQuery({
+    queryKey: ['/api/enrollments/fiche', ficheId],
+    enabled: !!ficheId
+  });
 
-  const totalAmount = selectedWorkshops.reduce(
-    (sum, s) => sum + (s.workshop?.priceCents || 0),
-    0
-  );
+  // Workshop selection logic - SAME AS FORM (selectedWorkshops priority)
+  const getCombinedWorkshopSelection = () => {
+    if (!fiche) return { workshopIds: [], isLegacyMode: false };
+    
+    // Get selected workshops (checkboxes are priority) - SAME LOGIC AS FORM
+    const selectedWorkshopIds = Object.keys(fiche.selectedWorkshops || {}).filter(
+      id => fiche.selectedWorkshops[id]
+    );
+    
+    // Fallback for existing fiches: if no checkboxes but propositions exist
+    const propositionWorkshopIds = Object.keys(fiche.workshopPropositions || {}).filter(
+      id => fiche.workshopPropositions[id]?.trim()
+    );
+    
+    // Priority: selected workshops, fallback to propositions for backward compatibility
+    const finalWorkshopIds = selectedWorkshopIds.length > 0 
+      ? selectedWorkshopIds 
+      : propositionWorkshopIds;
+    
+    return {
+      workshopIds: finalWorkshopIds.map(String), // Normalize to strings for consistency
+      isLegacyMode: selectedWorkshopIds.length === 0 && propositionWorkshopIds.length > 0
+    };
+  };
+
+  const { workshopIds, isLegacyMode } = getCombinedWorkshopSelection();
+
+  const totalAmount = workshopIds.reduce((sum, workshopId) => {
+    const workshop = workshopsList?.find(w => String(w.id) === String(workshopId));
+    return sum + (workshop?.priceCents || 0);
+  }, 0);
 
   // Normalize family information for display
   const family = fiche
@@ -293,7 +328,7 @@ export default function FicheDetail({ ficheId }) {
         });
         toast({
           title: "Contrat validé",
-          description: "Le contrat a été validé et signé. La fiche passe au statut 'Contrat signé'.",
+          description: "Le contrat a été validé et signé. La fiche passe au statut 'Ateliers en cours'.",
           variant: "default"
         });
       } else if (action === 'archive') {
@@ -393,6 +428,112 @@ export default function FicheDetail({ ficheId }) {
         description: error.message || "Impossible de clôturer la fiche",
         variant: "destructive"
       });
+    }
+  };
+
+  // Workshop report upload handler
+  const handleReportUpload = async (enrollmentId, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Prevent concurrent uploads
+    if (uploadingReportFor) return;
+
+    // Validate PDF by extension and common MIME types
+    const isPdf = file.name.toLowerCase().endsWith('.pdf') || 
+                  file.type === 'application/pdf' || 
+                  file.type === 'application/x-pdf';
+    
+    if (!isPdf) {
+      toast({
+        title: "Format invalide",
+        description: "Seuls les fichiers PDF sont acceptés",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "La taille maximale est de 5 MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingReportFor(enrollmentId);
+    try {
+      const formData = new FormData();
+      formData.append('reportFile', file);
+
+      const response = await fetch(`/api/enrollments/${enrollmentId}/upload-report`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erreur lors de l\'upload');
+      }
+
+      // Refetch enrollments to show updated report
+      await queryClient.refetchQueries({ queryKey: ['/api/enrollments/fiche', ficheId] });
+
+      toast({
+        title: "Succès",
+        description: "Bilan d'activité uploadé avec succès"
+      });
+    } catch (error) {
+      console.error('Error uploading report:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de l'upload du bilan",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingReportFor(null);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
+
+  // Close all workshops handler
+  const handleCloseAllWorkshops = async () => {
+    if (!canCloseWorkshops) {
+      toast({
+        title: "Action non autorisée",
+        description: "Seuls les EVS/CS et ADMIN peuvent clôturer la fiche",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsClosing(true);
+    try {
+      await apiRequest('POST', `/api/fiches/${ficheId}/close-all-workshops`, {});
+
+      // Refetch fiche to update state
+      await queryClient.invalidateQueries({ queryKey: ['/api/fiches', ficheId] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
+
+      toast({
+        title: "Fiche clôturée",
+        description: "La fiche a été clôturée avec succès. Notifications envoyées à FEVES et CD."
+      });
+
+      // Reset checkbox
+      setAllWorkshopsCompleted(false);
+    } catch (error) {
+      console.error('Error closing all workshops:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la clôture de la fiche",
+        variant: "destructive"
+      });
+    } finally {
+      setIsClosing(false);
     }
   };
 
@@ -956,58 +1097,207 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
-          {selectedWorkshops.length > 0 && (
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                Ateliers sélectionnés
-              </h2>
-              <div className={styles.workshopSelections}>
-                {selectedWorkshops.map((selection) => (
-                  <div key={selection.id} className={styles.workshopItem} data-testid={`workshop-${selection.id}`}>
-                    <div className={styles.workshopHierarchy}>
-                      <div className={styles.objectiveLevel}>
-                        <span className={styles.objectiveCode} data-testid={`text-objective-code-${selection.id}`}>
-                          {selection.workshop?.objective?.code}
-                        </span>
-                        <span className={styles.objectiveName} data-testid={`text-objective-name-${selection.id}`}>
-                          {selection.workshop?.objective?.name}
-                        </span>
-                      </div>
-                      <div className={styles.workshopLevel}>
-                        <h3 className={styles.workshopName} data-testid={`text-workshop-name-${selection.id}`}>
-                          {selection.workshop?.name}
-                        </h3>
-                      </div>
-                      <div className={styles.propositionLevel}>
-                        <div className={styles.propositionContent}>
-                          <span className={styles.propositionLabel}>Proposition du référent</span>
-                          {selection.reason && (
-                            <p className={styles.propositionText} data-testid={`text-proposition-${selection.id}`}>
-                              {selection.reason}
+          {/* Selected Workshops - EXACT COPY from FicheForm.jsx lines 1818-1876 */}
+          <div className={styles.reviewSection}>
+            <h3 className={styles.reviewSectionTitle}>
+              <Target className={styles.reviewSectionIcon} />
+              Ateliers sélectionnés
+            </h3>
+            <div className={styles.reviewContent}>
+              {(() => {
+                // Utility function to get combined workshop selection
+                const getCombinedWorkshopSelection = () => {
+                  // Get selected workshops (checkboxes are priority)
+                  const selectedWorkshopIds = Object.keys(fiche.selectedWorkshops || {}).filter(
+                    id => fiche.selectedWorkshops[id]
+                  );
+                  
+                  // Fallback for existing fiches: if no checkboxes but propositions exist
+                  const propositionWorkshopIds = Object.keys(fiche.workshopPropositions || {}).filter(
+                    id => fiche.workshopPropositions[id]?.trim()
+                  );
+                  
+                  // Priority: selected workshops, fallback to propositions for backward compatibility
+                  const finalWorkshopIds = selectedWorkshopIds.length > 0 
+                    ? selectedWorkshopIds 
+                    : propositionWorkshopIds;
+                  
+                  return {
+                    workshopIds: finalWorkshopIds,
+                    isLegacyMode: selectedWorkshopIds.length === 0 && propositionWorkshopIds.length > 0
+                  };
+                };
+                
+                const { workshopIds, isLegacyMode } = getCombinedWorkshopSelection();
+                
+                if (workshopIds.length === 0) {
+                  return <p>Aucun atelier sélectionné</p>;
+                }
+                
+                return workshopIds.map(workshopId => {
+                  const workshop = workshopsList?.find(w => w.id === workshopId);
+                  const workshopName = workshop?.name || `Atelier ${workshopId}`;
+                  const proposition = fiche.workshopPropositions?.[workshopId]?.trim();
+                  
+                  return (
+                    <div key={workshopId} className={styles.propositionReview}>
+                      <h4>✅ {workshopName}</h4>
+                      {isLegacyMode ? (
+                        <p><strong>Atelier avec proposition :</strong> {proposition}</p>
+                      ) : (
+                        proposition ? (
+                          <p><strong>Atelier sélectionné avec proposition :</strong> {proposition}</p>
+                        ) : (
+                          <p><strong>Atelier sélectionné</strong></p>
+                        )
+                      )}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
+          {/* Workshop Reports Section - Only show if there are enrollments */}
+          {workshopEnrollments.length > 0 && (
+            <>
+              <div className={styles.reviewSection}>
+                <h3 className={styles.reviewSectionTitle}>
+                  <Target className={styles.reviewSectionIcon} />
+                  Bilans d'ateliers
+                </h3>
+                <div className={styles.reviewContent}>
+                  {workshopEnrollments.map((enrollment) => {
+                    const workshop = workshopsList?.find(w => String(w.id) === String(enrollment.workshopId));
+                    const workshopName = workshop?.name || `Atelier ${enrollment.workshopId}`;
+                    const userRole = user?.role ?? user?.user?.role;
+                    const canUpload = userRole === 'EVS_CS' && enrollment.activityDone;
+                    const isUploading = uploadingReportFor === enrollment.id;
+
+                    return (
+                      <div key={enrollment.id} className={styles.workshopReportCard}>
+                        <div className={styles.workshopReportHeader}>
+                          <h4 className={styles.workshopReportTitle}>
+                            {workshopName} - Session {enrollment.sessionNumber}
+                          </h4>
+                          {!enrollment.activityDone && (
+                            <span className={styles.workshopPendingBadge}>En cours</span>
+                          )}
+                          {enrollment.activityDone && !enrollment.reportUrl && (
+                            <span className={styles.workshopReadyBadge}>Prêt pour bilan</span>
+                          )}
+                          {enrollment.reportUrl && (
+                            <span className={styles.workshopCompleteBadge}>Bilan disponible</span>
+                          )}
+                        </div>
+
+                        <div className={styles.workshopReportActions}>
+                          {/* Download button - visible if report exists */}
+                          {enrollment.reportUrl && (
+                            <a
+                              href={enrollment.reportUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.downloadReportButton}
+                              data-testid={`button-download-report-${enrollment.id}`}
+                            >
+                              Télécharger le bilan
+                            </a>
+                          )}
+
+                          {/* Upload button - only for EVS_CS after activity is done */}
+                          {canUpload && (
+                            <label 
+                              className={`${styles.uploadReportButton} ${isUploading ? styles.uploadDisabled : ''}`}
+                              aria-disabled={isUploading}
+                            >
+                              <input
+                                type="file"
+                                accept="application/pdf,.pdf"
+                                onChange={(e) => handleReportUpload(enrollment.id, e)}
+                                disabled={isUploading}
+                                className={styles.fileInput}
+                                data-testid={`input-upload-report-${enrollment.id}`}
+                              />
+                              {isUploading ? 'Upload en cours...' : enrollment.reportUrl ? 'Remplacer le bilan' : 'Uploader le bilan'}
+                            </label>
+                          )}
+
+                          {!canUpload && !enrollment.reportUrl && (
+                            <p className={styles.uploadHint}>
+                              Le bilan sera disponible après que l'activité soit marquée comme terminée
                             </p>
                           )}
                         </div>
-                        {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
-                          <div className={styles.propositionPrice} data-testid={`text-workshop-price-${selection.id}`}>
-                            {formatCurrency(selection.workshop?.priceCents || 0)}
-                          </div>
+
+                        {enrollment.reportUploadedAt && (
+                          <p className={styles.uploadInfo}>
+                            Uploadé le {formatDate(enrollment.reportUploadedAt)}
+                          </p>
                         )}
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
+                </div>
               </div>
 
-              {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
-                <div className={styles.totalSection}>
-                  <div className={styles.totalItem}>
-                    <label className={styles.totalLabel}>Total</label>
-                    <p className={styles.totalValue} data-testid="text-total-amount">
-                      {formatCurrency(totalAmount)}
+              {/* Close All Workshops Section - Only show if not already CLOTUREE */}
+              {fiche.state !== 'CLOTUREE' && (
+                <div className={styles.closeWorkshopsSection}>
+                  <h3 className={styles.closeWorkshopsTitle}>Clôture de la fiche</h3>
+                  <div className={styles.closeWorkshopsContent}>
+                    <label className={styles.closeWorkshopsLabel}>
+                      <input
+                        type="checkbox"
+                        checked={allWorkshopsCompleted}
+                        onChange={(e) => setAllWorkshopsCompleted(e.target.checked)}
+                        disabled={!canCloseWorkshops}
+                        data-testid="checkbox-all-workshops-completed"
+                      />
+                      <span>Tous les ateliers de cette fiche sont réalisés</span>
+                    </label>
+                    <button
+                      onClick={handleCloseAllWorkshops}
+                      disabled={isClosing || !allWorkshopsCompleted || !canCloseWorkshops}
+                      className={styles.closeWorkshopsButton}
+                      data-testid="button-close-all-workshops"
+                    >
+                      {isClosing ? 'Validation en cours...' : 'Valider'}
+                    </button>
+                  </div>
+                  {!canCloseWorkshops && (
+                    <p className={styles.closeWorkshopsHint}>
+                      Seuls les EVS/CS et ADMIN peuvent clôturer la fiche
                     </p>
+                  )}
+                </div>
+              )}
+
+              {/* Show closed badge if fiche is CLOTUREE */}
+              {fiche.state === 'CLOTUREE' && (
+                <div className={styles.closedBadgeSection}>
+                  <div className={styles.closedBadge}>
+                    ✓ Fiche clôturée - Tous les ateliers sont réalisés
                   </div>
                 </div>
               )}
+            </>
+          )}
+
+          {/* Nombre de participants - adapted from FicheForm review section */}
+          {fiche.participantsCount && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                Nombre de participants
+              </h2>
+              <div className={styles.cardContent}>
+                <p data-testid="text-participants-count">
+                  <strong>Nombre de participants :</strong> {fiche.participantsCount} personne{fiche.participantsCount > 1 ? 's' : ''}
+                </p>
+                <p style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+                  Nombre de personnes de la fiche navette qui participeront aux ateliers sélectionnés
+                </p>
+              </div>
             </div>
           )}
 

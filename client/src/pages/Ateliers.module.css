@@ -1,0 +1,107 @@
+.ateliersContainer {
+  min-height: 100vh;
+  background-color: rgb(var(--background));
+}
+
+.mainContent {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.headerSection {
+  margin-bottom: 2rem;
+}
+
+.headerContent h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgb(var(--foreground));
+  margin-bottom: 0.5rem;
+}
+
+.headerContent p {
+  color: rgb(var(--muted-foreground));
+  font-size: 1rem;
+}
+
+.filterSection {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filterLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(var(--foreground));
+}
+
+.filterSelect {
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: 6px;
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+}
+
+.filterSelect:hover {
+  border-color: rgb(var(--primary));
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: rgb(var(--primary));
+  box-shadow: 0 0 0 2px rgba(var(--primary), 0.1);
+}
+
+.sessionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.loadingContainer,
+.errorContainer,
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: rgb(var(--muted-foreground));
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgb(var(--border));
+  border-top: 2px solid rgb(var(--primary));
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .sessionsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .mainContent {
+    padding: 1rem;
+  }
+}

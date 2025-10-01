@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { z } from 'zod';
 import { storage } from "./storage";
 import { 
   authenticateUser, 
@@ -17,6 +18,7 @@ import { requireAuth, requireRole, requireFicheAccess } from './middleware/rbac.
 import { auditMiddleware } from './services/auditLogger.js';
 import { transitionFicheState, getValidTransitions } from './services/stateTransitions.js';
 import emailService from './services/emailService.js';
+import notificationService from './services/notificationService.js';
 
 // CSV parsing utility functions (inspired from seed.ts)
 function parseCsv(content: string): string[][] {
@@ -91,6 +93,13 @@ import {
   commentSchema
 } from './utils/validation.js';
 
+// Add validation schema for contract updates
+const contractUpdateSchema = z.object({
+  contractSignedByEVS: z.boolean().optional(),
+  contractSignedByCommune: z.boolean().optional(),
+  contractCommunePdfUrl: z.string().nullable().optional()
+});
+
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -125,6 +134,56 @@ const uploadCSV = multer({
       cb(null, true);
     } else {
       cb(new Error('Seuls les fichiers CSV sont autorisés'), false);
+    }
+  }
+});
+
+// Configure multer for PDF contract uploads  
+const uploadContractPDF = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+      // Generate timestamp-based filename: contract_commune_YYYYMMDD_HHMMSS.pdf
+      const timestamp = new Date().toISOString().replace(/[:-]/g, '').replace(/\..+/, '').replace('T', '_');
+      const filename = `contract_commune_${timestamp}.pdf`;
+      cb(null, filename);
+    }
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Seuls les fichiers PDF sont autorisés'), false);
+    }
+  }
+});
+
+// Configure multer for workshop report PDF uploads
+const uploadReportPDF = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+      // Generate timestamp-based filename: report_YYYYMMDD_HHMMSS.pdf
+      const timestamp = new Date().toISOString().replace(/[:-]/g, '').replace(/\..+/, '').replace('T', '_');
+      const filename = `report_${timestamp}.pdf`;
+      cb(null, filename);
+    }
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Seuls les fichiers PDF sont autorisés'), false);
     }
   }
 });
@@ -340,6 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           (() => { try { return JSON.parse(fiche.childrenData); } catch { return null; } })() : fiche.childrenData,
         workshopPropositions: fiche.workshopPropositions && typeof fiche.workshopPropositions === 'string' ?
           (() => { try { return JSON.parse(fiche.workshopPropositions); } catch { return null; } })() : fiche.workshopPropositions,
+        selectedWorkshops: fiche.selectedWorkshops && typeof fiche.selectedWorkshops === 'string' ?
+          (() => { try { return JSON.parse(fiche.selectedWorkshops); } catch { return null; } })() : fiche.selectedWorkshops,
         validTransitions: getValidTransitions(req.ficheAccess.role, fiche.state)
       };
 
@@ -358,6 +419,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData,
         childrenData,
         workshopPropositions,
+        selectedWorkshops,
+        participantsCount,
         capDocuments,
         familyConsent
       } = req.validatedData;
@@ -385,6 +448,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         familyDetailedData: familyDetailedData || null,
         childrenData: childrenData || null,
         workshopPropositions: workshopPropositions || null,
+        selectedWorkshops: selectedWorkshops || null,
+        participantsCount: participantsCount,
         capDocuments: capDocuments || null,
         familyConsent: familyConsent || false
       });
@@ -499,6 +564,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });
+
+  // Close fiche - all workshops completed (EVS_CS and ADMIN only)
+  app.post('/api/fiches/:id/close-all-workshops',
+    requireAuth,
+    requireRole('ADMIN', 'EVS_CS'),
+    auditMiddleware('close_all_workshops', 'FicheNavette'),
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        
+        // Get the fiche
+        const fiche = await storage.getFiche(id);
+        if (!fiche) {
+          return res.status(404).json({ message: 'Fiche non trouvée' });
+        }
+
+        // Check if already closed
+        if (fiche.state === 'CLOTUREE') {
+          return res.status(400).json({ message: 'La fiche est déjà clôturée' });
+        }
+
+        // Check permissions: EVS_CS must be from the assigned organization
+        if (req.user.role === 'EVS_CS') {
+          if (!fiche.assignedOrgId || req.user.orgId !== fiche.assignedOrgId) {
+            return res.status(403).json({ 
+              message: 'Vous n\'êtes pas autorisé à clôturer cette fiche' 
+            });
+          }
+        }
+
+        // Use state transition service to ensure proper validation and audit logging
+        const updatedFiche = await transitionFicheState(id, 'CLOTUREE', req.user.userId, {
+          action: 'close_all_workshops',
+          closedBy: req.user.email
+        });
+
+        // Send notifications to RELATIONS_EVS and CD
+        try {
+          await notificationService.notifyFicheAllWorkshopsCompleted(updatedFiche);
+        } catch (notifError) {
+          console.error('Failed to send notifications:', notifError);
+          // Don't fail the request if notifications fail
+        }
+
+        res.json({ 
+          success: true, 
+          message: 'Fiche clôturée avec succès',
+          fiche: updatedFiche
+        });
+      } catch (error) {
+        console.error('Close all workshops error:', error);
+        res.status(500).json({ message: 'Erreur lors de la clôture de la fiche' });
+      }
+    }
+  );
 
   // Comments
   app.get('/api/fiches/:id/comments', requireAuth, requireFicheAccess, async (req, res) => {
@@ -617,6 +737,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Update organization error:', error);
       res.status(500).json({ message: 'Erreur lors de la modification de l\'organisation' });
+    }
+  });
+
+  // Delete organization
+  app.delete('/api/organizations/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteOrganization(id);
+      res.status(200).end();
+    } catch (error) {
+      console.error('Delete organization error:', error);
+      res.status(500).json({ message: 'Erreur lors de la suppression de l\'organisation' });
     }
   });
 
@@ -1271,6 +1403,308 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });
+
+  // Workshop Sessions - Role-based access
+  app.get('/api/workshop-sessions', requireAuth, requireRole('ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD'), async (req, res) => {
+    try {
+      const userRole = req.user.role;
+      const userOrgId = req.user.orgId;
+
+      const sessions = await storage.getWorkshopSessions(userRole, userOrgId);
+      res.json(sessions);
+    } catch (error) {
+      console.error('Get workshop sessions error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Upload commune contract PDF
+  app.post('/api/workshop-sessions/:sessionId/upload-contract', 
+    requireAuth, 
+    requireRole('ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD'), 
+    uploadContractPDF.single('contractFile'), 
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: 'Aucun fichier fourni' });
+        }
+
+        const { sessionId } = req.params;
+        
+        // Check ownership for EVS_CS
+        const enrollment = await storage.getWorkshopEnrollment(sessionId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Session non trouvée' });
+        }
+        
+        if (req.user.role === 'EVS_CS' && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à uploader pour cette session' });
+        }
+
+        const filename = req.file.filename;
+        const fileUrl = `/uploads/${filename}`;
+        
+        res.json({ 
+          success: true, 
+          filename,
+          url: fileUrl,
+          message: 'Fichier uploadé avec succès' 
+        });
+      } catch (error) {
+        console.error('Error uploading contract:', error);
+        res.status(500).json({ message: 'Erreur lors de l\'upload du contrat' });
+      }
+    }
+  );
+
+  // Update workshop session contracts
+  app.patch('/api/workshop-sessions/:sessionId/contracts',
+    requireAuth,
+    requireRole('ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD'),
+    validateRequest(contractUpdateSchema),
+    async (req, res) => {
+      try {
+        const { sessionId } = req.params;
+        const { contractSignedByEVS, contractSignedByCommune, contractCommunePdfUrl } = req.validatedData;
+
+        console.log('Update contracts request:', { sessionId, contractSignedByEVS, contractSignedByCommune, contractCommunePdfUrl });
+
+        // Get current enrollment to check if contractSignedAt already exists
+        const enrollment = await storage.getWorkshopEnrollment(sessionId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Session non trouvée' });
+        }
+
+        // Check if user is EVS_CS of this enrollment's organization
+        if (req.user.role === 'EVS_CS' && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cette session' });
+        }
+
+        // Build partial update object only with present fields
+        const updates = {};
+        if (contractSignedByEVS !== undefined) updates.contractSignedByEVS = contractSignedByEVS;
+        if (contractSignedByCommune !== undefined) updates.contractSignedByCommune = contractSignedByCommune;
+        if (contractCommunePdfUrl !== undefined) updates.contractCommunePdfUrl = contractCommunePdfUrl;
+        
+        // Add timestamp only if no date exists yet AND a contract is being signed
+        if (!enrollment.contractSignedAt && (contractSignedByEVS || contractSignedByCommune)) {
+          updates.contractSignedAt = new Date();
+        }
+
+        console.log('Updates to apply:', updates);
+
+        await storage.updateSessionContracts(sessionId, updates);
+
+        console.log('Contracts updated successfully');
+
+        res.json({
+          success: true,
+          message: 'Contrats mis à jour avec succès'
+        });
+      } catch (error) {
+        console.error('Error updating session contracts:', error);
+        res.status(500).json({ message: 'Erreur lors de la mise à jour des contrats' });
+      }
+    }
+  );
+
+  // Mark workshop session as activity done
+  app.post('/api/workshop-sessions/:enrollmentId/mark-activity-done',
+    requireAuth,
+    requireRole('ADMIN', 'EVS_CS'),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+        const userId = req.user.userId;
+
+        // Get the enrollment to check ownership
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Inscription non trouvée' });
+        }
+
+        // Check if user is EVS_CS of this enrollment
+        if (req.user.role === 'EVS_CS' && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cette session' });
+        }
+
+        // Mark all enrollments of this session as activity done
+        const result = await storage.markSessionActivityDone(enrollmentId, userId);
+
+        // Get workshop and org details for notification
+        const workshop = await storage.getWorkshop(enrollment.workshopId);
+        const org = await storage.getOrganization(enrollment.evsId);
+
+        // Prepare session data for notification
+        const sessionData = {
+          id: enrollmentId,
+          sessionNumber: enrollment.sessionNumber,
+          participantCount: enrollment.participantCount,
+          workshop: workshop ? { name: workshop.name } : { name: 'Atelier' },
+          evs: org ? { name: org.name } : { name: 'Organisation' }
+        };
+
+        // Send notification to all RELATIONS_EVS users
+        await notificationService.notifyWorkshopActivityCompleted(
+          sessionData,
+          result.enrollments
+        ).catch(err => {
+          console.error('Failed to send notification:', err);
+          // Don't fail the request if notification fails
+        });
+
+        res.json({
+          success: true,
+          message: `Activité marquée comme terminée pour ${result.updatedCount} inscription(s)`,
+          updatedCount: result.updatedCount
+        });
+      } catch (error) {
+        console.error('Error marking activity done:', error);
+        res.status(500).json({ message: 'Erreur lors de la mise à jour de l\'activité' });
+      }
+    }
+  );
+
+  // Schedule control for workshop session
+  app.post('/api/workshop-sessions/:enrollmentId/schedule-control',
+    requireAuth,
+    requireRole('ADMIN', 'RELATIONS_EVS'),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+
+        // Get the enrollment to check conditions
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Inscription non trouvée' });
+        }
+
+        // Check if activity is done
+        if (!enrollment.activityDone) {
+          return res.status(400).json({ message: 'L\'activité doit être marquée comme terminée avant de programmer le contrôle' });
+        }
+
+        // Check if already scheduled
+        if (enrollment.controlScheduled) {
+          return res.status(400).json({ message: 'Le contrôle est déjà programmé pour cette session' });
+        }
+
+        // Schedule control for all enrollments of this session
+        const result = await storage.scheduleSessionControl(enrollmentId);
+
+        res.json({
+          success: true,
+          message: `Contrôle programmé pour ${result.updatedCount} inscription(s)`,
+          updatedCount: result.updatedCount
+        });
+      } catch (error) {
+        console.error('Error scheduling control:', error);
+        res.status(500).json({ message: 'Erreur lors de la programmation du contrôle' });
+      }
+    }
+  );
+
+  // Validate control for workshop session
+  app.post('/api/workshop-sessions/:enrollmentId/validate-control',
+    requireAuth,
+    requireRole('ADMIN', 'RELATIONS_EVS'),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+
+        // Get the enrollment to check conditions
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Inscription non trouvée' });
+        }
+
+        // Check if control is scheduled
+        if (!enrollment.controlScheduled) {
+          return res.status(400).json({ message: 'Le contrôle doit être programmé avant d\'être validé' });
+        }
+
+        // Check if already validated
+        if (enrollment.controlValidatedAt) {
+          return res.status(400).json({ message: 'Le contrôle est déjà validé pour cette session' });
+        }
+
+        // Validate control for all enrollments of this session
+        const result = await storage.validateSessionControl(enrollmentId);
+
+        res.json({
+          success: true,
+          message: `Contrôle validé pour ${result.updatedCount} inscription(s)`,
+          updatedCount: result.updatedCount
+        });
+      } catch (error) {
+        console.error('Error validating control:', error);
+        res.status(500).json({ message: 'Erreur lors de la validation du contrôle' });
+      }
+    }
+  );
+
+  // Get enrollments for a specific fiche
+  app.get('/api/enrollments/fiche/:ficheId',
+    requireAuth,
+    async (req, res) => {
+      try {
+        const { ficheId } = req.params;
+        
+        // Get enrollments for this fiche
+        const enrollments = await storage.getWorkshopEnrollments({ ficheId });
+        
+        res.json(enrollments);
+      } catch (error) {
+        console.error('Error fetching enrollments for fiche:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des inscriptions' });
+      }
+    }
+  );
+
+  // Upload workshop report for an enrollment
+  app.post('/api/enrollments/:enrollmentId/upload-report',
+    requireAuth,
+    requireRole('ADMIN', 'EVS_CS'),
+    uploadReportPDF.single('reportFile'),
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: 'Aucun fichier fourni' });
+        }
+
+        const { enrollmentId } = req.params;
+        const userId = req.user.userId;
+
+        // Check if enrollment exists and activity is done
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: 'Inscription non trouvée' });
+        }
+
+        if (!enrollment.activityDone) {
+          return res.status(400).json({ message: 'L\'activité doit être marquée comme terminée avant d\'uploader le bilan' });
+        }
+
+        // Check if user is EVS_CS of this enrollment
+        if (req.user.role === 'EVS_CS' && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à uploader le bilan pour cette inscription' });
+        }
+
+        const fileUrl = `/uploads/${req.file.filename}`;
+        const updatedEnrollment = await storage.uploadEnrollmentReport(enrollmentId, fileUrl, userId);
+
+        res.json({
+          success: true,
+          message: 'Bilan uploadé avec succès',
+          reportUrl: fileUrl,
+          enrollment: updatedEnrollment
+        });
+      } catch (error) {
+        console.error('Error uploading report:', error);
+        res.status(500).json({ message: 'Erreur lors de l\'upload du bilan' });
+      }
+    }
+  );
 
   // Admin Dashboard stats (including email logs count)
   app.get('/api/admin/stats', requireAuth, requireRole('ADMIN'), async (req, res) => {

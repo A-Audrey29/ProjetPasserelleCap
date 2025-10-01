@@ -14,6 +14,7 @@ export default function StateTimeline({ currentState, stateHistory = [] }) {
     'FIELD_CHECK_SCHEDULED',
     'FIELD_CHECK_DONE',
     'CLOSED',
+    'CLOTUREE',
     'ARCHIVED'
   ];
 

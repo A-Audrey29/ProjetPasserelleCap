@@ -94,6 +94,7 @@ export default function FicheForm({
     ],
     descriptionSituation: "",
     workshopPropositions: {},
+    participantsCount: 1, // Default number of participants for workshops
     capDocuments: [],
   });
 
@@ -163,6 +164,7 @@ export default function FicheForm({
       descriptionSituation:
         initialData.description || initialData.descriptionSituation || "",
       workshopPropositions: initialData.workshopPropositions || {},
+      participantsCount: initialData.participantsCount || 1,
       capDocuments: initialData.capDocuments || [],
       familyConsent: initialData.familyConsent || false,
     }));
@@ -759,8 +761,15 @@ export default function FicheForm({
   };
 
   const validateObjectivesStep = () => {
-    // This step doesn't require validation as propositions are optional
-    return true;
+    let isValid = true;
+    
+    // Validate participants count - now required
+    if (!formData.participantsCount || formData.participantsCount < 1 || formData.participantsCount > 10) {
+      setFieldError('participantsCount', 'Le nombre de participants doit être compris entre 1 et 10');
+      isValid = false;
+    }
+    
+    return isValid;
   };
 
   const renderObjectivesStep = () => (
@@ -842,6 +851,33 @@ export default function FicheForm({
             )}
           </div>
         ))}
+
+        {/* Participants Count Section */}
+        <div className={styles.participantsSection}>
+          <label className={styles.fieldLabel} htmlFor="participantsCount">
+            Nombre de participants
+          </label>
+          <select
+            id="participantsCount"
+            value={formData.participantsCount}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || 1; // Default to 1 if NaN
+              setFormData(prev => ({ ...prev, participantsCount: value }));
+            }}
+            className={styles.fieldSelect}
+            data-testid="select-participants-count"
+          >
+            {[...Array(10)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {i + 1} participant{i + 1 > 1 ? 's' : ''}
+              </option>
+            ))}
+          </select>
+          <ErrorMessage error={getFieldError('participantsCount')} fieldPath="participantsCount" />
+          <p className={styles.fieldHint}>
+            Nombre de personnes de la fiche navette qui participeront aux ateliers sélectionnés
+          </p>
+        </div>
 
         <div className={styles.buttonContainer}>
           <button
@@ -1342,9 +1378,6 @@ export default function FicheForm({
 
   const handleSave = async () => {
     try {
-      console.log("Save clicked! Current user:", user);
-      console.log("Current form data:", formData);
-
       const userRole = user?.user?.role || user?.role;
       const currentState = initialData?.state || "DRAFT";
       const isAdmin = userRole === "ADMIN";
@@ -1366,6 +1399,7 @@ export default function FicheForm({
         childrenData: formData.children,
         workshopPropositions: cleanPropositions,
         selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
+        participantsCount: formData.participantsCount, // Save participants count for workshops
         familyConsent: formData.familyConsent,
         capDocuments: formData.capDocuments, // Save CAP documents
       };
@@ -1537,7 +1571,7 @@ export default function FicheForm({
         ficheId = initialData.id;
         await transitionFiche({
           id: initialData.id,
-          newState: "SUBMITTED_TO_CD",
+          newState: "SUBMITTED_TO_FEVES",
           metadata: {
             transmittedBy: user?.user?.id || user?.id,
             transmissionDate: new Date().toISOString(),
@@ -1563,9 +1597,11 @@ export default function FicheForm({
           childrenData: formData.children,
           workshopPropositions: cleanPropositions,
           selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
+          participantsCount: formData.participantsCount, // Save participants count for workshops
           familyConsent: formData.familyConsent,
           capDocuments: formData.capDocuments, // Save CAP documents
         };
+
 
         // Create the fiche as DRAFT
         const newFiche = await onSubmit(ficheData);
@@ -1577,10 +1613,10 @@ export default function FicheForm({
           ficheId = newFiche.id;
         }
 
-        // Then transition it to SUBMITTED_TO_CD
+        // Then transition it to SUBMITTED_TO_FEVES (nouveau workflow)
         await transitionFiche({
           id: ficheId || newFiche?.id,
-          newState: "SUBMITTED_TO_CD",
+          newState: "SUBMITTED_TO_FEVES",
           metadata: {
             transmittedBy: user?.user?.id || user?.id,
             transmissionDate: new Date().toISOString(),
@@ -1591,7 +1627,7 @@ export default function FicheForm({
       toast({
         title: "Fiche Validée!",
         description:
-          "La fiche a été transmise avec succès au Conseil Départemental pour validation.",
+          "La fiche a été transmise avec succès à FEVES pour traitement.",
         variant: "success",
       });
 
@@ -1833,6 +1869,22 @@ export default function FicheForm({
                 );
               });
             })()}
+          </div>
+        </div>
+
+        {/* Participants Count */}
+        <div className={styles.reviewSection}>
+          <h3 className={styles.reviewSectionTitle}>
+            <Target className={styles.reviewSectionIcon} />
+            Nombre de participants
+          </h3>
+          <div className={styles.reviewContent}>
+            <p>
+              <strong>Nombre de participants :</strong> {formData.participantsCount || 1} personne{(formData.participantsCount || 1) > 1 ? 's' : ''}
+            </p>
+            <p style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+              Nombre de personnes de la fiche navette qui participeront aux ateliers sélectionnés
+            </p>
           </div>
         </div>
 

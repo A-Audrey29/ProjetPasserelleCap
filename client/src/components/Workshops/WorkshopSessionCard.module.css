@@ -1,0 +1,405 @@
+.card {
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Header */
+.header {
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.sessionInfo {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+}
+
+.sessionNumber {
+  font-weight: 500;
+}
+
+.evsName {
+  color: rgb(var(--primary));
+}
+
+/* Stats */
+.statsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: rgb(var(--muted));
+  border-radius: 6px;
+}
+
+.participants {
+  font-weight: 500;
+}
+
+.count {
+  color: rgb(var(--foreground));
+}
+
+.state {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.stateText {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  background: rgb(var(--secondary));
+  color: rgb(var(--secondary-foreground));
+}
+
+/* Fiches */
+.fichesSection {
+  margin-bottom: 1.5rem;
+}
+
+.fichesTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 0.75rem;
+}
+
+.fichesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ficheItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgb(var(--background));
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.ficheRef {
+  font-weight: 600;
+  color: rgb(var(--primary));
+}
+
+.ficheParticipants {
+  color: rgb(var(--muted-foreground));
+}
+
+.ficheLink {
+  margin-left: auto;
+  color: rgb(var(--primary));
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.ficheLink:hover {
+  background: rgb(var(--accent));
+  color: rgb(var(--accent-foreground));
+}
+
+.noFiches {
+  color: rgb(var(--muted-foreground));
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* History Section */
+.historySection {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgb(var(--muted));
+  border-radius: 6px;
+  border-left: 3px solid rgb(var(--primary));
+}
+
+.historyTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 0.75rem;
+}
+
+.historyContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.historyItem {
+  font-size: 0.875rem;
+  color: rgb(var(--foreground));
+  line-height: 1.5;
+  padding: 0.25rem 0;
+}
+
+.historySeparator {
+  color: rgb(var(--border));
+  text-align: center;
+  margin: 0.25rem 0;
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
+/* Contracts */
+.contractsSection {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1.5rem;
+}
+
+.contractsTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 1rem;
+}
+
+.contractItem {
+  margin-bottom: 1rem;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: rgb(var(--foreground));
+  cursor: pointer;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: rgb(var(--primary));
+}
+
+.checkboxLabel input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fileUpload {
+  margin-top: 0.5rem;
+  margin-left: 1.5rem;
+}
+
+.fileInput {
+  font-size: 0.875rem;
+  padding: 0.5rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: 4px;
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+}
+
+.fileInput:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fileName {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: rgb(var(--muted-foreground));
+}
+
+.saveButton {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: rgb(var(--primary));
+  opacity: 0.9;
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.inProgressNote {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1rem;
+  text-align: center;
+}
+
+.inProgressNote p {
+  color: rgb(var(--muted-foreground));
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Activity Section */
+.activitySection {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.activityTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 1rem;
+}
+
+.activityItem {
+  margin-bottom: 1rem;
+}
+
+.markDoneButton {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.markDoneButton:hover:not(:disabled) {
+  background: rgb(var(--primary));
+  opacity: 0.9;
+}
+
+.markDoneButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.completedNote {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1rem;
+  text-align: center;
+  background: rgb(var(--success-bg));
+}
+
+.completedNote p {
+  color: rgb(var(--success-foreground));
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Control Section */
+.controlSection {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1.5rem;
+  margin-top: 1rem;
+}
+
+.controlTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 1rem;
+}
+
+.controlItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.controlItem .checkboxLabel {
+  flex: 1;
+}
+
+.controlButton {
+  padding: 0.5rem 1.5rem;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.controlButton:hover:not(:disabled) {
+  background: rgb(var(--primary));
+  opacity: 0.9;
+}
+
+.controlButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Control Badges for other roles */
+.controlBadgesSection {
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.controlBadge {
+  padding: 0.5rem 1rem;
+  background: rgb(var(--success-bg));
+  color: rgb(var(--success-foreground));
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .card {
+    padding: 1rem;
+  }
+  
+  .statsRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .ficheItem {
+    flex-wrap: wrap;
+  }
+}

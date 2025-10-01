@@ -9,7 +9,7 @@ export const orgTypeEnum = pgEnum("org_type", ["EVS", "CS", "OTHER"]);
 export const ficheStateEnum = pgEnum("fiche_state", [
   "DRAFT", "SUBMITTED_TO_CD", "SUBMITTED_TO_FEVES", "ASSIGNED_EVS", "ACCEPTED_EVS", "EVS_REJECTED", "NEEDS_INFO",
   "CONTRACT_SIGNED", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
-  "FIELD_CHECK_DONE", "CLOSED", "ARCHIVED"
+  "FIELD_CHECK_DONE", "CLOSED", "CLOTUREE", "ARCHIVED"
 ]);
 export const emailStatusEnum = pgEnum("email_status", ["intercepted", "sent", "viewed", "archived", "error"]);
 
@@ -69,8 +69,52 @@ export const workshops = pgTable("workshops", {
   objectiveId: varchar("objective_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
+  // Capacités pour gestion collective des ateliers
+  minCapacity: integer("min_capacity"), // Seuil minimum pour démarrer
+  maxCapacity: integer("max_capacity"), // Capacité maximum avant nouvelle session
 }, (table) => ({
   objectiveIdx: index("workshops_objective_idx").on(table.objectiveId),
+}));
+
+// Table pour le tracking collectif des inscriptions aux ateliers
+export const workshopEnrollments = pgTable("workshop_enrollments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ficheId: varchar("fiche_id").notNull(), // Référence vers fiche_navettes
+  workshopId: varchar("workshop_id").notNull(), // Référence vers workshops
+  evsId: varchar("evs_id").notNull(), // Organisation EVS/CS responsable
+  participantCount: integer("participant_count").notNull(), // Nombre de participants de cette fiche
+  sessionNumber: integer("session_number").notNull().default(1), // Numéro de session (1, 2, 3...)
+  
+  // État de la session
+  isLocked: boolean("is_locked").notNull().default(false), // Verrouillé quand seuil atteint
+  
+  // Gestion des contrats par session
+  contractSignedByEVS: boolean("contract_signed_by_evs").notNull().default(false),
+  contractSignedByCommune: boolean("contract_signed_by_commune").notNull().default(false),
+  contractCommunePdfUrl: text("contract_commune_pdf_url"), // URL du PDF uploadé si structure communale
+  contractSignedAt: timestamp("contract_signed_at"), // Date de signature du contrat
+  
+  // Suivi de l'activité
+  activityDone: boolean("activity_done").notNull().default(false),
+  activityCompletedAt: timestamp("activity_completed_at"), // Date de marquage de l'activité terminée
+  
+  // Contrôle de terrain (par session)
+  controlScheduled: boolean("control_scheduled").notNull().default(false), // Contrôle programmé
+  controlValidatedAt: timestamp("control_validated_at"), // Date de validation du contrôle
+  
+  // Bilan d'atelier par famille
+  reportUrl: text("report_url"), // URL du bilan uploadé pour cette famille
+  reportUploadedAt: timestamp("report_uploaded_at"), // Date d'upload du bilan
+  reportUploadedBy: varchar("report_uploaded_by"), // User ID qui a uploadé le bilan
+  
+  // Timestamp pour audit
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  ficheIdx: index("workshop_enrollments_fiche_idx").on(table.ficheId),
+  workshopIdx: index("workshop_enrollments_workshop_idx").on(table.workshopId),
+  evsIdx: index("workshop_enrollments_evs_idx").on(table.evsId),
+  sessionIdx: index("workshop_enrollments_session_idx").on(table.workshopId, table.evsId, table.sessionNumber),
 }));
 
 export const ficheNavettes = pgTable("fiche_navettes", {
@@ -95,6 +139,9 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   
   // Workshop selections (checkboxes) - priority indicator
   selectedWorkshops: json("selected_workshops"), // Store which workshops are selected (checked)
+  
+  // Number of participants for workshops
+  participantsCount: integer("participants_count").default(1), // Number of people from the fiche who will participate in workshops (1-10)
   
   // Family consent
   familyConsent: boolean("family_consent").notNull().default(false),
@@ -207,20 +254,30 @@ export const organizationsRelations = relations(organizations, ({ one, many }) =
   epci: one(epcis, { fields: [organizations.epciId], references: [epcis.id] }),
   users: many(users),
   assignedFiches: many(ficheNavettes),
+  enrollments: many(workshopEnrollments),
 }));
 
 export const workshopObjectivesRelations = relations(workshopObjectives, ({ many }) => ({
   workshops: many(workshops),
 }));
 
-export const workshopsRelations = relations(workshops, ({ one }) => ({
+export const workshopsRelations = relations(workshops, ({ one, many }) => ({
   objective: one(workshopObjectives, { fields: [workshops.objectiveId], references: [workshopObjectives.id] }),
+  enrollments: many(workshopEnrollments),
 }));
 
 export const ficheNavettesRelations = relations(ficheNavettes, ({ one, many }) => ({
   emitter: one(users, { fields: [ficheNavettes.emitterId], references: [users.id] }),
   assignedOrg: one(organizations, { fields: [ficheNavettes.assignedOrgId], references: [organizations.orgId] }),
   comments: many(comments),
+  enrollments: many(workshopEnrollments),
+}));
+
+// Relations pour workshop_enrollments  
+export const workshopEnrollmentsRelations = relations(workshopEnrollments, ({ one }) => ({
+  fiche: one(ficheNavettes, { fields: [workshopEnrollments.ficheId], references: [ficheNavettes.id] }),
+  workshop: one(workshops, { fields: [workshopEnrollments.workshopId], references: [workshops.id] }),
+  evsOrganization: one(organizations, { fields: [workshopEnrollments.evsId], references: [organizations.orgId] }),
 }));
 
 
@@ -255,7 +312,18 @@ export const insertWorkshopObjectiveSchema = createInsertSchema(workshopObjectiv
   createdAt: true,
 });
 
-export const insertWorkshopSchema = createInsertSchema(workshops);
+export const insertWorkshopSchema = createInsertSchema(workshops).extend({
+  minCapacity: z.number().int().min(1, "La capacité minimum doit être au moins 1").optional(),
+  maxCapacity: z.number().int().min(1, "La capacité maximum doit être au moins 1").optional(),
+}).refine((data) => {
+  if (data.minCapacity && data.maxCapacity) {
+    return data.maxCapacity >= data.minCapacity;
+  }
+  return true;
+}, {
+  message: "La capacité maximum doit être supérieure ou égale à la capacité minimum",
+  path: ["maxCapacity"],
+});
 
 export const insertFicheNavetteSchema = createInsertSchema(ficheNavettes).omit({
   id: true,
@@ -285,6 +353,16 @@ export const insertMigrationSchema = createInsertSchema(migrations).omit({
   executedAt: true,
 });
 
+// Schema pour workshop_enrollments avec validation renforcée
+export const insertWorkshopEnrollmentSchema = createInsertSchema(workshopEnrollments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  participantCount: z.number().int().min(1, "Le nombre de participants doit être au moins 1"),
+  sessionNumber: z.number().int().min(1, "Le numéro de session doit être au moins 1"),
+});
+
 // Types
 export type Epci = typeof epcis.$inferSelect;
 export type InsertEpci = z.infer<typeof insertEpciSchema>;
@@ -306,3 +384,5 @@ export type EmailLog = typeof emailLogs.$inferSelect;
 export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
 export type Migration = typeof migrations.$inferSelect;
 export type InsertMigration = z.infer<typeof insertMigrationSchema>;
+export type WorkshopEnrollment = typeof workshopEnrollments.$inferSelect;
+export type InsertWorkshopEnrollment = z.infer<typeof insertWorkshopEnrollmentSchema>;

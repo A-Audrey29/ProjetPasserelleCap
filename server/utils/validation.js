@@ -12,6 +12,8 @@ export const ficheCreationSchema = z.object({
   familyDetailedData: z.any().optional(),
   childrenData: z.any().optional(),
   workshopPropositions: z.any().optional(),
+  selectedWorkshops: z.any().optional(),
+  participantsCount: z.coerce.number().int().min(1, 'Le nombre de participants doit être au minimum 1').max(10, 'Le nombre de participants ne peut dépasser 10'),
   capDocuments: z.array(z.object({
     url: z.string().url(),
     name: z.string(),
@@ -46,6 +48,7 @@ export function validateRequest(schema) {
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Validation failed:', error.errors);
         return res.status(400).json({
           message: 'Données invalides',
           errors: error.errors
