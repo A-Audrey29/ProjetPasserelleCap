@@ -309,7 +309,7 @@ export default function WorkshopSessionCard({ session }) {
                 type="checkbox"
                 checked={activityDone}
                 onChange={(e) => setActivityDone(e.target.checked)}
-                disabled={activityDone && user?.role !== 'ADMIN'}
+                disabled={session?.activityDone}
                 data-testid={`checkbox-activity-done-${session?.id}`}
               />
               <span>Activité réalisée</span>
@@ -319,7 +319,7 @@ export default function WorkshopSessionCard({ session }) {
           {/* Mark as Done Button */}
           <button
             onClick={handleMarkActivityDone}
-            disabled={isMarkingDone}
+            disabled={isMarkingDone || !activityDone}
             className={styles.markDoneButton}
             data-testid={`button-mark-done-${session?.id}`}
           >
