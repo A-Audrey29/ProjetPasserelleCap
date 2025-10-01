@@ -68,6 +68,10 @@ export default function FicheDetail({ ficheId }) {
   const [allWorkshopsCompleted, setAllWorkshopsCompleted] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // Final report upload states
+  const [uploadingFinalReport, setUploadingFinalReport] = useState(false);
+  const [finalReportPdfUrl, setFinalReportPdfUrl] = useState(null);
+
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
     queryKey: ['/api/fiches', ficheId],
@@ -76,7 +80,7 @@ export default function FicheDetail({ ficheId }) {
 
   // Compute derived values after fiche is loaded
   const userRole = user?.role ?? user?.user?.role;
-  const canCloseWorkshops = (userRole === 'EVS_CS' || userRole === 'ADMIN') && fiche?.state !== 'CLOTUREE';
+  const canCloseWorkshops = (userRole === 'EVS_CS' || userRole === 'ADMIN') && fiche?.state !== 'CLOSED';
 
   // Update states when fiche data loads
   useEffect(() => {
@@ -87,6 +91,10 @@ export default function FicheDetail({ ficheId }) {
       setFieldCheckCompleted(fiche.fieldCheckCompleted || false);
       setFinalReportSent(fiche.finalReportSent || false);
       setRemainingPaymentSent(fiche.remainingPaymentSent || false);
+      
+      // Check if final report PDF exists
+      const reportPath = `/uploads/final-report-${fiche.id}.pdf`;
+      setFinalReportPdfUrl(reportPath);
     }
   }, [fiche]);
 
@@ -489,6 +497,78 @@ export default function FicheDetail({ ficheId }) {
       });
     } finally {
       setUploadingReportFor(null);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
+
+  // Final report upload handler
+  const handleFinalReportUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Prevent concurrent uploads
+    if (uploadingFinalReport) return;
+
+    // Validate PDF
+    const isPdf = file.name.toLowerCase().endsWith('.pdf') || 
+                  file.type === 'application/pdf' || 
+                  file.type === 'application/x-pdf';
+    
+    if (!isPdf) {
+      toast({
+        title: "Format invalide",
+        description: "Seuls les fichiers PDF sont acceptés",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "La taille maximale est de 10 MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingFinalReport(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`/api/fiches/${ficheId}/upload-final-report`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erreur lors de l\'upload');
+      }
+
+      const result = await response.json();
+      setFinalReportPdfUrl(result.url);
+
+      // Refetch fiche to show updated state (now FINAL_REPORT_RECEIVED)
+      await queryClient.invalidateQueries({ queryKey: ['/api/fiches', ficheId] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
+
+      toast({
+        title: "Succès",
+        description: "Rapport final uploadé avec succès. La fiche est maintenant en attente de validation finale."
+      });
+    } catch (error) {
+      console.error('Error uploading final report:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de l'upload du rapport final",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingFinalReport(false);
       // Reset file input
       event.target.value = '';
     }
@@ -1236,8 +1316,8 @@ export default function FicheDetail({ ficheId }) {
                 </div>
               </div>
 
-              {/* Close All Workshops Section - Only show if not already CLOTUREE */}
-              {fiche.state !== 'CLOTUREE' && (
+              {/* Close All Workshops Section - Only show if not already CLOSED */}
+              {fiche.state !== 'CLOSED' && (
                 <div className={styles.closeWorkshopsSection}>
                   <h3 className={styles.closeWorkshopsTitle}>Clôture de la fiche</h3>
                   <div className={styles.closeWorkshopsContent}>
@@ -1268,8 +1348,8 @@ export default function FicheDetail({ ficheId }) {
                 </div>
               )}
 
-              {/* Show closed badge if fiche is CLOTUREE */}
-              {fiche.state === 'CLOTUREE' && (
+              {/* Show closed badge if fiche is CLOSED */}
+              {fiche.state === 'CLOSED' && (
                 <div className={styles.closedBadgeSection}>
                   <div className={styles.closedBadge}>
                     ✓ Fiche clôturée - Tous les ateliers sont réalisés
@@ -1563,65 +1643,70 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
-          {/* Final Verification for RELATIONS_EVS with FIELD_CHECK_DONE status */}
-          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'FIELD_CHECK_DONE' && (
+          {/* Final Verification for RELATIONS_EVS with FIELD_CHECK_DONE or FINAL_REPORT_RECEIVED status */}
+          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (fiche.state === 'FIELD_CHECK_DONE' || fiche.state === 'FINAL_REPORT_RECEIVED') && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Vérification finale
               </h2>
               
               <div className={styles.finalVerification}>
-                <div className={styles.verificationChecks}>
-                  <div className={styles.checkItem}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        className={styles.checkbox}
-                        checked={finalReportSent}
-                        onChange={(e) => setFinalReportSent(e.target.checked)}
-                        data-testid="checkbox-final-report-sent"
-                      />
-                      <span className={styles.checkboxText}>
-                        Le rapport final de l'activité a été envoyé à la FEVES et au Conseil départemental.
-                      </span>
-                    </label>
-                  </div>
-                  
-                  <div className={styles.checkItem}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        className={styles.checkbox}
-                        checked={remainingPaymentSent}
-                        onChange={(e) => setRemainingPaymentSent(e.target.checked)}
-                        data-testid="checkbox-remaining-payment-sent"
-                      />
-                      <span className={styles.checkboxText}>
-                        Le solde restant (30% du Total) a été versé à l'organisme désigné.
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Action button */}
-                <div className={styles.finalVerificationActions}>
-                  <button
-                    className={styles.validateFinalButton}
-                    onClick={() => handleFinalVerificationCompletion()}
-                    disabled={!finalReportSent || !remainingPaymentSent || transitionMutation.isPending}
-                    data-testid="button-validate-final-verification"
-                  >
-                    <CheckCircle className={styles.buttonIcon} />
-                    Valider
-                  </button>
-                </div>
-
-                {(!finalReportSent || !remainingPaymentSent) && (
-                  <div className={styles.validationNote}>
-                    <p className={styles.noteText}>
-                      Les deux vérifications doivent être cochées pour pouvoir clôturer la fiche.
+                {/* Upload PDF section - only shown at FIELD_CHECK_DONE */}
+                {fiche.state === 'FIELD_CHECK_DONE' && (
+                  <div className={styles.uploadSection}>
+                    <p className={styles.instructionText}>
+                      Les ateliers de la fiche ont été réalisés, veuillez télécharger le bilan final.
                     </p>
+                    <label 
+                      className={`${styles.uploadFinalReportButton} ${uploadingFinalReport ? styles.uploadDisabled : ''}`}
+                      aria-disabled={uploadingFinalReport}
+                    >
+                      <input
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        onChange={handleFinalReportUpload}
+                        disabled={uploadingFinalReport}
+                        className={styles.fileInput}
+                        data-testid="input-upload-final-report"
+                      />
+                      {uploadingFinalReport ? 'Upload en cours...' : 'Uploader le bilan final (PDF)'}
+                    </label>
                   </div>
+                )}
+
+                {/* PDF display and validation - only shown at FINAL_REPORT_RECEIVED */}
+                {fiche.state === 'FINAL_REPORT_RECEIVED' && (
+                  <>
+                    <div className={styles.reportSection}>
+                      <p className={styles.confirmationText}>
+                        ✓ Les ateliers de la fiche ont été réalisés, le bilan final est téléchargé
+                      </p>
+                      {finalReportPdfUrl && (
+                        <a
+                          href={finalReportPdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.downloadReportLink}
+                          data-testid="link-download-final-report"
+                        >
+                          📄 Télécharger le rapport final
+                        </a>
+                      )}
+                    </div>
+
+                    {/* Validation button */}
+                    <div className={styles.finalVerificationActions}>
+                      <button
+                        className={styles.validateFinalButton}
+                        onClick={() => handleFinalVerificationCompletion()}
+                        disabled={transitionMutation.isPending}
+                        data-testid="button-validate-and-close-fiche"
+                      >
+                        <CheckCircle className={styles.buttonIcon} />
+                        Valider et clôturer la fiche
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             </div>

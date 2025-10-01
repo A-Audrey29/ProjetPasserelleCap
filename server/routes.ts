@@ -681,6 +681,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload final report for a fiche and transition to FINAL_REPORT_RECEIVED
+  app.post('/api/fiches/:id/upload-final-report', requireAuth, requireFicheAccess, upload.single('file'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!req.file) {
+        return res.status(400).json({ message: 'Aucun fichier fourni' });
+      }
+
+      // Only accept PDF files for final report
+      if (req.file.mimetype !== 'application/pdf') {
+        return res.status(400).json({ message: 'Seuls les fichiers PDF sont autorisés pour le rapport final' });
+      }
+
+      // Get fiche to verify state
+      const fiche = await storage.getFiche(id);
+      if (!fiche) {
+        return res.status(404).json({ message: 'Fiche non trouvée' });
+      }
+
+      // Rename uploaded file to conventional name: final-report-{ficheId}.pdf
+      const oldPath = path.join(uploadsDir, req.file.filename);
+      const newFilename = `final-report-${id}.pdf`;
+      const newPath = path.join(uploadsDir, newFilename);
+      
+      // Remove old file if exists
+      if (fs.existsSync(newPath)) {
+        fs.unlinkSync(newPath);
+      }
+      
+      // Rename to conventional name
+      fs.renameSync(oldPath, newPath);
+
+      const fileUrl = `/uploads/${newFilename}`;
+      
+      // Transition fiche to FINAL_REPORT_RECEIVED
+      await transitionFicheState(id, 'FINAL_REPORT_RECEIVED', req.user.userId, {
+        finalReportUrl: fileUrl,
+        finalReportUploadedAt: new Date().toISOString()
+      });
+
+      res.json({
+        url: fileUrl,
+        name: req.file.originalname,
+        mime: req.file.mimetype,
+        size: req.file.size,
+        message: 'Rapport final uploadé avec succès'
+      });
+    } catch (error) {
+      console.error('Upload final report error:', error);
+      res.status(500).json({ message: error.message || 'Erreur lors du téléchargement' });
+    }
+  });
+
   // Serve uploaded files
   app.get('/uploads/:filename', (req, res) => {
     const { filename } = req.params;

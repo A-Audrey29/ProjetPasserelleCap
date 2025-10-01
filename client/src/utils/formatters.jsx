@@ -191,7 +191,6 @@ export function formatState(state) {
     FIELD_CHECK_SCHEDULED: 'Vérification programmée',
     FIELD_CHECK_DONE: 'Vérification effectuée',
     FINAL_REPORT_RECEIVED: 'Rapport final reçu',
-    REMAINING_30_PAID: 'Solde 30% payé',
     CLOSED: 'Clôturé',
     ARCHIVED: 'Archivé'
   };

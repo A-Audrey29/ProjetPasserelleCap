@@ -7,9 +7,9 @@ export const STATE_LABELS = {
   EVS_REJECTED: 'Refusé EVS',
   CONTRACT_SIGNED: 'Ateliers en cours',
   ACTIVITY_DONE: 'Ateliers terminés',
-  CLOTUREE: 'Fiche clôturée',
   FIELD_CHECK_SCHEDULED: 'Vérification programmée',
   FIELD_CHECK_DONE: 'Vérification effectuée',
+  FINAL_REPORT_RECEIVED: 'Rapport final reçu',
   CLOSED: 'Clôturé',
   ARCHIVED: 'Archivé'
 };

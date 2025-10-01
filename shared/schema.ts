@@ -7,9 +7,9 @@ import { z } from "zod";
 export const roleEnum = pgEnum("role", ["ADMIN", "SUIVI_PROJETS", "EMETTEUR", "RELATIONS_EVS", "EVS_CS", "CD"]);
 export const orgTypeEnum = pgEnum("org_type", ["EVS", "CS", "OTHER"]);
 export const ficheStateEnum = pgEnum("fiche_state", [
-  "DRAFT", "SUBMITTED_TO_CD", "SUBMITTED_TO_FEVES", "ASSIGNED_EVS", "ACCEPTED_EVS", "EVS_REJECTED", "NEEDS_INFO",
+  "DRAFT", "SUBMITTED_TO_FEVES", "ASSIGNED_EVS", "ACCEPTED_EVS", "EVS_REJECTED",
   "CONTRACT_SIGNED", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
-  "FIELD_CHECK_DONE", "CLOSED", "CLOTUREE", "ARCHIVED"
+  "FIELD_CHECK_DONE", "FINAL_REPORT_RECEIVED", "CLOSED", "ARCHIVED"
 ]);
 export const emailStatusEnum = pgEnum("email_status", ["intercepted", "sent", "viewed", "archived", "error"]);
 

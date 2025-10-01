@@ -137,22 +137,20 @@ const STATE_TRANSITIONS = {
   EMETTEUR: {
     DRAFT: ['SUBMITTED_TO_FEVES']
   },
-  CD: {
-    SUBMITTED_TO_CD: ['SUBMITTED_TO_FEVES', 'ARCHIVED', 'DRAFT']
-  },
   RELATIONS_EVS: {
     SUBMITTED_TO_FEVES: ['ASSIGNED_EVS'],
     ACCEPTED_EVS: ['CONTRACT_SIGNED', 'ARCHIVED'], // Skip CONTRACT_SENT, go directly to CONTRACT_SIGNED or ARCHIVED
     CONTRACT_SIGNED: ['ACTIVITY_DONE'],
     ACTIVITY_DONE: ['FIELD_CHECK_SCHEDULED'],
     FIELD_CHECK_SCHEDULED: ['FIELD_CHECK_DONE'], // RELATIONS_EVS validates field check
-    FIELD_CHECK_DONE: ['CLOSED'],
+    FIELD_CHECK_DONE: ['FINAL_REPORT_RECEIVED'],
+    FINAL_REPORT_RECEIVED: ['CLOSED'], // Final validation closes the fiche
     CLOSED: ['ARCHIVED']
   },
   EVS_CS: {
     ASSIGNED_EVS: ['ACCEPTED_EVS', 'SUBMITTED_TO_FEVES'], // EVS can accept or refuse (back to SUBMITTED_TO_FEVES)
     CONTRACT_SIGNED: ['FIELD_CHECK_SCHEDULED'], // EVS_CS confirms activity completion
-    ACCEPTED_EVS: ['CLOTUREE'] // EVS_CS can close all workshops (definitive, no reversal)
+    ACCEPTED_EVS: ['CLOSED'] // EVS_CS can close all workshops (definitive, no reversal)
   }
 };
 

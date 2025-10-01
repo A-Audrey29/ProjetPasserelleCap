@@ -18,9 +18,17 @@ const STATE_COLORS = {
   'DRAFT': 'secondary',
   'SUBMITTED_TO_FEVES': 'default',
   'ASSIGNED_EVS': 'outline',
+  'ACCEPTED_EVS': 'default',
+  'EVS_REJECTED': 'destructive',
+  'CONTRACT_SIGNED': 'default',
+  'ACTIVITY_DONE': 'default',
+  'FIELD_CHECK_SCHEDULED': 'default',
+  'FIELD_CHECK_DONE': 'default',
+  'FINAL_REPORT_RECEIVED': 'default',
   'IN_PROGRESS': 'default',
   'COMPLETED': 'success',
   'CLOSED': 'success',
+  'ARCHIVED': 'secondary',
   'REJECTED': 'destructive',
   'CANCELLED': 'destructive'
 };

@@ -17,6 +17,7 @@ export default function StatusBadge({ state, className = '' }) {
       case 'ACTIVITY_DONE':
       case 'FIELD_CHECK_SCHEDULED':
       case 'FIELD_CHECK_DONE':
+      case 'FINAL_REPORT_RECEIVED':
         return `${baseClass} ${styles.statusAccepted}`;
       case 'EVS_REJECTED':
         return `${baseClass} ${styles.statusRejected}`;
