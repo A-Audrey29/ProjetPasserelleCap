@@ -71,16 +71,41 @@ export default function Ateliers() {
               Vue d'ensemble des sessions d'ateliers collectifs
             </p>
           </div>
+          
+          {/* Filter */}
+          <div className={styles.filterSection}>
+            <label htmlFor="state-filter" className={styles.filterLabel}>
+              Filtrer par état :
+            </label>
+            <select
+              id="state-filter"
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+              className={styles.filterSelect}
+              data-testid="select-state-filter"
+            >
+              <option value="TOUS">Tous</option>
+              <option value="EN ATTENTE">En attente</option>
+              <option value="PRÊTE">Prête</option>
+              <option value="EN COURS">En cours</option>
+              <option value="TERMINÉE">Terminée</option>
+            </select>
+          </div>
         </div>
 
         {/* Sessions List */}
         <div className={styles.sessionsGrid}>
-          {sessions.length === 0 ? (
+          {filteredSessions.length === 0 ? (
             <div className={styles.emptyState}>
-              <p>Aucune session d'atelier disponible</p>
+              <p>
+                {sessions.length === 0 
+                  ? 'Aucune session d\'atelier disponible' 
+                  : `Aucune session dans l'état "${stateFilter === 'TOUS' ? 'Tous' : stateFilter}"`
+                }
+              </p>
             </div>
           ) : (
-            sessions.map((session) => (
+            filteredSessions.map((session) => (
               <WorkshopSessionCard 
                 key={session.id} 
                 session={session}
