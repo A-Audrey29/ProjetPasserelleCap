@@ -298,6 +298,35 @@ class NotificationService {
       return [];
     }
   }
+
+  /**
+   * Notification: Tous les ateliers d'une fiche sont terminés, fiche clôturée
+   */
+  async notifyFicheAllWorkshopsCompleted(fiche) {
+    try {
+      // Get emails for RELATIONS_EVS and CD
+      const fevesEmails = await this.getFevesEmails();
+      const cdEmails = await this.getCdEmails();
+      const allEmails = [...fevesEmails, ...cdEmails];
+
+      if (allEmails.length === 0) {
+        console.log('No RELATIONS_EVS or CD emails found for fiche closure notification');
+        return;
+      }
+
+      // Send email notification
+      await emailService.sendFicheAllWorkshopsCompletedNotification({
+        emails: allEmails,
+        ficheRef: fiche.ref,
+        ficheId: fiche.id
+      });
+
+      console.log(`Fiche closure notification sent for ${fiche.ref} to ${allEmails.length} recipients`);
+    } catch (error) {
+      console.error('Error sending fiche closure notification:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

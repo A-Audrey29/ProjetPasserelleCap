@@ -871,6 +871,69 @@ Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
 
     await this.deliver(mailOptions, meta);
   }
+
+  /**
+   * Send notification when all workshops for a fiche are completed
+   */
+  async sendFicheAllWorkshopsCompletedNotification({ emails, ficheRef, ficheId }: {
+    emails: string[];
+    ficheRef: string;
+    ficheId: string;
+  }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: emails,
+      subject: `Fiche clôturée - ${ficheRef}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #3B4B61;">Fiche clôturée</h2>
+          
+          <p>Bonjour,</p>
+          
+          <p>La fiche <strong>${ficheRef}</strong> a été clôturée, tous les ateliers sont réalisés.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #6A8B74; margin-top: 0;">Détails</h3>
+            <p><strong>Référence :</strong> ${ficheRef}</p>
+            <p><strong>Statut :</strong> CLÔTURÉE</p>
+          </div>
+          
+          <p>Vous pouvez consulter les détails de la fiche sur la plateforme.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/fiches/${ficheId}" 
+               style="background-color: #6A8B74; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Voir la fiche
+            </a>
+          </div>
+          
+          <p style="color: #8C4A4A;"><em>Email envoyé automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</em></p>
+        </div>
+      `,
+      text: `Fiche clôturée - ${ficheRef}
+
+La fiche ${ficheRef} a été clôturée, tous les ateliers sont réalisés.
+
+Détails :
+- Référence : ${ficheRef}
+- Statut : CLÔTURÉE
+
+Vous pouvez consulter les détails de la fiche sur la plateforme.
+
+Email envoyé automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`
+    };
+
+    const meta = {
+      event: 'fiche_all_workshops_completed',
+      ficheRef,
+      ficheId
+    };
+
+    await this.deliver(mailOptions, meta);
+  }
 }
 
 // Export singleton instance
