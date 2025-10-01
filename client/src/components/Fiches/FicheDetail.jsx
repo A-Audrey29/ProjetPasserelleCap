@@ -328,7 +328,7 @@ export default function FicheDetail({ ficheId }) {
         });
         toast({
           title: "Contrat validé",
-          description: "Le contrat a été validé et signé. La fiche passe au statut 'Contrat signé'.",
+          description: "Le contrat a été validé et signé. La fiche passe au statut 'Ateliers en cours'.",
           variant: "default"
         });
       } else if (action === 'archive') {
