@@ -692,6 +692,60 @@ export class DatabaseStorage implements IStorage {
 
     return enrollment;
   }
+
+  // Schedule control for all enrollments of a session
+  async scheduleSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }> {
+    // Get the enrollment to find its session info
+    const enrollment = await this.getWorkshopEnrollment(sessionId);
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    // Update all enrollments with same (workshopId, evsId, sessionNumber)
+    const enrollments = await db.update(workshopEnrollments)
+      .set({ 
+        controlScheduled: true,
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(workshopEnrollments.workshopId, enrollment.workshopId),
+        eq(workshopEnrollments.evsId, enrollment.evsId),
+        eq(workshopEnrollments.sessionNumber, enrollment.sessionNumber)
+      ))
+      .returning();
+
+    return {
+      updatedCount: enrollments.length,
+      enrollments
+    };
+  }
+
+  // Validate control for all enrollments of a session
+  async validateSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }> {
+    // Get the enrollment to find its session info
+    const enrollment = await this.getWorkshopEnrollment(sessionId);
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    // Update all enrollments with same (workshopId, evsId, sessionNumber)
+    const enrollments = await db.update(workshopEnrollments)
+      .set({ 
+        controlValidatedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(workshopEnrollments.workshopId, enrollment.workshopId),
+        eq(workshopEnrollments.evsId, enrollment.evsId),
+        eq(workshopEnrollments.sessionNumber, enrollment.sessionNumber)
+      ))
+      .returning();
+
+    return {
+      updatedCount: enrollments.length,
+      enrollments
+    };
+  }
 }
 
 export const storage = new DatabaseStorage();
