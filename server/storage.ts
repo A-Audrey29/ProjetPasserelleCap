@@ -507,6 +507,8 @@ export class DatabaseStorage implements IStorage {
         contractSignedAt: workshopEnrollments.contractSignedAt,
         activityDone: workshopEnrollments.activityDone,
         activityCompletedAt: workshopEnrollments.activityCompletedAt,
+        controlScheduled: workshopEnrollments.controlScheduled,
+        controlValidatedAt: workshopEnrollments.controlValidatedAt,
         createdAt: workshopEnrollments.createdAt,
         // Workshop details
         workshopName: workshops.name,
@@ -560,6 +562,8 @@ export class DatabaseStorage implements IStorage {
           contractSignedAt: session.contractSignedAt,
           activityDone: session.activityDone,
           activityCompletedAt: session.activityCompletedAt,
+          controlScheduled: session.controlScheduled,
+          controlValidatedAt: session.controlValidatedAt,
           createdAt: session.createdAt,
           workshop: {
             id: session.workshopId,
