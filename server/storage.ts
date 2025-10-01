@@ -102,6 +102,8 @@ export interface IStorage {
   getEnrollmentsByWorkshopAndEvs(workshopId: string, evsId: string): Promise<WorkshopEnrollment[]>;
   markSessionActivityDone(sessionId: string, userId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
   uploadEnrollmentReport(enrollmentId: string, reportUrl: string, userId: string): Promise<WorkshopEnrollment>;
+  scheduleSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
+  validateSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
 }
 
 export class DatabaseStorage implements IStorage {
