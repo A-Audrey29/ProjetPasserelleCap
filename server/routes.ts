@@ -565,6 +565,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Close fiche - all workshops completed (EVS_CS and ADMIN only)
+  app.post('/api/fiches/:id/close-all-workshops',
+    requireAuth,
+    requireRole('ADMIN', 'EVS_CS'),
+    auditMiddleware('close_all_workshops', 'FicheNavette'),
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        
+        // Get the fiche
+        const fiche = await storage.getFiche(id);
+        if (!fiche) {
+          return res.status(404).json({ message: 'Fiche non trouvée' });
+        }
+
+        // Check if already closed
+        if (fiche.state === 'CLOTUREE') {
+          return res.status(400).json({ message: 'La fiche est déjà clôturée' });
+        }
+
+        // Check permissions: EVS_CS must be from the assigned organization
+        if (req.user.role === 'EVS_CS') {
+          if (!fiche.assignedOrgId || req.user.orgId !== fiche.assignedOrgId) {
+            return res.status(403).json({ 
+              message: 'Vous n\'êtes pas autorisé à clôturer cette fiche' 
+            });
+          }
+        }
+
+        // Use state transition service to ensure proper validation and audit logging
+        const updatedFiche = await transitionFicheState(id, 'CLOTUREE', req.user.userId, {
+          action: 'close_all_workshops',
+          closedBy: req.user.email
+        });
+
+        // Send notifications to RELATIONS_EVS and CD
+        try {
+          await notificationService.notifyFicheAllWorkshopsCompleted(updatedFiche);
+        } catch (notifError) {
+          console.error('Failed to send notifications:', notifError);
+          // Don't fail the request if notifications fail
+        }
+
+        res.json({ 
+          success: true, 
+          message: 'Fiche clôturée avec succès',
+          fiche: updatedFiche
+        });
+      } catch (error) {
+        console.error('Close all workshops error:', error);
+        res.status(500).json({ message: 'Erreur lors de la clôture de la fiche' });
+      }
+    }
+  );
+
   // Comments
   app.get('/api/fiches/:id/comments', requireAuth, requireFicheAccess, async (req, res) => {
     try {

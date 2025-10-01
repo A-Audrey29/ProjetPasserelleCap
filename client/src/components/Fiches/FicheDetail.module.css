@@ -1606,3 +1606,97 @@
     justify-content: center;
   }
 }
+
+/* Close Workshops Section */
+.closeWorkshopsSection {
+  background-color: #F5F6F7;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 2px solid #D9A066;
+}
+
+.closeWorkshopsTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin: 0 0 1rem 0;
+}
+
+.closeWorkshopsContent {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.closeWorkshopsLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: #3B4B61;
+}
+
+.closeWorkshopsLabel input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+}
+
+.closeWorkshopsLabel input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.closeWorkshopsButton {
+  padding: 0.625rem 1.25rem;
+  background-color: #6A8B74;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeWorkshopsButton:hover:not(:disabled) {
+  background-color: #5A7A64;
+}
+
+.closeWorkshopsButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #6A8B74;
+}
+
+.closeWorkshopsHint {
+  font-size: 0.8rem;
+  color: #8C4A4A;
+  margin: 0.5rem 0 0 0;
+  font-style: italic;
+}
+
+/* Closed Badge Section */
+.closedBadgeSection {
+  background-color: #F5F6F7;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 2px solid #6A8B74;
+}
+
+.closedBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6A8B74;
+  padding: 0.75rem;
+  background-color: white;
+  border-radius: 6px;
+}

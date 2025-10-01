@@ -64,11 +64,19 @@ export default function FicheDetail({ ficheId }) {
   // Workshop report upload state
   const [uploadingReportFor, setUploadingReportFor] = useState(null);
 
+  // Close all workshops states
+  const [allWorkshopsCompleted, setAllWorkshopsCompleted] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
   // Query for fiche details
   const { data: fiche, isLoading, error } = useQuery({
     queryKey: ['/api/fiches', ficheId],
     enabled: !!ficheId
   });
+
+  // Compute derived values after fiche is loaded
+  const userRole = user?.role ?? user?.user?.role;
+  const canCloseWorkshops = (userRole === 'EVS_CS' || userRole === 'ADMIN') && fiche?.state !== 'CLOTUREE';
 
   // Update states when fiche data loads
   useEffect(() => {
@@ -488,6 +496,44 @@ export default function FicheDetail({ ficheId }) {
       setUploadingReportFor(null);
       // Reset file input
       event.target.value = '';
+    }
+  };
+
+  // Close all workshops handler
+  const handleCloseAllWorkshops = async () => {
+    if (!canCloseWorkshops) {
+      toast({
+        title: "Action non autorisée",
+        description: "Seuls les EVS/CS et ADMIN peuvent clôturer la fiche",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsClosing(true);
+    try {
+      await apiRequest('POST', `/api/fiches/${ficheId}/close-all-workshops`, {});
+
+      // Refetch fiche to update state
+      await queryClient.invalidateQueries({ queryKey: ['/api/fiches', ficheId] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/fiches'] });
+
+      toast({
+        title: "Fiche clôturée",
+        description: "La fiche a été clôturée avec succès. Notifications envoyées à FEVES et CD."
+      });
+
+      // Reset checkbox
+      setAllWorkshopsCompleted(false);
+    } catch (error) {
+      console.error('Error closing all workshops:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la clôture de la fiche",
+        variant: "destructive"
+      });
+    } finally {
+      setIsClosing(false);
     }
   };
 
@@ -1114,85 +1160,128 @@ export default function FicheDetail({ ficheId }) {
 
           {/* Workshop Reports Section - Only show if there are enrollments */}
           {workshopEnrollments.length > 0 && (
-            <div className={styles.reviewSection}>
-              <h3 className={styles.reviewSectionTitle}>
-                <Target className={styles.reviewSectionIcon} />
-                Bilans d'ateliers
-              </h3>
-              <div className={styles.reviewContent}>
-                {workshopEnrollments.map((enrollment) => {
-                  const workshop = workshopsList?.find(w => String(w.id) === String(enrollment.workshopId));
-                  const workshopName = workshop?.name || `Atelier ${enrollment.workshopId}`;
-                  const userRole = user?.role ?? user?.user?.role;
-                  const canUpload = userRole === 'EVS_CS' && enrollment.activityDone;
-                  const isUploading = uploadingReportFor === enrollment.id;
+            <>
+              <div className={styles.reviewSection}>
+                <h3 className={styles.reviewSectionTitle}>
+                  <Target className={styles.reviewSectionIcon} />
+                  Bilans d'ateliers
+                </h3>
+                <div className={styles.reviewContent}>
+                  {workshopEnrollments.map((enrollment) => {
+                    const workshop = workshopsList?.find(w => String(w.id) === String(enrollment.workshopId));
+                    const workshopName = workshop?.name || `Atelier ${enrollment.workshopId}`;
+                    const userRole = user?.role ?? user?.user?.role;
+                    const canUpload = userRole === 'EVS_CS' && enrollment.activityDone;
+                    const isUploading = uploadingReportFor === enrollment.id;
 
-                  return (
-                    <div key={enrollment.id} className={styles.workshopReportCard}>
-                      <div className={styles.workshopReportHeader}>
-                        <h4 className={styles.workshopReportTitle}>
-                          {workshopName} - Session {enrollment.sessionNumber}
-                        </h4>
-                        {!enrollment.activityDone && (
-                          <span className={styles.workshopPendingBadge}>En cours</span>
-                        )}
-                        {enrollment.activityDone && !enrollment.reportUrl && (
-                          <span className={styles.workshopReadyBadge}>Prêt pour bilan</span>
-                        )}
-                        {enrollment.reportUrl && (
-                          <span className={styles.workshopCompleteBadge}>Bilan disponible</span>
-                        )}
-                      </div>
+                    return (
+                      <div key={enrollment.id} className={styles.workshopReportCard}>
+                        <div className={styles.workshopReportHeader}>
+                          <h4 className={styles.workshopReportTitle}>
+                            {workshopName} - Session {enrollment.sessionNumber}
+                          </h4>
+                          {!enrollment.activityDone && (
+                            <span className={styles.workshopPendingBadge}>En cours</span>
+                          )}
+                          {enrollment.activityDone && !enrollment.reportUrl && (
+                            <span className={styles.workshopReadyBadge}>Prêt pour bilan</span>
+                          )}
+                          {enrollment.reportUrl && (
+                            <span className={styles.workshopCompleteBadge}>Bilan disponible</span>
+                          )}
+                        </div>
 
-                      <div className={styles.workshopReportActions}>
-                        {/* Download button - visible if report exists */}
-                        {enrollment.reportUrl && (
-                          <a
-                            href={enrollment.reportUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={styles.downloadReportButton}
-                            data-testid={`button-download-report-${enrollment.id}`}
-                          >
-                            Télécharger le bilan
-                          </a>
-                        )}
+                        <div className={styles.workshopReportActions}>
+                          {/* Download button - visible if report exists */}
+                          {enrollment.reportUrl && (
+                            <a
+                              href={enrollment.reportUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.downloadReportButton}
+                              data-testid={`button-download-report-${enrollment.id}`}
+                            >
+                              Télécharger le bilan
+                            </a>
+                          )}
 
-                        {/* Upload button - only for EVS_CS after activity is done */}
-                        {canUpload && (
-                          <label 
-                            className={`${styles.uploadReportButton} ${isUploading ? styles.uploadDisabled : ''}`}
-                            aria-disabled={isUploading}
-                          >
-                            <input
-                              type="file"
-                              accept="application/pdf,.pdf"
-                              onChange={(e) => handleReportUpload(enrollment.id, e)}
-                              disabled={isUploading}
-                              className={styles.fileInput}
-                              data-testid={`input-upload-report-${enrollment.id}`}
-                            />
-                            {isUploading ? 'Upload en cours...' : enrollment.reportUrl ? 'Remplacer le bilan' : 'Uploader le bilan'}
-                          </label>
-                        )}
+                          {/* Upload button - only for EVS_CS after activity is done */}
+                          {canUpload && (
+                            <label 
+                              className={`${styles.uploadReportButton} ${isUploading ? styles.uploadDisabled : ''}`}
+                              aria-disabled={isUploading}
+                            >
+                              <input
+                                type="file"
+                                accept="application/pdf,.pdf"
+                                onChange={(e) => handleReportUpload(enrollment.id, e)}
+                                disabled={isUploading}
+                                className={styles.fileInput}
+                                data-testid={`input-upload-report-${enrollment.id}`}
+                              />
+                              {isUploading ? 'Upload en cours...' : enrollment.reportUrl ? 'Remplacer le bilan' : 'Uploader le bilan'}
+                            </label>
+                          )}
 
-                        {!canUpload && !enrollment.reportUrl && (
-                          <p className={styles.uploadHint}>
-                            Le bilan sera disponible après que l'activité soit marquée comme terminée
+                          {!canUpload && !enrollment.reportUrl && (
+                            <p className={styles.uploadHint}>
+                              Le bilan sera disponible après que l'activité soit marquée comme terminée
+                            </p>
+                          )}
+                        </div>
+
+                        {enrollment.reportUploadedAt && (
+                          <p className={styles.uploadInfo}>
+                            Uploadé le {formatDate(enrollment.reportUploadedAt)}
                           </p>
                         )}
                       </div>
-
-                      {enrollment.reportUploadedAt && (
-                        <p className={styles.uploadInfo}>
-                          Uploadé le {formatDate(enrollment.reportUploadedAt)}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+
+              {/* Close All Workshops Section - Only show if not already CLOTUREE */}
+              {fiche.state !== 'CLOTUREE' && (
+                <div className={styles.closeWorkshopsSection}>
+                  <h3 className={styles.closeWorkshopsTitle}>Clôture de la fiche</h3>
+                  <div className={styles.closeWorkshopsContent}>
+                    <label className={styles.closeWorkshopsLabel}>
+                      <input
+                        type="checkbox"
+                        checked={allWorkshopsCompleted}
+                        onChange={(e) => setAllWorkshopsCompleted(e.target.checked)}
+                        disabled={!canCloseWorkshops}
+                        data-testid="checkbox-all-workshops-completed"
+                      />
+                      <span>Tous les ateliers de cette fiche sont réalisés</span>
+                    </label>
+                    <button
+                      onClick={handleCloseAllWorkshops}
+                      disabled={isClosing || !allWorkshopsCompleted || !canCloseWorkshops}
+                      className={styles.closeWorkshopsButton}
+                      data-testid="button-close-all-workshops"
+                    >
+                      {isClosing ? 'Validation en cours...' : 'Valider'}
+                    </button>
+                  </div>
+                  {!canCloseWorkshops && (
+                    <p className={styles.closeWorkshopsHint}>
+                      Seuls les EVS/CS et ADMIN peuvent clôturer la fiche
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Show closed badge if fiche is CLOTUREE */}
+              {fiche.state === 'CLOTUREE' && (
+                <div className={styles.closedBadgeSection}>
+                  <div className={styles.closedBadge}>
+                    ✓ Fiche clôturée - Tous les ateliers sont réalisés
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Nombre de participants - adapted from FicheForm review section */}
