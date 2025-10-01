@@ -319,11 +319,11 @@ export default function WorkshopSessionCard({ session }) {
           {/* Mark as Done Button */}
           <button
             onClick={handleMarkActivityDone}
-            disabled={isMarkingDone || activityDone}
+            disabled={isMarkingDone}
             className={styles.markDoneButton}
             data-testid={`button-mark-done-${session?.id}`}
           >
-            {isMarkingDone ? 'En cours...' : 'Marquer comme terminée'}
+            {isMarkingDone ? 'En cours...' : 'Valider'}
           </button>
         </div>
       )}
