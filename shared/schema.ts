@@ -98,6 +98,10 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
   activityDone: boolean("activity_done").notNull().default(false),
   activityCompletedAt: timestamp("activity_completed_at"), // Date de marquage de l'activité terminée
   
+  // Contrôle de terrain (par session)
+  controlScheduled: boolean("control_scheduled").notNull().default(false), // Contrôle programmé
+  controlValidatedAt: timestamp("control_validated_at"), // Date de validation du contrôle
+  
   // Bilan d'atelier par famille
   reportUrl: text("report_url"), // URL du bilan uploadé pour cette famille
   reportUploadedAt: timestamp("report_uploaded_at"), // Date d'upload du bilan
