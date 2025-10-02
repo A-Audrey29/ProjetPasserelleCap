@@ -18,6 +18,16 @@ class NotificationService {
       const emitter = await storage.getUser(fiche.emitterId);
       const emitterName = emitter ? `${emitter.firstName} ${emitter.lastName}` : undefined;
       
+      // Récupérer la structure d'appartenance de l'émetteur
+      let emitterStructure = null;
+      if (emitter?.orgId) {
+        const emitterOrg = await storage.getOrganization(emitter.orgId);
+        emitterStructure = emitterOrg?.name;
+      } else if (emitter?.structure) {
+        // Fallback sur le champ texte libre si pas d'orgId
+        emitterStructure = emitter.structure;
+      }
+      
       // Récupérer les informations de l'organisation assignée si applicable
       let assignedOrg = null;
       let evsOrgName = null;
@@ -37,10 +47,10 @@ class NotificationService {
         case 'SUBMITTED_TO_FEVES':
           if (oldState === 'DRAFT') {
             // Émetteur transmet directement à FEVES (nouveau workflow)
-            await this.notifySubmittedToFeves(fiche, emitterName);
+            await this.notifySubmittedToFeves(fiche, emitterName, emitterStructure);
           } else if (oldState === 'SUBMITTED_TO_CD') {
             // Validation par le CD (legacy workflow)
-            await this.notifySubmittedToFeves(fiche, emitterName);
+            await this.notifySubmittedToFeves(fiche, emitterName, emitterStructure);
           }
           break;
           
@@ -99,14 +109,15 @@ class NotificationService {
   }
 
   /**
-   * Notification : Fiche validée par le CD et transmise à FEVES
+   * Notification : Fiche transmise à FEVES
    */
-  async notifySubmittedToFeves(fiche, emitterName) {
+  async notifySubmittedToFeves(fiche, emitterName, emitterStructure) {
     const fevesEmails = await this.getFevesEmails();
     if (fevesEmails.length > 0) {
       await emailService.sendSubmittedToFevesNotification({
         fevesEmails,
         emitterName,
+        emitterStructure,
         ficheId: fiche.id,
         ficheRef: fiche.ref
       });
