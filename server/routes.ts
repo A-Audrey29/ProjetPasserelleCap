@@ -581,7 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Check if already closed
-        if (fiche.state === 'CLOTUREE') {
+        if (fiche.state === 'CLOSED') {
           return res.status(400).json({ message: 'La fiche est déjà clôturée' });
         }
 
@@ -595,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Use state transition service to ensure proper validation and audit logging
-        const updatedFiche = await transitionFicheState(id, 'CLOTUREE', req.user.userId, {
+        const updatedFiche = await transitionFicheState(id, 'CLOSED', req.user.userId, {
           action: 'close_all_workshops',
           closedBy: req.user.email
         });
