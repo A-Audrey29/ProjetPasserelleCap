@@ -115,6 +115,8 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
   workshopIdx: index("workshop_enrollments_workshop_idx").on(table.workshopId),
   evsIdx: index("workshop_enrollments_evs_idx").on(table.evsId),
   sessionIdx: index("workshop_enrollments_session_idx").on(table.workshopId, table.evsId, table.sessionNumber),
+  // Protection anti-doublon: une fiche ne peut être inscrite qu'une seule fois à un atelier
+  uniqueFicheWorkshop: unique("unique_fiche_workshop").on(table.ficheId, table.workshopId),
 }));
 
 export const ficheNavettes = pgTable("fiche_navettes", {
