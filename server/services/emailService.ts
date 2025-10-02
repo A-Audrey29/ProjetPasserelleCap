@@ -270,25 +270,26 @@ class EmailService {
   /**
    * Send email notification when fiche is submitted to FEVES
    */
-  async sendSubmittedToFevesNotification({ fevesEmails, emitterName, ficheId, ficheRef }: { fevesEmails: string[]; emitterName?: string; ficheId: string; ficheRef: string; }) {
+  async sendSubmittedToFevesNotification({ fevesEmails, emitterName, emitterStructure, ficheId, ficheRef }: { fevesEmails: string[]; emitterName?: string; emitterStructure?: string; ficheId: string; ficheRef: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - CD',
+        name: 'Passerelle CAP',
         email: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
-      subject: 'Fiche CAP validée par le CD - À traiter',
+      subject: 'Nouvelle fiche CAP à traiter',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #6A8B74;">Fiche CAP validée - À traiter</h2>
+          <h2 style="color: #6A8B74;">Nouvelle fiche CAP à traiter</h2>
           
           <p>Bonjour,</p>
           
-          <p>Le Conseil Départemental a validé une fiche CAP qui vous est maintenant transmise pour traitement.</p>
+          <p>Une nouvelle fiche CAP a été soumise et vous est maintenant transmise pour traitement.</p>
           
           <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p><strong>Référence :</strong> ${ficheRef}</p>
             <p><strong>Émetteur :</strong> ${emitterName || 'Non spécifié'}</p>
+            ${emitterStructure ? `<p><strong>Structure :</strong> ${emitterStructure}</p>` : ''}
           </div>
           
           <p>Veuillez vous connecter à la plateforme pour examiner cette fiche et procéder à l'assignation EVS.</p>
@@ -315,6 +316,7 @@ class EmailService {
       ficheId,
       ficheRef,
       emitterName,
+      emitterStructure,
       fevesEmails
     };
 
