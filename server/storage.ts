@@ -496,6 +496,7 @@ export class DatabaseStorage implements IStorage {
     let query = db
       .select({
         id: workshopEnrollments.id,
+        ficheId: workshopEnrollments.ficheId,
         workshopId: workshopEnrollments.workshopId,
         evsId: workshopEnrollments.evsId,
         participantCount: workshopEnrollments.participantCount,
@@ -527,15 +528,75 @@ export class DatabaseStorage implements IStorage {
     }
     // ADMIN, RELATIONS_EVS, CD see all sessions
 
-    const sessions = await query.orderBy(
+    const enrollments = await query.orderBy(
       asc(workshops.name),
       asc(workshopEnrollments.sessionNumber)
     );
 
-    // Get associated fiches for each session
-    const sessionsWithFiches = await Promise.all(
-      sessions.map(async (session) => {
-        const fiches = await db
+    // Group enrollments by (workshopId, evsId, sessionNumber)
+    const sessionMap = new Map<string, {
+      enrollments: typeof enrollments;
+      workshopName: string;
+      workshopMinCapacity: number;
+      workshopMaxCapacity: number;
+      evsName: string;
+    }>();
+
+    for (const enrollment of enrollments) {
+      const sessionKey = `${enrollment.workshopId}-${enrollment.evsId}-${enrollment.sessionNumber}`;
+      
+      if (!sessionMap.has(sessionKey)) {
+        sessionMap.set(sessionKey, {
+          enrollments: [],
+          workshopName: enrollment.workshopName || '',
+          workshopMinCapacity: enrollment.workshopMinCapacity || 0,
+          workshopMaxCapacity: enrollment.workshopMaxCapacity || 0,
+          evsName: enrollment.evsName || ''
+        });
+      }
+      
+      sessionMap.get(sessionKey)!.enrollments.push(enrollment);
+    }
+
+    // Aggregate data for each session
+    const sessions = await Promise.all(
+      Array.from(sessionMap.entries()).map(async ([sessionKey, sessionData]) => {
+        const { enrollments: sessionEnrollments, workshopName, workshopMinCapacity, workshopMaxCapacity, evsName } = sessionData;
+        
+        // Use first enrollment as base
+        const baseEnrollment = sessionEnrollments[0];
+        
+        // Aggregate values across all enrollments in this session
+        const aggregated = {
+          participantCount: sessionEnrollments.reduce((sum, e) => sum + (e.participantCount || 0), 0),
+          isLocked: sessionEnrollments.some(e => e.isLocked),
+          contractSignedByEVS: sessionEnrollments.some(e => e.contractSignedByEvs),
+          contractSignedByCommune: sessionEnrollments.some(e => e.contractSignedByCommune),
+          activityDone: sessionEnrollments.some(e => e.activityDone),
+          controlScheduled: sessionEnrollments.some(e => e.controlScheduled),
+          // Take most recent dates (MAX)
+          contractSignedAt: sessionEnrollments.reduce((latest, e) => {
+            if (!e.contractSignedAt) return latest;
+            if (!latest) return e.contractSignedAt;
+            return new Date(e.contractSignedAt) > new Date(latest) ? e.contractSignedAt : latest;
+          }, null as Date | null),
+          activityCompletedAt: sessionEnrollments.reduce((latest, e) => {
+            if (!e.activityCompletedAt) return latest;
+            if (!latest) return e.activityCompletedAt;
+            return new Date(e.activityCompletedAt) > new Date(latest) ? e.activityCompletedAt : latest;
+          }, null as Date | null),
+          controlValidatedAt: sessionEnrollments.reduce((latest, e) => {
+            if (!e.controlValidatedAt) return latest;
+            if (!latest) return e.controlValidatedAt;
+            return new Date(e.controlValidatedAt) > new Date(latest) ? e.controlValidatedAt : latest;
+          }, null as Date | null),
+          // Take first non-null PDF URL
+          contractCommunePdfUrl: sessionEnrollments.find(e => e.contractCommuneUrl)?.contractCommuneUrl || null
+        };
+
+        // Get all unique fiches for this session via their ficheIds
+        const ficheIds = Array.from(new Set(sessionEnrollments.map(e => e.ficheId).filter(Boolean)));
+        const fiches = ficheIds.length > 0 ? await db
           .select({
             id: ficheNavettes.id,
             ref: ficheNavettes.ref,
@@ -543,37 +604,34 @@ export class DatabaseStorage implements IStorage {
             participantsCount: ficheNavettes.participantsCount
           })
           .from(ficheNavettes)
-          .where(
-            and(
-              eq(ficheNavettes.assignedOrgId, session.evsId),
-              sql`${ficheNavettes.selectedWorkshops}->>${session.workshopId} = 'true'`
-            )
-          );
+          .where(sql`${ficheNavettes.id} IN (${sql.join(ficheIds.map(id => sql`${id}`), sql`, `)})`)
+        : [];
 
         return {
-          id: session.id,
-          workshopId: session.workshopId,
-          sessionNumber: session.sessionNumber,
-          participantCount: session.participantCount,
-          isLocked: session.isLocked,
-          contractSignedByEVS: session.contractSignedByEvs,
-          contractSignedByCommune: session.contractSignedByCommune,
-          contractCommunePdfUrl: session.contractCommuneUrl,
-          contractSignedAt: session.contractSignedAt,
-          activityDone: session.activityDone,
-          activityCompletedAt: session.activityCompletedAt,
-          controlScheduled: session.controlScheduled,
-          controlValidatedAt: session.controlValidatedAt,
-          createdAt: session.createdAt,
+          // Use first enrollment ID as session identifier
+          id: baseEnrollment.id,
+          workshopId: baseEnrollment.workshopId,
+          sessionNumber: baseEnrollment.sessionNumber,
+          participantCount: aggregated.participantCount,
+          isLocked: aggregated.isLocked,
+          contractSignedByEVS: aggregated.contractSignedByEVS,
+          contractSignedByCommune: aggregated.contractSignedByCommune,
+          contractCommunePdfUrl: aggregated.contractCommunePdfUrl,
+          contractSignedAt: aggregated.contractSignedAt,
+          activityDone: aggregated.activityDone,
+          activityCompletedAt: aggregated.activityCompletedAt,
+          controlScheduled: aggregated.controlScheduled,
+          controlValidatedAt: aggregated.controlValidatedAt,
+          createdAt: baseEnrollment.createdAt,
           workshop: {
-            id: session.workshopId,
-            name: session.workshopName,
-            minCapacity: session.workshopMinCapacity,
-            maxCapacity: session.workshopMaxCapacity
+            id: baseEnrollment.workshopId,
+            name: workshopName,
+            minCapacity: workshopMinCapacity,
+            maxCapacity: workshopMaxCapacity
           },
           evs: {
-            id: session.evsId,
-            name: session.evsName
+            id: baseEnrollment.evsId,
+            name: evsName
           },
           fiches: fiches.map(f => ({
             id: f.id,
@@ -585,7 +643,7 @@ export class DatabaseStorage implements IStorage {
       })
     );
 
-    return sessionsWithFiches;
+    return sessions;
   }
 
   // Helper function to extract guardian name from familyDetailedData
