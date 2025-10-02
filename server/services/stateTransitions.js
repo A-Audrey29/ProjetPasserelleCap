@@ -2,6 +2,90 @@ import { storage } from '../storage.ts';
 import { logAction } from './auditLogger.js';
 import notificationService from './notificationService.js';
 
+/**
+ * Trouve une session avec de la place OU crée une nouvelle session
+ * 
+ * LOGIQUE:
+ * - Groupe tous les enrollments par sessionNumber
+ * - Calcule le total de participants par session
+ * - Cherche une session non-verrouillée avec capacité restante (< maxCapacity)
+ * - Si aucune session disponible, retourne nouveau numéro de session
+ * 
+ * @param {string} workshopId - ID de l'atelier
+ * @param {string} evsId - ID de l'organisation EVS
+ * @param {number} newParticipantCount - Nombre de participants à ajouter
+ * @returns {Promise<number>} - Numéro de session à utiliser
+ */
+async function findOrCreateSessionNumber(workshopId, evsId, newParticipantCount) {
+  // 1. Récupérer les infos de l'atelier (notamment maxCapacity)
+  const workshop = await storage.getWorkshop(workshopId);
+  if (!workshop || !workshop.maxCapacity) {
+    console.log(`⚠️ No maxCapacity for workshop ${workshopId}, creating session 1`);
+    return 1; // Pas de limite définie, retourner session 1
+  }
+  
+  // 2. Récupérer TOUS les enrollments de cet atelier+EVS
+  const allEnrollments = await storage.getWorkshopEnrollments({
+    workshopId: workshopId,
+    evsId: evsId
+  });
+  
+  if (allEnrollments.length === 0) {
+    console.log(`🆕 No existing enrollments, creating session 1`);
+    return 1; // Première inscription, créer session 1
+  }
+  
+  // 3. Grouper par sessionNumber et calculer total + état de verrouillage
+  const sessionStats = {};
+  
+  for (const enrollment of allEnrollments) {
+    const sessionNum = enrollment.sessionNumber;
+    
+    if (!sessionStats[sessionNum]) {
+      sessionStats[sessionNum] = {
+        total: 0,
+        isLocked: false
+      };
+    }
+    
+    sessionStats[sessionNum].total += enrollment.participantCount;
+    sessionStats[sessionNum].isLocked = sessionStats[sessionNum].isLocked || enrollment.isLocked;
+  }
+  
+  // 4. Trier les sessions par numéro (1, 2, 3...)
+  const sortedSessionNumbers = Object.keys(sessionStats)
+    .map(Number)
+    .sort((a, b) => a - b);
+  
+  // 5. Chercher la première session NON verrouillée avec de la place
+  for (const sessionNum of sortedSessionNumbers) {
+    const stats = sessionStats[sessionNum];
+    
+    // Session verrouillée → ignorer
+    if (stats.isLocked) {
+      console.log(`🔒 Session ${sessionNum} is locked, skipping`);
+      continue;
+    }
+    
+    // Vérifier si ajout dépasse maxCapacity
+    const totalAfterAdd = stats.total + newParticipantCount;
+    
+    if (totalAfterAdd <= workshop.maxCapacity) {
+      console.log(`✅ Session ${sessionNum} has space: ${stats.total}/${workshop.maxCapacity} → adding ${newParticipantCount}`);
+      return sessionNum; // Cette session a de la place
+    } else {
+      console.log(`⚠️ Session ${sessionNum} would exceed capacity: ${totalAfterAdd} > ${workshop.maxCapacity}`);
+    }
+  }
+  
+  // 6. Aucune session disponible → créer nouvelle session
+  const maxSessionNumber = Math.max(...sortedSessionNumbers);
+  const newSessionNumber = maxSessionNumber + 1;
+  
+  console.log(`🆕 All sessions full or locked, creating session ${newSessionNumber}`);
+  return newSessionNumber;
+}
+
 // Helper function to create workshop enrollments when fiche transitions to ACCEPTED_EVS
 async function createWorkshopEnrollments(fiche) {
   if (!fiche.selectedWorkshops || !fiche.assignedOrgId) {
