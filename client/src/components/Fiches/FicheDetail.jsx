@@ -800,6 +800,9 @@ export default function FicheDetail({ ficheId }) {
       case 'cd_return':
         const userRoleForCDReturn = user.user?.role || user.role;
         return userRoleForCDReturn === 'CD' && fiche.state === 'SUBMITTED_TO_CD';
+      case 'feves_return':
+        const userRoleForFeves = user.user?.role || user.role;
+        return userRoleForFeves === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
       case 'edit':
         const userRole = user.user?.role || user.role;
         const userId = user.user?.id || user.id;
