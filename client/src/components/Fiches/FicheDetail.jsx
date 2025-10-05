@@ -946,6 +946,17 @@ export default function FicheDetail({ ficheId }) {
                 Affecter
               </button>
             )}
+
+            {canPerformAction('feves_return') && (
+              <button 
+                onClick={() => setShowFevesReturnModal(true)}
+                className={styles.returnButton}
+                data-testid="button-feves-return"
+              >
+                <RotateCcw className={styles.buttonIcon} />
+                Refuser et renvoyer à l'émetteur
+              </button>
+            )}
             
             {/* EVS accept/refuse buttons */}
             {canPerformAction('accept') && (
@@ -1991,6 +2002,69 @@ export default function FicheDetail({ ficheId }) {
               <UserPlus className={styles.buttonIcon} />
               Affecter
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* FEVES Return Modal */}
+      {showFevesReturnModal && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>
+                Refuser et renvoyer à l'émetteur
+              </h2>
+              <button 
+                className={styles.modalClose}
+                onClick={() => {
+                  setShowFevesReturnModal(false);
+                  setFevesReturnComment('');
+                }}
+                data-testid="button-close-feves-return-modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p className={styles.confirmationMessage}>
+                Cette fiche sera renvoyée en brouillon. L'émetteur sera notifié par email.
+              </p>
+              <p className={styles.confirmationMessage}>
+                <strong>Ajoutez un commentaire pour expliquer les corrections attendues :</strong>
+              </p>
+              
+              <textarea
+                className={styles.commentTextarea}
+                placeholder="Décrivez les corrections à apporter..."
+                value={fevesReturnComment}
+                onChange={(e) => setFevesReturnComment(e.target.value)}
+                rows={5}
+                data-testid="textarea-feves-comment"
+              />
+            </div>
+
+            <div className={styles.modalActions}>
+              <button 
+                className={styles.cancelButton}
+                onClick={() => {
+                  setShowFevesReturnModal(false);
+                  setFevesReturnComment('');
+                }}
+                data-testid="button-cancel-feves-return"
+              >
+                Annuler
+              </button>
+              <button 
+                className={styles.returnButton}
+                onClick={handleFevesReturn}
+                disabled={!fevesReturnComment.trim() || transitionMutation.isPending}
+                data-testid="button-confirm-feves-return"
+              >
+                <RotateCcw className={styles.buttonIcon} />
+                Renvoyer à l'émetteur
+              </button>
+            </div>
           </div>
         </div>
       )}
