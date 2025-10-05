@@ -102,6 +102,7 @@ export default function Dashboard() {
           epsiList={epsiList}
           organizations={organizations}
           objectives={objectives}
+          userRole={user?.role}
         />
 
         {/* Fiches List */}

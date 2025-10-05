@@ -6,7 +6,8 @@ export default function FilterBar({
   filters, 
   onFiltersChange, 
   organizations = [],
-  objectives = []
+  objectives = [],
+  userRole
 }) {
   const handleFilterChange = (key, value) => {
     onFiltersChange({
@@ -57,24 +58,26 @@ export default function FilterBar({
           </select>
         </div>
         
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel}>
-            EVS/CS
-          </label>
-          <select 
-            className={styles.selectInput}
-            value={filters.assignedOrgId || ''}
-            onChange={(e) => handleFilterChange('assignedOrgId', e.target.value)}
-            data-testid="select-organization"
-          >
-            <option value="">Toutes les organisations</option>
-            {organizations.map((org) => (
-              <option key={org.orgId} value={org.orgId}>
-                {org.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {userRole !== 'EMETTEUR' && (
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>
+              EVS/CS
+            </label>
+            <select 
+              className={styles.selectInput}
+              value={filters.assignedOrgId || ''}
+              onChange={(e) => handleFilterChange('assignedOrgId', e.target.value)}
+              data-testid="select-organization"
+            >
+              <option value="">Toutes les organisations</option>
+              {organizations.map((org) => (
+                <option key={org.orgId} value={org.orgId}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
     </div>
   );
