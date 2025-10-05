@@ -143,6 +143,21 @@ class NotificationService {
   }
 
   /**
+   * Notification : Fiche refusée par FEVES (RELATIONS_EVS)
+   */
+  async notifyFevesRejection(fiche, emitter, reason) {
+    if (emitter?.email) {
+      await emailService.sendFevesRejectionNotification({
+        emitterEmail: emitter.email,
+        emitterName: `${emitter.firstName} ${emitter.lastName}`,
+        ficheId: fiche.id,
+        ficheRef: fiche.ref,
+        reason
+      });
+    }
+  }
+
+  /**
    * Notification : Fiche assignée à un EVS
    */
   async notifyEvsAssignment(fiche, assignedOrg) {
