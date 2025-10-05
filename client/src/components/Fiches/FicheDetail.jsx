@@ -68,6 +68,10 @@ export default function FicheDetail({ ficheId }) {
   const [allWorkshopsCompleted, setAllWorkshopsCompleted] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // FEVES rejection modal states
+  const [showFevesReturnModal, setShowFevesReturnModal] = useState(false);
+  const [fevesReturnComment, setFevesReturnComment] = useState('');
+
   // Final report upload states
   const [uploadingFinalReport, setUploadingFinalReport] = useState(false);
   const [finalReportPdfUrl, setFinalReportPdfUrl] = useState(null);
@@ -272,6 +276,48 @@ export default function FicheDetail({ ficheId }) {
       toast({
         title: "Erreur de validation",
         description: error.message || "Impossible de traiter la validation",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // FEVES return to draft (rejection)
+  const handleFevesReturn = async () => {
+    if (!fevesReturnComment.trim()) {
+      toast({
+        title: "Commentaire requis",
+        description: "Veuillez ajouter un commentaire pour expliquer les corrections attendues",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Add comment first
+      await addCommentMutation.mutateAsync(fevesReturnComment);
+      
+      // Then transition to DRAFT
+      await transitionMutation.mutateAsync({ 
+        newState: 'DRAFT',
+        metadata: {
+          reason: fevesReturnComment,
+          rejectedBy: user?.id || user?.user?.id,
+          rejectedAt: new Date().toISOString()
+        }
+      });
+      
+      setShowFevesReturnModal(false);
+      setFevesReturnComment('');
+      
+      toast({
+        title: "Fiche renvoyée",
+        description: "La fiche a été renvoyée à l'émetteur pour corrections. Un email de notification a été envoyé.",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de renvoyer la fiche",
         variant: "destructive"
       });
     }
