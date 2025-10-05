@@ -372,20 +372,16 @@ export const getRoleActionSuggestions = (role) => {
     });
   }
   
+  // EVS/CS - Système d'ateliers collectifs
+  // Les EVS/CS gèrent maintenant des sessions d'ateliers collectifs automatisées
+  // au lieu de compléter individuellement chaque fiche navette
   if (role === ROLES.EVS_CS) {
     actionSuggestions.push({
-      icon: 'FileText',
-      title: 'Compléter les accompagnements',
-      description: 'Enrichir les fiches avec vos interventions locales',
-      href: '/completion',
+      icon: 'Users',
+      title: 'Gestion des Ateliers',
+      description: 'Gérer vos sessions d\'ateliers et inscriptions',
+      href: '/ateliers',
       color: 'primary'
-    });
-    actionSuggestions.push({
-      icon: 'CheckCircle',
-      title: 'Clôturer vos interventions',
-      description: 'Finaliser votre partie des accompagnements',
-      href: '/closure',
-      color: 'success'
     });
   }
   
