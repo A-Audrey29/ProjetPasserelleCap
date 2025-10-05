@@ -58,6 +58,9 @@ class NotificationService {
           if (oldState === 'SUBMITTED_TO_CD') {
             // Refus par le CD
             await this.notifyCdRejection(fiche, emitter, metadata.reason);
+          } else if (oldState === 'SUBMITTED_TO_FEVES') {
+            // Refus par FEVES (RELATIONS_EVS)
+            await this.notifyFevesRejection(fiche, emitter, metadata.reason);
           }
           break;
           
