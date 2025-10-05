@@ -379,6 +379,61 @@ class EmailService {
   }
 
   /**
+   * Send email notification when FEVES (RELATIONS_EVS) rejects fiche (back to emitter)
+   */
+  async sendFevesRejectionNotification({ emitterEmail, emitterName, ficheId, ficheRef, reason }: { emitterEmail: string; emitterName?: string; ficheId: string; ficheRef: string; reason?: string; }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP - FEVES',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: emitterEmail,
+      subject: `Fiche ${ficheRef} - Corrections requises`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #D9A066;">Fiche CAP renvoyée - Corrections requises</h2>
+          
+          <p>Bonjour ${emitterName || 'cher partenaire'},</p>
+          
+          <p>La FEVES a examiné votre fiche CAP et demande des corrections avant de pouvoir la transmettre à une structure EVS/CS.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>Référence :</strong> ${ficheRef}</p>
+            ${reason ? `<p><strong>Motif :</strong> ${reason}</p>` : ''}
+          </div>
+          
+          <p>Veuillez vous connecter à la plateforme pour consulter les commentaires et effectuer les modifications demandées.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'https://passerelle-cap.replit.app'}/fiches/${ficheId}" 
+               style="background-color: #D9A066; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Modifier la fiche
+            </a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #666; font-size: 12px;">
+            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
+            FEVES Guadeloupe et Saint-Martin
+          </p>
+        </div>
+      `
+    };
+
+    const meta = {
+      event: 'feves_rejection',
+      ficheId,
+      ficheRef,
+      emitterEmail,
+      emitterName,
+      reason
+    };
+
+    return await this.deliver(mailOptions, meta);
+  }
+
+  /**
    * Send email notification when EVS accepts assignment
    */
   async sendEvsAcceptanceNotification({ fevesEmails, evsOrgName, ficheId, ficheRef }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; }) {
