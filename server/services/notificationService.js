@@ -159,6 +159,7 @@ class NotificationService {
 
   /**
    * Notification : Fiche assignée à un EVS
+   * Envoie la référence formatée (FN-ANNEE-MOIS-CHIFFRE) pour affichage lisible
    */
   async notifyEvsAssignment(fiche, assignedOrg) {
     if (assignedOrg?.contactEmail) {
@@ -166,7 +167,8 @@ class NotificationService {
         contactEmail: assignedOrg.contactEmail,
         contactName: assignedOrg.contactName,
         orgName: assignedOrg.name,
-        ficheId: fiche.id
+        ficheId: fiche.id,        // UUID pour traçabilité logs
+        ficheRef: fiche.reference // Référence formatée pour affichage utilisateur
       });
     }
   }

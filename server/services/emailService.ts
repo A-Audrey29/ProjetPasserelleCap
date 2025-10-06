@@ -72,8 +72,9 @@ class EmailService {
 
   /**
    * Send email notification for EVS assignment
+   * Affiche la référence formatée (FN-ANNEE-MOIS-CHIFFRE) au lieu de l'UUID technique
    */
-  async sendEvsAssignmentNotification({ contactEmail, contactName, orgName, ficheId }: { contactEmail: string; contactName?: string; orgName?: string; ficheId: string; }) {
+  async sendEvsAssignmentNotification({ contactEmail, contactName, orgName, ficheId, ficheRef }: { contactEmail: string; contactName?: string; orgName?: string; ficheId: string; ficheRef: string; }) {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
@@ -91,7 +92,7 @@ class EmailService {
           
           <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p><strong>Organisation :</strong> ${orgName}</p>
-            <p><strong>Référence :</strong> ${ficheId}</p>
+            <p><strong>Référence :</strong> ${ficheRef}</p>
           </div>
           
           <p>Veuillez vous connecter à la plateforme Passerelle CAP pour consulter les détails de cette fiche et commencer l'accompagnement.</p>
@@ -119,7 +120,7 @@ class EmailService {
         Une nouvelle fiche CAP vous a été assignée par l'équipe FEVES.
         
         Organisation : ${orgName}
-        Référence : ${ficheId}
+        Référence : ${ficheRef}
         
         Veuillez vous connecter à la plateforme Passerelle CAP pour consulter les détails.
         
@@ -133,7 +134,7 @@ class EmailService {
 
     const meta = {
       event: 'evs_assignment',
-      ficheId,
+      ficheId,  // UUID conservé pour traçabilité logs
       orgName,
       contactEmail
     };
