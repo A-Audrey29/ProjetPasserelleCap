@@ -143,6 +143,84 @@ class EmailService {
   }
 
   /**
+   * Send email notification when workshop session reaches minCapacity and is ready to start
+   */
+  async sendWorkshopReadyNotification({ contactEmail, contactName, orgName, workshopName, sessionNumber, participantCount, ficheList }: { contactEmail: string; contactName?: string; orgName?: string; workshopName: string; sessionNumber: number; participantCount: number; ficheList: string; }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP - FEVES',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: contactEmail,
+      subject: `Atelier prêt à démarrer : ${workshopName} - Session ${sessionNumber}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #6A8B74;">Atelier prêt à démarrer 🎯</h2>
+          
+          <p>Bonjour ${contactName || 'cher partenaire'},</p>
+          
+          <p>Un atelier a atteint le seuil minimum de participants et est maintenant prêt à démarrer.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>Atelier :</strong> ${workshopName}</p>
+            <p><strong>Session :</strong> ${sessionNumber}</p>
+            <p><strong>Organisation :</strong> ${orgName}</p>
+            <p><strong>Nombre de participants :</strong> ${participantCount}</p>
+            <p><strong>Fiches concernées :</strong> ${ficheList}</p>
+          </div>
+          
+          <p>Vous pouvez maintenant organiser le démarrage de cet atelier avec les familles inscrites.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers" 
+               style="background-color: #6A8B74; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Consulter les ateliers
+            </a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #666; font-size: 12px;">
+            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
+            FEVES Guadeloupe et Saint-Martin
+          </p>
+        </div>
+      `,
+      text: `
+        Atelier prêt à démarrer
+        
+        Bonjour ${contactName || 'cher partenaire'},
+        
+        Un atelier a atteint le seuil minimum de participants et est maintenant prêt à démarrer.
+        
+        Atelier : ${workshopName}
+        Session : ${sessionNumber}
+        Organisation : ${orgName}
+        Nombre de participants : ${participantCount}
+        Fiches concernées : ${ficheList}
+        
+        Vous pouvez maintenant organiser le démarrage de cet atelier avec les familles inscrites.
+        
+        Lien : ${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers
+        
+        ---
+        Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.
+        FEVES Guadeloupe et Saint-Martin
+      `
+    };
+
+    const meta = {
+      event: 'workshop_ready',
+      workshopName,
+      sessionNumber,
+      orgName,
+      contactEmail
+    };
+
+    return await this.deliver(mailOptions, meta);
+  }
+
+  /**
    * Send email notification when fiche is returned to emitter
    */
   async sendEmitterReturnNotification({ emitterEmail, emitterName, ficheId, reason }: { emitterEmail: string; emitterName?: string; ficheId: string; reason?: string; }) {
