@@ -206,12 +206,13 @@ class NotificationService {
 
   /**
    * Notification : Contrat signé (paiement 70% à déclencher)
+   * Envoyée aux RELATIONS_EVS pour suivi
    */
   async notifyContractSigned(fiche, evsOrgName) {
-    const cdEmails = await this.getCdEmails();
-    if (cdEmails.length > 0) {
+    const fevesEmails = await this.getFevesEmails();
+    if (fevesEmails.length > 0) {
       await emailService.sendContractSignedNotification({
-        cdEmails,
+        fevesEmails,
         evsOrgName,
         ficheId: fiche.id,
         ficheRef: fiche.ref,
@@ -237,14 +238,13 @@ class NotificationService {
 
   /**
    * Notification : Contrôle terrain validé (paiement final + clôture)
+   * Envoyée uniquement aux RELATIONS_EVS
    */
   async notifyFieldCheckDone(fiche, evsOrgName) {
-    const cdEmails = await this.getCdEmails();
     const fevesEmails = await this.getFevesEmails();
     
-    if (cdEmails.length > 0 || fevesEmails.length > 0) {
+    if (fevesEmails.length > 0) {
       await emailService.sendFieldCheckCompletedNotification({
-        cdEmails,
         fevesEmails,
         evsOrgName,
         ficheId: fiche.id,
@@ -383,27 +383,26 @@ class NotificationService {
 
   /**
    * Notification: Tous les ateliers d'une fiche sont terminés, fiche clôturée
+   * Envoyée uniquement aux RELATIONS_EVS
    */
   async notifyFicheAllWorkshopsCompleted(fiche) {
     try {
-      // Get emails for RELATIONS_EVS and CD
+      // Get emails for RELATIONS_EVS only
       const fevesEmails = await this.getFevesEmails();
-      const cdEmails = await this.getCdEmails();
-      const allEmails = [...fevesEmails, ...cdEmails];
 
-      if (allEmails.length === 0) {
-        console.log('No RELATIONS_EVS or CD emails found for fiche closure notification');
+      if (fevesEmails.length === 0) {
+        console.log('No RELATIONS_EVS emails found for fiche closure notification');
         return;
       }
 
       // Send email notification
       await emailService.sendFicheAllWorkshopsCompletedNotification({
-        emails: allEmails,
+        emails: fevesEmails,
         ficheRef: fiche.ref,
         ficheId: fiche.id
       });
 
-      console.log(`Fiche closure notification sent for ${fiche.ref} to ${allEmails.length} recipients`);
+      console.log(`Fiche closure notification sent for ${fiche.ref} to ${fevesEmails.length} recipients`);
     } catch (error) {
       console.error('Error sending fiche closure notification:', error);
       throw error;

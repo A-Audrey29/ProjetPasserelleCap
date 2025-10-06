@@ -625,7 +625,7 @@ class EmailService {
   /**
    * Send email notification when contract is signed (70% payment)
    */
-  async sendContractSignedNotification({ cdEmails, evsOrgName, ficheId, ficheRef, totalAmount }: { cdEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; totalAmount?: number; }) {
+  async sendContractSignedNotification({ fevesEmails, evsOrgName, ficheId, ficheRef, totalAmount }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; totalAmount?: number; }) {
     const formattedAmount = totalAmount ? (totalAmount / 100).toFixed(2) : 'Non spécifié';
     const advanceAmount = totalAmount ? ((totalAmount * 0.7) / 100).toFixed(2) : 'Non calculé';
 
@@ -634,7 +634,7 @@ class EmailService {
         name: 'Passerelle CAP - EVS',
         email: 'studio.makeawave@gmail.com'
       },
-      to: cdEmails.join(','),
+      to: fevesEmails.join(','),
       subject: 'Contrat CAP signé - Acompte de 70% à verser',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -739,17 +739,17 @@ class EmailService {
   /**
    * Send email notification when field check is completed
    */
-  async sendFieldCheckCompletedNotification({ cdEmails, fevesEmails, evsOrgName, ficheId, ficheRef, totalAmount }: { cdEmails: string[]; fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; totalAmount?: number; }) {
+  async sendFieldCheckCompletedNotification({ fevesEmails, evsOrgName, ficheId, ficheRef, totalAmount }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; totalAmount?: number; }) {
     const formattedAmount = totalAmount ? (totalAmount / 100).toFixed(2) : 'Non spécifié';
     const remainingAmount = totalAmount ? ((totalAmount * 0.3) / 100).toFixed(2) : 'Non calculé';
     
-    // Email to CD for final payment
-    const cdMailOptions = {
+    // Email to RELATIONS_EVS only
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
         email: 'studio.makeawave@gmail.com'
       },
-      to: cdEmails.join(','),
+      to: fevesEmails.join(','),
       subject: 'Contrôle terrain validé - Solde de 30% à verser',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -785,77 +785,15 @@ class EmailService {
       `
     };
 
-    // Email to FEVES for information
-    const fevesMailOptions = {
-      from: {
-        name: 'Passerelle CAP - FEVES',
-        email: 'studio.makeawave@gmail.com'
-      },
-      to: fevesEmails.join(','),
-      subject: 'Contrôle terrain validé - Fiche en attente de clôture',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #3B4B61;">Contrôle terrain validé</h2>
-          
-          <p>Bonjour,</p>
-          
-          <p>Le contrôle terrain a été effectué et validé. La fiche attend maintenant le paiement final du CD pour être clôturée.</p>
-          
-          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <p><strong>Référence :</strong> ${ficheRef}</p>
-            <p><strong>EVS :</strong> ${evsOrgName || 'Non spécifié'}</p>
-          </div>
-          
-          <p>Vous pouvez suivre l'avancement de la clôture dans la plateforme.</p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.FRONTEND_URL || 'https://passerelle-cap.replit.app'}/fiches/${ficheId}" 
-               style="background-color: #3B4B61; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Suivre la fiche
-            </a>
-          </div>
-          
-          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-          
-          <p style="color: #666; font-size: 12px;">
-            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
-            FEVES Guadeloupe et Saint-Martin
-          </p>
-        </div>
-      `
+    const meta = {
+      event: 'field_check_completed',
+      ficheId,
+      ficheRef,
+      evsOrgName,
+      fevesEmails
     };
 
-    try {
-      // Send to CD first
-      const cdMeta = {
-        event: 'field_check_completed_cd',
-        ficheId,
-        ficheRef,
-        evsOrgName,
-        totalAmount,
-        cdEmails
-      };
-      const cdResult = await this.deliver(cdMailOptions, cdMeta);
-
-      // Send to FEVES
-      const fevesMeta = {
-        event: 'field_check_completed_feves',
-        ficheId,
-        ficheRef,
-        evsOrgName,
-        fevesEmails
-      };
-      const fevesResult = await this.deliver(fevesMailOptions, fevesMeta);
-
-      return { 
-        success: cdResult.success && fevesResult.success, 
-        cdResult,
-        fevesResult
-      };
-    } catch (error: any) {
-      console.error('Failed to send field check completed notifications:', error);
-      return { success: false, error: error.message };
-    }
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
