@@ -1,21 +1,33 @@
-import { useState, useEffect } from 'react';
-import { ExternalLink } from 'lucide-react';
-import { Link } from 'wouter';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import styles from './WorkshopSessionCard.module.css';
+import { useState, useEffect } from "react";
+import { ExternalLink } from "lucide-react";
+import { Link } from "wouter";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import styles from "./WorkshopSessionCard.module.css";
 
 export default function WorkshopSessionCard({ session }) {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [contractEvs, setContractEvs] = useState(session?.contractSignedByEVS || false);
-  const [contractCommune, setContractCommune] = useState(session?.contractSignedByCommune || false);
+  const [contractEvs, setContractEvs] = useState(
+    session?.contractSignedByEVS || false,
+  );
+  const [contractCommune, setContractCommune] = useState(
+    session?.contractSignedByCommune || false,
+  );
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [communePdfUrl, setCommunePdfUrl] = useState(session?.contractCommunePdfUrl || null);
-  const [activityDone, setActivityDone] = useState(session?.activityDone || false);
-  const [controlScheduled, setControlScheduled] = useState(session?.controlScheduled || false);
-  const [controlValidatedAt, setControlValidatedAt] = useState(session?.controlValidatedAt || null);
+  const [communePdfUrl, setCommunePdfUrl] = useState(
+    session?.contractCommunePdfUrl || null,
+  );
+  const [activityDone, setActivityDone] = useState(
+    session?.activityDone || false,
+  );
+  const [controlScheduled, setControlScheduled] = useState(
+    session?.controlScheduled || false,
+  );
+  const [controlValidatedAt, setControlValidatedAt] = useState(
+    session?.controlValidatedAt || null,
+  );
   const [scheduleControlChecked, setScheduleControlChecked] = useState(false);
   const [validateControlChecked, setValidateControlChecked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -32,7 +44,14 @@ export default function WorkshopSessionCard({ session }) {
     setActivityDone(session?.activityDone || false);
     setControlScheduled(session?.controlScheduled || false);
     setControlValidatedAt(session?.controlValidatedAt || null);
-  }, [session?.contractSignedByEVS, session?.contractSignedByCommune, session?.contractCommunePdfUrl, session?.activityDone, session?.controlScheduled, session?.controlValidatedAt]);
+  }, [
+    session?.contractSignedByEVS,
+    session?.contractSignedByCommune,
+    session?.contractCommunePdfUrl,
+    session?.activityDone,
+    session?.controlScheduled,
+    session?.controlValidatedAt,
+  ]);
 
   // Reset control checkboxes when server flags change
   useEffect(() => {
@@ -46,36 +65,39 @@ export default function WorkshopSessionCard({ session }) {
   // Calculate session state based on SERVER data, not local state
   const getSessionState = () => {
     // TERMINÉE if activity is done
-    if (session?.activityDone) return 'TERMINÉE';
+    if (session?.activityDone) return "TERMINÉE";
     // EN COURS if EITHER contract is signed (EVS/CS OR Commune, not both)
-    if (session?.contractSignedByEVS || session?.contractSignedByCommune) return 'EN COURS';
+    if (session?.contractSignedByEVS || session?.contractSignedByCommune)
+      return "EN COURS";
     // PRÊTE if minimum capacity reached
-    if (session?.participantCount >= session?.workshop?.minCapacity) return 'PRÊTE';
-    return 'EN ATTENTE';
+    if (session?.participantCount >= session?.workshop?.minCapacity)
+      return "PRÊTE";
+    return "EN ATTENTE";
   };
 
   const sessionState = getSessionState();
-  const isReady = sessionState === 'PRÊTE';
-  const isInProgress = sessionState === 'EN COURS';
-  const isDone = sessionState === 'TERMINÉE';
+  const isReady = sessionState === "PRÊTE";
+  const isInProgress = sessionState === "EN COURS";
+  const isDone = sessionState === "TERMINÉE";
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (file.type !== 'application/pdf') {
+    if (file.type !== "application/pdf") {
       toast({
         title: "Erreur",
         description: "Seuls les fichiers PDF sont acceptés",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    if (file.size > 5 * 1024 * 1024) { // 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB
       toast({
-        title: "Erreur", 
+        title: "Erreur",
         description: "Le fichier ne doit pas dépasser 5MB",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -83,32 +105,35 @@ export default function WorkshopSessionCard({ session }) {
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append('contractFile', file);
+      formData.append("contractFile", file);
 
-      const response = await fetch(`/api/workshop-sessions/${session.id}/upload-contract`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
+      const response = await fetch(
+        `/api/workshop-sessions/${session.id}/upload-contract`,
+        {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        },
+      );
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        throw new Error("Upload failed");
       }
 
       const result = await response.json();
       setCommunePdfUrl(result.url);
       setUploadedFile(file);
-      
+
       toast({
         title: "Succès",
-        description: "Fichier uploadé avec succès"
+        description: "Fichier uploadé avec succès",
       });
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error("Error uploading file:", error);
       toast({
         title: "Erreur",
         description: "Erreur lors de l'upload du fichier",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsUploading(false);
@@ -116,51 +141,57 @@ export default function WorkshopSessionCard({ session }) {
   };
 
   const handleSave = async () => {
-    console.log('=== DÉBUT SAUVEGARDE ===');
-    console.log('État AVANT sauvegarde:', {
+    console.log("=== DÉBUT SAUVEGARDE ===");
+    console.log("État AVANT sauvegarde:", {
       sessionId: session.id,
       contractEvs,
       contractCommune,
       communePdfUrl,
       sessionStateAvant: sessionState,
       isReadyAvant: isReady,
-      isInProgressAvant: isInProgress
+      isInProgressAvant: isInProgress,
     });
-    
+
     setIsSaving(true);
     try {
       const payload = {
         contractSignedByEVS: contractEvs,
         contractSignedByCommune: contractCommune,
-        contractCommunePdfUrl: communePdfUrl
+        contractCommunePdfUrl: communePdfUrl,
       };
-      console.log('Payload envoyé:', payload);
-      
-      const response = await apiRequest('PATCH', `/api/workshop-sessions/${session.id}/contracts`, payload);
-      console.log('Réponse reçue:', response.status, response.statusText);
+      console.log("Payload envoyé:", payload);
+
+      const response = await apiRequest(
+        "PATCH",
+        `/api/workshop-sessions/${session.id}/contracts`,
+        payload,
+      );
+      console.log("Réponse reçue:", response.status, response.statusText);
 
       // Force refetch to get updated data immediately
-      console.log('Refetch des données...');
-      await queryClient.refetchQueries({ queryKey: ['/api/workshop-sessions'] });
-      console.log('Données rafraîchies');
-      
-      console.log('État APRÈS sauvegarde:', {
+      console.log("Refetch des données...");
+      await queryClient.refetchQueries({
+        queryKey: ["/api/workshop-sessions"],
+      });
+      console.log("Données rafraîchies");
+
+      console.log("État APRÈS sauvegarde:", {
         contractSignedByEVS: session?.contractSignedByEVS,
         contractSignedByCommune: session?.contractSignedByCommune,
-        sessionStateApres: getSessionState()
+        sessionStateApres: getSessionState(),
       });
 
       toast({
         title: "Succès",
-        description: "Contrats mis à jour avec succès"
+        description: "Contrats mis à jour avec succès",
       });
-      console.log('=== FIN SAUVEGARDE (succès) ===');
+      console.log("=== FIN SAUVEGARDE (succès) ===");
     } catch (error) {
-      console.error('=== ERREUR SAUVEGARDE ===', error);
+      console.error("=== ERREUR SAUVEGARDE ===", error);
       toast({
         title: "Erreur",
         description: error.message || "Erreur lors de la sauvegarde",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
@@ -170,21 +201,29 @@ export default function WorkshopSessionCard({ session }) {
   const handleMarkActivityDone = async () => {
     setIsMarkingDone(true);
     try {
-      const response = await apiRequest('POST', `/api/workshop-sessions/${session.id}/mark-activity-done`, {});
-      
+      const response = await apiRequest(
+        "POST",
+        `/api/workshop-sessions/${session.id}/mark-activity-done`,
+        {},
+      );
+
       // Force refetch to get updated data immediately
-      await queryClient.refetchQueries({ queryKey: ['/api/workshop-sessions'] });
-      
+      await queryClient.refetchQueries({
+        queryKey: ["/api/workshop-sessions"],
+      });
+
       toast({
         title: "Succès",
-        description: "Activité marquée comme terminée. Notification envoyée à FEVES."
+        description:
+          "Activité marquée comme terminée. Notification envoyée à FEVES.",
       });
     } catch (error) {
-      console.error('Error marking activity done:', error);
+      console.error("Error marking activity done:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Erreur lors de la mise à jour de l'activité",
-        variant: "destructive"
+        description:
+          error.message || "Erreur lors de la mise à jour de l'activité",
+        variant: "destructive",
       });
     } finally {
       setIsMarkingDone(false);
@@ -194,21 +233,28 @@ export default function WorkshopSessionCard({ session }) {
   const handleScheduleControl = async () => {
     setIsSchedulingControl(true);
     try {
-      await apiRequest('POST', `/api/workshop-sessions/${session.id}/schedule-control`, {});
-      
+      await apiRequest(
+        "POST",
+        `/api/workshop-sessions/${session.id}/schedule-control`,
+        {},
+      );
+
       // Force refetch to get updated data immediately
-      await queryClient.refetchQueries({ queryKey: ['/api/workshop-sessions'] });
-      
+      await queryClient.refetchQueries({
+        queryKey: ["/api/workshop-sessions"],
+      });
+
       toast({
         title: "Succès",
-        description: "Contrôle programmé avec succès"
+        description: "Contrôle programmé avec succès",
       });
     } catch (error) {
-      console.error('Error scheduling control:', error);
+      console.error("Error scheduling control:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Erreur lors de la programmation du contrôle",
-        variant: "destructive"
+        description:
+          error.message || "Erreur lors de la programmation du contrôle",
+        variant: "destructive",
       });
     } finally {
       setIsSchedulingControl(false);
@@ -218,21 +264,28 @@ export default function WorkshopSessionCard({ session }) {
   const handleValidateControl = async () => {
     setIsValidatingControl(true);
     try {
-      await apiRequest('POST', `/api/workshop-sessions/${session.id}/validate-control`, {});
-      
+      await apiRequest(
+        "POST",
+        `/api/workshop-sessions/${session.id}/validate-control`,
+        {},
+      );
+
       // Force refetch to get updated data immediately
-      await queryClient.refetchQueries({ queryKey: ['/api/workshop-sessions'] });
-      
+      await queryClient.refetchQueries({
+        queryKey: ["/api/workshop-sessions"],
+      });
+
       toast({
         title: "Succès",
-        description: "Contrôle validé avec succès"
+        description: "Contrôle validé avec succès",
       });
     } catch (error) {
-      console.error('Error validating control:', error);
+      console.error("Error validating control:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Erreur lors de la validation du contrôle",
-        variant: "destructive"
+        description:
+          error.message || "Erreur lors de la validation du contrôle",
+        variant: "destructive",
       });
     } finally {
       setIsValidatingControl(false);
@@ -240,12 +293,17 @@ export default function WorkshopSessionCard({ session }) {
   };
 
   return (
-    <div className={styles.card} data-testid={`card-workshop-session-${session?.id}`}>
+    <div
+      className={styles.card}
+      data-testid={`card-workshop-session-${session?.id}`}
+    >
       {/* Header */}
       <div className={styles.header}>
         <h3 className={styles.title}>{session?.workshop?.name}</h3>
         <div className={styles.sessionInfo}>
-          <span className={styles.sessionNumber}>Session {session?.sessionNumber}</span>
+          <span className={styles.sessionNumber}>
+            Session {session?.sessionNumber}
+          </span>
           <span className={styles.evsName}>{session?.evs?.name}</span>
         </div>
       </div>
@@ -254,11 +312,14 @@ export default function WorkshopSessionCard({ session }) {
       <div className={styles.statsRow}>
         <div className={styles.participants}>
           <span className={styles.count}>
-            {session?.participantCount}/{session?.workshop?.maxCapacity} participants
+            {session?.participantCount}/{session?.workshop?.maxCapacity}{" "}
+            participants
           </span>
         </div>
         <div className={styles.state}>
-          <span className={`${styles.stateText} ${styles[sessionState?.toLowerCase()?.replace(' ', '')]}`}>
+          <span
+            className={`${styles.stateText} ${styles[sessionState?.toLowerCase()?.replace(" ", "")]}`}
+          >
             {sessionState}
           </span>
         </div>
@@ -272,9 +333,11 @@ export default function WorkshopSessionCard({ session }) {
             session.fiches.map((fiche) => (
               <div key={fiche.id} className={styles.ficheItem}>
                 <span className={styles.ficheRef}>#{fiche.ref}</span>
-                <span className={styles.ficheParticipants}>- {fiche.participantsCount} pers.</span>
-                <Link 
-                  href={`/fiches/${fiche.id}`} 
+                <span className={styles.ficheParticipants}>
+                  - {fiche.participantsCount} pers.
+                </span>
+                <Link
+                  href={`/fiches/${fiche.id}`}
                   target="_blank"
                   className={styles.ficheLink}
                   data-testid={`link-fiche-${fiche.id}`}
@@ -290,43 +353,71 @@ export default function WorkshopSessionCard({ session }) {
       </div>
 
       {/* Historique Section - Show key events with dates */}
-      {(session?.contractSignedAt || session?.activityCompletedAt || session?.controlScheduled || session?.controlValidatedAt) && (
+      {(session?.contractSignedAt ||
+        session?.activityCompletedAt ||
+        session?.controlScheduled ||
+        session?.controlValidatedAt) && (
         <div className={styles.historySection}>
           <h4 className={styles.historyTitle}>Historique :</h4>
           <div className={styles.historyContent}>
             {session.contractSignedAt && (
-              <div className={styles.historyItem} data-testid={`history-contract-${session.id}`}>
-                📋 Contrat signé {
-                  session.contractSignedByEVS && session.contractSignedByCommune 
-                    ? '(EVS/Commune)' 
-                    : session.contractSignedByEVS 
-                      ? 'EVS' 
-                      : 'Commune'
-                } le {new Date(session.contractSignedAt).toLocaleDateString('fr-FR')}
+              <div
+                className={styles.historyItem}
+                data-testid={`history-contract-${session.id}`}
+              >
+                📋 Contrat signé{" "}
+                {session.contractSignedByEVS && session.contractSignedByCommune
+                  ? "(EVS/Commune)"
+                  : session.contractSignedByEVS
+                    ? "EVS"
+                    : "Commune"}{" "}
+                le{" "}
+                {new Date(session.contractSignedAt).toLocaleDateString("fr-FR")}
               </div>
             )}
             {session.contractSignedAt && session.activityCompletedAt && (
-              <div className={styles.historySeparator}>─────────────────────────</div>
+              <div className={styles.historySeparator}>
+                ─────────────────────────
+              </div>
             )}
             {session.activityCompletedAt && (
-              <div className={styles.historyItem} data-testid={`history-activity-${session.id}`}>
-                ✓ Atelier terminé le {new Date(session.activityCompletedAt).toLocaleDateString('fr-FR')}
+              <div
+                className={styles.historyItem}
+                data-testid={`history-activity-${session.id}`}
+              >
+                ✓ Atelier terminé le{" "}
+                {new Date(session.activityCompletedAt).toLocaleDateString(
+                  "fr-FR",
+                )}
               </div>
             )}
             {session.activityCompletedAt && session.controlScheduled && (
-              <div className={styles.historySeparator}>─────────────────────────</div>
+              <div className={styles.historySeparator}>
+                ─────────────────────────
+              </div>
             )}
             {session.controlScheduled && (
-              <div className={styles.historyItem} data-testid={`history-control-scheduled-${session.id}`}>
+              <div
+                className={styles.historyItem}
+                data-testid={`history-control-scheduled-${session.id}`}
+              >
                 📅 Contrôle programmé
               </div>
             )}
             {session.controlScheduled && session.controlValidatedAt && (
-              <div className={styles.historySeparator}>─────────────────────────</div>
+              <div className={styles.historySeparator}>
+                ─────────────────────────
+              </div>
             )}
             {session.controlValidatedAt && (
-              <div className={styles.historyItem} data-testid={`history-control-validated-${session.id}`}>
-                ✓ Contrôle validé le {new Date(session.controlValidatedAt).toLocaleDateString('fr-FR')}
+              <div
+                className={styles.historyItem}
+                data-testid={`history-control-validated-${session.id}`}
+              >
+                ✓ Contrôle validé le{" "}
+                {new Date(session.controlValidatedAt).toLocaleDateString(
+                  "fr-FR",
+                )}
               </div>
             )}
           </div>
@@ -337,7 +428,7 @@ export default function WorkshopSessionCard({ session }) {
       {isReady && (
         <div className={styles.contractsSection}>
           <h4 className={styles.contractsTitle}>Contrats :</h4>
-          
+
           {/* EVS Contract */}
           <div className={styles.contractItem}>
             <label className={styles.checkboxLabel}>
@@ -348,7 +439,10 @@ export default function WorkshopSessionCard({ session }) {
                 disabled={isInProgress}
                 data-testid={`checkbox-contract-evs-${session?.id}`}
               />
-              <span>Contrat signé EVS</span>
+              <span>
+                En tant qu'EVS ou centre social, je m'engage à réaliser les
+                ateliers selon les modalités du contrat signé.
+              </span>
             </label>
           </div>
 
@@ -362,37 +456,11 @@ export default function WorkshopSessionCard({ session }) {
                 disabled={isInProgress}
                 data-testid={`checkbox-contract-commune-${session?.id}`}
               />
-              <span>Contrat signé Commune</span>
+              <span>
+                En tant que structure communale, je m'engage à réaliser les
+                ateliers selon les modalités des fiches ateliers validées.
+              </span>
             </label>
-            
-            {/* File upload for Commune */}
-            <div className={styles.fileUpload}>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileUpload}
-                disabled={isInProgress || isUploading}
-                className={styles.fileInput}
-                data-testid={`input-file-commune-${session?.id}`}
-              />
-              {isUploading && (
-                <span className={styles.uploadingText}>Upload en cours...</span>
-              )}
-              {uploadedFile && (
-                <span className={styles.fileName}>{uploadedFile.name}</span>
-              )}
-              {!uploadedFile && communePdfUrl && (
-                <a 
-                  href={communePdfUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className={styles.pdfLink}
-                  data-testid={`link-commune-pdf-${session?.id}`}
-                >
-                  📄 Contrat commune (PDF)
-                </a>
-              )}
-            </div>
           </div>
 
           {/* Save Button */}
@@ -402,7 +470,7 @@ export default function WorkshopSessionCard({ session }) {
             className={styles.saveButton}
             data-testid={`button-save-${session?.id}`}
           >
-            {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+            {isSaving ? "Enregistrement..." : "Enregistrer"}
           </button>
         </div>
       )}
@@ -411,7 +479,7 @@ export default function WorkshopSessionCard({ session }) {
       {isInProgress && !isDone && (
         <div className={styles.activitySection}>
           <h4 className={styles.activityTitle}>Activité :</h4>
-          
+
           <div className={styles.activityItem}>
             <label className={styles.checkboxLabel}>
               <input
@@ -432,7 +500,7 @@ export default function WorkshopSessionCard({ session }) {
             className={styles.markDoneButton}
             data-testid={`button-mark-done-${session?.id}`}
           >
-            {isMarkingDone ? 'En cours...' : 'Valider'}
+            {isMarkingDone ? "En cours..." : "Valider"}
           </button>
         </div>
       )}
@@ -445,75 +513,90 @@ export default function WorkshopSessionCard({ session }) {
           </div>
 
           {/* Control Section - Only for RELATIONS_EVS and not yet validated */}
-          {(user?.role === 'RELATIONS_EVS' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'ADMIN') && !controlValidatedAt && (
-            <div className={styles.controlSection}>
-              <h4 className={styles.controlTitle}>Contrôle :</h4>
-              
-              {/* Schedule Control */}
-              {!controlScheduled && (
-                <div className={styles.controlItem}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={scheduleControlChecked}
-                      onChange={(e) => setScheduleControlChecked(e.target.checked)}
-                      disabled={false}
-                      data-testid={`checkbox-control-schedule-${session?.id}`}
-                    />
-                    <span>Programmer le contrôle</span>
-                  </label>
-                  <button
-                    onClick={handleScheduleControl}
-                    disabled={isSchedulingControl || !scheduleControlChecked}
-                    className={styles.controlButton}
-                    data-testid={`button-schedule-control-${session?.id}`}
-                  >
-                    {isSchedulingControl ? 'En cours...' : 'Valider'}
-                  </button>
-                </div>
-              )}
+          {(user?.role === "RELATIONS_EVS" ||
+            user?.user?.role === "RELATIONS_EVS" ||
+            user?.role === "ADMIN") &&
+            !controlValidatedAt && (
+              <div className={styles.controlSection}>
+                <h4 className={styles.controlTitle}>Contrôle :</h4>
 
-              {/* Validate Control - Only show if scheduled */}
-              {controlScheduled && !controlValidatedAt && (
-                <div className={styles.controlItem}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={validateControlChecked}
-                      onChange={(e) => setValidateControlChecked(e.target.checked)}
-                      disabled={false}
-                      data-testid={`checkbox-control-validate-${session?.id}`}
-                    />
-                    <span>Valider le contrôle</span>
-                  </label>
-                  <button
-                    onClick={handleValidateControl}
-                    disabled={isValidatingControl || !validateControlChecked}
-                    className={styles.controlButton}
-                    data-testid={`button-validate-control-${session?.id}`}
-                  >
-                    {isValidatingControl ? 'En cours...' : 'Valider'}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+                {/* Schedule Control */}
+                {!controlScheduled && (
+                  <div className={styles.controlItem}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={scheduleControlChecked}
+                        onChange={(e) =>
+                          setScheduleControlChecked(e.target.checked)
+                        }
+                        disabled={false}
+                        data-testid={`checkbox-control-schedule-${session?.id}`}
+                      />
+                      <span>Programmer le contrôle</span>
+                    </label>
+                    <button
+                      onClick={handleScheduleControl}
+                      disabled={isSchedulingControl || !scheduleControlChecked}
+                      className={styles.controlButton}
+                      data-testid={`button-schedule-control-${session?.id}`}
+                    >
+                      {isSchedulingControl ? "En cours..." : "Valider"}
+                    </button>
+                  </div>
+                )}
+
+                {/* Validate Control - Only show if scheduled */}
+                {controlScheduled && !controlValidatedAt && (
+                  <div className={styles.controlItem}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={validateControlChecked}
+                        onChange={(e) =>
+                          setValidateControlChecked(e.target.checked)
+                        }
+                        disabled={false}
+                        data-testid={`checkbox-control-validate-${session?.id}`}
+                      />
+                      <span>Valider le contrôle</span>
+                    </label>
+                    <button
+                      onClick={handleValidateControl}
+                      disabled={isValidatingControl || !validateControlChecked}
+                      className={styles.controlButton}
+                      data-testid={`button-validate-control-${session?.id}`}
+                    >
+                      {isValidatingControl ? "En cours..." : "Valider"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
           {/* Control Badges for other roles */}
-          {(user?.role !== 'RELATIONS_EVS' && user?.user?.role !== 'RELATIONS_EVS' && user?.role !== 'ADMIN') && (
-            <div className={styles.controlBadgesSection}>
-              {controlScheduled && (
-                <div className={styles.controlBadge} data-testid={`badge-control-scheduled-${session?.id}`}>
-                  ✓ Contrôle programmé
-                </div>
-              )}
-              {controlValidatedAt && (
-                <div className={styles.controlBadge} data-testid={`badge-control-validated-${session?.id}`}>
-                  ✓ Contrôle validé
-                </div>
-              )}
-            </div>
-          )}
+          {user?.role !== "RELATIONS_EVS" &&
+            user?.user?.role !== "RELATIONS_EVS" &&
+            user?.role !== "ADMIN" && (
+              <div className={styles.controlBadgesSection}>
+                {controlScheduled && (
+                  <div
+                    className={styles.controlBadge}
+                    data-testid={`badge-control-scheduled-${session?.id}`}
+                  >
+                    ✓ Contrôle programmé
+                  </div>
+                )}
+                {controlValidatedAt && (
+                  <div
+                    className={styles.controlBadge}
+                    data-testid={`badge-control-validated-${session?.id}`}
+                  >
+                    ✓ Contrôle validé
+                  </div>
+                )}
+              </div>
+            )}
         </>
       )}
     </div>
