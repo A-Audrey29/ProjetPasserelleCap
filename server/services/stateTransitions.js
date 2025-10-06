@@ -155,6 +155,9 @@ async function createWorkshopEnrollments(fiche) {
       // ÉTAPE 4: Vérifier et verrouiller la session si capacité atteinte
       await checkAndLockWorkshopSessions(workshopId, fiche.assignedOrgId);
       
+      // ÉTAPE 5: Vérifier si minCapacity atteint et envoyer notification "prêt"
+      await checkAndNotifyWorkshopReady(workshopId, fiche.assignedOrgId, sessionNumber);
+      
     } catch (error) {
       console.error(`❌ Failed to create enrollment for workshop ${workshopId}:`, error);
       // Continue avec les autres ateliers même en cas d'erreur
@@ -247,6 +250,80 @@ async function checkAndLockWorkshopSessions(workshopId, evsId) {
     
   } catch (error) {
     console.error(`❌ Failed to check/lock sessions for workshop ${workshopId}, EVS ${evsId}:`, error);
+  }
+}
+
+/**
+ * Vérifie si une session d'atelier atteint minCapacity et envoie notification
+ * Notification envoyée UNE SEULE FOIS par session
+ * 
+ * @param {string} workshopId - ID de l'atelier
+ * @param {string} evsId - ID de l'organisation EVS
+ * @param {number} sessionNumber - Numéro de la session à vérifier
+ */
+async function checkAndNotifyWorkshopReady(workshopId, evsId, sessionNumber) {
+  console.log(`🎯 ENTERING checkAndNotifyWorkshopReady for workshop ${workshopId}, EVS ${evsId}, session ${sessionNumber}`);
+  
+  try {
+    // 1. Récupérer les infos de l'atelier (notamment minCapacity)
+    const workshop = await storage.getWorkshop(workshopId);
+    if (!workshop || !workshop.minCapacity) {
+      console.log(`⚪ No minCapacity for workshop ${workshopId}, skipping ready notification`);
+      return;
+    }
+
+    // 2. Récupérer TOUS les enrollments de cette session spécifique
+    const allEnrollments = await storage.getWorkshopEnrollments({
+      workshopId: workshopId,
+      evsId: evsId
+    });
+    
+    // Filtrer uniquement les enrollments de cette session
+    const sessionEnrollments = allEnrollments.filter(e => e.sessionNumber === sessionNumber);
+    
+    if (sessionEnrollments.length === 0) {
+      console.log(`⚪ No enrollments found for session ${sessionNumber}`);
+      return;
+    }
+
+    // 3. Vérifier si la notification a déjà été envoyée pour cette session
+    const alreadyNotified = sessionEnrollments.some(e => e.minCapacityNotificationSent);
+    if (alreadyNotified) {
+      console.log(`⏭️ Notification already sent for session ${sessionNumber}, skipping`);
+      return;
+    }
+
+    // 4. Calculer le total de participants de cette session
+    const totalParticipants = sessionEnrollments.reduce((sum, e) => sum + (e.participantCount || 0), 0);
+    
+    console.log(`📊 Session ${sessionNumber}: ${totalParticipants}/${workshop.minCapacity} participants (minCapacity)`);
+
+    // 5. Vérifier si minCapacity est atteint
+    if (totalParticipants >= workshop.minCapacity) {
+      console.log(`🎯 Session ${sessionNumber} READY! Sending notification...`);
+      
+      // Envoyer la notification
+      await notificationService.notifyWorkshopReady(
+        workshopId,
+        sessionNumber,
+        evsId,
+        sessionEnrollments
+      );
+      
+      // Marquer le flag sur TOUS les enrollments de cette session
+      const updatePromises = sessionEnrollments.map(enrollment => 
+        storage.updateWorkshopEnrollment(enrollment.id, { minCapacityNotificationSent: true })
+      );
+      
+      await Promise.all(updatePromises);
+      
+      console.log(`✅ Notification sent and flag set for session ${sessionNumber} of workshop ${workshopId}`);
+    } else {
+      console.log(`⏳ Session ${sessionNumber} below minCapacity (${totalParticipants}/${workshop.minCapacity})`);
+    }
+    
+  } catch (error) {
+    console.error(`❌ Failed to check/notify workshop ready for workshop ${workshopId}, session ${sessionNumber}:`, error);
   }
 }
 
