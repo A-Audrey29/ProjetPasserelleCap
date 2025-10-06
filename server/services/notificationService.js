@@ -301,6 +301,57 @@ class NotificationService {
   }
 
   /**
+   * Notification: Atelier prêt à démarrer (minCapacity atteint)
+   * Envoyée une seule fois quand la session atteint le seuil minimum de participants
+   */
+  async notifyWorkshopReady(workshopId, sessionNumber, evsId, enrollments) {
+    try {
+      // Get workshop details
+      const workshop = await storage.getWorkshop(workshopId);
+      if (!workshop) {
+        console.log(`Workshop ${workshopId} not found for ready notification`);
+        return;
+      }
+
+      // Get EVS organization details
+      const evsOrg = await storage.getOrganization(evsId);
+      if (!evsOrg || !evsOrg.contactEmail) {
+        console.log(`No contact email found for organization ${evsId}`);
+        return;
+      }
+
+      // Calculate total participants
+      const participantCount = enrollments.reduce((sum, e) => sum + (e.participantCount || 0), 0);
+
+      // Get all fiches for this session
+      const ficheRefs = [];
+      for (const enrollment of enrollments) {
+        const fiche = await storage.getFiche(enrollment.ficheId);
+        if (fiche) {
+          ficheRefs.push(`#${fiche.ref}`);
+        }
+      }
+      const ficheList = ficheRefs.join(', ');
+
+      // Send email notification to EVS/CS organization
+      await emailService.sendWorkshopReadyNotification({
+        contactEmail: evsOrg.contactEmail,
+        contactName: evsOrg.contactName,
+        orgName: evsOrg.name,
+        workshopName: workshop.name,
+        sessionNumber,
+        participantCount,
+        ficheList
+      });
+
+      console.log(`✅ Workshop ready notification sent for ${workshop.name} session ${sessionNumber} to ${evsOrg.name}`);
+    } catch (error) {
+      console.error('Error sending workshop ready notification:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Récupère les emails des utilisateurs CD
    */
   async getCdEmails() {
