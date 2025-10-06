@@ -168,7 +168,7 @@ class NotificationService {
         contactName: assignedOrg.contactName,
         orgName: assignedOrg.name,
         ficheId: fiche.id,        // UUID pour traçabilité logs
-        ficheRef: fiche.reference // Référence formatée pour affichage utilisateur
+        ficheRef: fiche.ref // Référence formatée pour affichage utilisateur
       });
     }
   }

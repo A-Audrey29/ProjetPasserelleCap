@@ -474,7 +474,7 @@ class EmailService {
           
           <p>Bonjour ${emitterName || 'cher partenaire'},</p>
           
-          <p>La FEVES a examiné votre fiche CAP et demande des corrections avant de pouvoir la transmettre à une structure EVS/CS.</p>
+          <p>La FEVES a refusée la fiche CAP et demande des corrections avant de pouvoir la transmettre à une structure EVS/CS.</p>
           
           <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p><strong>Référence :</strong> ${ficheRef}</p>
