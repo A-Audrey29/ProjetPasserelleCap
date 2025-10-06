@@ -87,6 +87,7 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
   
   // État de la session
   isLocked: boolean("is_locked").notNull().default(false), // Verrouillé quand seuil atteint
+  minCapacityNotificationSent: boolean("min_capacity_notification_sent").notNull().default(false), // Notification "atelier prêt" envoyée
   
   // Gestion des contrats par session
   contractSignedByEVS: boolean("contract_signed_by_evs").notNull().default(false),
