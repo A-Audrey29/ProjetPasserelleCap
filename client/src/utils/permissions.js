@@ -217,9 +217,7 @@ export const PERMISSIONS = {
     
     // Creation & Edition - Read-only (no creation or modification)
     
-    // Validation & Workflow - CD validation powers (Valider/Refuser)
-    ACTIONS.VALIDATE_OFFICIAL,
-    ACTIONS.REFUSE_REQUEST_CORRECTIONS,
+    // Validation & Workflow - Read-only (CD ne valide plus les fiches)
     
     // Documents - Read access only
     ACTIONS.DOWNLOAD_ALL_DOCUMENTS,
@@ -387,11 +385,11 @@ export const getRoleActionSuggestions = (role) => {
   
   if (role === ROLES.CD) {
     actionSuggestions.push({
-      icon: 'CheckCircle',
-      title: 'Fiches en attente de validations',
-      description: 'Valider les fiches soumises pour transmission à FEVES',
-      href: '/fiches?state=SUBMITTED_TO_CD',
-      color: 'success'
+      icon: 'Users',
+      title: 'Consulter la gestion des ateliers',
+      description: 'Consulter les sessions d\'ateliers et les inscriptions',
+      href: '/ateliers',
+      color: 'primary'
     });
     actionSuggestions.push({
       icon: 'FileText',
