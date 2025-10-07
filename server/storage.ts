@@ -570,7 +570,7 @@ export class DatabaseStorage implements IStorage {
         const aggregated = {
           participantCount: sessionEnrollments.reduce((sum, e) => sum + (e.participantCount || 0), 0),
           isLocked: sessionEnrollments.some(e => e.isLocked),
-          contractSignedByEVS: sessionEnrollments.some(e => e.contractSignedByEvs),
+          contractSignedByEVS: sessionEnrollments.some(e => e.contractSignedByEVS),
           contractSignedByCommune: sessionEnrollments.some(e => e.contractSignedByCommune),
           activityDone: sessionEnrollments.some(e => e.activityDone),
           controlScheduled: sessionEnrollments.some(e => e.controlScheduled),
