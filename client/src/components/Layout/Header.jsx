@@ -160,10 +160,10 @@ export default function Header() {
             {/* Logo/Title */}
             <div className={styles.logoSection}>
               <img src={logoCD} alt="Conseil Départemental de la Guadeloupe" className={styles.logoImage} />
+              <img src={logoFEVES} alt="FEVES Guadeloupe & St Martin" className={styles.logoImage} />
               <Link href="/" className={styles.logo}>
                 Passerelle CAP
               </Link>
-              <img src={logoFEVES} alt="FEVES Guadeloupe & St Martin" className={styles.logoImage} />
             </div>
 
             {/* Desktop Navigation */}
