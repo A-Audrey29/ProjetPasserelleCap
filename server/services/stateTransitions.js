@@ -144,7 +144,7 @@ async function createWorkshopEnrollments(fiche) {
         participantCount: participantCount, // Nombre de participants DE CETTE FICHE uniquement
         sessionNumber: sessionNumber,
         isLocked: false,
-        contractSignedByEvs: false,
+        contractSignedByEVS: false,
         contractSignedByCommune: false,
         activityDone: false,
       });

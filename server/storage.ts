@@ -502,7 +502,7 @@ export class DatabaseStorage implements IStorage {
         participantCount: workshopEnrollments.participantCount,
         sessionNumber: workshopEnrollments.sessionNumber,
         isLocked: workshopEnrollments.isLocked,
-        contractSignedByEvs: workshopEnrollments.contractSignedByEVS,
+        contractSignedByEVS: workshopEnrollments.contractSignedByEVS,
         contractSignedByCommune: workshopEnrollments.contractSignedByCommune,
         contractCommuneUrl: workshopEnrollments.contractCommunePdfUrl,
         contractSignedAt: workshopEnrollments.contractSignedAt,
