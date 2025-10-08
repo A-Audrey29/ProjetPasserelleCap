@@ -408,6 +408,68 @@ class NotificationService {
       throw error;
     }
   }
+
+  /**
+   * Notification: Contrat EVS/CS signé → Déblocage 70% de subvention
+   * Envoyée à la FEVES (RELATIONS_EVS)
+   */
+  async notifyWorkshopContractEvsSignedForSubvention(session) {
+    try {
+      const fevesEmails = await this.getFevesEmails();
+      if (fevesEmails.length === 0) {
+        console.log('No FEVES emails found for EVS contract subsidy notification');
+        return;
+      }
+
+      // Get workshop and organization details
+      const workshop = session.workshop || await storage.getWorkshop(session.workshopId);
+      const evsOrg = session.evs || await storage.getOrganization(session.evsId);
+
+      await emailService.sendWorkshopContractEvsSignedNotification({
+        fevesEmails,
+        workshopName: workshop?.name || 'Atelier',
+        sessionNumber: session.sessionNumber,
+        evsName: evsOrg?.name || 'Organisation',
+        sessionId: session.id
+      });
+
+      console.log(`✅ EVS contract subsidy notification sent for ${workshop?.name} session ${session.sessionNumber}`);
+    } catch (error) {
+      console.error('Error sending EVS contract subsidy notification:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Notification: Contrat Commune signé → Simple notification de démarrage
+   * Envoyée à la FEVES (RELATIONS_EVS)
+   */
+  async notifyWorkshopContractCommuneSignedForStart(session) {
+    try {
+      const fevesEmails = await this.getFevesEmails();
+      if (fevesEmails.length === 0) {
+        console.log('No FEVES emails found for Commune contract start notification');
+        return;
+      }
+
+      // Get workshop and organization details
+      const workshop = session.workshop || await storage.getWorkshop(session.workshopId);
+      const evsOrg = session.evs || await storage.getOrganization(session.evsId);
+
+      await emailService.sendWorkshopContractCommuneSignedNotification({
+        fevesEmails,
+        workshopName: workshop?.name || 'Atelier',
+        sessionNumber: session.sessionNumber,
+        evsName: evsOrg?.name || 'Organisation',
+        sessionId: session.id
+      });
+
+      console.log(`✅ Commune contract start notification sent for ${workshop?.name} session ${session.sessionNumber}`);
+    } catch (error) {
+      console.error('Error sending Commune contract start notification:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance
