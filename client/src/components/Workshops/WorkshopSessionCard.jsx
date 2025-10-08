@@ -435,7 +435,13 @@ export default function WorkshopSessionCard({ session }) {
               <input
                 type="checkbox"
                 checked={contractEvs}
-                onChange={(e) => setContractEvs(e.target.checked)}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  setContractEvs(isChecked);
+                  if (isChecked) {
+                    setContractCommune(false); // Décocher Commune si EVS est coché
+                  }
+                }}
                 disabled={isInProgress}
                 data-testid={`checkbox-contract-evs-${session?.id}`}
               />
@@ -452,7 +458,13 @@ export default function WorkshopSessionCard({ session }) {
               <input
                 type="checkbox"
                 checked={contractCommune}
-                onChange={(e) => setContractCommune(e.target.checked)}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  setContractCommune(isChecked);
+                  if (isChecked) {
+                    setContractEvs(false); // Décocher EVS si Commune est coché
+                  }
+                }}
                 disabled={isInProgress}
                 data-testid={`checkbox-contract-commune-${session?.id}`}
               />
@@ -463,10 +475,17 @@ export default function WorkshopSessionCard({ session }) {
             </label>
           </div>
 
+          {/* Validation Error Message */}
+          {!contractEvs && !contractCommune && (
+            <div className={styles.contractError} data-testid={`error-no-contract-${session?.id}`}>
+              ⚠️ Vous devez cocher au moins un des deux contrats
+            </div>
+          )}
+
           {/* Save Button */}
           <button
             onClick={handleSave}
-            disabled={isSaving || isInProgress || isUploading}
+            disabled={isSaving || isInProgress || isUploading || (!contractEvs && !contractCommune)}
             className={styles.saveButton}
             data-testid={`button-save-${session?.id}`}
           >
