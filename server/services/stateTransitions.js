@@ -385,7 +385,9 @@ export async function transitionFicheState(ficheId, newState, userId, metadata =
   }
 
   // Perform the transition
-  const updatedFiche = await storage.updateFiche(ficheId, { state: newState, ...metadata });
+  await storage.updateFiche(ficheId, { state: newState, ...metadata });
+  // Reload complete fiche to ensure all fields (including ref) are present
+  const updatedFiche = await storage.getFiche(ficheId);
 
   // Handle automatic workshop enrollment creation for ACCEPTED_EVS transition
   if (newState === 'ACCEPTED_EVS') {
