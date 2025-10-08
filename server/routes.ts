@@ -1542,6 +1542,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cette session' });
         }
 
+        // Detect if a contract is being newly signed (transition from false to true)
+        const evsContractNewlySigned = contractSignedByEVS === true && !enrollment.contractSignedByEVS;
+        const communeContractNewlySigned = contractSignedByCommune === true && !enrollment.contractSignedByCommune;
+
         // Build partial update object only with present fields
         const updates = {};
         if (contractSignedByEVS !== undefined) updates.contractSignedByEVS = contractSignedByEVS;
@@ -1558,6 +1562,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateSessionContracts(sessionId, updates);
 
         console.log('Contracts updated successfully');
+
+        // Send notifications if a contract was newly signed
+        if (evsContractNewlySigned || communeContractNewlySigned) {
+          // Get workshop and org details for notification
+          const workshop = await storage.getWorkshop(enrollment.workshopId);
+          const org = await storage.getOrganization(enrollment.evsId);
+
+          // Prepare session data for notification
+          const sessionData = {
+            id: sessionId,
+            sessionNumber: enrollment.sessionNumber,
+            workshopId: enrollment.workshopId,
+            evsId: enrollment.evsId,
+            workshop: workshop ? { name: workshop.name } : { name: 'Atelier' },
+            evs: org ? { name: org.name } : { name: 'Organisation' }
+          };
+
+          // Send appropriate notification based on contract type
+          if (evsContractNewlySigned) {
+            console.log('🔔 Sending EVS contract subsidy notification...');
+            await notificationService.notifyWorkshopContractEvsSignedForSubvention(sessionData)
+              .catch(err => {
+                console.error('Failed to send EVS contract notification:', err);
+                // Don't fail the request if notification fails
+              });
+          }
+
+          if (communeContractNewlySigned) {
+            console.log('🔔 Sending Commune contract start notification...');
+            await notificationService.notifyWorkshopContractCommuneSignedForStart(sessionData)
+              .catch(err => {
+                console.error('Failed to send Commune contract notification:', err);
+                // Don't fail the request if notification fails
+              });
+          }
+        }
 
         res.json({
           success: true,
