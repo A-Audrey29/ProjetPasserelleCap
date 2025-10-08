@@ -1542,9 +1542,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cette session' });
         }
 
+        // SERVER-SIDE VALIDATION: Enforce mutual exclusion between EVS and Commune contracts
+        // Check if the update would result in both contracts being signed
+        const finalEvsState = contractSignedByEVS !== undefined ? contractSignedByEVS : enrollment.contractSignedByEVS;
+        const finalCommuneState = contractSignedByCommune !== undefined ? contractSignedByCommune : enrollment.contractSignedByCommune;
+        
+        if (finalEvsState === true && finalCommuneState === true) {
+          return res.status(400).json({ 
+            message: 'Un seul type de contrat peut être signé (EVS/CS ou Commune, pas les deux). Veuillez décocher l\'autre contrat avant de continuer.' 
+          });
+        }
+
         // Detect if a contract is being newly signed (transition from false to true)
         const evsContractNewlySigned = contractSignedByEVS === true && !enrollment.contractSignedByEVS;
         const communeContractNewlySigned = contractSignedByCommune === true && !enrollment.contractSignedByCommune;
+        
+        console.log('Contract signing detection:', {
+          evsContractNewlySigned,
+          communeContractNewlySigned,
+          contractSignedByEVS,
+          enrollmentContractSignedByEVS: enrollment.contractSignedByEVS,
+          contractSignedByCommune,
+          enrollmentContractSignedByCommune: enrollment.contractSignedByCommune
+        });
 
         // Build partial update object only with present fields
         const updates = {};
