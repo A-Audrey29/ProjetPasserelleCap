@@ -676,7 +676,7 @@ class EmailService {
       ficheRef,
       evsOrgName,
       totalAmount,
-      cdEmails
+      fevesEmails
     };
 
     return await this.deliver(mailOptions, meta);
@@ -937,6 +937,172 @@ Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
 
     const meta = {
       event: 'workshop_activity_completed',
+      sessionId,
+      workshopName,
+      sessionNumber,
+      evsName
+    };
+
+    await this.deliver(mailOptions, meta);
+  }
+
+  /**
+   * Send notification when EVS/CS contract is signed - 70% subsidy to be released
+   */
+  async sendWorkshopContractEvsSignedNotification({ fevesEmails, workshopName, sessionNumber, evsName, sessionId }: {
+    fevesEmails: string[];
+    workshopName: string;
+    sessionNumber: number;
+    evsName: string;
+    sessionId: string;
+  }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP - Ateliers',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: fevesEmails.join(','),
+      subject: `Contrat EVS/CS signé - Déblocage subvention 70% : ${workshopName} Session ${sessionNumber}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #6A8B74;">💰 Contrat EVS/CS signé - Subvention à débloquer</h2>
+          
+          <p>Bonjour,</p>
+          
+          <p>Le contrat EVS/CS pour un atelier a été signé. Vous devez maintenant débloquer <strong>70% de la subvention</strong> pour cet atelier.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #3B4B61; margin-top: 0;">Détails de l'atelier</h3>
+            <p><strong>Atelier :</strong> ${workshopName}</p>
+            <p><strong>Session :</strong> ${sessionNumber}</p>
+            <p><strong>Organisation EVS/CS :</strong> ${evsName}</p>
+            <p style="color: #6A8B74; font-weight: bold; font-size: 1.1em; margin-top: 15px;">💵 Action requise : Débloquer 70% de la subvention</p>
+          </div>
+          
+          <p>Le contrat a été validé, l'atelier peut maintenant démarrer.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers" 
+               style="background-color: #6A8B74; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Gérer les ateliers
+            </a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #666; font-size: 12px;">
+            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
+            FEVES Guadeloupe et Saint-Martin
+          </p>
+        </div>
+      `,
+      text: `
+        Contrat EVS/CS signé - Subvention à débloquer
+        
+        Le contrat EVS/CS pour un atelier a été signé. Vous devez maintenant débloquer 70% de la subvention pour cet atelier.
+        
+        Détails de l'atelier :
+        - Atelier : ${workshopName}
+        - Session : ${sessionNumber}
+        - Organisation EVS/CS : ${evsName}
+        
+        Action requise : Débloquer 70% de la subvention
+        
+        Le contrat a été validé, l'atelier peut maintenant démarrer.
+        
+        Lien : ${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers
+        
+        ---
+        Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.
+        FEVES Guadeloupe et Saint-Martin
+      `
+    };
+
+    const meta = {
+      event: 'workshop_contract_evs_signed',
+      sessionId,
+      workshopName,
+      sessionNumber,
+      evsName
+    };
+
+    await this.deliver(mailOptions, meta);
+  }
+
+  /**
+   * Send notification when Commune contract is signed - simple start notification
+   */
+  async sendWorkshopContractCommuneSignedNotification({ fevesEmails, workshopName, sessionNumber, evsName, sessionId }: {
+    fevesEmails: string[];
+    workshopName: string;
+    sessionNumber: number;
+    evsName: string;
+    sessionId: string;
+  }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP - Ateliers',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: fevesEmails.join(','),
+      subject: `Contrat Commune signé - Atelier prêt : ${workshopName} Session ${sessionNumber}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #3B4B61;">✅ Contrat Commune signé - Atelier prêt à démarrer</h2>
+          
+          <p>Bonjour,</p>
+          
+          <p>Le contrat avec la commune pour un atelier a été signé. L'atelier est maintenant prêt à démarrer.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #3B4B61; margin-top: 0;">Détails de l'atelier</h3>
+            <p><strong>Atelier :</strong> ${workshopName}</p>
+            <p><strong>Session :</strong> ${sessionNumber}</p>
+            <p><strong>Organisation :</strong> ${evsName}</p>
+            <p style="color: #3B4B61; font-weight: bold; margin-top: 15px;">ℹ️ Contrat communal - Pas de subvention associée</p>
+          </div>
+          
+          <p>Le contrat a été validé, l'atelier peut maintenant démarrer.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers" 
+               style="background-color: #3B4B61; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Consulter les ateliers
+            </a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #666; font-size: 12px;">
+            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
+            FEVES Guadeloupe et Saint-Martin
+          </p>
+        </div>
+      `,
+      text: `
+        Contrat Commune signé - Atelier prêt à démarrer
+        
+        Le contrat avec la commune pour un atelier a été signé. L'atelier est maintenant prêt à démarrer.
+        
+        Détails de l'atelier :
+        - Atelier : ${workshopName}
+        - Session : ${sessionNumber}
+        - Organisation : ${evsName}
+        
+        Note : Contrat communal - Pas de subvention associée
+        
+        Le contrat a été validé, l'atelier peut maintenant démarrer.
+        
+        Lien : ${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers
+        
+        ---
+        Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.
+        FEVES Guadeloupe et Saint-Martin
+      `
+    };
+
+    const meta = {
+      event: 'workshop_contract_commune_signed',
       sessionId,
       workshopName,
       sessionNumber,
