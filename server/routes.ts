@@ -1245,21 +1245,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { ficheId, orgId, orgName, contactEmail, contactName } = req.body;
       
+      // Load fiche to get reference
+      const fiche = await storage.getFiche(ficheId);
+      if (!fiche) {
+        return res.status(404).json({ message: 'Fiche non trouvée' });
+      }
+      
       // Log notification details
       console.log('EVS Assignment Notification:', {
         ficheId,
+        ficheRef: fiche.ref,
         orgId,
         orgName,
         contactEmail,
         contactName
       });
 
-      // Send actual email
+      // Send actual email with ficheRef
       const emailResult = await emailService.sendEvsAssignmentNotification({
         contactEmail,
         contactName,
         orgName,
-        ficheId
+        ficheId,
+        ficheRef: fiche.ref
       });
 
       // Create audit log for notification
