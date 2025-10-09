@@ -8,7 +8,7 @@ import {
   type EmailLog, type InsertEmailLog, type WorkshopEnrollment, type InsertWorkshopEnrollment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, like, ilike, count, sql } from "drizzle-orm";
+import { eq, and, or, desc, asc, like, ilike, count, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // EPCIs
@@ -22,6 +22,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUsersByRole(role: string): Promise<User[]>;
+  getUsersBySearch(search: string): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
   getAllUsers(): Promise<User[]>;
@@ -61,6 +62,7 @@ export interface IStorage {
     search?: string;
   }): Promise<FicheNavette[]>;
   getFiche(id: string): Promise<FicheNavette | undefined>;
+  getFicheByRef(ref: string): Promise<FicheNavette | undefined>;
   createFiche(fiche: InsertFicheNavette): Promise<FicheNavette>;
   updateFiche(id: string, fiche: Partial<InsertFicheNavette>): Promise<FicheNavette>;
   deleteFiche(id: string): Promise<void>;
@@ -152,6 +154,26 @@ export class DatabaseStorage implements IStorage {
 
   async getUsersByRole(role: string): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, role as any)).orderBy(asc(users.lastName));
+  }
+
+  /**
+   * Recherche des utilisateurs par nom ou prénom (insensible à la casse)
+   * Utilisé pour la recherche dans le journal d'audit
+   * @param search - Terme de recherche (partiel accepté)
+   * @returns Liste des utilisateurs dont le nom ou prénom contient le terme recherché
+   */
+  async getUsersBySearch(search: string): Promise<User[]> {
+    const searchPattern = `%${search}%`;
+    return await db
+      .select()
+      .from(users)
+      .where(
+        or(
+          ilike(users.firstName, searchPattern),
+          ilike(users.lastName, searchPattern)
+        )
+      )
+      .orderBy(asc(users.lastName));
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -322,6 +344,20 @@ export class DatabaseStorage implements IStorage {
     return fiche || undefined;
   }
 
+  /**
+   * Recherche une fiche par sa référence (ex: FN-2025-10-018)
+   * Utilisé pour la recherche dans le journal d'audit
+   * @param ref - Référence de la fiche (exacte, insensible à la casse)
+   * @returns La fiche correspondante si trouvée
+   */
+  async getFicheByRef(ref: string): Promise<FicheNavette | undefined> {
+    const [fiche] = await db
+      .select()
+      .from(ficheNavettes)
+      .where(ilike(ficheNavettes.ref, ref));
+    return fiche || undefined;
+  }
+
   async createFiche(insertFiche: InsertFicheNavette): Promise<FicheNavette> {
     const [fiche] = await db.insert(ficheNavettes).values(insertFiche).returning();
     return fiche;
@@ -358,6 +394,12 @@ export class DatabaseStorage implements IStorage {
   /**
    * Récupère tous les logs d'audit avec pagination et filtres
    * Utilisé pour l'interface d'administration
+   * 
+   * RECHERCHE INTELLIGENTE :
+   * - Si le terme commence par "FN-" → recherche par référence de fiche
+   * - Sinon si le terme contient des lettres → recherche par nom/prénom d'acteur
+   * - Sinon → recherche classique dans l'entityId (UUID)
+   * 
    * @param filters - Filtres optionnels (actorId, action, entity, search, page, size)
    * @returns Liste paginée des logs avec le total
    */
@@ -379,9 +421,47 @@ export class DatabaseStorage implements IStorage {
     if (action) conditions.push(ilike(auditLogs.action, action));
     if (entity) conditions.push(ilike(auditLogs.entity, entity));
     
-    // Recherche textuelle dans l'entityId
-    if (search) {
-      conditions.push(like(auditLogs.entityId, `%${search}%`));
+    // RECHERCHE INTELLIGENTE
+    if (search && search.trim()) {
+      const trimmedSearch = search.trim();
+      
+      // CAS 1 : Recherche par référence de fiche (commence par FN- insensible à la casse)
+      if (trimmedSearch.toUpperCase().startsWith('FN-')) {
+        console.log(`🔍 Recherche intelligente: détection référence fiche "${trimmedSearch}"`);
+        const fiche = await this.getFicheByRef(trimmedSearch);
+        
+        if (fiche) {
+          console.log(`✅ Fiche trouvée: ${fiche.ref} (ID: ${fiche.id})`);
+          // Filtrer les logs par l'entityId de cette fiche
+          conditions.push(eq(auditLogs.entityId, fiche.id));
+        } else {
+          console.log(`⚠️ Aucune fiche trouvée avec la référence "${trimmedSearch}"`);
+          // Pas de fiche trouvée → aucun résultat
+          // On force une condition impossible pour retourner 0 résultats
+          conditions.push(eq(auditLogs.entityId, 'no-match-found'));
+        }
+      }
+      // CAS 2 : Recherche par nom d'acteur (contient des lettres, pas un UUID pur)
+      else if (/[a-zA-ZÀ-ÿ]/.test(trimmedSearch)) {
+        console.log(`🔍 Recherche intelligente: détection nom d'acteur "${trimmedSearch}"`);
+        const users = await this.getUsersBySearch(trimmedSearch);
+        
+        if (users.length > 0) {
+          const userIds = users.map(u => u.id);
+          console.log(`✅ ${users.length} utilisateur(s) trouvé(s):`, users.map(u => `${u.firstName} ${u.lastName}`).join(', '));
+          // Filtrer les logs par les actorIds trouvés
+          conditions.push(inArray(auditLogs.actorId, userIds));
+        } else {
+          console.log(`⚠️ Aucun utilisateur trouvé avec le terme "${trimmedSearch}"`);
+          // Pas d'utilisateur trouvé → aucun résultat
+          conditions.push(eq(auditLogs.actorId, 'no-match-found'));
+        }
+      }
+      // CAS 3 : Recherche classique dans entityId (UUID ou autre)
+      else {
+        console.log(`🔍 Recherche classique dans entityId: "${trimmedSearch}"`);
+        conditions.push(like(auditLogs.entityId, `%${trimmedSearch}%`));
+      }
     }
 
     // Calcul du nombre total de résultats
