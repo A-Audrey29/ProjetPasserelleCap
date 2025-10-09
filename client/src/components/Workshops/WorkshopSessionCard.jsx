@@ -578,7 +578,8 @@ export default function WorkshopSessionCard({ session }) {
                         disabled={false}
                         data-testid={`checkbox-control-validate-${session?.id}`}
                       />
-                      <span>Valider le contrôle</span>
+                      <span>Valider le contrôle et procèder au versement du solde restant dû.
+</span>
                     </label>
                     <button
                       onClick={handleValidateControl}
