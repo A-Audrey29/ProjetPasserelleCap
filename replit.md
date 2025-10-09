@@ -15,6 +15,16 @@ Preferred communication style: Simple, everyday language.
 - **NO YELLOW colors** - Absolutely no yellow in the design
 - **Component structure** - All components as .jsx files with corresponding .module.css files
 
+## Recent Changes (October 2025)
+
+### Centralized Audit Log Interface
+- **Admin Audit Tab**: New centralized audit log interface accessible only to ADMIN users
+- **Features**: Full-text search, multi-criteria filtering (action type, entity type, user), pagination (20 items/page)
+- **Backend**: GET `/api/admin/audit-logs` endpoint with role-based access control (ADMIN only)
+- **Frontend**: `AdminAuditTab.jsx` component with `AdminAuditTab.module.css` (100% charte graphique compliant)
+- **Filter Strategy**: Static reference lists (ACTION_LABELS, ENTITY_LABELS) ensure complete filtering capabilities
+- **Display**: Comprehensive event details with actor information, timestamps, and expandable metadata JSON viewer
+
 ## System Architecture
 
 ### Frontend Architecture
