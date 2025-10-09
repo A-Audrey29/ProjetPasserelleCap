@@ -523,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/fiches/:id/assign', requireAuth, requireRole('RELATIONS_EVS'), validateRequest(assignmentSchema), auditMiddleware('assign', 'FicheNavette'), async (req, res) => {
+  app.post('/api/fiches/:id/assign', requireAuth, requireRole('ADMIN', 'RELATIONS_EVS'), validateRequest(assignmentSchema), auditMiddleware('assign', 'FicheNavette'), async (req, res) => {
     try {
       const { id } = req.params;
       const { assignedOrgId } = req.validatedData;
