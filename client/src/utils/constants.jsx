@@ -14,6 +14,17 @@ export const STATE_LABELS = {
   ARCHIVED: 'Archivé'
 };
 
+// States available for filtering (excludes obsolete workshop states)
+export const FILTERABLE_STATES = {
+  DRAFT: 'Brouillon',
+  SUBMITTED_TO_FEVES: 'Envoyé FEVES',
+  ASSIGNED_EVS: 'Affecté EVS',
+  ACCEPTED_EVS: 'Accepté EVS',
+  EVS_REJECTED: 'Refusé EVS',
+  CLOSED: 'Clôturé',
+  ARCHIVED: 'Archivé'
+};
+
 // User roles and their labels
 export const ROLE_LABELS = {
   ADMIN: 'Administrateur',
