@@ -8,7 +8,7 @@ import {
   type EmailLog, type InsertEmailLog, type WorkshopEnrollment, type InsertWorkshopEnrollment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, like, count, sql } from "drizzle-orm";
+import { eq, and, or, desc, asc, like, ilike, count, sql } from "drizzle-orm";
 
 export interface IStorage {
   // EPCIs
@@ -374,8 +374,10 @@ export class DatabaseStorage implements IStorage {
     // Construction des conditions WHERE
     const conditions = [];
     if (actorId) conditions.push(eq(auditLogs.actorId, actorId));
-    if (action) conditions.push(eq(auditLogs.action, action));
-    if (entity) conditions.push(eq(auditLogs.entity, entity));
+    // Utilisation de ilike pour rendre les filtres action et entity insensibles à la casse
+    // Cela permet de matcher CREATE avec create, UPDATE avec update, etc.
+    if (action) conditions.push(ilike(auditLogs.action, action));
+    if (entity) conditions.push(ilike(auditLogs.entity, entity));
     
     // Recherche textuelle dans l'entityId
     if (search) {

@@ -7,43 +7,62 @@ import { formatDate } from '@/utils/formatters';
 /**
  * Traductions des actions d'audit pour affichage utilisateur
  * Mappage action technique -> libellé français
+ * Inclut toutes les actions présentes dans la base de données (anciennes et nouvelles)
  */
 const ACTION_LABELS = {
+  // Actions actuelles (minuscules)
   'create': 'Création',
   'update': 'Modification',
   'delete': 'Suppression',
   'state_transition': 'Changement d\'état',
+  'transition': 'Transition',
   'assign': 'Assignation',
   'comment': 'Commentaire',
-  'upload': 'Upload document',
-  'download': 'Téléchargement',
   'reset_password': 'Réinitialisation mot de passe',
-  'toggle_active': 'Activation/Désactivation',
-  'email_notification': 'Notification email'
+  'activate': 'Activation/Désactivation',
+  'email_notification': 'Notification email',
+  'close_all_workshops': 'Clôture ateliers',
+  'mark_viewed': 'Marquer vu',
+  'delete_all': 'Suppression totale',
+  // Actions historiques (majuscules - septembre 2025)
+  'CREATE': 'Création',
+  'UPDATE': 'Modification',
+  'STATE_CHANGE': 'Changement d\'état'
 };
 
 /**
  * Types d'entités avec leurs libellés
+ * Contient uniquement les entités réellement présentes dans les logs d'audit
  */
 const ENTITY_LABELS = {
   'FicheNavette': 'Fiche navette',
   'User': 'Utilisateur',
-  'Organization': 'Organisation',
-  'Workshop': 'Atelier',
-  'WorkshopEnrollment': 'Inscription atelier',
-  'Comment': 'Commentaire'
+  'UserProfile': 'Profil utilisateur',
+  'EmailLog': 'Log email'
 };
 
 /**
  * Couleurs associées aux types d'actions pour la visualisation
+ * Utilise les styles CSS de la charte graphique
  */
 const ACTION_COLORS = {
   'create': 'success',
   'update': 'info',
   'delete': 'danger',
   'state_transition': 'primary',
+  'transition': 'primary',
   'assign': 'warning',
-  'comment': 'secondary'
+  'comment': 'secondary',
+  'reset_password': 'warning',
+  'activate': 'info',
+  'email_notification': 'info',
+  'close_all_workshops': 'warning',
+  'mark_viewed': 'secondary',
+  'delete_all': 'danger',
+  // Actions historiques (majuscules)
+  'CREATE': 'success',
+  'UPDATE': 'info',
+  'STATE_CHANGE': 'primary'
 };
 
 /**
