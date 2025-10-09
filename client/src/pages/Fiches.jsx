@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/common/Card';
 import styles from './Fiches.module.css';
 
 // Import state labels from constants
-import { STATE_LABELS } from '../utils/constants';
+import { STATE_LABELS, FILTERABLE_STATES } from '../utils/constants';
 
 const STATE_COLORS = {
   'DRAFT': 'secondary',
@@ -208,7 +208,7 @@ export default function Fiches() {
               >
                 <option value="">Filtrer par état</option>
                 <option value="all">Tous les états</option>
-                {Object.entries(STATE_LABELS).map(([key, label]) => (
+                {Object.entries(FILTERABLE_STATES).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
               </select>
