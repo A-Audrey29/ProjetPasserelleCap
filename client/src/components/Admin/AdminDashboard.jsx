@@ -4,12 +4,14 @@ import {
   Building2, 
   Plus,
   LayoutGrid,
-  Mail
+  Mail,
+  History
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import AdminUsersTab from './AdminUsersTab';
 import AdminStructuresTab from './AdminStructuresTab';
 import AdminEmailsTab from './AdminEmailsTab';
+import AdminAuditTab from './AdminAuditTab';
 import styles from './AdminDashboard.module.css';
 
 export default function AdminDashboard() {
@@ -47,6 +49,12 @@ export default function AdminDashboard() {
       label: 'Emails', 
       icon: Mail,
       testId: 'tab-emails'
+    },
+    { 
+      id: 'audit', 
+      label: 'Journal d\'audit', 
+      icon: History,
+      testId: 'tab-audit'
     }
   ];
 
@@ -191,6 +199,9 @@ export default function AdminDashboard() {
 
         {/* Onglet Emails */}
         {activeTab === 'emails' && <AdminEmailsTab />}
+
+        {/* Onglet Journal d'audit */}
+        {activeTab === 'audit' && <AdminAuditTab />}
       </div>
     </div>
   );

@@ -67,6 +67,14 @@ export interface IStorage {
 
   // Audit Logs
   getAuditLogs(entityId?: string, entity?: string): Promise<AuditLog[]>;
+  getAllAuditLogs(filters?: {
+    actorId?: string;
+    action?: string;
+    entity?: string;
+    search?: string;
+    page?: number;
+    size?: number;
+  }): Promise<{ logs: AuditLog[], total: number }>;
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
 
   // Comments
@@ -345,6 +353,54 @@ export class DatabaseStorage implements IStorage {
   async createAuditLog(insertLog: InsertAuditLog): Promise<AuditLog> {
     const [log] = await db.insert(auditLogs).values(insertLog).returning();
     return log;
+  }
+
+  /**
+   * Récupère tous les logs d'audit avec pagination et filtres
+   * Utilisé pour l'interface d'administration
+   * @param filters - Filtres optionnels (actorId, action, entity, search, page, size)
+   * @returns Liste paginée des logs avec le total
+   */
+  async getAllAuditLogs(filters?: {
+    actorId?: string;
+    action?: string;
+    entity?: string;
+    search?: string;
+    page?: number;
+    size?: number;
+  }): Promise<{ logs: AuditLog[], total: number }> {
+    const { actorId, action, entity, search, page = 1, size = 50 } = filters || {};
+    
+    // Construction des conditions WHERE
+    const conditions = [];
+    if (actorId) conditions.push(eq(auditLogs.actorId, actorId));
+    if (action) conditions.push(eq(auditLogs.action, action));
+    if (entity) conditions.push(eq(auditLogs.entity, entity));
+    
+    // Recherche textuelle dans l'entityId
+    if (search) {
+      conditions.push(like(auditLogs.entityId, `%${search}%`));
+    }
+
+    // Calcul du nombre total de résultats
+    const [totalResult] = await db.select({ count: count() }).from(auditLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    const total = totalResult.count;
+
+    // Récupération des résultats paginés
+    const offset = (page - 1) * size;
+    let query = db.select().from(auditLogs);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    const logs = await query
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(size)
+      .offset(offset);
+
+    return { logs, total };
   }
 
   // Comments

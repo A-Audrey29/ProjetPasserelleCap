@@ -1219,7 +1219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Audit logs
+  // Audit logs - Legacy endpoint for fiche detail view
   app.get('/api/audit', requireAuth, async (req, res) => {
     try {
       const { entity, entityId } = req.query;
@@ -1236,6 +1236,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(logsWithActors);
     } catch (error) {
       console.error('Get audit logs error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Admin endpoint - All audit logs with pagination and filters
+  app.get('/api/admin/audit-logs', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { actorId, action, entity, search, page, limit } = req.query;
+      
+      // Récupération des logs avec pagination
+      const result = await storage.getAllAuditLogs({
+        actorId: actorId as string,
+        action: action as string,
+        entity: entity as string,
+        search: search as string,
+        page: page ? parseInt(page as string) : undefined,
+        size: limit ? parseInt(limit as string) : undefined
+      });
+      
+      // Enrichir avec les informations des acteurs
+      const logsWithActors = await Promise.all(
+        result.logs.map(async (log) => {
+          const actor = log.actorId ? await storage.getUser(log.actorId) : null;
+          return { ...log, actor };
+        })
+      );
+
+      res.json({
+        logs: logsWithActors,
+        total: result.total
+      });
+    } catch (error) {
+      console.error('Get all audit logs error:', error);
       res.status(500).json({ message: 'Erreur interne du serveur' });
     }
   });
