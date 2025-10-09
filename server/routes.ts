@@ -1255,16 +1255,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         size: limit ? parseInt(limit as string) : undefined
       });
       
-      // Enrichir avec les informations des acteurs
-      const logsWithActors = await Promise.all(
+      // Enrichir avec les informations des acteurs ET les références de fiches
+      const logsWithEnrichedData = await Promise.all(
         result.logs.map(async (log) => {
+          // Enrichir avec l'acteur
           const actor = log.actorId ? await storage.getUser(log.actorId) : null;
-          return { ...log, actor };
+          
+          // Si l'entité est une FicheNavette, enrichir avec la référence formatée
+          let ficheReference = null;
+          if (log.entity === 'FicheNavette' && log.entityId) {
+            try {
+              const fiche = await storage.getFiche(log.entityId);
+              if (fiche && fiche.ref) {
+                ficheReference = fiche.ref;
+              }
+            } catch (error) {
+              // Si la fiche n'existe plus ou erreur, on garde null
+              console.warn(`Cannot fetch fiche reference for ${log.entityId}:`, error);
+            }
+          }
+          
+          return { ...log, actor, ficheReference };
         })
       );
 
       res.json({
-        logs: logsWithActors,
+        logs: logsWithEnrichedData,
         total: result.total
       });
     } catch (error) {
