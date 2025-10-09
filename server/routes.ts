@@ -1241,7 +1241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Notification endpoints for EPCI workflow
-  app.post('/api/notifications/evs-assignment', requireAuth, requireRole('RELATIONS_EVS'), async (req, res) => {
+  app.post('/api/notifications/evs-assignment', requireAuth, requireRole('ADMIN', 'RELATIONS_EVS'), async (req, res) => {
     try {
       const { ficheId, orgId, orgName, contactEmail, contactName } = req.body;
       
@@ -1298,7 +1298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/notifications/emitter-return', requireAuth, requireRole('RELATIONS_EVS'), async (req, res) => {
+  app.post('/api/notifications/emitter-return', requireAuth, requireRole('ADMIN', 'RELATIONS_EVS'), async (req, res) => {
     try {
       const { ficheId, emitterEmail, emitterName, reason } = req.body;
       
