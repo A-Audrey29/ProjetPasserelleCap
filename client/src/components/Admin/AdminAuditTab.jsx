@@ -50,10 +50,11 @@ const ACTION_COLORS = {
  * Composant AdminAuditTab
  * Interface d'administration pour consulter le journal d'audit global du système
  * Fonctionnalités :
- * - Pagination des résultats
- * - Recherche textuelle dans les entityId
- * - Filtrage par action, entité et utilisateur
- * - Affichage des métadonnées détaillées de chaque événement
+ * - Pagination des résultats (20 événements par page)
+ * - Recherche textuelle dans les références de fiches et IDs d'entité
+ * - Filtrage par action, type d'entité et utilisateur
+ * - Affichage intelligent : référence formatée (FN-ANNEE-MOIS-CHIFFRE) pour les fiches, ID technique pour les autres entités
+ * - Affichage des métadonnées détaillées de chaque événement avec acteur et horodatage
  */
 export default function AdminAuditTab() {
   // États pour les filtres et la pagination
@@ -175,8 +176,12 @@ export default function AdminAuditTab() {
                 </span>
               </div>
               <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>ID de l'entité :</span>
-                <span className={styles.detailValue}>{selectedLog.entityId}</span>
+                <span className={styles.detailLabel}>
+                  {selectedLog.ficheReference ? 'Référence :' : 'ID de l\'entité :'}
+                </span>
+                <span className={styles.detailValue}>
+                  {selectedLog.ficheReference || selectedLog.entityId}
+                </span>
               </div>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Date :</span>
@@ -264,7 +269,7 @@ export default function AdminAuditTab() {
           <Search size={18} className={styles.searchIcon} />
           <input
             type="text"
-            placeholder="Rechercher par ID d'entité..."
+            placeholder="Rechercher par référence ou ID..."
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
             className={styles.searchInput}
@@ -350,7 +355,7 @@ export default function AdminAuditTab() {
                 <div className={styles.columnDate}>Date</div>
                 <div className={styles.columnAction}>Action</div>
                 <div className={styles.columnEntity}>Entité</div>
-                <div className={styles.columnEntityId}>ID Entité</div>
+                <div className={styles.columnEntityId}>Référence</div>
                 <div className={styles.columnActor}>Acteur</div>
                 <div className={styles.columnDetails}>Détails</div>
               </div>
@@ -380,7 +385,9 @@ export default function AdminAuditTab() {
                     </div>
                     
                     <div className={styles.columnEntityId}>
-                      <code className={styles.entityIdCode}>{log.entityId}</code>
+                      <code className={styles.entityIdCode}>
+                        {log.ficheReference || log.entityId}
+                      </code>
                     </div>
                     
                     <div className={styles.columnActor}>
