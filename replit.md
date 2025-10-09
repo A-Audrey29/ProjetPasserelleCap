@@ -24,6 +24,7 @@ Preferred communication style: Simple, everyday language.
 - **Frontend**: `AdminAuditTab.jsx` component with `AdminAuditTab.module.css` (100% charte graphique compliant)
 - **Filter Strategy**: Static reference lists (ACTION_LABELS, ENTITY_LABELS) ensure complete filtering capabilities
 - **Display**: Comprehensive event details with actor information, timestamps, and expandable metadata JSON viewer
+- **Smart Reference Display**: Fiche navette logs show formatted reference (FN-ANNEE-MOIS-CHIFFRE) instead of technical ID for better readability
 
 ## System Architecture
 
