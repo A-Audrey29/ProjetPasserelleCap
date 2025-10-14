@@ -1546,6 +1546,11 @@ export default function FicheForm({
       hasErrors = true;
     }
 
+    // Check that CAP document PDF is uploaded
+    if (!formData.capDocuments || formData.capDocuments.length === 0) {
+      setFieldError('capDocuments', 'Vous devez télécharger la fiche navette CAP (PDF) avant de transmettre');
+      hasErrors = true;
+    }
 
     // Run all step validations to show field-specific errors
     const referentValid = validateReferentStep();
