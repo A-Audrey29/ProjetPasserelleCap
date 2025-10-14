@@ -63,7 +63,7 @@ export default function Contact() {
                   <Phone className={`w-5 h-5 ${styles.contactIcon}`} />
                   <div className={styles.contactItemContent}>
                     <p>Téléphone</p>
-                    <p>01 23 45 67 89</p>
+                    <p>+590 690 37 05 73</p>
                   </div>
                 </div>
                 
@@ -71,7 +71,7 @@ export default function Contact() {
                   <Mail className={`w-5 h-5 ${styles.contactIcon}`} />
                   <div className={styles.contactItemContent}>
                     <p>Email</p>
-                    <p>support@passerelle.cap.fr</p>
+                    <p> cap-cd@fevesguadeloupeetsaintmartin.org</p>
                   </div>
                 </div>
                 
@@ -80,8 +80,8 @@ export default function Contact() {
                   <div className={styles.contactItemContent}>
                     <p>Adresse</p>
                     <p>
-                      123 Rue de la Solidarité<br />
-                      75000 Paris
+                      28 rue Léon Blum<br />
+                      97111 Morne-à-l’eau
                     </p>
                   </div>
                 </div>
