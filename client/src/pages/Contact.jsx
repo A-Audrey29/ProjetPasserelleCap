@@ -116,7 +116,7 @@ export default function Contact() {
             */}
           </div>
 
-          {/* Contact Form */}
+          {/* MASQUÉ TEMPORAIREMENT - Formulaire de contact
           <div className={styles.contactCard}>
             <h2 className={styles.cardTitle}>
               Envoyer un message
@@ -154,6 +154,7 @@ export default function Contact() {
               </button>
             </form>
           </div>
+          */}
         </div>
       </main>
     </div>
