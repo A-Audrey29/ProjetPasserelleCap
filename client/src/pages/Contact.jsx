@@ -59,6 +59,7 @@ export default function Contact() {
               </h2>
               
               <div className={styles.contactDetails}>
+                {/* MASQUÉ TEMPORAIREMENT - Section Téléphone
                 <div className={styles.contactItem}>
                   <Phone className={`w-5 h-5 ${styles.contactIcon}`} />
                   <div className={styles.contactItemContent}>
@@ -66,6 +67,7 @@ export default function Contact() {
                     <p>+590 690 37 05 73</p>
                   </div>
                 </div>
+                */}
                 
                 <div className={styles.contactItem}>
                   <Mail className={`w-5 h-5 ${styles.contactIcon}`} />
@@ -75,19 +77,22 @@ export default function Contact() {
                   </div>
                 </div>
                 
+                {/* MASQUÉ TEMPORAIREMENT - Section Adresse postale
                 <div className={styles.contactItem}>
                   <MapPin className={`w-5 h-5 ${styles.contactIcon}`} />
                   <div className={styles.contactItemContent}>
                     <p>Adresse</p>
                     <p>
                       28 rue Léon Blum<br />
-                      97111 Morne-à-l’eau
+                      97111 Morne-à-l'eau
                     </p>
                   </div>
                 </div>
+                */}
               </div>
             </div>
 
+            {/* MASQUÉ TEMPORAIREMENT - Section Horaires d'ouverture
             <div className={styles.contactCard}>
               <h2 className={styles.cardTitle}>
                 Horaires d'ouverture
@@ -108,6 +113,7 @@ export default function Contact() {
                 </div>
               </div>
             </div>
+            */}
           </div>
 
           {/* Contact Form */}
