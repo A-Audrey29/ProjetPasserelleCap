@@ -152,6 +152,9 @@ export default function FicheDetail({ ficheId }) {
     enabled: !!ficheId
   });
 
+  // Check if all workshop reports are uploaded (required for closure)
+  const allReportsUploaded = workshopEnrollments.length > 0 && workshopEnrollments.every(e => e.reportUrl);
+
   // Workshop selection logic - SAME AS FORM (selectedWorkshops priority)
   const getCombinedWorkshopSelection = () => {
     if (!fiche) return { workshopIds: [], isLegacyMode: false };
@@ -1393,7 +1396,7 @@ export default function FicheDetail({ ficheId }) {
                     </label>
                     <button
                       onClick={handleCloseAllWorkshops}
-                      disabled={isClosing || !allWorkshopsCompleted || !canCloseWorkshops}
+                      disabled={isClosing || !allWorkshopsCompleted || !canCloseWorkshops || !allReportsUploaded}
                       className={styles.closeWorkshopsButton}
                       data-testid="button-close-all-workshops"
                     >
@@ -1403,6 +1406,11 @@ export default function FicheDetail({ ficheId }) {
                   {!canCloseWorkshops && (
                     <p className={styles.closeWorkshopsHint}>
                       Seuls les EVS/CS et ADMIN peuvent clôturer la fiche
+                    </p>
+                  )}
+                  {canCloseWorkshops && !allReportsUploaded && (
+                    <p className={styles.closeWorkshopsHint}>
+                      Tous les bilans doivent être uploadés
                     </p>
                   )}
                 </div>
