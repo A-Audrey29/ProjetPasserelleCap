@@ -1,11 +1,13 @@
 import { Search, Filter } from 'lucide-react';
+import { STATE_LABELS } from '@/utils/constants';
 import styles from './FilterBar.module.css';
 
 export default function FilterBar({ 
   filters, 
   onFiltersChange, 
   organizations = [],
-  objectives = []
+  objectives = [],
+  userRole
 }) {
   const handleFilterChange = (key, value) => {
     onFiltersChange({
@@ -50,33 +52,32 @@ export default function FilterBar({
             data-testid="select-state"
           >
             <option value="">Tous les états</option>
-            <option value="DRAFT">Brouillon</option>
-            <option value="SUBMITTED_TO_FEVES">Envoyé FEVES</option>
-            <option value="ASSIGNED_TO_EVS">Affecté EVS</option>
-            <option value="EVS_ACCEPTED">Accepté EVS</option>
-            <option value="CONTRACT_SIGNED">Contrat signé</option>
-            <option value="CLOSED">Clôturé</option>
-          </select>
-        </div>
-        
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel}>
-            EVS/CS
-          </label>
-          <select 
-            className={styles.selectInput}
-            value={filters.assignedOrgId || ''}
-            onChange={(e) => handleFilterChange('assignedOrgId', e.target.value)}
-            data-testid="select-organization"
-          >
-            <option value="">Toutes les organisations</option>
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
+            {Object.entries(STATE_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
             ))}
           </select>
         </div>
+        
+        {userRole !== 'EMETTEUR' && (
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>
+              EVS/CS
+            </label>
+            <select 
+              className={styles.selectInput}
+              value={filters.assignedOrgId || ''}
+              onChange={(e) => handleFilterChange('assignedOrgId', e.target.value)}
+              data-testid="select-organization"
+            >
+              <option value="">Toutes les organisations</option>
+              {organizations.map((org) => (
+                <option key={org.orgId} value={org.orgId}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
     </div>
   );

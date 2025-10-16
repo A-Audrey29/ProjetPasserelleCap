@@ -9,15 +9,15 @@ export default function StatusBadge({ state, className = '' }) {
       case 'DRAFT':
         return `${baseClass} ${styles.statusDraft}`;
       case 'SUBMITTED_TO_FEVES':
-      case 'NEEDS_INFO':
         return `${baseClass} ${styles.statusSubmitted}`;
       case 'ASSIGNED_EVS':
         return `${baseClass} ${styles.statusAssigned}`;
-      case 'EVS_ACCEPTED':
+      case 'ACCEPTED_EVS':
       case 'CONTRACT_SIGNED':
       case 'ACTIVITY_DONE':
       case 'FIELD_CHECK_SCHEDULED':
       case 'FIELD_CHECK_DONE':
+      case 'FINAL_REPORT_RECEIVED':
         return `${baseClass} ${styles.statusAccepted}`;
       case 'EVS_REJECTED':
         return `${baseClass} ${styles.statusRejected}`;

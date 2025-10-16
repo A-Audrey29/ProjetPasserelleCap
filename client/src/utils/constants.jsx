@@ -1,18 +1,26 @@
 // Fiche states and their labels
 export const STATE_LABELS = {
   DRAFT: 'Brouillon',
-  SUBMITTED_TO_CD: 'Soumis au CD',
   SUBMITTED_TO_FEVES: 'Envoyé FEVES',
   ASSIGNED_EVS: 'Affecté EVS',
   ACCEPTED_EVS: 'Accepté EVS',
-  EVS_ACCEPTED: 'Accepté EVS',
   EVS_REJECTED: 'Refusé EVS',
-  NEEDS_INFO: 'Infos demandées',
   CONTRACT_SIGNED: 'Ateliers en cours',
   ACTIVITY_DONE: 'Ateliers terminés',
-  CLOTUREE: 'Fiche clôturée',
   FIELD_CHECK_SCHEDULED: 'Vérification programmée',
   FIELD_CHECK_DONE: 'Vérification effectuée',
+  FINAL_REPORT_RECEIVED: 'Rapport final reçu',
+  CLOSED: 'Clôturé',
+  ARCHIVED: 'Archivé'
+};
+
+// States available for filtering (excludes obsolete workshop states)
+export const FILTERABLE_STATES = {
+  DRAFT: 'Brouillon',
+  SUBMITTED_TO_FEVES: 'Envoyé FEVES',
+  ASSIGNED_EVS: 'Affecté EVS',
+  ACCEPTED_EVS: 'Accepté EVS',
+  EVS_REJECTED: 'Refusé EVS',
   CLOSED: 'Clôturé',
   ARCHIVED: 'Archivé'
 };

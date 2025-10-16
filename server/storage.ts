@@ -8,7 +8,7 @@ import {
   type EmailLog, type InsertEmailLog, type WorkshopEnrollment, type InsertWorkshopEnrollment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, like, count, sql } from "drizzle-orm";
+import { eq, and, or, desc, asc, like, ilike, count, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // EPCIs
@@ -22,6 +22,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUsersByRole(role: string): Promise<User[]>;
+  getUsersBySearch(search: string): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
   getAllUsers(): Promise<User[]>;
@@ -61,12 +62,21 @@ export interface IStorage {
     search?: string;
   }): Promise<FicheNavette[]>;
   getFiche(id: string): Promise<FicheNavette | undefined>;
+  getFicheByRef(ref: string): Promise<FicheNavette | undefined>;
   createFiche(fiche: InsertFicheNavette): Promise<FicheNavette>;
   updateFiche(id: string, fiche: Partial<InsertFicheNavette>): Promise<FicheNavette>;
   deleteFiche(id: string): Promise<void>;
 
   // Audit Logs
   getAuditLogs(entityId?: string, entity?: string): Promise<AuditLog[]>;
+  getAllAuditLogs(filters?: {
+    actorId?: string;
+    action?: string;
+    entity?: string;
+    search?: string;
+    page?: number;
+    size?: number;
+  }): Promise<{ logs: AuditLog[], total: number }>;
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
 
   // Comments
@@ -144,6 +154,26 @@ export class DatabaseStorage implements IStorage {
 
   async getUsersByRole(role: string): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, role as any)).orderBy(asc(users.lastName));
+  }
+
+  /**
+   * Recherche des utilisateurs par nom ou prénom (insensible à la casse)
+   * Utilisé pour la recherche dans le journal d'audit
+   * @param search - Terme de recherche (partiel accepté)
+   * @returns Liste des utilisateurs dont le nom ou prénom contient le terme recherché
+   */
+  async getUsersBySearch(search: string): Promise<User[]> {
+    const searchPattern = `%${search}%`;
+    return await db
+      .select()
+      .from(users)
+      .where(
+        or(
+          ilike(users.firstName, searchPattern),
+          ilike(users.lastName, searchPattern)
+        )
+      )
+      .orderBy(asc(users.lastName));
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -314,6 +344,20 @@ export class DatabaseStorage implements IStorage {
     return fiche || undefined;
   }
 
+  /**
+   * Recherche une fiche par sa référence (ex: FN-2025-10-018)
+   * Utilisé pour la recherche dans le journal d'audit
+   * @param ref - Référence de la fiche (exacte, insensible à la casse)
+   * @returns La fiche correspondante si trouvée
+   */
+  async getFicheByRef(ref: string): Promise<FicheNavette | undefined> {
+    const [fiche] = await db
+      .select()
+      .from(ficheNavettes)
+      .where(ilike(ficheNavettes.ref, ref));
+    return fiche || undefined;
+  }
+
   async createFiche(insertFiche: InsertFicheNavette): Promise<FicheNavette> {
     const [fiche] = await db.insert(ficheNavettes).values(insertFiche).returning();
     return fiche;
@@ -345,6 +389,100 @@ export class DatabaseStorage implements IStorage {
   async createAuditLog(insertLog: InsertAuditLog): Promise<AuditLog> {
     const [log] = await db.insert(auditLogs).values(insertLog).returning();
     return log;
+  }
+
+  /**
+   * Récupère tous les logs d'audit avec pagination et filtres
+   * Utilisé pour l'interface d'administration
+   * 
+   * RECHERCHE INTELLIGENTE :
+   * - Si le terme commence par "FN-" → recherche par référence de fiche
+   * - Sinon si le terme contient des lettres → recherche par nom/prénom d'acteur
+   * - Sinon → recherche classique dans l'entityId (UUID)
+   * 
+   * @param filters - Filtres optionnels (actorId, action, entity, search, page, size)
+   * @returns Liste paginée des logs avec le total
+   */
+  async getAllAuditLogs(filters?: {
+    actorId?: string;
+    action?: string;
+    entity?: string;
+    search?: string;
+    page?: number;
+    size?: number;
+  }): Promise<{ logs: AuditLog[], total: number }> {
+    const { actorId, action, entity, search, page = 1, size = 50 } = filters || {};
+    
+    // Construction des conditions WHERE
+    const conditions = [];
+    if (actorId) conditions.push(eq(auditLogs.actorId, actorId));
+    // Utilisation de ilike pour rendre les filtres action et entity insensibles à la casse
+    // Cela permet de matcher CREATE avec create, UPDATE avec update, etc.
+    if (action) conditions.push(ilike(auditLogs.action, action));
+    if (entity) conditions.push(ilike(auditLogs.entity, entity));
+    
+    // RECHERCHE INTELLIGENTE
+    if (search && search.trim()) {
+      const trimmedSearch = search.trim();
+      
+      // CAS 1 : Recherche par référence de fiche (commence par FN- insensible à la casse)
+      if (trimmedSearch.toUpperCase().startsWith('FN-')) {
+        console.log(`🔍 Recherche intelligente: détection référence fiche "${trimmedSearch}"`);
+        const fiche = await this.getFicheByRef(trimmedSearch);
+        
+        if (fiche) {
+          console.log(`✅ Fiche trouvée: ${fiche.ref} (ID: ${fiche.id})`);
+          // Filtrer les logs par l'entityId de cette fiche
+          conditions.push(eq(auditLogs.entityId, fiche.id));
+        } else {
+          console.log(`⚠️ Aucune fiche trouvée avec la référence "${trimmedSearch}"`);
+          // Pas de fiche trouvée → aucun résultat
+          // On force une condition impossible pour retourner 0 résultats
+          conditions.push(eq(auditLogs.entityId, 'no-match-found'));
+        }
+      }
+      // CAS 2 : Recherche par nom d'acteur (contient des lettres, pas un UUID pur)
+      else if (/[a-zA-ZÀ-ÿ]/.test(trimmedSearch)) {
+        console.log(`🔍 Recherche intelligente: détection nom d'acteur "${trimmedSearch}"`);
+        const users = await this.getUsersBySearch(trimmedSearch);
+        
+        if (users.length > 0) {
+          const userIds = users.map(u => u.id);
+          console.log(`✅ ${users.length} utilisateur(s) trouvé(s):`, users.map(u => `${u.firstName} ${u.lastName}`).join(', '));
+          // Filtrer les logs par les actorIds trouvés
+          conditions.push(inArray(auditLogs.actorId, userIds));
+        } else {
+          console.log(`⚠️ Aucun utilisateur trouvé avec le terme "${trimmedSearch}"`);
+          // Pas d'utilisateur trouvé → aucun résultat
+          conditions.push(eq(auditLogs.actorId, 'no-match-found'));
+        }
+      }
+      // CAS 3 : Recherche classique dans entityId (UUID ou autre)
+      else {
+        console.log(`🔍 Recherche classique dans entityId: "${trimmedSearch}"`);
+        conditions.push(like(auditLogs.entityId, `%${trimmedSearch}%`));
+      }
+    }
+
+    // Calcul du nombre total de résultats
+    const [totalResult] = await db.select({ count: count() }).from(auditLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    const total = totalResult.count;
+
+    // Récupération des résultats paginés
+    const offset = (page - 1) * size;
+    let query = db.select().from(auditLogs);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    const logs = await query
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(size)
+      .offset(offset);
+
+    return { logs, total };
   }
 
   // Comments
@@ -496,12 +634,13 @@ export class DatabaseStorage implements IStorage {
     let query = db
       .select({
         id: workshopEnrollments.id,
+        ficheId: workshopEnrollments.ficheId,
         workshopId: workshopEnrollments.workshopId,
         evsId: workshopEnrollments.evsId,
         participantCount: workshopEnrollments.participantCount,
         sessionNumber: workshopEnrollments.sessionNumber,
         isLocked: workshopEnrollments.isLocked,
-        contractSignedByEvs: workshopEnrollments.contractSignedByEVS,
+        contractSignedByEVS: workshopEnrollments.contractSignedByEVS,
         contractSignedByCommune: workshopEnrollments.contractSignedByCommune,
         contractCommuneUrl: workshopEnrollments.contractCommunePdfUrl,
         contractSignedAt: workshopEnrollments.contractSignedAt,
@@ -527,15 +666,75 @@ export class DatabaseStorage implements IStorage {
     }
     // ADMIN, RELATIONS_EVS, CD see all sessions
 
-    const sessions = await query.orderBy(
+    const enrollments = await query.orderBy(
       asc(workshops.name),
       asc(workshopEnrollments.sessionNumber)
     );
 
-    // Get associated fiches for each session
-    const sessionsWithFiches = await Promise.all(
-      sessions.map(async (session) => {
-        const fiches = await db
+    // Group enrollments by (workshopId, evsId, sessionNumber)
+    const sessionMap = new Map<string, {
+      enrollments: typeof enrollments;
+      workshopName: string;
+      workshopMinCapacity: number;
+      workshopMaxCapacity: number;
+      evsName: string;
+    }>();
+
+    for (const enrollment of enrollments) {
+      const sessionKey = `${enrollment.workshopId}-${enrollment.evsId}-${enrollment.sessionNumber}`;
+      
+      if (!sessionMap.has(sessionKey)) {
+        sessionMap.set(sessionKey, {
+          enrollments: [],
+          workshopName: enrollment.workshopName || '',
+          workshopMinCapacity: enrollment.workshopMinCapacity || 0,
+          workshopMaxCapacity: enrollment.workshopMaxCapacity || 0,
+          evsName: enrollment.evsName || ''
+        });
+      }
+      
+      sessionMap.get(sessionKey)!.enrollments.push(enrollment);
+    }
+
+    // Aggregate data for each session
+    const sessions = await Promise.all(
+      Array.from(sessionMap.entries()).map(async ([sessionKey, sessionData]) => {
+        const { enrollments: sessionEnrollments, workshopName, workshopMinCapacity, workshopMaxCapacity, evsName } = sessionData;
+        
+        // Use first enrollment as base
+        const baseEnrollment = sessionEnrollments[0];
+        
+        // Aggregate values across all enrollments in this session
+        const aggregated = {
+          participantCount: sessionEnrollments.reduce((sum, e) => sum + (e.participantCount || 0), 0),
+          isLocked: sessionEnrollments.some(e => e.isLocked),
+          contractSignedByEVS: sessionEnrollments.some(e => e.contractSignedByEVS),
+          contractSignedByCommune: sessionEnrollments.some(e => e.contractSignedByCommune),
+          activityDone: sessionEnrollments.some(e => e.activityDone),
+          controlScheduled: sessionEnrollments.some(e => e.controlScheduled),
+          // Take most recent dates (MAX)
+          contractSignedAt: sessionEnrollments.reduce((latest, e) => {
+            if (!e.contractSignedAt) return latest;
+            if (!latest) return e.contractSignedAt;
+            return new Date(e.contractSignedAt) > new Date(latest) ? e.contractSignedAt : latest;
+          }, null as Date | null),
+          activityCompletedAt: sessionEnrollments.reduce((latest, e) => {
+            if (!e.activityCompletedAt) return latest;
+            if (!latest) return e.activityCompletedAt;
+            return new Date(e.activityCompletedAt) > new Date(latest) ? e.activityCompletedAt : latest;
+          }, null as Date | null),
+          controlValidatedAt: sessionEnrollments.reduce((latest, e) => {
+            if (!e.controlValidatedAt) return latest;
+            if (!latest) return e.controlValidatedAt;
+            return new Date(e.controlValidatedAt) > new Date(latest) ? e.controlValidatedAt : latest;
+          }, null as Date | null),
+          // Take first non-null PDF URL
+          contractCommunePdfUrl: sessionEnrollments.find(e => e.contractCommuneUrl)?.contractCommuneUrl || null
+        };
+
+        // Get all unique fiches for this session via their ficheIds
+        const ficheIds = Array.from(new Set(sessionEnrollments.map(e => e.ficheId).filter(Boolean)));
+        const fiches = ficheIds.length > 0 ? await db
           .select({
             id: ficheNavettes.id,
             ref: ficheNavettes.ref,
@@ -543,37 +742,34 @@ export class DatabaseStorage implements IStorage {
             participantsCount: ficheNavettes.participantsCount
           })
           .from(ficheNavettes)
-          .where(
-            and(
-              eq(ficheNavettes.assignedOrgId, session.evsId),
-              sql`${ficheNavettes.selectedWorkshops}->>${session.workshopId} = 'true'`
-            )
-          );
+          .where(sql`${ficheNavettes.id} IN (${sql.join(ficheIds.map(id => sql`${id}`), sql`, `)})`)
+        : [];
 
         return {
-          id: session.id,
-          workshopId: session.workshopId,
-          sessionNumber: session.sessionNumber,
-          participantCount: session.participantCount,
-          isLocked: session.isLocked,
-          contractSignedByEVS: session.contractSignedByEvs,
-          contractSignedByCommune: session.contractSignedByCommune,
-          contractCommunePdfUrl: session.contractCommuneUrl,
-          contractSignedAt: session.contractSignedAt,
-          activityDone: session.activityDone,
-          activityCompletedAt: session.activityCompletedAt,
-          controlScheduled: session.controlScheduled,
-          controlValidatedAt: session.controlValidatedAt,
-          createdAt: session.createdAt,
+          // Use first enrollment ID as session identifier
+          id: baseEnrollment.id,
+          workshopId: baseEnrollment.workshopId,
+          sessionNumber: baseEnrollment.sessionNumber,
+          participantCount: aggregated.participantCount,
+          isLocked: aggregated.isLocked,
+          contractSignedByEVS: aggregated.contractSignedByEVS,
+          contractSignedByCommune: aggregated.contractSignedByCommune,
+          contractCommunePdfUrl: aggregated.contractCommunePdfUrl,
+          contractSignedAt: aggregated.contractSignedAt,
+          activityDone: aggregated.activityDone,
+          activityCompletedAt: aggregated.activityCompletedAt,
+          controlScheduled: aggregated.controlScheduled,
+          controlValidatedAt: aggregated.controlValidatedAt,
+          createdAt: baseEnrollment.createdAt,
           workshop: {
-            id: session.workshopId,
-            name: session.workshopName,
-            minCapacity: session.workshopMinCapacity,
-            maxCapacity: session.workshopMaxCapacity
+            id: baseEnrollment.workshopId,
+            name: workshopName,
+            minCapacity: workshopMinCapacity,
+            maxCapacity: workshopMaxCapacity
           },
           evs: {
-            id: session.evsId,
-            name: session.evsName
+            id: baseEnrollment.evsId,
+            name: evsName
           },
           fiches: fiches.map(f => ({
             id: f.id,
@@ -585,7 +781,7 @@ export class DatabaseStorage implements IStorage {
       })
     );
 
-    return sessionsWithFiches;
+    return sessions;
   }
 
   // Helper function to extract guardian name from familyDetailedData

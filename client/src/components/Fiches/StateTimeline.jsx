@@ -13,13 +13,13 @@ export default function StateTimeline({ currentState, stateHistory = [] }) {
     'ACTIVITY_DONE',
     'FIELD_CHECK_SCHEDULED',
     'FIELD_CHECK_DONE',
+    'FINAL_REPORT_RECEIVED',
     'CLOSED',
-    'CLOTUREE',
     'ARCHIVED'
   ];
 
   // Alternative workflow branches
-  const alternativeStates = ['EVS_REJECTED', 'NEEDS_INFO'];
+  const alternativeStates = ['EVS_REJECTED'];
 
   const getCurrentStateIndex = () => {
     return workflowStates.indexOf(currentState);

@@ -3,6 +3,7 @@ import { FileText, Users, CheckCircle, ArrowRight, Plus, Eye, BarChart3, Setting
 import { useAuth } from '@/hooks/useAuth';
 import { getRoleActionSuggestions } from '@/utils/permissions';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import styles from './Home.module.css';
 
 export default function Home() {
@@ -259,6 +260,7 @@ export default function Home() {
           </>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

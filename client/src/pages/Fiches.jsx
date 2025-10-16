@@ -5,6 +5,7 @@ import { Eye, FileText, Plus, Search, Filter, Calendar, User, Building } from 'l
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission, ROLES, ACTIONS } from '@/utils/permissions';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
@@ -12,16 +13,23 @@ import { Card, CardContent } from '@/components/common/Card';
 import styles from './Fiches.module.css';
 
 // Import state labels from constants
-import { STATE_LABELS } from '../utils/constants';
+import { STATE_LABELS, FILTERABLE_STATES } from '../utils/constants';
 
 const STATE_COLORS = {
   'DRAFT': 'secondary',
-  'SUBMITTED_TO_CD': 'default',
   'SUBMITTED_TO_FEVES': 'default',
   'ASSIGNED_EVS': 'outline',
+  'ACCEPTED_EVS': 'default',
+  'EVS_REJECTED': 'destructive',
+  'CONTRACT_SIGNED': 'default',
+  'ACTIVITY_DONE': 'default',
+  'FIELD_CHECK_SCHEDULED': 'default',
+  'FIELD_CHECK_DONE': 'default',
+  'FINAL_REPORT_RECEIVED': 'default',
   'IN_PROGRESS': 'default',
   'COMPLETED': 'success',
   'CLOSED': 'success',
+  'ARCHIVED': 'secondary',
   'REJECTED': 'destructive',
   'CANCELLED': 'destructive'
 };
@@ -96,11 +104,6 @@ export default function Fiches() {
       return 'Vos fiches navettes';
     }
     return 'Fiches navettes';
-  };
-
-  const formatAmount = (amountCents) => {
-    if (!amountCents) return '0 €';
-    return `${(amountCents / 100).toFixed(2)} €`;
   };
 
   const formatDate = (dateString) => {
@@ -206,7 +209,7 @@ export default function Fiches() {
               >
                 <option value="">Filtrer par état</option>
                 <option value="all">Tous les états</option>
-                {Object.entries(STATE_LABELS).map(([key, label]) => (
+                {Object.entries(FILTERABLE_STATES).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
               </select>
@@ -228,7 +231,7 @@ export default function Fiches() {
                   <CardContent className={styles.cardContent}>
                     <div className={styles.cardHeader}>
                       <div className={styles.cardTitle}>
-                        <span className={styles.ficheRef}>#{fiche.id.slice(0, 8)}</span>
+                        <span className={styles.ficheRef}>#{fiche.ref}</span>
                         <Badge 
                           variant={STATE_COLORS[fiche.state] || 'default'}
                           className={styles.stateBadge}
@@ -255,15 +258,6 @@ export default function Fiches() {
                           <div className={styles.detailItem}>
                             <Building className={styles.detailIcon} />
                             <span>Assignée à: {fiche.assignedOrg.name}</span>
-                          </div>
-                        )}
-
-                        {/* Only show amount for ADMIN and RELATIONS_EVS */}
-                        {(user?.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (
-                          <div className={styles.detailItem}>
-                            <span className={styles.amount}>
-                              Montant: {formatAmount(fiche.totalAmount)}
-                            </span>
                           </div>
                         )}
                       </div>
@@ -303,6 +297,7 @@ export default function Fiches() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

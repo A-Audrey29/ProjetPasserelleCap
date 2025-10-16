@@ -10,6 +10,9 @@ app.use(express.urlencoded({ extended: false }));
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Serve legal documents (markdown files)
+app.use('/legal', express.static(path.join(process.cwd(), 'legal')));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

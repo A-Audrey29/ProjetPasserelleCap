@@ -1,4 +1,4 @@
-import { FileText, Clock, Users, Euro } from 'lucide-react';
+import { FileText, Clock, Users } from 'lucide-react';
 import styles from './KPICards.module.css';
 
 export default function KPICards({ stats = {} }) {
@@ -23,13 +23,6 @@ export default function KPICards({ stats = {} }) {
       icon: Users,
       color: 'success',
       testId: 'kpi-families-helped'
-    },
-    {
-      title: 'Budget engagé',
-      value: `€${(stats.totalBudget || 0).toLocaleString()}`,
-      icon: Euro,
-      color: 'primary',
-      testId: 'kpi-total-budget'
     }
   ];
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { X, Save, User, Mail, Shield, Key } from 'lucide-react';
+import { X, Save, User, Mail, Shield, Key, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
@@ -42,6 +42,7 @@ export default function UserForm({ user, onClose, onSuccess }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
 
   
 
@@ -331,14 +332,24 @@ export default function UserForm({ user, onClose, onSuccess }) {
                 <Key className={styles.labelIcon} />
                 {isEditing ? 'Nouveau mot de passe' : 'Mot de passe *'}
               </label>
-              <Input
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                className={errors.password ? styles.inputError : ''}
-                placeholder={isEditing ? 'Laisser vide pour ne pas changer' : 'Mot de passe'}
-                data-testid="input-user-password"
-              />
+              <div className={styles.passwordWrapper}>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  className={errors.password ? styles.inputError : ''}
+                  placeholder={isEditing ? 'Laisser vide pour ne pas changer' : 'Mot de passe'}
+                  data-testid="input-user-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className={styles.passwordToggle}
+                  data-testid="button-toggle-password"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.password && <span className={styles.error}>{errors.password}</span>}
             </div>
 

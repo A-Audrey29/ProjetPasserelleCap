@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, pgEnum, json, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, pgEnum, json, index, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -7,9 +7,9 @@ import { z } from "zod";
 export const roleEnum = pgEnum("role", ["ADMIN", "SUIVI_PROJETS", "EMETTEUR", "RELATIONS_EVS", "EVS_CS", "CD"]);
 export const orgTypeEnum = pgEnum("org_type", ["EVS", "CS", "OTHER"]);
 export const ficheStateEnum = pgEnum("fiche_state", [
-  "DRAFT", "SUBMITTED_TO_CD", "SUBMITTED_TO_FEVES", "ASSIGNED_EVS", "ACCEPTED_EVS", "EVS_REJECTED", "NEEDS_INFO",
+  "DRAFT", "SUBMITTED_TO_FEVES", "ASSIGNED_EVS", "ACCEPTED_EVS", "EVS_REJECTED",
   "CONTRACT_SIGNED", "ACTIVITY_DONE", "FIELD_CHECK_SCHEDULED",
-  "FIELD_CHECK_DONE", "CLOSED", "CLOTUREE", "ARCHIVED"
+  "FIELD_CHECK_DONE", "FINAL_REPORT_RECEIVED", "CLOSED", "ARCHIVED"
 ]);
 export const emailStatusEnum = pgEnum("email_status", ["intercepted", "sent", "viewed", "archived", "error"]);
 
@@ -87,6 +87,7 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
   
   // État de la session
   isLocked: boolean("is_locked").notNull().default(false), // Verrouillé quand seuil atteint
+  minCapacityNotificationSent: boolean("min_capacity_notification_sent").notNull().default(false), // Notification "atelier prêt" envoyée
   
   // Gestion des contrats par session
   contractSignedByEVS: boolean("contract_signed_by_evs").notNull().default(false),
@@ -115,6 +116,8 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
   workshopIdx: index("workshop_enrollments_workshop_idx").on(table.workshopId),
   evsIdx: index("workshop_enrollments_evs_idx").on(table.evsId),
   sessionIdx: index("workshop_enrollments_session_idx").on(table.workshopId, table.evsId, table.sessionNumber),
+  // Protection anti-doublon: une fiche ne peut être inscrite qu'une seule fois à un atelier
+  uniqueFicheWorkshop: unique("unique_fiche_workshop").on(table.ficheId, table.workshopId),
 }));
 
 export const ficheNavettes = pgTable("fiche_navettes", {

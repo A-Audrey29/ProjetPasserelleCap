@@ -1,0 +1,58 @@
+🔔 1. SOUMISSION INITIALE
+DRAFT → SUBMITTED_TO_FEVES
+📤 Déclencheur : Émetteur soumet sa fiche
+👥 Destinataires : Tous les RELATIONS_EVS (FEVES)
+📄 Contenu : Nouvelle fiche #[ref] de [émetteur] ([structure])
+
+🔔 2. AFFECTATION EVS
+SUBMITTED_TO_FEVES → ASSIGNED_EVS
+📤 Déclencheur : RELATIONS_EVS assigne à une organisation EVS/CS
+👥 Destinataire : Contact de l'organisation EVS assignée (contactEmail)
+📄 Contenu : Fiche #[ref] assignée à votre organisation
+
+2B. Refus - SUBMITTED_TO_FEVES → DRAFT
+📤 Déclencheur : RELATIONS_EVS refuse la fiche
+👥 Destinataires : Émetteur soumet sa fiche
+📄 Contenu : La FEVES a refusée la fiche #[ref] - Raison: [raison]
+
+🔔 3. RÉPONSE EVS
+3A. Acceptation - ASSIGNED_EVS → ACCEPTED_EVS
+📤 Déclencheur : EVS accepte la fiche
+👥 Destinataires : Tous les RELATIONS_EVS
+📄 Contenu : [Organisation EVS] a accepté la fiche #[ref]
+3B. Refus - ASSIGNED_EVS → SUBMITTED_TO_FEVES
+📤 Déclencheur : EVS refuse la fiche
+👥 Destinataires : Tous les RELATIONS_EVS
+📄 Contenu : [Organisation EVS] a refusé la fiche #[ref] - Raison: [raison]
+
+Ajouté une notification un atelier est prêt dans une EVS/VC envoyer une notification à EVS/CS concerné avec [tel atelier] [session]- fiche #[ref].
+
+🔔 4. CONTRAT SIGNÉ
+ACCEPTED_EVS → CONTRACT_SIGNED
+📤 Déclencheur : Contrats signés
+👥 Destinataires : Tous les RELATIONS_EVS
+📄 Contenu : Contrat signé pour [tel atelier] [session] [Organisation EVS] - fiche #[ref]. Débloquer les 70% du montant de la subvention de l’atelier.
+
+🔔 5. ACTIVITÉ TERMINÉE (NIVEAU FICHE)
+CONTRACT_SIGNED → ACTIVITY_DONE
+📤 Déclencheur : Activité marquée terminée
+👥 Destinataires : Tous les RELATIONS_EVS
+📄 Contenu : Activité terminée pour fiche #[ref] - [Organisation EVS]
+
+🔔 6. ACTIVITÉ ATELIER TERMINÉE (NIVEAU SESSION)
+Bouton "Activité terminée" sur session atelier
+📤 Déclencheur : EVS marque une session atelier comme terminée
+👥 Destinataires : Tous les RELATIONS_EVS
+📄 Contenu : Session [numéro] de [atelier] terminée - [nb] participants - Fiches: [liste]
+
+🔔 7. CONTRÔLE TERRAIN VALIDÉ
+FIELD_CHECK_SCHEDULED → FIELD_CHECK_DONE
+📤 Déclencheur : RELATIONS_EVS valide le contrôle
+👥 Destinataires : Tous les RELATIONS_EVS
+📄 Contenu :Session [numéro] de [atelier] terminée  [Organisation EVS]- [nb] participants - Fiches: [liste] - [Organisation EVS]. Les 30% finaux du montant de la subvention peuvent être versés.
+
+🔔 8. CLÔTURE FICHE (TOUS ATELIERS TERMINÉS)
+ACCEPTED_EVS → CLOSED (court-circuit EVS_CS)
+📤 Déclencheur : EVS clôture tous les ateliers d'une fiche
+👥 Destinataires : Tous les RELATIONS_EVS 
+📄 Contenu : Tous les ateliers de la fiche #[ref] sont terminés, fiche clôturée

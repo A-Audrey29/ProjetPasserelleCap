@@ -1,0 +1,632 @@
+/* AdminAuditTab - Interface du journal d'audit système */
+/* Respect STRICT de la charte graphique : #3B4B61, #F5F6F7, #6A8B74, #D9A066, #8C4A4A */
+/* AUCUNE autre couleur n'est autorisée */
+
+.auditTab {
+  padding: 2rem;
+  background: #F5F6F7;
+  min-height: 100vh;
+}
+
+/* Header avec statistiques */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 2rem;
+}
+
+.headerContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+}
+
+.headerIcon {
+  color: #3B4B61;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.title {
+  font-family: var(--font-titles);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #3B4B61;
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  color: #3B4B61;
+  opacity: 0.7;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Carte de statistiques */
+.statsCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(245, 246, 247, 0.95);
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(59, 75, 97, 0.05);
+}
+
+.statsIcon {
+  color: #6A8B74;
+  flex-shrink: 0;
+}
+
+.statsContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.statsValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3B4B61;
+  line-height: 1;
+}
+
+.statsLabel {
+  font-size: 0.85rem;
+  color: #3B4B61;
+  opacity: 0.6;
+  margin-top: 0.25rem;
+}
+
+/* Conteneur des filtres */
+.filtersContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(245, 246, 247, 0.98);
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  border-radius: 8px;
+}
+
+/* Barre de recherche */
+.searchBox {
+  position: relative;
+  flex: 1;
+  min-width: 280px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #3B4B61;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 2.75rem;
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  border-radius: 6px;
+  background: #F5F6F7;
+  color: #3B4B61;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #6A8B74;
+  box-shadow: 0 0 0 3px rgba(106, 139, 116, 0.1);
+}
+
+/* Groupes de filtres */
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filterLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3B4B61;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filterSelect {
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  border-radius: 6px;
+  background: #F5F6F7;
+  color: #3B4B61;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #6A8B74;
+  box-shadow: 0 0 0 3px rgba(106, 139, 116, 0.1);
+}
+
+.filterSelect:hover {
+  border-color: #6A8B74;
+}
+
+/* Conteneur de la liste des logs */
+.logsContainer {
+  background: rgba(245, 246, 247, 0.98);
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* États de chargement et vide */
+.loadingState,
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.loadingIcon {
+  color: #6A8B74;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loadingState p {
+  color: #3B4B61;
+  opacity: 0.7;
+  font-size: 1rem;
+}
+
+.emptyIcon {
+  color: rgba(59, 75, 97, 0.15);
+  margin-bottom: 1.5rem;
+}
+
+.emptyText {
+  color: #3B4B61;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.emptySubtext {
+  color: #3B4B61;
+  opacity: 0.6;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Table des logs */
+.logsList {
+  width: 100%;
+}
+
+.logsTable {
+  display: flex;
+  flex-direction: column;
+}
+
+/* En-tête du tableau */
+.tableHeader {
+  display: grid;
+  grid-template-columns: 180px 140px 140px 1fr 180px 120px;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: #F5F6F7;
+  border-bottom: 2px solid rgba(59, 75, 97, 0.15);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3B4B61;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Corps du tableau */
+.tableBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 180px 140px 140px 1fr 180px 120px;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #F5F6F7;
+  align-items: center;
+  transition: background 0.15s ease;
+}
+
+.tableRow:hover {
+  background: #F5F6F7;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+/* Colonnes du tableau */
+.columnDate,
+.columnEntity,
+.columnActor {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #3B4B61;
+}
+
+.columnIcon {
+  color: #3B4B61;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.columnAction {
+  display: flex;
+  align-items: center;
+}
+
+.columnEntityId {
+  display: flex;
+  align-items: center;
+}
+
+.columnDetails {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Badge d'action avec couleurs */
+.actionBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+/* Couleurs des badges - strictement charte graphique */
+.badge-success {
+  background: rgba(106, 139, 116, 0.15);
+  color: #6A8B74;
+}
+
+.badge-info {
+  background: rgba(59, 75, 97, 0.1);
+  color: #3B4B61;
+}
+
+.badge-danger {
+  background: rgba(140, 74, 74, 0.15);
+  color: #8C4A4A;
+}
+
+.badge-primary {
+  background: rgba(106, 139, 116, 0.2);
+  color: #6A8B74;
+}
+
+.badge-warning {
+  background: rgba(217, 160, 102, 0.15);
+  color: #D9A066;
+}
+
+.badge-secondary {
+  background: rgba(59, 75, 97, 0.08);
+  color: #3B4B61;
+}
+
+.badge-default {
+  background: #F5F6F7;
+  color: #3B4B61;
+}
+
+/* Code pour l'entityId */
+.entityIdCode {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #3B4B61;
+  background: #F5F6F7;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(59, 75, 97, 0.15);
+}
+
+/* Acteur système */
+.systemActor {
+  color: #3B4B61;
+  opacity: 0.5;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Bouton voir détails */
+.detailsButton {
+  padding: 0.5rem 1rem;
+  background: #6A8B74;
+  color: #F5F6F7;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.detailsButton:hover {
+  background: rgba(106, 139, 116, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(106, 139, 116, 0.3);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: rgba(245, 246, 247, 0.98);
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  border-radius: 8px;
+  margin-top: 1.5rem;
+}
+
+.paginationButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  background: #F5F6F7;
+  color: #3B4B61;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paginationButton:hover:not(:disabled) {
+  border-color: #6A8B74;
+  background: #6A8B74;
+  color: rgba(245, 246, 247, 0.98);
+}
+
+.paginationButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.paginationInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pageIndicator {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #3B4B61;
+}
+
+.itemsIndicator {
+  font-size: 0.85rem;
+  color: #3B4B61;
+  opacity: 0.6;
+}
+
+/* Vue détaillée d'un log */
+.logDetails {
+  padding: 0;
+}
+
+.detailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(59, 75, 97, 0.15);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(245, 246, 247, 0.98);
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  color: #3B4B61;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: #6A8B74;
+  color: rgba(245, 246, 247, 0.98);
+  border-color: #6A8B74;
+}
+
+.detailsTitle {
+  font-family: var(--font-titles);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3B4B61;
+  margin: 0;
+}
+
+/* Contenu des détails */
+.detailsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.detailSection {
+  background: rgba(245, 246, 247, 0.98);
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-titles);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #3B4B61;
+  margin: 0 0 1.25rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #F5F6F7;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.25rem;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detailLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3B4B61;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detailValue {
+  font-size: 0.95rem;
+  color: #3B4B61;
+  word-break: break-word;
+}
+
+/* Conteneur de métadonnées JSON */
+.metadataContainer {
+  background: #F5F6F7;
+  border: 1px solid rgba(59, 75, 97, 0.15);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow: auto;
+  max-height: 400px;
+}
+
+.metadataJson {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: #3B4B61;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 160px 120px 120px 1fr 160px 110px;
+  }
+}
+
+@media (max-width: 968px) {
+  .auditTab {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .statsCard {
+    width: 100%;
+  }
+
+  .filtersContainer {
+    padding: 1rem;
+  }
+
+  .searchBox {
+    min-width: 100%;
+  }
+
+  .filterSelect {
+    min-width: 100%;
+  }
+
+  .tableHeader {
+    display: none;
+  }
+
+  .tableRow {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .columnDate,
+  .columnAction,
+  .columnEntity,
+  .columnEntityId,
+  .columnActor,
+  .columnDetails {
+    justify-content: flex-start;
+  }
+
+  .columnDetails {
+    justify-content: flex-end;
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .paginationButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

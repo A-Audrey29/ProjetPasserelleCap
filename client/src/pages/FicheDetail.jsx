@@ -5,6 +5,7 @@ import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiche } from '@/hooks/useFiches';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import FicheDetail from '@/components/Fiches/FicheDetail';
 import StatusBadge from '@/components/Common/StatusBadge';
 import styles from './FicheDetail.module.css';
@@ -102,6 +103,7 @@ export default function FicheDetailPage() {
 
         <FicheDetail ficheId={id} />
       </main>
+      <Footer />
     </div>
   );
 }

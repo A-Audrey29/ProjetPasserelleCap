@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { Phone, Mail, MapPin } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import styles from './Contact.module.css';
 
 export default function Contact() {
@@ -59,35 +60,40 @@ export default function Contact() {
               </h2>
               
               <div className={styles.contactDetails}>
+                {/* MASQUÉ TEMPORAIREMENT - Section Téléphone
                 <div className={styles.contactItem}>
                   <Phone className={`w-5 h-5 ${styles.contactIcon}`} />
                   <div className={styles.contactItemContent}>
                     <p>Téléphone</p>
-                    <p>01 23 45 67 89</p>
+                    <p>+590 690 37 05 73</p>
                   </div>
                 </div>
+                */}
                 
                 <div className={styles.contactItem}>
                   <Mail className={`w-5 h-5 ${styles.contactIcon}`} />
                   <div className={styles.contactItemContent}>
                     <p>Email</p>
-                    <p>support@passerelle.cap.fr</p>
+                    <p> cap-cd@fevesguadeloupeetsaintmartin.org</p>
                   </div>
                 </div>
                 
+                {/* MASQUÉ TEMPORAIREMENT - Section Adresse postale
                 <div className={styles.contactItem}>
                   <MapPin className={`w-5 h-5 ${styles.contactIcon}`} />
                   <div className={styles.contactItemContent}>
                     <p>Adresse</p>
                     <p>
-                      123 Rue de la Solidarité<br />
-                      75000 Paris
+                      28 rue Léon Blum<br />
+                      97111 Morne-à-l'eau
                     </p>
                   </div>
                 </div>
+                */}
               </div>
             </div>
 
+            {/* MASQUÉ TEMPORAIREMENT - Section Horaires d'ouverture
             <div className={styles.contactCard}>
               <h2 className={styles.cardTitle}>
                 Horaires d'ouverture
@@ -108,9 +114,10 @@ export default function Contact() {
                 </div>
               </div>
             </div>
+            */}
           </div>
 
-          {/* Contact Form */}
+          {/* MASQUÉ TEMPORAIREMENT - Formulaire de contact
           <div className={styles.contactCard}>
             <h2 className={styles.cardTitle}>
               Envoyer un message
@@ -148,8 +155,10 @@ export default function Contact() {
               </button>
             </form>
           </div>
+          */}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

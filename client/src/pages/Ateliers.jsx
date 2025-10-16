@@ -2,16 +2,24 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import WorkshopSessionCard from '@/components/Workshops/WorkshopSessionCard';
 import styles from './Ateliers.module.css';
 
 export default function Ateliers() {
   const { user, isAuthenticated } = useAuth();
   const [stateFilter, setStateFilter] = useState('TOUS');
+  const [organizationFilter, setOrganizationFilter] = useState('');
 
   // Query workshop sessions with role-based filtering
   const { data: sessions = [], isLoading, error } = useQuery({
     queryKey: ['/api/workshop-sessions'],
+    enabled: isAuthenticated
+  });
+
+  // Query organizations for filter
+  const { data: organizations = [] } = useQuery({
+    queryKey: ['/api/organizations'],
     enabled: isAuthenticated
   });
 
@@ -23,10 +31,11 @@ export default function Ateliers() {
     return 'EN ATTENTE';
   };
 
-  // Filter sessions based on selected state
+  // Filter sessions based on selected state and organization
   const filteredSessions = sessions.filter((session) => {
-    if (stateFilter === 'TOUS') return true;
-    return getSessionState(session) === stateFilter;
+    const stateMatch = stateFilter === 'TOUS' || getSessionState(session) === stateFilter;
+    const orgMatch = !organizationFilter || session.evsId === organizationFilter;
+    return stateMatch && orgMatch;
   });
 
   if (isLoading) {
@@ -72,24 +81,46 @@ export default function Ateliers() {
             </p>
           </div>
           
-          {/* Filter */}
+          {/* Filters */}
           <div className={styles.filterSection}>
-            <label htmlFor="state-filter" className={styles.filterLabel}>
-              Filtrer par état :
-            </label>
-            <select
-              id="state-filter"
-              value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value)}
-              className={styles.filterSelect}
-              data-testid="select-state-filter"
-            >
-              <option value="TOUS">Tous</option>
-              <option value="EN ATTENTE">En attente</option>
-              <option value="PRÊTE">Prête</option>
-              <option value="EN COURS">En cours</option>
-              <option value="TERMINÉE">Terminée</option>
-            </select>
+            <div className={styles.filterGroup}>
+              <label htmlFor="state-filter" className={styles.filterLabel}>
+                Filtrer par état :
+              </label>
+              <select
+                id="state-filter"
+                value={stateFilter}
+                onChange={(e) => setStateFilter(e.target.value)}
+                className={styles.filterSelect}
+                data-testid="select-state-filter"
+              >
+                <option value="TOUS">Tous</option>
+                <option value="EN ATTENTE">En attente</option>
+                <option value="PRÊTE">Prête</option>
+                <option value="EN COURS">En cours</option>
+                <option value="TERMINÉE">Terminée</option>
+              </select>
+            </div>
+
+            <div className={styles.filterGroup}>
+              <label htmlFor="organization-filter" className={styles.filterLabel}>
+                Filtrer par structure :
+              </label>
+              <select
+                id="organization-filter"
+                value={organizationFilter}
+                onChange={(e) => setOrganizationFilter(e.target.value)}
+                className={styles.filterSelect}
+                data-testid="select-organization-filter"
+              >
+                <option value="">Toutes les structures</option>
+                {organizations.map((org) => (
+                  <option key={org.orgId} value={org.orgId}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -115,6 +146,7 @@ export default function Ateliers() {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

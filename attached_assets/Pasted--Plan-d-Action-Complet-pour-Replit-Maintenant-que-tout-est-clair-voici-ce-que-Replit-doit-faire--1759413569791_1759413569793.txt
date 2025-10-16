@@ -1,0 +1,264 @@
+## Plan d'Action Complet pour Replit
+
+Maintenant que tout est clair, voici ce que Replit doit faire.
+
+---
+
+## 🎯 Objectifs
+
+1. Corriger le bug des enrollments (chaque fiche doit avoir les siens)
+2. Simplifier les états de fiche (supprimer les redondances)
+3. Ajouter les protections (contrainte UNIQUE, validations backend)
+4. Nettoyer les données de test
+
+---
+
+## 📋 TÂCHES DÉTAILLÉES
+
+### **TÂCHE 1 : Migration du Schéma**
+
+**Fichier** : `shared/schema.ts`
+
+**Action 1.1** : Modifier l'enum des états de fiche
+```typescript
+export const ficheStateEnum = pgEnum("fiche_state", [
+  "DRAFT",
+  "SUBMITTED_TO_FEVES",
+  "ASSIGNED_EVS",
+  "ACCEPTED_EVS",
+  "EVS_REJECTED",
+  "IN_PROGRESS",      // NOUVEAU
+  "READY_TO_CLOSE",   // NOUVEAU
+  "ARCHIVED"          // NOUVEAU (remplace CLOSED)
+]);
+// SUPPRIMER : CONTRACT_SIGNED, ACTIVITY_DONE, FIELD_CHECK_*, FINAL_REPORT_RECEIVED, CLOSED
+```
+
+**Action 1.2** : Ajouter la contrainte UNIQUE sur les enrollments
+```typescript
+export const workshopEnrollments = pgTable("workshop_enrollments", {
+  // ... colonnes existantes
+}, (table) => ({
+  sessionIdx: index("session_idx").on(table.workshopId, table.evsId, table.sessionNumber),
+  uniqueFicheWorkshop: unique("unique_fiche_workshop").on(table.ficheId, table.workshopId) // AJOUTER
+}));
+```
+
+**Action 1.3** : Générer et exécuter la migration
+```bash
+npm run db:generate
+npm run db:migrate
+```
+
+---
+
+### **TÂCHE 2 : Refactoriser la Création des Enrollments**
+
+**Fichier** : `server/services/stateTransitions.js`
+
+**Action 2.1** : Créer `findOrCreateSessionNumber()`
+- Code déjà fourni par Replit (document 4)
+- Vérifier qu'il utilise `maxCapacity` (pas `minCapacity`)
+
+**Action 2.2** : Réécrire `createWorkshopEnrollments()`
+- Code déjà fourni par Replit (document 4)
+- **CRITIQUE** : Vérifier que `storage.getWorkshopEnrollments({ ficheId, workshopId })` fonctionne
+- **Si NON** : Ajouter `storage.getEnrollmentByFicheAndWorkshop(ficheId, workshopId)`
+
+**Action 2.3** : Ajouter la transition automatique IN_PROGRESS
+```javascript
+async function createWorkshopEnrollments(fiche) {
+  // ... code de création des enrollments
+  
+  // Transition automatique ACCEPTED_EVS → IN_PROGRESS
+  await storage.updateFiche(fiche.id, { state: 'IN_PROGRESS' });
+}
+```
+
+---
+
+### **TÂCHE 3 : Refactoriser le Verrouillage des Sessions**
+
+**Fichier** : `server/services/stateTransitions.js`
+
+**Action 3.1** : Réécrire `checkAndLockWorkshopSessions()`
+```javascript
+async function checkAndLockWorkshopSessions(workshopId, evsId) {
+  const enrollments = await storage.getEnrollmentsByWorkshopAndEvs(workshopId, evsId);
+  const workshop = await storage.getWorkshop(workshopId);
+  
+  if (!workshop?.maxCapacity) return;
+  
+  // Grouper par session
+  const sessions = {};
+  for (const e of enrollments) {
+    if (!sessions[e.sessionNumber]) {
+      sessions[e.sessionNumber] = { total: 0, enrollments: [] };
+    }
+    sessions[e.sessionNumber].total += e.participantCount;
+    sessions[e.sessionNumber].enrollments.push(e);
+  }
+  
+  // Verrouiller chaque session qui atteint maxCapacity
+  for (const session of Object.values(sessions)) {
+    if (session.total >= workshop.maxCapacity) {
+      for (const enrollment of session.enrollments) {
+        if (!enrollment.isLocked) {
+          await storage.updateWorkshopEnrollment(enrollment.id, { isLocked: true });
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### **TÂCHE 4 : Créer l'Endpoint "Tous Ateliers Réalisés"**
+
+**Fichier** : `server/routes.ts`
+
+**Action 4.1** : Créer l'endpoint avec validation stricte
+```javascript
+app.post('/api/fiches/:id/mark-completed', 
+  requireAuth, 
+  requireRole(['EVS_CS']),
+  async (req, res) => {
+    const ficheId = req.params.id;
+    
+    // Validation : tous les bilans uploadés
+    const enrollments = await storage.getEnrollmentsByFiche(ficheId);
+    
+    if (enrollments.length === 0) {
+      return res.status(400).json({ error: 'No workshops enrolled' });
+    }
+    
+    const missingReports = enrollments.filter(e => !e.reportUrl);
+    if (missingReports.length > 0) {
+      return res.status(400).json({ 
+        error: `Cannot close: ${missingReports.length} workshop reports missing` 
+      });
+    }
+    
+    // Transition valide
+    await storage.updateFiche(ficheId, { state: 'READY_TO_CLOSE' });
+    
+    res.json({ success: true });
+  }
+);
+```
+
+---
+
+### **TÂCHE 5 : Créer l'Endpoint "Archiver Fiche"**
+
+**Fichier** : `server/routes.ts`
+
+**Action 5.1** : Endpoint pour la FEVES (sans vérification contrôle)
+```javascript
+app.post('/api/fiches/:id/archive', 
+  requireAuth, 
+  requireRole(['RELATIONS_EVS', 'ADMIN']),
+  async (req, res) => {
+    const ficheId = req.params.id;
+    const fiche = await storage.getFiche(ficheId);
+    
+    if (fiche.state !== 'READY_TO_CLOSE') {
+      return res.status(400).json({ 
+        error: 'Fiche must be in READY_TO_CLOSE state' 
+      });
+    }
+    
+    await storage.updateFiche(ficheId, { state: 'ARCHIVED' });
+    
+    res.json({ success: true });
+  }
+);
+```
+
+---
+
+### **TÂCHE 6 : Nettoyer les Fiches de Test**
+
+**Script SQL** à exécuter :
+```sql
+-- Supprimer les enrollments des fiches de test
+DELETE FROM workshop_enrollments 
+WHERE fiche_id IN (
+  SELECT id FROM fiche_navettes 
+  WHERE ref LIKE 'FN-2025-10-%'
+);
+
+-- Supprimer les fiches de test
+DELETE FROM fiche_navettes 
+WHERE ref LIKE 'FN-2025-10-%';
+```
+
+---
+
+### **TÂCHE 7 : Mettre à Jour le Frontend**
+
+**Fichiers à vérifier** (rechercher les anciens états) :
+- `client/src/components/Fiches/*.jsx`
+- `client/src/pages/*.jsx`
+- `client/src/utils/permissions.js`
+
+**Remplacements nécessaires** :
+```javascript
+// ❌ Ancien code
+if (fiche.state === 'CONTRACT_SIGNED') { ... }
+if (fiche.state === 'ACTIVITY_DONE') { ... }
+
+// ✅ Nouveau code
+if (fiche.state === 'IN_PROGRESS') { ... }
+```
+
+**Action 7.1** : Chercher tous les usages des anciens états
+```bash
+grep -r "CONTRACT_SIGNED\|ACTIVITY_DONE\|FIELD_CHECK_SCHEDULED\|FIELD_CHECK_DONE\|FINAL_REPORT_RECEIVED\|CLOSED" client/src
+```
+
+**Action 7.2** : Remplacer par `IN_PROGRESS` ou `READY_TO_CLOSE` selon le contexte
+
+---
+
+### **TÂCHE 8 : Ajouter la Méthode Storage Manquante**
+
+**Fichier** : `server/storage.ts`
+
+**Action 8.1** : Ajouter `getEnrollmentsByFiche()`
+```typescript
+async getEnrollmentsByFiche(ficheId: string): Promise<Enrollment[]> {
+  return db.query.workshopEnrollments.findMany({
+    where: eq(workshopEnrollments.ficheId, ficheId)
+  });
+}
+```
+
+---
+
+## ✅ Tests de Validation
+
+Après déploiement, tester ce scénario :
+
+1. Créer FN-2025-10-003 avec 3 ateliers
+2. Passer à ACCEPTED_EVS
+3. **Vérifier** : État = IN_PROGRESS automatiquement
+4. **Vérifier** : 3 enrollments créés dans la BDD
+5. Créer FN-2025-10-004 avec les mêmes ateliers
+6. Passer à ACCEPTED_EVS
+7. **Vérifier** : FN-004 a ses propres 3 enrollments (pas de réutilisation)
+8. **Vérifier** : Dans Gestion Ateliers, les 2 fiches apparaissent (8 participants total)
+9. **Vérifier** : Dans Détail FN-004, la section "Bilans" s'affiche
+
+---
+
+## 🚨 Points Critiques pour Replit
+
+1. **Vérifier** que `storage.getWorkshopEnrollments()` supporte les filtres `{ ficheId, workshopId }`
+2. **Utiliser** `maxCapacity` (pas `minCapacity`) dans `findOrCreateSessionNumber()`
+3. **Ne pas oublier** la transition automatique IN_PROGRESS après création enrollments
+4. **Ne pas oublier** la contrainte UNIQUE dans le schéma
+5. **Chercher et remplacer** tous les usages des anciens états dans le frontend
+
+Confirmez que ce plan est complet et clair ?

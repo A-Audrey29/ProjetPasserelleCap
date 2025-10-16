@@ -1,0 +1,71 @@
+/* Footer component styles - Charte graphique stricte */
+
+.footer {
+  background-color: #3B4B61;
+  color: #F5F6F7;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 1.5rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 1.5rem 2rem;
+  }
+}
+
+.legalLinks {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.legalLink {
+  font-size: 0.875rem;
+  color: #F5F6F7;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.legalLink:hover {
+  color: #6A8B74;
+  text-decoration: underline;
+}
+
+/* Copyright commenté - peut être réactivé si besoin */
+.bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1.5rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.copyright {
+  font-size: 0.875rem;
+  color: rgba(245, 246, 247, 0.7);
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .legalLink {
+    font-size: 0.8125rem;
+  }
+  
+  .legalLinks {
+    gap: 1.5rem;
+  }
+}

@@ -182,9 +182,8 @@ export function formatState(state) {
     DRAFT: 'Brouillon',
     SUBMITTED_TO_FEVES: 'Envoyé FEVES',
     ASSIGNED_EVS: 'Affecté EVS',
-    EVS_ACCEPTED: 'Accepté EVS',
+    ACCEPTED_EVS: 'Accepté EVS',
     EVS_REJECTED: 'Refusé EVS',
-    NEEDS_INFO: 'Infos demandées',
     CONTRACT_SENT: 'Contrat envoyé',
     CONTRACT_SIGNED: 'Contrat signé',
     ADVANCE_70_PAID: 'Avance 70% payée',
@@ -192,7 +191,6 @@ export function formatState(state) {
     FIELD_CHECK_SCHEDULED: 'Vérification programmée',
     FIELD_CHECK_DONE: 'Vérification effectuée',
     FINAL_REPORT_RECEIVED: 'Rapport final reçu',
-    REMAINING_30_PAID: 'Solde 30% payé',
     CLOSED: 'Clôturé',
     ARCHIVED: 'Archivé'
   };

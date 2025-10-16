@@ -6,6 +6,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import styles from './Header.module.css';
+import logoCD from '@assets/logo-conseil-departemental_1759841302876.png';
+import logoFEVES from '@assets/LOGO FEVES_1759841302878.jpg';
 
 export default function Header() {
   const [location] = useLocation();
@@ -57,7 +59,7 @@ export default function Header() {
     {
       href: '/contact',
       label: 'Nous contacter',
-      roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'EVS_CS', 'CD']
+      roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS', 'CD']
     }
   ];
 
@@ -157,6 +159,8 @@ export default function Header() {
           <div className={styles.headerContent}>
             {/* Logo/Title */}
             <div className={styles.logoSection}>
+              <img src={logoCD} alt="Conseil Départemental de la Guadeloupe" className={styles.logoImage} />
+              <img src={logoFEVES} alt="FEVES Guadeloupe & St Martin" className={styles.logoImage} />
               <Link href="/" className={styles.logo}>
                 Passerelle CAP
               </Link>

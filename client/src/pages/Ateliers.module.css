@@ -29,6 +29,13 @@
   margin-top: 1.5rem;
   display: flex;
   align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
 }
 
@@ -36,6 +43,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: rgb(var(--foreground));
+  white-space: nowrap;
 }
 
 .filterSelect {

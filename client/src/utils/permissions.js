@@ -217,9 +217,7 @@ export const PERMISSIONS = {
     
     // Creation & Edition - Read-only (no creation or modification)
     
-    // Validation & Workflow - CD validation powers (Valider/Refuser)
-    ACTIONS.VALIDATE_OFFICIAL,
-    ACTIONS.REFUSE_REQUEST_CORRECTIONS,
+    // Validation & Workflow - Read-only (CD ne valide plus les fiches)
     
     // Documents - Read access only
     ACTIONS.DOWNLOAD_ALL_DOCUMENTS,
@@ -372,30 +370,26 @@ export const getRoleActionSuggestions = (role) => {
     });
   }
   
+  // EVS/CS - Système d'ateliers collectifs
+  // Les EVS/CS gèrent maintenant des sessions d'ateliers collectifs automatisées
+  // au lieu de compléter individuellement chaque fiche navette
   if (role === ROLES.EVS_CS) {
     actionSuggestions.push({
-      icon: 'FileText',
-      title: 'Compléter les accompagnements',
-      description: 'Enrichir les fiches avec vos interventions locales',
-      href: '/completion',
+      icon: 'Users',
+      title: 'Gestion des Ateliers',
+      description: 'Gérer vos sessions d\'ateliers et inscriptions',
+      href: '/ateliers',
       color: 'primary'
-    });
-    actionSuggestions.push({
-      icon: 'CheckCircle',
-      title: 'Clôturer vos interventions',
-      description: 'Finaliser votre partie des accompagnements',
-      href: '/closure',
-      color: 'success'
     });
   }
   
   if (role === ROLES.CD) {
     actionSuggestions.push({
-      icon: 'CheckCircle',
-      title: 'Fiches en attente de validations',
-      description: 'Valider les fiches soumises pour transmission à FEVES',
-      href: '/fiches?state=SUBMITTED_TO_CD',
-      color: 'success'
+      icon: 'Users',
+      title: 'Consulter la gestion des ateliers',
+      description: 'Consulter les sessions d\'ateliers et les inscriptions',
+      href: '/ateliers',
+      color: 'primary'
     });
     actionSuggestions.push({
       icon: 'FileText',

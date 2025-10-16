@@ -18,6 +18,16 @@ class NotificationService {
       const emitter = await storage.getUser(fiche.emitterId);
       const emitterName = emitter ? `${emitter.firstName} ${emitter.lastName}` : undefined;
       
+      // Récupérer la structure d'appartenance de l'émetteur
+      let emitterStructure = null;
+      if (emitter?.orgId) {
+        const emitterOrg = await storage.getOrganization(emitter.orgId);
+        emitterStructure = emitterOrg?.name;
+      } else if (emitter?.structure) {
+        // Fallback sur le champ texte libre si pas d'orgId
+        emitterStructure = emitter.structure;
+      }
+      
       // Récupérer les informations de l'organisation assignée si applicable
       let assignedOrg = null;
       let evsOrgName = null;
@@ -37,10 +47,10 @@ class NotificationService {
         case 'SUBMITTED_TO_FEVES':
           if (oldState === 'DRAFT') {
             // Émetteur transmet directement à FEVES (nouveau workflow)
-            await this.notifySubmittedToFeves(fiche, emitterName);
+            await this.notifySubmittedToFeves(fiche, emitterName, emitterStructure);
           } else if (oldState === 'SUBMITTED_TO_CD') {
             // Validation par le CD (legacy workflow)
-            await this.notifySubmittedToFeves(fiche, emitterName);
+            await this.notifySubmittedToFeves(fiche, emitterName, emitterStructure);
           }
           break;
           
@@ -48,6 +58,9 @@ class NotificationService {
           if (oldState === 'SUBMITTED_TO_CD') {
             // Refus par le CD
             await this.notifyCdRejection(fiche, emitter, metadata.reason);
+          } else if (oldState === 'SUBMITTED_TO_FEVES') {
+            // Refus par FEVES (RELATIONS_EVS)
+            await this.notifyFevesRejection(fiche, emitter, metadata.reason);
           }
           break;
           
@@ -99,14 +112,15 @@ class NotificationService {
   }
 
   /**
-   * Notification : Fiche validée par le CD et transmise à FEVES
+   * Notification : Fiche transmise à FEVES
    */
-  async notifySubmittedToFeves(fiche, emitterName) {
+  async notifySubmittedToFeves(fiche, emitterName, emitterStructure) {
     const fevesEmails = await this.getFevesEmails();
     if (fevesEmails.length > 0) {
       await emailService.sendSubmittedToFevesNotification({
         fevesEmails,
         emitterName,
+        emitterStructure,
         ficheId: fiche.id,
         ficheRef: fiche.ref
       });
@@ -129,7 +143,23 @@ class NotificationService {
   }
 
   /**
+   * Notification : Fiche refusée par FEVES (RELATIONS_EVS)
+   */
+  async notifyFevesRejection(fiche, emitter, reason) {
+    if (emitter?.email) {
+      await emailService.sendFevesRejectionNotification({
+        emitterEmail: emitter.email,
+        emitterName: `${emitter.firstName} ${emitter.lastName}`,
+        ficheId: fiche.id,
+        ficheRef: fiche.ref,
+        reason
+      });
+    }
+  }
+
+  /**
    * Notification : Fiche assignée à un EVS
+   * Envoie la référence formatée (FN-ANNEE-MOIS-CHIFFRE) pour affichage lisible
    */
   async notifyEvsAssignment(fiche, assignedOrg) {
     if (assignedOrg?.contactEmail) {
@@ -137,7 +167,8 @@ class NotificationService {
         contactEmail: assignedOrg.contactEmail,
         contactName: assignedOrg.contactName,
         orgName: assignedOrg.name,
-        ficheId: fiche.id
+        ficheId: fiche.id,        // UUID pour traçabilité logs
+        ficheRef: fiche.ref // Référence formatée pour affichage utilisateur
       });
     }
   }
@@ -175,12 +206,13 @@ class NotificationService {
 
   /**
    * Notification : Contrat signé (paiement 70% à déclencher)
+   * Envoyée aux RELATIONS_EVS pour suivi
    */
   async notifyContractSigned(fiche, evsOrgName) {
-    const cdEmails = await this.getCdEmails();
-    if (cdEmails.length > 0) {
+    const fevesEmails = await this.getFevesEmails();
+    if (fevesEmails.length > 0) {
       await emailService.sendContractSignedNotification({
-        cdEmails,
+        fevesEmails,
         evsOrgName,
         ficheId: fiche.id,
         ficheRef: fiche.ref,
@@ -206,14 +238,13 @@ class NotificationService {
 
   /**
    * Notification : Contrôle terrain validé (paiement final + clôture)
+   * Envoyée uniquement aux RELATIONS_EVS
    */
   async notifyFieldCheckDone(fiche, evsOrgName) {
-    const cdEmails = await this.getCdEmails();
     const fevesEmails = await this.getFevesEmails();
     
-    if (cdEmails.length > 0 || fevesEmails.length > 0) {
+    if (fevesEmails.length > 0) {
       await emailService.sendFieldCheckCompletedNotification({
-        cdEmails,
         fevesEmails,
         evsOrgName,
         ficheId: fiche.id,
@@ -270,6 +301,57 @@ class NotificationService {
   }
 
   /**
+   * Notification: Atelier prêt à démarrer (minCapacity atteint)
+   * Envoyée une seule fois quand la session atteint le seuil minimum de participants
+   */
+  async notifyWorkshopReady(workshopId, sessionNumber, evsId, enrollments) {
+    try {
+      // Get workshop details
+      const workshop = await storage.getWorkshop(workshopId);
+      if (!workshop) {
+        console.log(`Workshop ${workshopId} not found for ready notification`);
+        return;
+      }
+
+      // Get EVS organization details
+      const evsOrg = await storage.getOrganization(evsId);
+      if (!evsOrg || !evsOrg.contactEmail) {
+        console.log(`No contact email found for organization ${evsId}`);
+        return;
+      }
+
+      // Calculate total participants
+      const participantCount = enrollments.reduce((sum, e) => sum + (e.participantCount || 0), 0);
+
+      // Get all fiches for this session
+      const ficheRefs = [];
+      for (const enrollment of enrollments) {
+        const fiche = await storage.getFiche(enrollment.ficheId);
+        if (fiche) {
+          ficheRefs.push(`#${fiche.ref}`);
+        }
+      }
+      const ficheList = ficheRefs.join(', ');
+
+      // Send email notification to EVS/CS organization
+      await emailService.sendWorkshopReadyNotification({
+        contactEmail: evsOrg.contactEmail,
+        contactName: evsOrg.contactName,
+        orgName: evsOrg.name,
+        workshopName: workshop.name,
+        sessionNumber,
+        participantCount,
+        ficheList
+      });
+
+      console.log(`✅ Workshop ready notification sent for ${workshop.name} session ${sessionNumber} to ${evsOrg.name}`);
+    } catch (error) {
+      console.error('Error sending workshop ready notification:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Récupère les emails des utilisateurs CD
    */
   async getCdEmails() {
@@ -301,29 +383,90 @@ class NotificationService {
 
   /**
    * Notification: Tous les ateliers d'une fiche sont terminés, fiche clôturée
+   * Envoyée uniquement aux RELATIONS_EVS
    */
   async notifyFicheAllWorkshopsCompleted(fiche) {
     try {
-      // Get emails for RELATIONS_EVS and CD
+      // Get emails for RELATIONS_EVS only
       const fevesEmails = await this.getFevesEmails();
-      const cdEmails = await this.getCdEmails();
-      const allEmails = [...fevesEmails, ...cdEmails];
 
-      if (allEmails.length === 0) {
-        console.log('No RELATIONS_EVS or CD emails found for fiche closure notification');
+      if (fevesEmails.length === 0) {
+        console.log('No RELATIONS_EVS emails found for fiche closure notification');
         return;
       }
 
       // Send email notification
       await emailService.sendFicheAllWorkshopsCompletedNotification({
-        emails: allEmails,
+        emails: fevesEmails,
         ficheRef: fiche.ref,
         ficheId: fiche.id
       });
 
-      console.log(`Fiche closure notification sent for ${fiche.ref} to ${allEmails.length} recipients`);
+      console.log(`Fiche closure notification sent for ${fiche.ref} to ${fevesEmails.length} recipients`);
     } catch (error) {
       console.error('Error sending fiche closure notification:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Notification: Contrat EVS/CS signé → Déblocage 70% de subvention
+   * Envoyée à la FEVES (RELATIONS_EVS)
+   */
+  async notifyWorkshopContractEvsSignedForSubvention(session) {
+    try {
+      const fevesEmails = await this.getFevesEmails();
+      if (fevesEmails.length === 0) {
+        console.log('No FEVES emails found for EVS contract subsidy notification');
+        return;
+      }
+
+      // Get workshop and organization details
+      const workshop = session.workshop || await storage.getWorkshop(session.workshopId);
+      const evsOrg = session.evs || await storage.getOrganization(session.evsId);
+
+      await emailService.sendWorkshopContractEvsSignedNotification({
+        fevesEmails,
+        workshopName: workshop?.name || 'Atelier',
+        sessionNumber: session.sessionNumber,
+        evsName: evsOrg?.name || 'Organisation',
+        sessionId: session.id
+      });
+
+      console.log(`✅ EVS contract subsidy notification sent for ${workshop?.name} session ${session.sessionNumber}`);
+    } catch (error) {
+      console.error('Error sending EVS contract subsidy notification:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Notification: Contrat Commune signé → Simple notification de démarrage
+   * Envoyée à la FEVES (RELATIONS_EVS)
+   */
+  async notifyWorkshopContractCommuneSignedForStart(session) {
+    try {
+      const fevesEmails = await this.getFevesEmails();
+      if (fevesEmails.length === 0) {
+        console.log('No FEVES emails found for Commune contract start notification');
+        return;
+      }
+
+      // Get workshop and organization details
+      const workshop = session.workshop || await storage.getWorkshop(session.workshopId);
+      const evsOrg = session.evs || await storage.getOrganization(session.evsId);
+
+      await emailService.sendWorkshopContractCommuneSignedNotification({
+        fevesEmails,
+        workshopName: workshop?.name || 'Atelier',
+        sessionNumber: session.sessionNumber,
+        evsName: evsOrg?.name || 'Organisation',
+        sessionId: session.id
+      });
+
+      console.log(`✅ Commune contract start notification sent for ${workshop?.name} session ${session.sessionNumber}`);
+    } catch (error) {
+      console.error('Error sending Commune contract start notification:', error);
       throw error;
     }
   }

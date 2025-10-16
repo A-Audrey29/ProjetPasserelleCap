@@ -523,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/fiches/:id/assign', requireAuth, requireRole('RELATIONS_EVS'), validateRequest(assignmentSchema), auditMiddleware('assign', 'FicheNavette'), async (req, res) => {
+  app.post('/api/fiches/:id/assign', requireAuth, requireRole('ADMIN', 'RELATIONS_EVS'), validateRequest(assignmentSchema), auditMiddleware('assign', 'FicheNavette'), async (req, res) => {
     try {
       const { id } = req.params;
       const { assignedOrgId } = req.validatedData;
@@ -581,7 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Check if already closed
-        if (fiche.state === 'CLOTUREE') {
+        if (fiche.state === 'CLOSED') {
           return res.status(400).json({ message: 'La fiche est déjà clôturée' });
         }
 
@@ -595,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Use state transition service to ensure proper validation and audit logging
-        const updatedFiche = await transitionFicheState(id, 'CLOTUREE', req.user.userId, {
+        const updatedFiche = await transitionFicheState(id, 'CLOSED', req.user.userId, {
           action: 'close_all_workshops',
           closedBy: req.user.email
         });
@@ -678,6 +678,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Upload error:', error);
       res.status(500).json({ message: 'Erreur lors du téléchargement' });
+    }
+  });
+
+  // Upload final report for a fiche and transition to FINAL_REPORT_RECEIVED
+  app.post('/api/fiches/:id/upload-final-report', requireAuth, requireFicheAccess, upload.single('file'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!req.file) {
+        return res.status(400).json({ message: 'Aucun fichier fourni' });
+      }
+
+      // Only accept PDF files for final report
+      if (req.file.mimetype !== 'application/pdf') {
+        return res.status(400).json({ message: 'Seuls les fichiers PDF sont autorisés pour le rapport final' });
+      }
+
+      // Get fiche to verify state
+      const fiche = await storage.getFiche(id);
+      if (!fiche) {
+        return res.status(404).json({ message: 'Fiche non trouvée' });
+      }
+
+      // Rename uploaded file to conventional name: final-report-{ficheId}.pdf
+      const oldPath = path.join(uploadsDir, req.file.filename);
+      const newFilename = `final-report-${id}.pdf`;
+      const newPath = path.join(uploadsDir, newFilename);
+      
+      // Remove old file if exists
+      if (fs.existsSync(newPath)) {
+        fs.unlinkSync(newPath);
+      }
+      
+      // Rename to conventional name
+      fs.renameSync(oldPath, newPath);
+
+      const fileUrl = `/uploads/${newFilename}`;
+      
+      // Transition fiche to FINAL_REPORT_RECEIVED
+      await transitionFicheState(id, 'FINAL_REPORT_RECEIVED', req.user.userId, {
+        finalReportUrl: fileUrl,
+        finalReportUploadedAt: new Date().toISOString()
+      });
+
+      res.json({
+        url: fileUrl,
+        name: req.file.originalname,
+        mime: req.file.mimetype,
+        size: req.file.size,
+        message: 'Rapport final uploadé avec succès'
+      });
+    } catch (error) {
+      console.error('Upload final report error:', error);
+      res.status(500).json({ message: error.message || 'Erreur lors du téléchargement' });
     }
   });
 
@@ -1165,7 +1219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Audit logs
+  // Audit logs - Legacy endpoint for fiche detail view
   app.get('/api/audit', requireAuth, async (req, res) => {
     try {
       const { entity, entityId } = req.query;
@@ -1186,26 +1240,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint - All audit logs with pagination and filters
+  app.get('/api/admin/audit-logs', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { actorId, action, entity, search, page, limit } = req.query;
+      
+      // Récupération des logs avec pagination
+      const result = await storage.getAllAuditLogs({
+        actorId: actorId as string,
+        action: action as string,
+        entity: entity as string,
+        search: search as string,
+        page: page ? parseInt(page as string) : undefined,
+        size: limit ? parseInt(limit as string) : undefined
+      });
+      
+      // Enrichir avec les informations des acteurs ET les références de fiches
+      const logsWithEnrichedData = await Promise.all(
+        result.logs.map(async (log) => {
+          // Enrichir avec l'acteur
+          const actor = log.actorId ? await storage.getUser(log.actorId) : null;
+          
+          // Si l'entité est une FicheNavette, enrichir avec la référence formatée
+          let ficheReference = null;
+          if (log.entity === 'FicheNavette' && log.entityId) {
+            try {
+              const fiche = await storage.getFiche(log.entityId);
+              if (fiche && fiche.ref) {
+                ficheReference = fiche.ref;
+              }
+            } catch (error) {
+              // Si la fiche n'existe plus ou erreur, on garde null
+              console.warn(`Cannot fetch fiche reference for ${log.entityId}:`, error);
+            }
+          }
+          
+          return { ...log, actor, ficheReference };
+        })
+      );
+
+      res.json({
+        logs: logsWithEnrichedData,
+        total: result.total
+      });
+    } catch (error) {
+      console.error('Get all audit logs error:', error);
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
   // Notification endpoints for EPCI workflow
-  app.post('/api/notifications/evs-assignment', requireAuth, requireRole('RELATIONS_EVS'), async (req, res) => {
+  app.post('/api/notifications/evs-assignment', requireAuth, requireRole('ADMIN', 'RELATIONS_EVS'), async (req, res) => {
     try {
       const { ficheId, orgId, orgName, contactEmail, contactName } = req.body;
+      
+      // Load fiche to get reference
+      const fiche = await storage.getFiche(ficheId);
+      if (!fiche) {
+        return res.status(404).json({ message: 'Fiche non trouvée' });
+      }
       
       // Log notification details
       console.log('EVS Assignment Notification:', {
         ficheId,
+        ficheRef: fiche.ref,
         orgId,
         orgName,
         contactEmail,
         contactName
       });
 
-      // Send actual email
+      // Send actual email with ficheRef
       const emailResult = await emailService.sendEvsAssignmentNotification({
         contactEmail,
         contactName,
         orgName,
-        ficheId
+        ficheId,
+        ficheRef: fiche.ref
       });
 
       // Create audit log for notification
@@ -1236,7 +1347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/notifications/emitter-return', requireAuth, requireRole('RELATIONS_EVS'), async (req, res) => {
+  app.post('/api/notifications/emitter-return', requireAuth, requireRole('ADMIN', 'RELATIONS_EVS'), async (req, res) => {
     try {
       const { ficheId, emitterEmail, emitterName, reason } = req.body;
       
@@ -1480,6 +1591,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier cette session' });
         }
 
+        // SERVER-SIDE VALIDATION: Enforce mutual exclusion between EVS and Commune contracts
+        // Check if the update would result in both contracts being signed
+        const finalEvsState = contractSignedByEVS !== undefined ? contractSignedByEVS : enrollment.contractSignedByEVS;
+        const finalCommuneState = contractSignedByCommune !== undefined ? contractSignedByCommune : enrollment.contractSignedByCommune;
+        
+        if (finalEvsState === true && finalCommuneState === true) {
+          return res.status(400).json({ 
+            message: 'Un seul type de contrat peut être signé (EVS/CS ou Commune, pas les deux). Veuillez décocher l\'autre contrat avant de continuer.' 
+          });
+        }
+
+        // Detect if a contract is being newly signed (transition from false to true)
+        const evsContractNewlySigned = contractSignedByEVS === true && !enrollment.contractSignedByEVS;
+        const communeContractNewlySigned = contractSignedByCommune === true && !enrollment.contractSignedByCommune;
+        
+        console.log('Contract signing detection:', {
+          evsContractNewlySigned,
+          communeContractNewlySigned,
+          contractSignedByEVS,
+          enrollmentContractSignedByEVS: enrollment.contractSignedByEVS,
+          contractSignedByCommune,
+          enrollmentContractSignedByCommune: enrollment.contractSignedByCommune
+        });
+
         // Build partial update object only with present fields
         const updates = {};
         if (contractSignedByEVS !== undefined) updates.contractSignedByEVS = contractSignedByEVS;
@@ -1496,6 +1631,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateSessionContracts(sessionId, updates);
 
         console.log('Contracts updated successfully');
+
+        // Send notifications if a contract was newly signed
+        if (evsContractNewlySigned || communeContractNewlySigned) {
+          // Get workshop and org details for notification
+          const workshop = await storage.getWorkshop(enrollment.workshopId);
+          const org = await storage.getOrganization(enrollment.evsId);
+
+          // Prepare session data for notification
+          const sessionData = {
+            id: sessionId,
+            sessionNumber: enrollment.sessionNumber,
+            workshopId: enrollment.workshopId,
+            evsId: enrollment.evsId,
+            workshop: workshop ? { name: workshop.name } : { name: 'Atelier' },
+            evs: org ? { name: org.name } : { name: 'Organisation' }
+          };
+
+          // Send appropriate notification based on contract type
+          if (evsContractNewlySigned) {
+            console.log('🔔 Sending EVS contract subsidy notification...');
+            await notificationService.notifyWorkshopContractEvsSignedForSubvention(sessionData)
+              .catch(err => {
+                console.error('Failed to send EVS contract notification:', err);
+                // Don't fail the request if notification fails
+              });
+          }
+
+          if (communeContractNewlySigned) {
+            console.log('🔔 Sending Commune contract start notification...');
+            await notificationService.notifyWorkshopContractCommuneSignedForStart(sessionData)
+              .catch(err => {
+                console.error('Failed to send Commune contract notification:', err);
+                // Don't fail the request if notification fails
+              });
+          }
+        }
 
         res.json({
           success: true,

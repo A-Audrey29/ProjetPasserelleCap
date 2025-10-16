@@ -35,6 +35,19 @@
 .logoSection {
   display: flex;
   align-items: center;
+  gap: 1rem;
+}
+
+.logoImage {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 640px) {
+  .logoImage {
+    height: 35px;
+  }
 }
 
 .logo {
@@ -43,6 +56,14 @@
   font-weight: 600;
   color: rgb(var(--primary));
   text-decoration: none;
+  padding: 0 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .logo {
+    font-size: 1rem;
+    padding: 0 0.25rem;
+  }
 }
 
 .logo:hover {

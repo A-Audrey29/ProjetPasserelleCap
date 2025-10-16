@@ -72,8 +72,9 @@ class EmailService {
 
   /**
    * Send email notification for EVS assignment
+   * Affiche la référence formatée (FN-ANNEE-MOIS-CHIFFRE) au lieu de l'UUID technique
    */
-  async sendEvsAssignmentNotification({ contactEmail, contactName, orgName, ficheId }: { contactEmail: string; contactName?: string; orgName?: string; ficheId: string; }) {
+  async sendEvsAssignmentNotification({ contactEmail, contactName, orgName, ficheId, ficheRef }: { contactEmail: string; contactName?: string; orgName?: string; ficheId: string; ficheRef: string; }) {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
@@ -91,7 +92,7 @@ class EmailService {
           
           <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p><strong>Organisation :</strong> ${orgName}</p>
-            <p><strong>Référence :</strong> ${ficheId}</p>
+            <p><strong>Référence :</strong> ${ficheRef}</p>
           </div>
           
           <p>Veuillez vous connecter à la plateforme Passerelle CAP pour consulter les détails de cette fiche et commencer l'accompagnement.</p>
@@ -119,7 +120,7 @@ class EmailService {
         Une nouvelle fiche CAP vous a été assignée par l'équipe FEVES.
         
         Organisation : ${orgName}
-        Référence : ${ficheId}
+        Référence : ${ficheRef}
         
         Veuillez vous connecter à la plateforme Passerelle CAP pour consulter les détails.
         
@@ -133,7 +134,85 @@ class EmailService {
 
     const meta = {
       event: 'evs_assignment',
-      ficheId,
+      ficheId,  // UUID conservé pour traçabilité logs
+      orgName,
+      contactEmail
+    };
+
+    return await this.deliver(mailOptions, meta);
+  }
+
+  /**
+   * Send email notification when workshop session reaches minCapacity and is ready to start
+   */
+  async sendWorkshopReadyNotification({ contactEmail, contactName, orgName, workshopName, sessionNumber, participantCount, ficheList }: { contactEmail: string; contactName?: string; orgName?: string; workshopName: string; sessionNumber: number; participantCount: number; ficheList: string; }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP - FEVES',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: contactEmail,
+      subject: `Atelier prêt à démarrer : ${workshopName} - Session ${sessionNumber}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #6A8B74;">Atelier prêt à démarrer 🎯</h2>
+          
+          <p>Bonjour ${contactName || 'cher partenaire'},</p>
+          
+          <p>Un atelier a atteint le seuil minimum de participants et est maintenant prêt à démarrer.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>Atelier :</strong> ${workshopName}</p>
+            <p><strong>Session :</strong> ${sessionNumber}</p>
+            <p><strong>Organisation :</strong> ${orgName}</p>
+            <p><strong>Nombre de participants :</strong> ${participantCount}</p>
+            <p><strong>Fiches concernées :</strong> ${ficheList}</p>
+          </div>
+          
+          <p>Vous pouvez maintenant organiser le démarrage de cet atelier avec les familles inscrites.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers" 
+               style="background-color: #6A8B74; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Consulter les ateliers
+            </a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #666; font-size: 12px;">
+            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
+            FEVES Guadeloupe et Saint-Martin
+          </p>
+        </div>
+      `,
+      text: `
+        Atelier prêt à démarrer
+        
+        Bonjour ${contactName || 'cher partenaire'},
+        
+        Un atelier a atteint le seuil minimum de participants et est maintenant prêt à démarrer.
+        
+        Atelier : ${workshopName}
+        Session : ${sessionNumber}
+        Organisation : ${orgName}
+        Nombre de participants : ${participantCount}
+        Fiches concernées : ${ficheList}
+        
+        Vous pouvez maintenant organiser le démarrage de cet atelier avec les familles inscrites.
+        
+        Lien : ${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers
+        
+        ---
+        Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.
+        FEVES Guadeloupe et Saint-Martin
+      `
+    };
+
+    const meta = {
+      event: 'workshop_ready',
+      workshopName,
+      sessionNumber,
       orgName,
       contactEmail
     };
@@ -270,25 +349,26 @@ class EmailService {
   /**
    * Send email notification when fiche is submitted to FEVES
    */
-  async sendSubmittedToFevesNotification({ fevesEmails, emitterName, ficheId, ficheRef }: { fevesEmails: string[]; emitterName?: string; ficheId: string; ficheRef: string; }) {
+  async sendSubmittedToFevesNotification({ fevesEmails, emitterName, emitterStructure, ficheId, ficheRef }: { fevesEmails: string[]; emitterName?: string; emitterStructure?: string; ficheId: string; ficheRef: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - CD',
+        name: 'Passerelle CAP',
         email: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
-      subject: 'Fiche CAP validée par le CD - À traiter',
+      subject: 'Nouvelle fiche CAP à traiter',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #6A8B74;">Fiche CAP validée - À traiter</h2>
+          <h2 style="color: #6A8B74;">Nouvelle fiche CAP à traiter</h2>
           
           <p>Bonjour,</p>
           
-          <p>Le Conseil Départemental a validé une fiche CAP qui vous est maintenant transmise pour traitement.</p>
+          <p>Une nouvelle fiche CAP a été soumise et vous est maintenant transmise pour traitement.</p>
           
           <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p><strong>Référence :</strong> ${ficheRef}</p>
             <p><strong>Émetteur :</strong> ${emitterName || 'Non spécifié'}</p>
+            ${emitterStructure ? `<p><strong>Structure :</strong> ${emitterStructure}</p>` : ''}
           </div>
           
           <p>Veuillez vous connecter à la plateforme pour examiner cette fiche et procéder à l'assignation EVS.</p>
@@ -315,6 +395,7 @@ class EmailService {
       ficheId,
       ficheRef,
       emitterName,
+      emitterStructure,
       fevesEmails
     };
 
@@ -366,6 +447,61 @@ class EmailService {
 
     const meta = {
       event: 'cd_rejection',
+      ficheId,
+      ficheRef,
+      emitterEmail,
+      emitterName,
+      reason
+    };
+
+    return await this.deliver(mailOptions, meta);
+  }
+
+  /**
+   * Send email notification when FEVES (RELATIONS_EVS) rejects fiche (back to emitter)
+   */
+  async sendFevesRejectionNotification({ emitterEmail, emitterName, ficheId, ficheRef, reason }: { emitterEmail: string; emitterName?: string; ficheId: string; ficheRef: string; reason?: string; }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP - FEVES',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: emitterEmail,
+      subject: `Fiche ${ficheRef} - Corrections requises`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #D9A066;">Fiche CAP renvoyée - Corrections requises</h2>
+          
+          <p>Bonjour ${emitterName || 'cher partenaire'},</p>
+          
+          <p>La FEVES a refusée la fiche CAP et demande des corrections avant de pouvoir la transmettre à une structure EVS/CS.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>Référence :</strong> ${ficheRef}</p>
+            ${reason ? `<p><strong>Motif :</strong> ${reason}</p>` : ''}
+          </div>
+          
+          <p>Veuillez vous connecter à la plateforme pour consulter les commentaires et effectuer les modifications demandées.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'https://passerelle-cap.replit.app'}/fiches/${ficheId}" 
+               style="background-color: #D9A066; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Modifier la fiche
+            </a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #666; font-size: 12px;">
+            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
+            FEVES Guadeloupe et Saint-Martin
+          </p>
+        </div>
+      `
+    };
+
+    const meta = {
+      event: 'feves_rejection',
       ficheId,
       ficheRef,
       emitterEmail,
@@ -489,7 +625,7 @@ class EmailService {
   /**
    * Send email notification when contract is signed (70% payment)
    */
-  async sendContractSignedNotification({ cdEmails, evsOrgName, ficheId, ficheRef, totalAmount }: { cdEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; totalAmount?: number; }) {
+  async sendContractSignedNotification({ fevesEmails, evsOrgName, ficheId, ficheRef, totalAmount }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; totalAmount?: number; }) {
     const formattedAmount = totalAmount ? (totalAmount / 100).toFixed(2) : 'Non spécifié';
     const advanceAmount = totalAmount ? ((totalAmount * 0.7) / 100).toFixed(2) : 'Non calculé';
 
@@ -498,7 +634,7 @@ class EmailService {
         name: 'Passerelle CAP - EVS',
         email: 'studio.makeawave@gmail.com'
       },
-      to: cdEmails.join(','),
+      to: fevesEmails.join(','),
       subject: 'Contrat CAP signé - Acompte de 70% à verser',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -540,7 +676,7 @@ class EmailService {
       ficheRef,
       evsOrgName,
       totalAmount,
-      cdEmails
+      fevesEmails
     };
 
     return await this.deliver(mailOptions, meta);
@@ -603,17 +739,17 @@ class EmailService {
   /**
    * Send email notification when field check is completed
    */
-  async sendFieldCheckCompletedNotification({ cdEmails, fevesEmails, evsOrgName, ficheId, ficheRef, totalAmount }: { cdEmails: string[]; fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; totalAmount?: number; }) {
+  async sendFieldCheckCompletedNotification({ fevesEmails, evsOrgName, ficheId, ficheRef, totalAmount }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; totalAmount?: number; }) {
     const formattedAmount = totalAmount ? (totalAmount / 100).toFixed(2) : 'Non spécifié';
     const remainingAmount = totalAmount ? ((totalAmount * 0.3) / 100).toFixed(2) : 'Non calculé';
     
-    // Email to CD for final payment
-    const cdMailOptions = {
+    // Email to RELATIONS_EVS only
+    const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
         email: 'studio.makeawave@gmail.com'
       },
-      to: cdEmails.join(','),
+      to: fevesEmails.join(','),
       subject: 'Contrôle terrain validé - Solde de 30% à verser',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -649,77 +785,15 @@ class EmailService {
       `
     };
 
-    // Email to FEVES for information
-    const fevesMailOptions = {
-      from: {
-        name: 'Passerelle CAP - FEVES',
-        email: 'studio.makeawave@gmail.com'
-      },
-      to: fevesEmails.join(','),
-      subject: 'Contrôle terrain validé - Fiche en attente de clôture',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #3B4B61;">Contrôle terrain validé</h2>
-          
-          <p>Bonjour,</p>
-          
-          <p>Le contrôle terrain a été effectué et validé. La fiche attend maintenant le paiement final du CD pour être clôturée.</p>
-          
-          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <p><strong>Référence :</strong> ${ficheRef}</p>
-            <p><strong>EVS :</strong> ${evsOrgName || 'Non spécifié'}</p>
-          </div>
-          
-          <p>Vous pouvez suivre l'avancement de la clôture dans la plateforme.</p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.FRONTEND_URL || 'https://passerelle-cap.replit.app'}/fiches/${ficheId}" 
-               style="background-color: #3B4B61; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Suivre la fiche
-            </a>
-          </div>
-          
-          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-          
-          <p style="color: #666; font-size: 12px;">
-            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
-            FEVES Guadeloupe et Saint-Martin
-          </p>
-        </div>
-      `
+    const meta = {
+      event: 'field_check_completed',
+      ficheId,
+      ficheRef,
+      evsOrgName,
+      fevesEmails
     };
 
-    try {
-      // Send to CD first
-      const cdMeta = {
-        event: 'field_check_completed_cd',
-        ficheId,
-        ficheRef,
-        evsOrgName,
-        totalAmount,
-        cdEmails
-      };
-      const cdResult = await this.deliver(cdMailOptions, cdMeta);
-
-      // Send to FEVES
-      const fevesMeta = {
-        event: 'field_check_completed_feves',
-        ficheId,
-        ficheRef,
-        evsOrgName,
-        fevesEmails
-      };
-      const fevesResult = await this.deliver(fevesMailOptions, fevesMeta);
-
-      return { 
-        success: cdResult.success && fevesResult.success, 
-        cdResult,
-        fevesResult
-      };
-    } catch (error: any) {
-      console.error('Failed to send field check completed notifications:', error);
-      return { success: false, error: error.message };
-    }
+    return await this.deliver(mailOptions, meta);
   }
 
   /**
@@ -863,6 +937,172 @@ Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
 
     const meta = {
       event: 'workshop_activity_completed',
+      sessionId,
+      workshopName,
+      sessionNumber,
+      evsName
+    };
+
+    await this.deliver(mailOptions, meta);
+  }
+
+  /**
+   * Send notification when EVS/CS contract is signed - 70% subsidy to be released
+   */
+  async sendWorkshopContractEvsSignedNotification({ fevesEmails, workshopName, sessionNumber, evsName, sessionId }: {
+    fevesEmails: string[];
+    workshopName: string;
+    sessionNumber: number;
+    evsName: string;
+    sessionId: string;
+  }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP - Ateliers',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: fevesEmails.join(','),
+      subject: `Contrat EVS/CS signé - Déblocage subvention 70% : ${workshopName} Session ${sessionNumber}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #6A8B74;">💰 Contrat EVS/CS signé - Subvention à débloquer</h2>
+          
+          <p>Bonjour,</p>
+          
+          <p>Le contrat EVS/CS pour un atelier a été signé. Vous devez maintenant débloquer <strong>70% de la subvention</strong> pour cet atelier.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #3B4B61; margin-top: 0;">Détails de l'atelier</h3>
+            <p><strong>Atelier :</strong> ${workshopName}</p>
+            <p><strong>Session :</strong> ${sessionNumber}</p>
+            <p><strong>Organisation EVS/CS :</strong> ${evsName}</p>
+            <p style="color: #6A8B74; font-weight: bold; font-size: 1.1em; margin-top: 15px;">💵 Action requise : Débloquer 70% de la subvention</p>
+          </div>
+          
+          <p>Le contrat a été validé, l'atelier peut maintenant démarrer.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers" 
+               style="background-color: #6A8B74; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Gérer les ateliers
+            </a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #666; font-size: 12px;">
+            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
+            FEVES Guadeloupe et Saint-Martin
+          </p>
+        </div>
+      `,
+      text: `
+        Contrat EVS/CS signé - Subvention à débloquer
+        
+        Le contrat EVS/CS pour un atelier a été signé. Vous devez maintenant débloquer 70% de la subvention pour cet atelier.
+        
+        Détails de l'atelier :
+        - Atelier : ${workshopName}
+        - Session : ${sessionNumber}
+        - Organisation EVS/CS : ${evsName}
+        
+        Action requise : Débloquer 70% de la subvention
+        
+        Le contrat a été validé, l'atelier peut maintenant démarrer.
+        
+        Lien : ${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers
+        
+        ---
+        Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.
+        FEVES Guadeloupe et Saint-Martin
+      `
+    };
+
+    const meta = {
+      event: 'workshop_contract_evs_signed',
+      sessionId,
+      workshopName,
+      sessionNumber,
+      evsName
+    };
+
+    await this.deliver(mailOptions, meta);
+  }
+
+  /**
+   * Send notification when Commune contract is signed - simple start notification
+   */
+  async sendWorkshopContractCommuneSignedNotification({ fevesEmails, workshopName, sessionNumber, evsName, sessionId }: {
+    fevesEmails: string[];
+    workshopName: string;
+    sessionNumber: number;
+    evsName: string;
+    sessionId: string;
+  }) {
+    const mailOptions = {
+      from: {
+        name: 'Passerelle CAP - Ateliers',
+        email: 'studio.makeawave@gmail.com'
+      },
+      to: fevesEmails.join(','),
+      subject: `Contrat Commune signé - Atelier prêt : ${workshopName} Session ${sessionNumber}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #3B4B61;">✅ Contrat Commune signé - Atelier prêt à démarrer</h2>
+          
+          <p>Bonjour,</p>
+          
+          <p>Le contrat avec la commune pour un atelier a été signé. L'atelier est maintenant prêt à démarrer.</p>
+          
+          <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #3B4B61; margin-top: 0;">Détails de l'atelier</h3>
+            <p><strong>Atelier :</strong> ${workshopName}</p>
+            <p><strong>Session :</strong> ${sessionNumber}</p>
+            <p><strong>Organisation :</strong> ${evsName}</p>
+            <p style="color: #3B4B61; font-weight: bold; margin-top: 15px;">ℹ️ Contrat communal - Pas de subvention associée</p>
+          </div>
+          
+          <p>Le contrat a été validé, l'atelier peut maintenant démarrer.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers" 
+               style="background-color: #3B4B61; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Consulter les ateliers
+            </a>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #666; font-size: 12px;">
+            Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.<br>
+            FEVES Guadeloupe et Saint-Martin
+          </p>
+        </div>
+      `,
+      text: `
+        Contrat Commune signé - Atelier prêt à démarrer
+        
+        Le contrat avec la commune pour un atelier a été signé. L'atelier est maintenant prêt à démarrer.
+        
+        Détails de l'atelier :
+        - Atelier : ${workshopName}
+        - Session : ${sessionNumber}
+        - Organisation : ${evsName}
+        
+        Note : Contrat communal - Pas de subvention associée
+        
+        Le contrat a été validé, l'atelier peut maintenant démarrer.
+        
+        Lien : ${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers
+        
+        ---
+        Cet email a été envoyé automatiquement par la plateforme Passerelle CAP.
+        FEVES Guadeloupe et Saint-Martin
+      `
+    };
+
+    const meta = {
+      event: 'workshop_contract_commune_signed',
       sessionId,
       workshopName,
       sessionNumber,

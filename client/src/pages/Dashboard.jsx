@@ -5,6 +5,7 @@ import { Plus, Download } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiches, useDashboardStats } from '@/hooks/useFiches';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import KPICards from '@/components/Dashboard/KPICards';
 import FilterBar from '@/components/Dashboard/FilterBar';
 import FichesList from '@/components/Fiches/FichesList';
@@ -102,6 +103,7 @@ export default function Dashboard() {
           epsiList={epsiList}
           organizations={organizations}
           objectives={objectives}
+          userRole={user?.role}
         />
 
         {/* Fiches List */}
@@ -116,6 +118,7 @@ export default function Dashboard() {
           }}
         />
       </main>
+      <Footer />
     </div>
   );
 }
