@@ -18,10 +18,12 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes (October 2025)
 
 ### Legal Pages & Footer Implementation
-- **Footer Component**: Universal footer with links to legal pages, contact info, and copyright
+- **Footer Component**: Minimalist footer with legal links only
+  - **Content**: Only "Mentions Légales" and "Politique de Confidentialité" links (contact removed)
+  - **Copyright**: Commented out in code (SELFIE ME) - can be reactivated if needed
   - **Styling**: CSS Modules (Footer.module.css) following strict charte graphique (#3B4B61 background, #F5F6F7 text)
+  - **Layout**: Centered horizontal layout with responsive spacing
   - **Coverage**: Integrated across ALL pages (Home, Login, Dashboard, Fiches, Admin, Contact, Ateliers, FicheCreation, FicheDetail, Administration, Reports)
-  - **Responsive**: Grid layout adapting to mobile/tablet/desktop viewports
 - **Legal Pages**: Markdown-based content system for easy updates without code changes
   - **Pages**: Mentions Légales and Politique de Confidentialité
   - **Rendering**: ReactMarkdown with remark-gfm plugin for rich formatting
