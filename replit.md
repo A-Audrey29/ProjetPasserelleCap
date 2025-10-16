@@ -38,6 +38,23 @@ Preferred communication style: Simple, everyday language.
   - **Response**: Returns 429 status with French error message after limit exceeded
   - **Headers**: Standard RateLimit-* headers enabled for client-side tracking
 
+### Security Enhancement - Error Handling & Logging
+- **Environment-Aware Error Responses**: Different error handling for development vs production
+  - **Development**: Full error details including stack traces for debugging
+  - **Production**: Sanitized responses with user-friendly messages, no technical details exposed
+- **Error Logging**: Structured logging system that captures all errors server-side
+  - **Log Format**: JSON-formatted logs with timestamp, error code, user ID, request path, and full stack trace
+  - **Server-Side Only**: Sensitive technical details are never sent to clients in production
+- **Standardized Error Codes**: Internal error codes for support and debugging
+  - **ERR_001**: Validation errors (400, 422)
+  - **ERR_002**: Authentication errors (401)
+  - **ERR_003**: Authorization errors (403)
+  - **ERR_004**: Resource not found (404)
+  - **ERR_005**: Business logic errors (custom application rules)
+  - **ERR_500**: Internal server errors (500+)
+- **User-Friendly Messages**: Clear French error messages based on HTTP status codes
+  - Examples: "Requête invalide", "Non authentifié", "Accès refusé", "Ressource non trouvée"
+
 ### Legal Pages & Footer Implementation
 - **Footer Component**: Minimalist footer with legal links only
   - **Content**: Only "Mentions Légales" and "Politique de Confidentialité" links (contact removed)
