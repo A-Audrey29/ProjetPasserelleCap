@@ -17,6 +17,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 2025)
 
+### Security Enhancement - HTTP Security Headers (Helmet)
+- **Helmet Middleware**: Protection via security-focused HTTP headers
+  - **Implementation**: helmet middleware applied early in middleware chain
+  - **Active Protections**: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, and others
+  - **CSP Disabled**: contentSecurityPolicy set to false to allow React/Vite development without blocking
+  - **Purpose**: Prevents common web vulnerabilities (clickjacking, MIME sniffing, etc.)
+
 ### Security Enhancement - CORS Configuration
 - **CORS Protection**: Configured for secure cross-origin access control
   - **Development**: Accepts all origins for easy testing (`origin: true`)
