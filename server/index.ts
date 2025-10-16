@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
 import cors from "cors";
+import helmet from "helmet";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -8,6 +9,11 @@ const app = express();
 
 // Trust proxy - necessary for rate limiting to work correctly in proxied environments (Replit, etc.)
 app.set('trust proxy', 1);
+
+// Helmet security headers - CSP disabled to allow React/Vite to work
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP to avoid blocking React development
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
