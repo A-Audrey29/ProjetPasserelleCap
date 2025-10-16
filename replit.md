@@ -17,6 +17,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 2025)
 
+### Security Enhancement - CORS Configuration
+- **CORS Protection**: Configured for secure cross-origin access control
+  - **Development**: Accepts all origins for easy testing (`origin: true`)
+  - **Production**: Requires `CORS_ORIGIN` environment variable (blocks all origins if not set)
+  - **Credentials**: Enabled for HTTPOnly cookie-based authentication
+  - **Setup**: To enable production access, add your domain to Replit Secrets as `CORS_ORIGIN` (e.g., `https://yourdomain.com`)
+
 ### Security Enhancement - Login Rate Limiting
 - **Rate Limiter**: Protection against brute force attacks on login endpoint
   - **Implementation**: express-rate-limit middleware on `/api/auth/login`
