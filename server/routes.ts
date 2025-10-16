@@ -7,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
+import { v4 as uuidv4 } from 'uuid';
 import { storage } from "./storage";
 import { 
   authenticateUser, 
@@ -93,6 +94,8 @@ import {
   assignmentSchema,
   commentSchema
 } from './utils/validation.js';
+import { getFileExtension } from './utils/fileValidation.js';
+import { validateUploadedFileMimeType } from './middleware/validateMimeType.js';
 
 // Add validation schema for contract updates
 const contractUpdateSchema = z.object({
@@ -109,7 +112,17 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Configure multer for file uploads
 const upload = multer({
-  dest: uploadsDir,
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+      // Generate UUID-based filename with original extension
+      const ext = getFileExtension(file.originalname);
+      const filename = `${uuidv4()}${ext}`;
+      cb(null, filename);
+    }
+  }),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB
   },
@@ -146,9 +159,9 @@ const uploadContractPDF = multer({
       cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
-      // Generate timestamp-based filename: contract_commune_YYYYMMDD_HHMMSS.pdf
-      const timestamp = new Date().toISOString().replace(/[:-]/g, '').replace(/\..+/, '').replace('T', '_');
-      const filename = `contract_commune_${timestamp}.pdf`;
+      // Generate UUID-based filename with original extension
+      const ext = getFileExtension(file.originalname);
+      const filename = `${uuidv4()}${ext}`;
       cb(null, filename);
     }
   }),
@@ -171,9 +184,9 @@ const uploadReportPDF = multer({
       cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
-      // Generate timestamp-based filename: report_YYYYMMDD_HHMMSS.pdf
-      const timestamp = new Date().toISOString().replace(/[:-]/g, '').replace(/\..+/, '').replace('T', '_');
-      const filename = `report_${timestamp}.pdf`;
+      // Generate UUID-based filename with original extension
+      const ext = getFileExtension(file.originalname);
+      const filename = `${uuidv4()}${ext}`;
       cb(null, filename);
     }
   }),
@@ -671,7 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File uploads
-  app.post('/api/uploads', requireAuth, upload.single('file'), async (req, res) => {
+  app.post('/api/uploads', requireAuth, upload.single('file'), validateUploadedFileMimeType, async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: 'Aucun fichier fourni' });
@@ -692,7 +705,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload final report for a fiche and transition to FINAL_REPORT_RECEIVED
-  app.post('/api/fiches/:id/upload-final-report', requireAuth, requireFicheAccess, upload.single('file'), async (req, res) => {
+  app.post('/api/fiches/:id/upload-final-report', requireAuth, requireFicheAccess, upload.single('file'), validateUploadedFileMimeType, async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -1543,7 +1556,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/workshop-sessions/:sessionId/upload-contract', 
     requireAuth, 
     requireRole('ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD'), 
-    uploadContractPDF.single('contractFile'), 
+    uploadContractPDF.single('contractFile'),
+    validateUploadedFileMimeType,
     async (req, res) => {
       try {
         if (!req.file) {
@@ -1847,6 +1861,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     requireRole('ADMIN', 'EVS_CS'),
     uploadReportPDF.single('reportFile'),
+    validateUploadedFileMimeType,
     async (req, res) => {
       try {
         if (!req.file) {

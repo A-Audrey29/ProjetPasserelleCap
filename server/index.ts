@@ -6,6 +6,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { logError } from "./utils/errorLogger";
 import { getErrorMessage, getErrorCode, ErrorCodes } from "./utils/errorCodes";
+import { requireAuth } from "./middleware/rbac";
+import { protectUploadAccess } from "./middleware/uploadSecurity";
 
 const app = express();
 
@@ -30,10 +32,10 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Serve uploaded files statically with authentication and RBAC protection
+app.use('/uploads', requireAuth, protectUploadAccess, express.static(path.join(process.cwd(), 'uploads')));
 
-// Serve legal documents (markdown files)
+// Serve legal documents (markdown files) - public access
 app.use('/legal', express.static(path.join(process.cwd(), 'legal')));
 
 app.use((req, res, next) => {
