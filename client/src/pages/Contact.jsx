@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { Phone, Mail, MapPin } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import styles from './Contact.module.css';
 
 export default function Contact() {
@@ -157,6 +158,7 @@ export default function Contact() {
           */}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

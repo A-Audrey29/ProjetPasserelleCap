@@ -5,6 +5,7 @@ import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiches } from '@/hooks/useFiches';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import FicheForm from '@/components/Fiches/FicheForm';
 import { useToast } from '@/hooks/use-toast';
 import styles from './FicheCreation.module.css';
@@ -137,6 +138,7 @@ export default function FicheCreation() {
           isEditing={isEditMode}
         />
       </main>
+      <Footer />
     </div>
   );
 }

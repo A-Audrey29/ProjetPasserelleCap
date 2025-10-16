@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import WorkshopSessionCard from '@/components/Workshops/WorkshopSessionCard';
 import styles from './Ateliers.module.css';
 
@@ -145,6 +146,7 @@ export default function Ateliers() {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

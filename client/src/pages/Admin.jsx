@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import AdminDashboard from '@/components/Admin/AdminDashboard';
 import styles from './Admin.module.css';
 
@@ -38,6 +39,7 @@ export default function Admin() {
       <main className={styles.mainContent}>
         <AdminDashboard />
       </main>
+      <Footer />
     </div>
   );
 }

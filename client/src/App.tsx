@@ -16,6 +16,8 @@ import Contact from "@/pages/Contact";
 import Home from "@/pages/Home";
 import Fiches from "@/pages/Fiches";
 import Ateliers from "@/pages/Ateliers.jsx";
+import MentionsLegales from "@/pages/MentionsLegales";
+import PolitiqueConfidentialite from "@/pages/PolitiqueConfidentialite";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.jsx";
 
 function Router() {
@@ -25,7 +27,11 @@ function Router() {
   // Handle authentication redirection for login page only
   useEffect(() => {
     if (!isLoading) {
-      if (!isAuthenticated && location !== '/login' && location !== '/') {
+      // Allow public access to legal pages
+      const publicPaths = ['/login', '/', '/mentions-legales', '/politique-confidentialite'];
+      const isPublicPath = publicPaths.includes(location);
+      
+      if (!isAuthenticated && !isPublicPath) {
         setLocation('/login');
       } else if (isAuthenticated && location === '/login') {
         setLocation('/');
@@ -62,6 +68,8 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/" component={Home} />
+      <Route path="/mentions-legales" component={MentionsLegales} />
+      <Route path="/politique-confidentialite" component={PolitiqueConfidentialite} />
       {isAuthenticated ? (
         <>
           <Route path="/dashboard" component={Dashboard} />

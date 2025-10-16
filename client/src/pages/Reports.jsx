@@ -4,6 +4,7 @@ import { Download, Calendar, Filter, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import { formatDate } from '@/utils/formatters';
 import styles from './Reports.module.css';
 
@@ -261,6 +262,7 @@ export default function Reports() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

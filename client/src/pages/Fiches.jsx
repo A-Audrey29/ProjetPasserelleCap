@@ -5,6 +5,7 @@ import { Eye, FileText, Plus, Search, Filter, Calendar, User, Building } from 'l
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission, ROLES, ACTIONS } from '@/utils/permissions';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
@@ -296,6 +297,7 @@ export default function Fiches() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   Phone
 } from 'lucide-react';
 import Header from '@/components/Layout/Header';
+import Footer from '@/components/Layout/Footer';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
@@ -345,6 +346,7 @@ export default function Administration() {
           />
         )}
       </main>
+      <Footer />
     </div>
   );
 }
