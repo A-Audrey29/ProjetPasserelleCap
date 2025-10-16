@@ -6,6 +6,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
 import { storage } from "./storage";
 import { 
   authenticateUser, 
@@ -188,11 +189,20 @@ const uploadReportPDF = multer({
   }
 });
 
+// Rate limiter for login attempts - 5 attempts max per 15 minutes
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: { message: 'Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes.' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use(cookieParser());
 
   // Auth routes
-  app.post('/api/auth/login', validateRequest(loginSchema), async (req, res) => {
+  app.post('/api/auth/login', loginLimiter, validateRequest(loginSchema), async (req, res) => {
     try {
       const { email, password } = req.validatedData;
       const user = await authenticateUser(email, password);
