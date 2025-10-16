@@ -3,4 +3,14 @@ dist
 .DS_Store
 server/public
 vite.config.ts.*
-*.tar.gzuploads/
+*.tar.gz
+
+# Environment variables - NEVER commit secrets!
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Uploads directory
+uploads/
