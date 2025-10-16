@@ -55,6 +55,26 @@ Preferred communication style: Simple, everyday language.
 - **User-Friendly Messages**: Clear French error messages based on HTTP status codes
   - Examples: "Requête invalide", "Non authentifié", "Accès refusé", "Ressource non trouvée"
 
+### Security Enhancement - Secured File Uploads
+- **UUID Filenames**: All uploaded files use UUID-based names instead of predictable timestamps
+  - **Implementation**: Multer diskStorage with UUID v4 generation
+  - **Format**: `{uuid}{original-extension}` (e.g., `a3f2b1c4-5678-9abc.pdf`)
+  - **Prevents**: Enumeration attacks and file name prediction
+- **Magic Number Validation**: Real MIME type verification using file signatures (not just extensions)
+  - **Library**: file-type@16.5.4 for binary magic number detection
+  - **Allowed Types**: PDF (application/pdf), JPEG (image/jpeg), PNG (image/png)
+  - **Auto-Rejection**: Invalid files are deleted immediately after detection
+- **RBAC File Access Control**: Downloaded files protected by role-based access control
+  - **Middleware**: protectUploadAccess verifies user has access to associated fiche
+  - **Coverage**: capDocuments (JSON), contractCommunePdfUrl, workshop reportUrl
+  - **Access Rules**: Same RBAC matrix as fiche access (ADMIN, SUIVI_PROJETS, EMETTEUR, RELATIONS_EVS, EVS_CS)
+- **Protected Routes**: GET /uploads/* requires authentication and fiche access verification
+- **Secured Endpoints**: All upload endpoints validate real MIME type post-upload
+  - POST /api/uploads
+  - POST /api/fiches/:id/upload-final-report
+  - POST /api/workshop-sessions/:sessionId/upload-contract
+  - POST /api/enrollments/:enrollmentId/upload-report
+
 ### Legal Pages & Footer Implementation
 - **Footer Component**: Minimalist footer with legal links only
   - **Content**: Only "Mentions Légales" and "Politique de Confidentialité" links (contact removed)
