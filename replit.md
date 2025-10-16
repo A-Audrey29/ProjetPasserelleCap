@@ -17,6 +17,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 2025)
 
+### Legal Pages & Footer Implementation
+- **Footer Component**: Universal footer with links to legal pages, contact info, and copyright
+  - **Styling**: CSS Modules (Footer.module.css) following strict charte graphique (#3B4B61 background, #F5F6F7 text)
+  - **Coverage**: Integrated across ALL pages (Home, Login, Dashboard, Fiches, Admin, Contact, Ateliers, FicheCreation, FicheDetail, Administration, Reports)
+  - **Responsive**: Grid layout adapting to mobile/tablet/desktop viewports
+- **Legal Pages**: Markdown-based content system for easy updates without code changes
+  - **Pages**: Mentions Légales and Politique de Confidentialité
+  - **Rendering**: ReactMarkdown with remark-gfm plugin for rich formatting
+  - **Access**: Public routes (no authentication required) via `/mentions-legales` and `/politique-confidentialite`
+  - **Styling**: Shared LegalPage.module.css with professional typography and spacing
+  - **Content Storage**: Markdown files in `/legal` directory, served via `/client/public/legal` for Vite compatibility
+
 ### Centralized Audit Log Interface
 - **Admin Audit Tab**: New centralized audit log interface accessible only to ADMIN users
 - **Features**: Full-text search, multi-criteria filtering (action type, entity type, user), pagination (20 items/page)
@@ -56,6 +68,7 @@ Authentication is implemented using bcrypt for password hashing and JWT for sess
 - **Charte Graphique** - Strict adherence to color palette (#3B4B61, #F5F6F7, #6A8B74, #D9A066, #8C4A4A)
 - **Lucide React** - Icon library for consistent iconography
 - **Custom CSS Variables** - Global theming system without framework dependencies
+- **ReactMarkdown** - Markdown rendering for legal documents with remark-gfm for GitHub-flavored markdown support
 
 ### Data & State Management
 - **TanStack Query** - Server state management with caching and synchronization
