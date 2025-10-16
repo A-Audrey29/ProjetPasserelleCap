@@ -17,6 +17,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 2025)
 
+### Security Enhancement - Login Rate Limiting
+- **Rate Limiter**: Protection against brute force attacks on login endpoint
+  - **Implementation**: express-rate-limit middleware on `/api/auth/login`
+  - **Limits**: Maximum 5 login attempts per IP address within 15-minute window
+  - **Response**: Returns 429 status with French error message after limit exceeded
+  - **Headers**: Standard RateLimit-* headers enabled for client-side tracking
+
 ### Legal Pages & Footer Implementation
 - **Footer Component**: Minimalist footer with legal links only
   - **Content**: Only "Mentions Légales" and "Politique de Confidentialité" links (contact removed)
