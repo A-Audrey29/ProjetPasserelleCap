@@ -8,6 +8,7 @@ export default defineConfig({
   out: "./migrations",
   schema: "./shared/schema.ts",
   dialect: "postgresql",
+  casing: "snake_case", // Ensure migrations use snake_case column names
   dbCredentials: {
     url: process.env.DATABASE_URL,
   },
