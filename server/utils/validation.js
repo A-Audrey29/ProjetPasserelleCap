@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import path from 'path';
 
 export const loginSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -15,7 +16,41 @@ export const ficheCreationSchema = z.object({
   selectedWorkshops: z.any().optional(),
   participantsCount: z.coerce.number().int().min(1, 'Le nombre de participants doit être au minimum 1').max(10, 'Le nombre de participants ne peut dépasser 10'),
   capDocuments: z.array(z.object({
-    url: z.string().url(),
+    url: z.string().min(1, 'URL requise').trim().refine(
+      (url) => {
+        // Accept relative paths to local uploads directory
+        if (url.startsWith('/uploads/')) {
+          try {
+            // Decode URL encoding to prevent %2e%2e attacks
+            const decoded = decodeURIComponent(url);
+            
+            // Normalize the path to resolve .. and . segments
+            const normalized = path.posix.normalize(decoded);
+            
+            // Ensure normalized path still starts with /uploads/ and doesn't escape
+            if (!normalized.startsWith('/uploads/')) {
+              return false;
+            }
+            
+            // Additional safety: reject any path containing .. even after normalization
+            return !decoded.includes('..');
+          } catch {
+            // Malformed percent-encoding
+            return false;
+          }
+        }
+        
+        // For absolute URLs, validate full syntax
+        try {
+          const parsed = new URL(url);
+          // Require http/https protocol AND a valid hostname
+          return (parsed.protocol === 'http:' || parsed.protocol === 'https:') && !!parsed.hostname;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'L\'URL doit être un chemin /uploads/ valide ou une URL HTTP(S) complète avec nom d\'hôte' }
+    ),
     name: z.string(),
     size: z.number().min(0),
     mime: z.string()

@@ -1716,15 +1716,32 @@ export default function FicheForm({
     } catch (err) {
       const error = normalizeError(err, "handleTransmit");
       console.error("Transmission error:", error);
+      console.error("Error details:", err);
 
       // Re-enable the button on error
       setIsSubmitting(false);
 
+      // Extract detailed error information if available
+      let errorMessage = "Une erreur est survenue lors de la transmission de la fiche.";
+      
+      if (err?.response?.data) {
+        const data = err.response.data;
+        console.error("Backend validation errors:", data);
+        
+        // If there are validation errors, show them
+        if (data.errors && Array.isArray(data.errors)) {
+          const errorDetails = data.errors.map(e => `${e.path?.join('.')} : ${e.message}`).join('\n');
+          errorMessage = `${data.message || 'Erreur de validation'}\n\n${errorDetails}`;
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Erreur de transmission",
-        description:
-          error.message ||
-          "Une erreur est survenue lors de la transmission de la fiche.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
