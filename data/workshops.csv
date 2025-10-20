@@ -1,0 +1,12 @@
+id,objectiveId,name,description,minCapacity,maxCapacity
+ATL1,OBJ1,Gestion du temps et organisation familiale,"Aider les familles à organiser le temps entre les devoirs, les loisirs et les moments de détente.",8,10
+ATL2,OBJ1,Communication entre parents et enfants,Renforcer la communication au sein de la famille par des outils et exercices pratiques.,8,10
+ATL3,OBJ1,Méthodes d’apprentissage à la maison,Fournir aux parents des outils pratiques pour accompagner la réussite scolaire des enfants.,8,10
+ATL4,OBJ1,Soutien émotionnel et motivation scolaire,Apprendre aux parents à soutenir la motivation et la confiance en soi de leurs enfants.,8,10
+ATL5,OBJ2,La parole des aînés : une richesse pour l’éducation,"Créer un espace de dialogue intergénérationnel pour favoriser les échanges entre parents, enfants et grands-parents.",18,20
+ATL6,OBJ2,Mieux se comprendre pour mieux s’entraider,Améliorer la communication et la solidarité entre les générations.,7,9
+ATL7,OBJ2,Soutien scolaire et méthodes familiales,Aider les parents à mieux accompagner leurs enfants dans la scolarité.,7,9
+ATL8,OBJ2,"Les émotions, le moteur de la réussite scolaire",Apprendre à gérer les émotions liées à l’école et au travail scolaire en famille.,8,10
+ATL9,OBJ2,Renforcer la motivation scolaire par le dialogue,Encourager les enfants à se projeter positivement dans leur parcours d’apprentissage.,18,20
+ATL10,OBJ3,Pratique d’activité physique,Renforcer les liens familiaux par l’amélioration de la condition physique et la coopération.,8,10
+ATL11,OBJ3,Atelier découverte Sport/Étude,Aider les familles à comprendre l’impact du sport sur l’équilibre personnel et scolaire.,28,30
