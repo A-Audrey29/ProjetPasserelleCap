@@ -301,6 +301,14 @@ export default function FicheForm({
   const validateReferentStep = () => {
     let isValid = true;
     
+    console.log("🔍 Validation détaillée du référent:");
+    console.log("  - lastName:", formData.referent.lastName);
+    console.log("  - firstName:", formData.referent.firstName);
+    console.log("  - structure:", formData.referent.structure);
+    console.log("  - phone:", formData.referent.phone);
+    console.log("  - email:", formData.referent.email);
+    console.log("  - requestDate:", formData.referent.requestDate);
+    
     // Clear previous errors for referent fields
     clearFieldError('referent.lastName');
     clearFieldError('referent.firstName');
@@ -310,31 +318,37 @@ export default function FicheForm({
     clearFieldError('referent.requestDate');
     
     if (!formData.referent.lastName?.trim()) {
+      console.log("❌ lastName vide");
       setFieldError('referent.lastName', 'Le nom est obligatoire');
       isValid = false;
     }
     
     if (!formData.referent.firstName?.trim()) {
+      console.log("❌ firstName vide");
       setFieldError('referent.firstName', 'Le prénom est obligatoire');
       isValid = false;
     }
     
     if (!formData.referent.structure?.trim()) {
+      console.log("❌ structure vide");
       setFieldError('referent.structure', 'La structure est obligatoire');
       isValid = false;
     }
     
     if (!formData.referent.phone?.trim()) {
+      console.log("❌ phone vide");
       setFieldError('referent.phone', 'Le téléphone est obligatoire');
       isValid = false;
     }
     
     if (!formData.referent.email?.trim()) {
+      console.log("❌ email vide");
       setFieldError('referent.email', 'L\'email est obligatoire');
       isValid = false;
     }
     
     if (!formData.referent.requestDate?.trim()) {
+      console.log("❌ requestDate vide");
       setFieldError('referent.requestDate', 'La date de la demande est obligatoire');
       isValid = false;
     }
@@ -1584,6 +1598,22 @@ export default function FicheForm({
 
     if (hasErrors || !referentValid || !familyValid || !childrenValid || !besoinValid) {
       console.log("❌ VALIDATION ÉCHOUÉE - Affichage du toast d'erreur");
+      
+      // Ramener l'utilisateur à l'étape contenant l'erreur
+      if (!referentValid) {
+        console.log("→ Retour à l'étape 0 (Référent)");
+        setCurrentStep(0);
+      } else if (!familyValid) {
+        console.log("→ Retour à l'étape 1 (Famille)");
+        setCurrentStep(1);
+      } else if (!childrenValid) {
+        console.log("→ Retour à l'étape 2 (Enfants)");
+        setCurrentStep(2);
+      } else if (!besoinValid) {
+        console.log("→ Retour à l'étape 3 (Besoins)");
+        setCurrentStep(3);
+      }
+      
       // Optionally show a general toast for UX
       toast({
         title: "Erreur de validation",
