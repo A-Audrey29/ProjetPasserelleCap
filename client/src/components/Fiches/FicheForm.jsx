@@ -55,7 +55,8 @@ export default function FicheForm({
   const [currentStep, setCurrentStep] = useState(0);
   const [isReferentEditable, setIsReferentEditable] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState({});
 
@@ -1549,11 +1550,18 @@ export default function FicheForm({
   };
 
   const handleTransmit = async () => {
+    // Prevent double submissions
+    if (isSubmitting || isTransitioning) {
+      console.log("⚠️ Soumission déjà en cours, clic ignoré");
+      return;
+    }
+
     console.log("🔍 DEBUG handleTransmit - Début de la validation");
-    
+    setIsSubmitting(true);
+
     // Clear all previous errors before validation
     clearAllErrors();
-    
+
     let hasErrors = false;
 
     // Check specifically for family consent first
@@ -1598,7 +1606,10 @@ export default function FicheForm({
 
     if (hasErrors || !referentValid || !familyValid || !childrenValid || !besoinValid) {
       console.log("❌ VALIDATION ÉCHOUÉE - Affichage du toast d'erreur");
-      
+
+      // Re-enable the button since validation failed
+      setIsSubmitting(false);
+
       // Ramener l'utilisateur à l'étape contenant l'erreur
       if (!referentValid) {
         console.log("→ Retour à l'étape 0 (Référent)");
@@ -1613,7 +1624,7 @@ export default function FicheForm({
         console.log("→ Retour à l'étape 3 (Besoins)");
         setCurrentStep(3);
       }
-      
+
       // Optionally show a general toast for UX
       toast({
         title: "Erreur de validation",
@@ -1705,6 +1716,10 @@ export default function FicheForm({
     } catch (err) {
       const error = normalizeError(err, "handleTransmit");
       console.error("Transmission error:", error);
+
+      // Re-enable the button on error
+      setIsSubmitting(false);
+
       toast({
         title: "Erreur de transmission",
         description:
@@ -2015,16 +2030,16 @@ export default function FicheForm({
             <button
               type="button"
               onClick={handleTransmit}
-              disabled={isTransitioning}
+              disabled={isTransitioning || isSubmitting}
               className={`${styles.button} ${styles.buttonPrimary}`}
               data-testid="button-transmit"
             >
-              {isTransitioning ? (
+              {(isTransitioning || isSubmitting) ? (
                 <Loader2 className={`${styles.buttonIcon} ${styles.spinner}`} />
               ) : (
                 <Send className={styles.buttonIcon} />
               )}
-              {isTransitioning ? 'Transmission en cours...' : 'Transmettre'}
+              {(isTransitioning || isSubmitting) ? 'Transmission en cours...' : 'Transmettre'}
             </button>
 
             {/* Admin-only actions - only show if user is ADMIN and fiche exists */}
