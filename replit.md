@@ -17,16 +17,6 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 2025)
 
-### Database Configuration - Drizzle ORM Casing Fix (October 20, 2025)
-- **Problem**: All login attempts failed with 401 "Email ou mot de passe incorrect" despite valid credentials
-- **Root Cause**: Drizzle ORM returned PostgreSQL snake_case columns (`password_hash`, `first_name`) but code expected camelCase properties (`passwordHash`, `firstName`)
-- **Solution**: Added `casing: 'snake_case'` configuration to enable automatic mapping
-  - **Runtime**: `server/db.ts` now includes `casing: 'snake_case'` for query mapping
-  - **Migrations**: `drizzle.config.ts` now includes `casing: 'snake_case'` for schema generation
-  - **Impact**: All Drizzle queries now automatically convert snake_case DB columns to camelCase TypeScript properties
-- **Production Ready**: Configuration is stable for both Neon (development) and O2switch (production) PostgreSQL databases
-- **Testing**: Verified with admin@example.com login and authenticated /api/auth/me endpoint
-
 ### Security Enhancement - HTTP Security Headers (Helmet)
 - **Helmet Middleware**: Protection via security-focused HTTP headers
   - **Implementation**: helmet middleware applied early in middleware chain
