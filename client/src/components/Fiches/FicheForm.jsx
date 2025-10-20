@@ -1535,30 +1535,55 @@ export default function FicheForm({
   };
 
   const handleTransmit = async () => {
+    console.log("🔍 DEBUG handleTransmit - Début de la validation");
+    
     // Clear all previous errors before validation
     clearAllErrors();
     
     let hasErrors = false;
 
     // Check specifically for family consent first
+    console.log("✅ Consentement famille:", formData.familyConsent);
     if (!formData.familyConsent) {
+      console.log("❌ ERREUR: Consentement famille non coché");
       setFieldError('familyConsent', 'Vous devez cocher la case de consentement de la famille avant de transmettre la fiche');
       hasErrors = true;
     }
 
     // Check that CAP document PDF is uploaded
+    console.log("✅ Documents CAP:", formData.capDocuments);
     if (!formData.capDocuments || formData.capDocuments.length === 0) {
+      console.log("❌ ERREUR: Aucun document CAP uploadé");
       setFieldError('capDocuments', 'Vous devez télécharger la fiche navette CAP (PDF) avant de transmettre');
       hasErrors = true;
     }
 
     // Run all step validations to show field-specific errors
+    console.log("🔍 Validation du référent...");
     const referentValid = validateReferentStep();
+    console.log("Référent valide?", referentValid);
+    
+    console.log("🔍 Validation de la famille...");
     const familyValid = validateFamilyStep();
+    console.log("Famille valide?", familyValid);
+    
+    console.log("🔍 Validation des enfants...");
     const childrenValid = validateChildrenStep();
+    console.log("Enfants valides?", childrenValid);
+    
+    console.log("🔍 Validation des besoins...");
     const besoinValid = validateBesoinStep();
+    console.log("Besoins valides?", besoinValid);
+
+    console.log("📊 RÉSUMÉ VALIDATION:");
+    console.log("  - hasErrors:", hasErrors);
+    console.log("  - referentValid:", referentValid);
+    console.log("  - familyValid:", familyValid);
+    console.log("  - childrenValid:", childrenValid);
+    console.log("  - besoinValid:", besoinValid);
 
     if (hasErrors || !referentValid || !familyValid || !childrenValid || !besoinValid) {
+      console.log("❌ VALIDATION ÉCHOUÉE - Affichage du toast d'erreur");
       // Optionally show a general toast for UX
       toast({
         title: "Erreur de validation",
@@ -1567,6 +1592,8 @@ export default function FicheForm({
       });
       return;
     }
+    
+    console.log("✅ TOUTES LES VALIDATIONS RÉUSSIES - Transmission en cours...");
 
     try {
       let ficheId;
