@@ -11,5 +11,15 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Nettoyer DATABASE_URL pour éviter les problèmes d'encodage
+// Supprime les espaces initiaux/finaux et décode les entités HTML
+const cleanDatabaseUrl = process.env.DATABASE_URL
+  .trim()
+  .replace(/&amp;/g, '&')
+  .replace(/&lt;/g, '<')
+  .replace(/&gt;/g, '>')
+  .replace(/&quot;/g, '"')
+  .replace(/&#39;/g, "'");
+
+export const pool = new Pool({ connectionString: cleanDatabaseUrl });
 export const db = drizzle({ client: pool, schema });
