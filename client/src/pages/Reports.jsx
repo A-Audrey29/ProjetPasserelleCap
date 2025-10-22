@@ -150,7 +150,8 @@ export default function Reports() {
               />
             </div>
 
-            <div className={styles.headerActions}>
+            {/* Export buttons temporairement masqués - fonctionnalité non implémentée */}
+            {/* <div className={styles.headerActions}>
               <button 
                 className={styles.button}
                 onClick={() => handleExport('pdf')}
@@ -167,7 +168,7 @@ export default function Reports() {
                 <Download className={styles.icon} />
                 CSV
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
 
