@@ -2,152 +2,50 @@
 
 ## Overview
 
-Passerelle CAP is a comprehensive full-stack platform for managing CAP (Contrat d'Accompagnement Personnalisé) family accompaniment files. The system facilitates workflow management between different stakeholders including administrative staff (ADMIN), project supervisors (SUIVI_PROJETS), issuers (EMETTEUR), EVS relations (RELATIONS_EVS), and EVS/CS organizations. The application implements a sophisticated state machine for tracking file progression from creation to closure, with robust role-based access control and audit logging throughout the process.
+Passerelle CAP is a full-stack platform designed for managing CAP (Contrat d'Accompagnement Personnalisé) family accompaniment files. Its primary purpose is to streamline workflow management among administrative staff, project supervisors, issuers, EVS relations, and EVS/CS organizations. The system features a sophisticated state machine for tracking file progression, robust role-based access control, and comprehensive audit logging. The project aims to provide an efficient and secure solution for managing personalized accompaniment contracts.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
-**CRITICAL STYLING PREFERENCE**: 
+**CRITICAL STYLING PREFERENCE**:
 - **NO TAILWIND CSS** - User explicitly wants all Tailwind removed from the project
 - **CSS Modules only** - All components must use .module.css files for styling
 - **Charte graphique colors** - Strict adherence to color palette (#3B4B61, #F5F6F7, #6A8B74, #D9A066, #8C4A4A)
 - **NO YELLOW colors** - Absolutely no yellow in the design
 - **Component structure** - All components as .jsx files with corresponding .module.css files
 
-## Recent Changes (October 2025)
-
-### Security Enhancement - HTTP Security Headers (Helmet)
-- **Helmet Middleware**: Protection via security-focused HTTP headers
-  - **Implementation**: helmet middleware applied early in middleware chain
-  - **Active Protections**: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, and others
-  - **CSP Disabled**: contentSecurityPolicy set to false to allow React/Vite development without blocking
-  - **Purpose**: Prevents common web vulnerabilities (clickjacking, MIME sniffing, etc.)
-
-### Security Enhancement - CORS Configuration
-- **CORS Protection**: Configured for secure cross-origin access control
-  - **Development**: Accepts all origins for easy testing (`origin: true`)
-  - **Production**: Requires `CORS_ORIGIN` environment variable (blocks all origins if not set)
-  - **Credentials**: Enabled for HTTPOnly cookie-based authentication
-  - **Setup**: To enable production access, add your domain to Replit Secrets as `CORS_ORIGIN` (e.g., `https://yourdomain.com`)
-
-### Security Enhancement - Login Rate Limiting
-- **Rate Limiter**: Protection against brute force attacks on login endpoint
-  - **Implementation**: express-rate-limit middleware on `/api/auth/login`
-  - **Limits**: Maximum 5 login attempts per IP address within 15-minute window
-  - **Response**: Returns 429 status with French error message after limit exceeded
-  - **Headers**: Standard RateLimit-* headers enabled for client-side tracking
-
-### Security Enhancement - Error Handling & Logging
-- **Environment-Aware Error Responses**: Different error handling for development vs production
-  - **Development**: Full error details including stack traces for debugging
-  - **Production**: Sanitized responses with user-friendly messages, no technical details exposed
-- **Error Logging**: Structured logging system that captures all errors server-side
-  - **Log Format**: JSON-formatted logs with timestamp, error code, user ID, request path, and full stack trace
-  - **Server-Side Only**: Sensitive technical details are never sent to clients in production
-- **Standardized Error Codes**: Internal error codes for support and debugging
-  - **ERR_001**: Validation errors (400, 422)
-  - **ERR_002**: Authentication errors (401)
-  - **ERR_003**: Authorization errors (403)
-  - **ERR_004**: Resource not found (404)
-  - **ERR_005**: Business logic errors (custom application rules)
-  - **ERR_500**: Internal server errors (500+)
-- **User-Friendly Messages**: Clear French error messages based on HTTP status codes
-  - Examples: "Requête invalide", "Non authentifié", "Accès refusé", "Ressource non trouvée"
-
-### Security Enhancement - Secured File Uploads
-- **UUID Filenames**: All uploaded files use UUID-based names instead of predictable timestamps
-  - **Implementation**: Multer diskStorage with UUID v4 generation
-  - **Format**: `{uuid}{original-extension}` (e.g., `a3f2b1c4-5678-9abc.pdf`)
-  - **Prevents**: Enumeration attacks and file name prediction
-- **Magic Number Validation**: Real MIME type verification using file signatures (not just extensions)
-  - **Library**: file-type@16.5.4 for binary magic number detection
-  - **Allowed Types**: PDF (application/pdf), JPEG (image/jpeg), PNG (image/png)
-  - **Auto-Rejection**: Invalid files are deleted immediately after detection
-- **RBAC File Access Control**: Downloaded files protected by role-based access control
-  - **Middleware**: protectUploadAccess verifies user has access to associated fiche
-  - **Coverage**: capDocuments (JSON), contractCommunePdfUrl, workshop reportUrl
-  - **Access Rules**: Same RBAC matrix as fiche access (ADMIN, SUIVI_PROJETS, EMETTEUR, RELATIONS_EVS, EVS_CS)
-- **Protected Routes**: GET /uploads/* requires authentication and fiche access verification
-- **Secured Endpoints**: All upload endpoints validate real MIME type post-upload
-  - POST /api/uploads
-  - POST /api/fiches/:id/upload-final-report
-  - POST /api/workshop-sessions/:sessionId/upload-contract
-  - POST /api/enrollments/:enrollmentId/upload-report
-
-### Legal Pages & Footer Implementation
-- **Footer Component**: Minimalist footer with legal links only
-  - **Content**: Only "Mentions Légales" and "Politique de Confidentialité" links (contact removed)
-  - **Copyright**: Commented out in code (SELFIE ME) - can be reactivated if needed
-  - **Styling**: CSS Modules (Footer.module.css) following strict charte graphique (#3B4B61 background, #F5F6F7 text)
-  - **Layout**: Centered horizontal layout with responsive spacing
-  - **Coverage**: Integrated across ALL pages (Home, Login, Dashboard, Fiches, Admin, Contact, Ateliers, FicheCreation, FicheDetail, Administration, Reports)
-- **Legal Pages**: Markdown-based content system for easy updates without code changes
-  - **Pages**: Mentions Légales and Politique de Confidentialité
-  - **Rendering**: ReactMarkdown with remark-gfm plugin for rich formatting
-  - **Access**: Public routes (no authentication required) via `/mentions-legales` and `/politique-confidentialite`
-  - **Styling**: Shared LegalPage.module.css with professional typography and spacing
-  - **Content Storage**: Markdown files in `/legal` directory, served via `/client/public/legal` for Vite compatibility
-
-### Centralized Audit Log Interface
-- **Admin Audit Tab**: New centralized audit log interface accessible only to ADMIN users
-- **Features**: Full-text search, multi-criteria filtering (action type, entity type, user), pagination (20 items/page)
-- **Backend**: GET `/api/admin/audit-logs` endpoint with role-based access control (ADMIN only)
-- **Frontend**: `AdminAuditTab.jsx` component with `AdminAuditTab.module.css` (100% charte graphique compliant)
-- **Filter Strategy**: Static reference lists (ACTION_LABELS, ENTITY_LABELS) ensure complete filtering capabilities
-- **Display**: Comprehensive event details with actor information, timestamps, and expandable metadata JSON viewer
-- **Smart Reference Display**: Fiche navette logs show formatted reference (FN-ANNEE-MOIS-CHIFFRE) instead of technical ID for better readability
-
 ## System Architecture
 
-### Frontend Architecture
-The client-side is built with React 18 using a modern component-based architecture. The application uses Wouter for lightweight routing instead of React Router, with TanStack Query for state management and data fetching. The UI is built with CSS Modules for component-specific styling, following the strict charte graphique color palette. Each component has a corresponding .module.css file for maintainable, scoped styling. The build system uses Vite for fast development and optimized production builds.
+### UI/UX Decisions
+The frontend adheres to a strict "charte graphique" (graphic charter) with a specific color palette (#3B4B61, #F5F6F7, #6A8B74, #D9A066, #8C4A4A), explicitly excluding yellow. Styling is exclusively managed via CSS Modules, ensuring component-scoped styles. All components are structured as `.jsx` files with corresponding `.module.css` files. Legal pages (Mentions Légales, Politique de Confidentialité) are implemented using Markdown for easy content updates and are accessible via public routes.
 
-### Backend Architecture
-The server implements a RESTful API using Express.js with middleware-based architecture. Authentication uses JWT tokens stored in HTTPOnly cookies for security. The system includes comprehensive RBAC (Role-Based Access Control) middleware that enforces permissions at the route level. File uploads are handled through Multer with local storage (designed to be easily adaptable to S3). The API includes comprehensive audit logging and state transition management.
+### Technical Implementations
+The client-side is built with React 18, utilizing Wouter for lightweight routing and TanStack Query for data fetching and state management. The backend is a RESTful API built with Express.js, featuring middleware for authentication (JWT in HTTPOnly cookies), authorization (RBAC), and audit logging. File uploads use Multer with UUID-based filenames and magic number validation for security. Environment configuration uses `dotenv-flow` for secure multi-environment deployments (development and production).
 
-### Database Design
-The application uses PostgreSQL as the primary database with Drizzle ORM for type-safe database operations and migrations. The schema implements complex relationships between entities including users, organizations, families, children, workshops, and fiche navettes. The database includes optimized indexes for performance and supports a sophisticated state machine for fiche workflow management.
+### Feature Specifications
+The core functionality revolves around a finite state machine managing 16 distinct states for fiche navette workflows, with role-restricted and audited transitions. A centralized audit log interface, accessible only to ADMIN users, provides full-text search, multi-criteria filtering, and pagination. Security enhancements include Helmet middleware for HTTP security headers, robust CORS configuration, login rate limiting, environment-aware error handling, structured error logging, and a demo account guard system to prevent write operations in production.
 
-### State Management
-The application implements a finite state machine for fiche navette workflows with 16 distinct states from DRAFT to ARCHIVED. State transitions are role-restricted and fully audited. The frontend uses TanStack Query for server state management with optimistic updates and comprehensive caching strategies.
-
-### Authentication & Authorization
-Authentication is implemented using bcrypt for password hashing and JWT for session management. The system uses HTTPOnly cookies to prevent XSS attacks. Authorization follows a strict RBAC model with five distinct roles (ADMIN, SUIVI_PROJETS, EMETTEUR, RELATIONS_EVS, EVS_CS), each with specific permissions for different operations and data access patterns.
+### System Design Choices
+PostgreSQL is the primary database, managed with Drizzle ORM for type-safe operations and migrations. The system employs a robust RBAC model with five roles (ADMIN, SUIVI_PROJETS, EMETTEUR, RELATIONS_EVS, EVS_CS) for granular permission control. Frontend uses Vite for fast development and optimized builds, while the backend utilizes TypeScript for type safety across the stack.
 
 ## External Dependencies
 
-### Core Framework Dependencies
-- **React 18** - Frontend framework with hooks and modern patterns
-- **Express.js** - Backend API framework with middleware support
-- **PostgreSQL** - Primary database for data persistence
-- **Drizzle ORM** - Type-safe database operations and migrations
-
-### UI & Styling
-- **CSS Modules** - Component-scoped styling with .module.css files
-- **Charte Graphique** - Strict adherence to color palette (#3B4B61, #F5F6F7, #6A8B74, #D9A066, #8C4A4A)
-- **Lucide React** - Icon library for consistent iconography
-- **Custom CSS Variables** - Global theming system without framework dependencies
-- **ReactMarkdown** - Markdown rendering for legal documents with remark-gfm for GitHub-flavored markdown support
-
-### Data & State Management
-- **TanStack Query** - Server state management with caching and synchronization
-- **Wouter** - Lightweight client-side routing
-
-### Database & ORM
-- **@neondatabase/serverless** - Serverless PostgreSQL connection pooling
-- **Drizzle Kit** - Database migration and schema management tools
-
-### Authentication & Security
-- **bcrypt** - Password hashing for secure authentication
-- **jsonwebtoken** - JWT token generation and verification
-- **cookie-parser** - Cookie parsing middleware for session management
-
-### File Handling & Validation
-- **Multer** - Multipart form data handling for file uploads
-- **Zod** - Runtime type validation and schema validation
-
-### Development Tools
-- **Vite** - Fast build tool and development server
-- **TypeScript** - Type safety across the full stack
-- **ESBuild** - Fast JavaScript bundler for production builds
+- **React 18**: Frontend framework.
+- **Express.js**: Backend API framework.
+- **PostgreSQL**: Primary database.
+- **Drizzle ORM**: Type-safe database operations.
+- **TanStack Query**: Server state management, caching, and synchronization.
+- **Wouter**: Lightweight client-side routing.
+- **bcrypt**: Password hashing.
+- **jsonwebtoken**: JWT token generation and verification.
+- **cookie-parser**: Cookie parsing middleware.
+- **Multer**: Multipart form data handling for file uploads.
+- **Zod**: Runtime type and schema validation.
+- **Lucide React**: Icon library.
+- **ReactMarkdown** with **remark-gfm**: Markdown rendering for legal documents.
+- **Helmet**: HTTP security headers middleware.
+- **express-rate-limit**: Login rate limiting.
+- **file-type**: File magic number validation.
+- **@neondatabase/serverless**: Serverless PostgreSQL connection pooling.
+- **dotenv-flow**: Environment variable management.
