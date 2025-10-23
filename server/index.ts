@@ -1,3 +1,9 @@
+// Load environment variables FIRST (before any other imports)
+// dotenv-flow will load .env, .env.local, .env.{NODE_ENV}, .env.{NODE_ENV}.local
+// in order of priority, with Replit Secrets taking precedence over file-based variables
+import dotenvFlow from 'dotenv-flow';
+dotenvFlow.config();
+
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
 import cors from "cors";
