@@ -114,27 +114,29 @@ export default function LoginForm() {
           </button>
         </form>
         
-        <div className={styles.demoSection}>
-          <h3 className={styles.demoTitle}>Comptes de démonstration</h3>
-          <div className={styles.demoAccounts}>
-            {demoAccounts.map((account, index) => (
-              <div key={index} className={styles.demoAccount}>
-                <div className={styles.demoInfo}>
-                  <span className={styles.demoRole}>{account.role}</span>
-                  <span className={styles.demoEmail}>{account.email}</span>
+        {import.meta.env.VITE_ENABLE_DEMO_ACCOUNTS === 'true' && (
+          <div className={styles.demoSection}>
+            <h3 className={styles.demoTitle}>Comptes de démonstration</h3>
+            <div className={styles.demoAccounts}>
+              {demoAccounts.map((account, index) => (
+                <div key={index} className={styles.demoAccount}>
+                  <div className={styles.demoInfo}>
+                    <span className={styles.demoRole}>{account.role}</span>
+                    <span className={styles.demoEmail}>{account.email}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.demoButton}
+                    onClick={() => fillDemoAccount(account)}
+                    data-testid={`button-demo-${account.role.toLowerCase()}`}
+                  >
+                    Utiliser
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className={styles.demoButton}
-                  onClick={() => fillDemoAccount(account)}
-                  data-testid={`button-demo-${account.role.toLowerCase()}`}
-                >
-                  Utiliser
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
