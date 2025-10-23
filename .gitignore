@@ -6,11 +6,9 @@ vite.config.ts.*
 *.tar.gz
 
 # Environment variables - NEVER commit secrets!
-.env
-.env.local
-.env.*.local
-.env.production
-.env.development
+# Ignore ALL .env files EXCEPT .env.example
+.env*
+!.env.example
 
 # Uploads directory
 uploads/
