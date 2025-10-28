@@ -1,7 +1,7 @@
 // Load environment variables FIRST (before any other imports)
 // dotenv-flow will load .env, .env.local, .env.{NODE_ENV}, .env.{NODE_ENV}.local
 // in order of priority, with Replit Secrets taking precedence over file-based variables
-import dotenvFlow from 'dotenv-flow';
+import dotenvFlow from "dotenv-flow";
 dotenvFlow.config();
 
 import express, { type Request, Response, NextFunction } from "express";
@@ -18,31 +18,39 @@ import { protectUploadAccess } from "./middleware/uploadSecurity";
 const app = express();
 
 // Trust proxy - necessary for rate limiting to work correctly in proxied environments (Replit, etc.)
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // Helmet security headers - CSP enabled in production for better security
-app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === 'production', // Enable CSP in production only
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: process.env.NODE_ENV === "production", // Enable CSP in production only
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // CORS configuration - flexible for dev and production
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'development' 
-    ? true // Accept all origins in development
-    : process.env.CORS_ORIGIN || false, // Use CORS_ORIGIN in production, block if not set
+  origin:
+    process.env.NODE_ENV === "development"
+      ? true // Accept all origins in development
+      : process.env.CORS_ORIGIN || false, // Use CORS_ORIGIN in production, block if not set
   credentials: true, // Allow cookies/authentication headers
 };
 
 app.use(cors(corsOptions));
 
 // Serve uploaded files statically with authentication and RBAC protection
-app.use('/uploads', requireAuth, protectUploadAccess, express.static(path.join(process.cwd(), 'uploads')));
+app.use(
+  "/uploads",
+  requireAuth,
+  protectUploadAccess,
+  express.static(path.join(process.cwd(), "uploads")),
+);
 
 // Serve legal documents (markdown files) - public access
-app.use('/legal', express.static(path.join(process.cwd(), 'legal')));
+app.use("/legal", express.static(path.join(process.cwd(), "legal")));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -80,14 +88,14 @@ app.use((req, res, next) => {
   // Enhanced error handling middleware - differentiate between dev and prod
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    
+    const isDevelopment = process.env.NODE_ENV === "development";
+
     // Determine error code - use custom code if provided, otherwise infer from status
     const errorCode = err.code || getErrorCode(status);
-    
+
     // Log error with full details (always logged server-side)
     logError(err, errorCode, status, req, err.details);
-    
+
     // Prepare response based on environment
     if (isDevelopment) {
       // Development: Full details for debugging
@@ -111,7 +119,7 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (process.env.NODE_ENV !== "production") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
@@ -122,13 +130,16 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   // changement du port 5000 pour 3000 pour le faire tourner en local
-  const port = parseInt(process.env.PORT || '5000', 10); 
-  server.listen({
-    port,
-    host: "0.0.0.0",// changement d'adresse pour le faire tourner en local
-   // host: "127.0.0.1",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen(
+    {
+      port,
+      host: "0.0.0.0", // changement d'adresse pour le faire tourner en local
+      // host: "127.0.0.1",
+      reusePort: true,
+    },
+    () => {
+      log(`serving on port ${port}`);
+    },
+  );
 })();

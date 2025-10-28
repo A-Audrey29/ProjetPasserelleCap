@@ -1,12 +1,8 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
-import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
-import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
-
-const viteLogger = createLogger();
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -20,6 +16,14 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  // Import dynamique de vite pour éviter de le charger en production
+  const { createServer: createViteServer, createLogger } = await import("vite");
+  const [react, runtimeErrorOverlay] = await Promise.all([
+    import("@vitejs/plugin-react").then(m => m.default()),
+    import("@replit/vite-plugin-runtime-error-modal").then(m => m.default()),
+  ]);
+  const viteLogger = createLogger();
+
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
@@ -27,7 +31,15 @@ export async function setupVite(app: Express, server: Server) {
   };
 
   const vite = await createViteServer({
-    ...viteConfig,
+    plugins: [react, runtimeErrorOverlay],
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "..", "client", "src"),
+        "@shared": path.resolve(import.meta.dirname, "..", "shared"),
+        "@assets": path.resolve(import.meta.dirname, "..", "attached_assets"),
+      },
+    },
+    root: path.resolve(import.meta.dirname, "..", "client"),
     configFile: false,
     customLogger: {
       ...viteLogger,
