@@ -20,9 +20,9 @@ const app = express();
 // Trust proxy - necessary for rate limiting to work correctly in proxied environments (Replit, etc.)
 app.set('trust proxy', 1);
 
-// Helmet security headers - CSP disabled to allow React/Vite to work
+// Helmet security headers - CSP enabled in production for better security
 app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP to avoid blocking React development
+  contentSecurityPolicy: process.env.NODE_ENV === 'production', // Enable CSP in production only
 }));
 
 app.use(express.json());

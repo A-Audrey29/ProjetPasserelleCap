@@ -2,6 +2,17 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { storage } from './storage.ts';
 
+// CRITICAL: JWT_SECRET must be set in production for security
+if (!process.env.JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: JWT_SECRET environment variable must be set in production. ' +
+      'Generate a strong secret with: openssl rand -base64 32'
+    );
+  }
+  console.warn('⚠️  WARNING: JWT_SECRET not set, using development fallback (INSECURE)');
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const SALT_ROUNDS = 12;
 
