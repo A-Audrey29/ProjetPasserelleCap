@@ -1,25 +1,26 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import fetch from "node-fetch";
+import { neon, neonConfig } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// ⚙️ Important pour O2switch : fournir une implémentation de fetch
+neonConfig.fetchImplementation = fetch;
 
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  throw new Error("DATABASE_URL must be défini dans les variables d'environnement !");
 }
 
-// Nettoyer DATABASE_URL pour éviter les problèmes d'encodage
-// Supprime les espaces initiaux/finaux et décode les entités HTML
+// Nettoyer l'URL (pour éviter caractères encodés)
 const cleanDatabaseUrl = process.env.DATABASE_URL
   .trim()
-  .replace(/&amp;/g, '&')
-  .replace(/&lt;/g, '<')
-  .replace(/&gt;/g, '>')
+  .replace(/&amp;/g, "&")
+  .replace(/&lt;/g, "<")
+  .replace(/&gt;/g, ">")
   .replace(/&quot;/g, '"')
   .replace(/&#39;/g, "'");
 
-export const pool = new Pool({ connectionString: cleanDatabaseUrl });
-export const db = drizzle({ client: pool, schema });
+// 🔐 Connexion HTTPS via Neon
+const sql = neon(cleanDatabaseUrl);
+
+// Initialisation de Drizzle ORM
+export const db = drizzle(sql, { schema });
