@@ -1995,6 +1995,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint FTPS (ADMIN uniquement) - Pour diagnostiquer la connexion o2switch
+  app.get('/api/admin/test-ftp', requireAuth, requireRole('ADMIN'), async (req, res) => {
+    try {
+      const { testFTPSConnection } = await import('./utils/ftpsUpload.js');
+      const result = await testFTPSConnection();
+      
+      res.json(result);
+    } catch (error: any) {
+      console.error('Test FTPS error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erreur lors du test FTPS',
+        error: error.message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
