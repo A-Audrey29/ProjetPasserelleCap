@@ -353,39 +353,51 @@ mkdir -p uploads/navettes
 mkdir -p uploads/bilans
 chmod 755 uploads uploads/navettes uploads/bilans
 
-# Répertoires distants SFTP (en dehors du répertoire web, pour sécurité)
+# Répertoires distants FTPS (en dehors du répertoire web, pour sécurité)
 mkdir -p ~/uploads/navettes
 mkdir -p ~/uploads/bilans
 chmod 755 ~/uploads ~/uploads/navettes ~/uploads/bilans
 ```
 
-> 🔒 **Sécurité** : Les fichiers PDF sont automatiquement synchronisés vers `~/uploads/` (en dehors du répertoire web) via SFTP pour éviter l'accès direct via URL publique.
+> 🔒 **Sécurité** : Les fichiers PDF sont automatiquement synchronisés vers `~/uploads/` (en dehors du répertoire web) via FTPS pour éviter l'accès direct via URL publique.
 
-### 4.8 Configurer la variable SFTP_PASSWORD
+### 4.8 Configurer la variable FTP_PASSWORD
 
-Éditez le fichier `.env.production` sur le serveur et assurez-vous que `SFTP_PASSWORD` est bien renseignée :
+⚠️ **IMPORTANT** : o2switch utilise **FTPS** (FTP sécurisé avec TLS), PAS SFTP
+
+**Différence FTPS vs SFTP** :
+- ✅ **FTPS** = FTP over TLS/SSL sur port **21** (mode explicite) → **Supporté par o2switch**
+- ❌ **SFTP** = SSH File Transfer Protocol sur port **22** → **NON supporté par o2switch**
+
+Éditez le fichier `.env.production` sur le serveur et assurez-vous que `FTP_PASSWORD` est bien renseignée :
 
 ```bash
 nano .env.production
 ```
 
-Ajoutez ou vérifiez cette ligne :
+Ajoutez ou vérifiez ces lignes :
 
 ```env
-SFTP_PASSWORD=votre_mot_de_passe_sftp_o2switch
+FTP_PASSWORD=votre_mot_de_passe_ftp_o2switch
+FTP_HOST=millet.o2switch.net
+FTP_PORT=21
+FTP_USER=kalo4499
+FTP_SECURE=true
+FTP_TIMEOUT=30000
 ```
 
-> ⚠️ **Important** : Cette variable est **uniquement** utilisée en production pour synchroniser automatiquement les fichiers PDF uploadés (contrats, bilans) vers le stockage sécurisé SFTP.
+> ⚠️ **Important** : Ces variables sont **uniquement** utilisées en production pour synchroniser automatiquement les fichiers PDF uploadés (contrats, bilans) vers le stockage sécurisé FTPS.
 > 
-> En développement (NODE_ENV=development), la synchronisation SFTP est **désactivée** - les fichiers restent locaux uniquement.
+> En développement (NODE_ENV=development), la synchronisation FTPS est **désactivée** - les fichiers restent locaux uniquement.
 
 **Comment ça fonctionne** :
 - Lors d'un upload de PDF (contrat commune ou bilan d'atelier)
 - Le fichier est sauvegardé localement dans `/uploads/navettes/` ou `/uploads/bilans/`
-- **Automatiquement**, en production, le fichier est aussi transféré via SFTP vers :
-  - `/home/kalo4499/uploads/navettes/` (hors répertoire web)
-  - `/home/kalo4499/uploads/bilans/` (hors répertoire web)
-- En cas d'échec SFTP, le fichier local reste disponible (fallback)
+- **Automatiquement**, en production, le fichier est aussi transféré via FTPS (TLS 1.2+) vers :
+  - `/uploads/navettes/` (relatif au home FTP, soit `/home/kalo4499/uploads/navettes/`)
+  - `/uploads/bilans/` (relatif au home FTP, soit `/home/kalo4499/uploads/bilans/`)
+- La connexion FTPS utilise un chiffrement TLS fort avec retry automatique (3 tentatives)
+- En cas d'échec FTPS, le fichier local reste disponible (fallback) et une alerte est loggée
 
 ### 4.9 Configuration du process Node.js avec o2switch
 
