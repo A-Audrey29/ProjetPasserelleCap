@@ -63,11 +63,15 @@ class FTPSClient {
     this.client = new Client();
     this.config = getFTPSConfig();
     
-    // Configurer le timeout
-    this.client.ftp.timeout = this.config.timeout;
-    
-    // Activer les logs en mode verbose
+    // Configurer le client
     this.client.ftp.verbose = this.config.verbose;
+  }
+
+  /**
+   * Obtenir le client FTP interne (pour tests et diagnostics)
+   */
+  getClient(): Client {
+    return this.client;
   }
 
   /**
@@ -81,7 +85,8 @@ class FTPSClient {
         console.log(`🔌 [FTPS] Tentative ${attempt}/${maxRetries} - Connexion à ${this.config.host}:${this.config.port}...`);
         console.log(`👤 [FTPS] Utilisateur: ${this.config.user}`);
         console.log(`🔒 [FTPS] Mode sécurisé: ${this.config.secure ? 'OUI (TLS)' : 'NON'}`);
-
+        console.log(`⏱️ [FTPS] Timeout: ${this.config.timeout}ms`);
+        
         await this.client.access({
           host: this.config.host,
           port: this.config.port,
@@ -260,9 +265,12 @@ export async function testFTPSConnection(): Promise<{
   try {
     await ftpsClient.connect(1); // 1 seule tentative pour le test
 
+    // Récupérer le client connecté pour effectuer les opérations
+    const client = ftpsClient.getClient();
+
     // Lister le répertoire courant
-    const pwd = await ftpsClient.client.pwd();
-    const files = await ftpsClient.client.list();
+    const pwd = await client.pwd();
+    const files = await client.list();
 
     return {
       success: true,
