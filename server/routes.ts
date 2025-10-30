@@ -21,7 +21,7 @@ import { auditMiddleware } from './services/auditLogger.js';
 import { transitionFicheState, getValidTransitions } from './services/stateTransitions.js';
 import emailService from './services/emailService.js';
 import notificationService from './services/notificationService.js';
-import { uploadToSFTP } from './utils/sftpUpload.js';
+import { uploadToFTPS } from './utils/ftpsUpload.js';
 
 // Configuration des chemins de stockage pour les uploads
 const uploadsRoot = path.resolve("uploads");
@@ -1625,12 +1625,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const fileUrl = `/uploads/navettes/${filename}`;
         const localFilePath = path.join(uploadsNavettes, filename);
         
-        // Upload vers o2switch via SFTP (uniquement en production)
-        const sftpSuccess = await uploadToSFTP(localFilePath, 'navettes');
+        // Upload vers o2switch via FTPS (uniquement en production)
+        const ftpsSuccess = await uploadToFTPS(localFilePath, 'navettes');
         
-        // En production, logger les échecs SFTP
-        if (!sftpSuccess && process.env.NODE_ENV === 'production') {
-          console.error(`⚠️ [SFTP] Échec du transfert SFTP pour ${filename} - Le fichier reste disponible localement comme fallback`);
+        // En production, logger les échecs FTPS
+        if (!ftpsSuccess && process.env.NODE_ENV === 'production') {
+          console.error(`⚠️ [FTPS] Échec du transfert FTPS pour ${filename} - Le fichier reste disponible localement comme fallback`);
         }
         
         res.json({ 
@@ -1638,8 +1638,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           filename,
           url: fileUrl,
           message: 'Fichier uploadé avec succès',
-          warning: !sftpSuccess && process.env.NODE_ENV === 'production' 
-            ? 'Fichier disponible localement seulement (échec synchronisation SFTP)' 
+          warning: !ftpsSuccess && process.env.NODE_ENV === 'production' 
+            ? 'Fichier disponible localement seulement (échec synchronisation FTPS)' 
             : undefined
         });
       } catch (error) {
@@ -1947,12 +1947,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const fileUrl = `/uploads/bilans/${filename}`;
         const localFilePath = path.join(uploadsBilans, filename);
         
-        // Upload vers o2switch via SFTP (uniquement en production)
-        const sftpSuccess = await uploadToSFTP(localFilePath, 'bilans');
+        // Upload vers o2switch via FTPS (uniquement en production)
+        const ftpsSuccess = await uploadToFTPS(localFilePath, 'bilans');
         
-        // En production, logger les échecs SFTP
-        if (!sftpSuccess && process.env.NODE_ENV === 'production') {
-          console.error(`⚠️ [SFTP] Échec du transfert SFTP pour ${filename} - Le fichier reste disponible localement comme fallback`);
+        // En production, logger les échecs FTPS
+        if (!ftpsSuccess && process.env.NODE_ENV === 'production') {
+          console.error(`⚠️ [FTPS] Échec du transfert FTPS pour ${filename} - Le fichier reste disponible localement comme fallback`);
         }
         
         const updatedEnrollment = await storage.uploadEnrollmentReport(enrollmentId, fileUrl, userId);
@@ -1962,8 +1962,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: 'Bilan uploadé avec succès',
           reportUrl: fileUrl,
           enrollment: updatedEnrollment,
-          warning: !sftpSuccess && process.env.NODE_ENV === 'production' 
-            ? 'Fichier disponible localement seulement (échec synchronisation SFTP)' 
+          warning: !ftpsSuccess && process.env.NODE_ENV === 'production' 
+            ? 'Fichier disponible localement seulement (échec synchronisation FTPS)' 
             : undefined
         });
       } catch (error) {
