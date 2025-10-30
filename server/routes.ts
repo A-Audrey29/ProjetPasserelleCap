@@ -22,6 +22,11 @@ import { transitionFicheState, getValidTransitions } from './services/stateTrans
 import emailService from './services/emailService.js';
 import notificationService from './services/notificationService.js';
 
+// Configuration des chemins de stockage pour les uploads
+const uploadsRoot = path.resolve("uploads");
+const uploadsNavettes = path.join(uploadsRoot, "navettes");
+const uploadsBilans = path.join(uploadsRoot, "bilans");
+
 // CSV parsing utility functions (inspired from seed.ts)
 function parseCsv(content: string): string[][] {
   // Auto-detect delimiter by checking first line
@@ -104,17 +109,25 @@ const contractUpdateSchema = z.object({
   contractCommunePdfUrl: z.string().nullable().optional()
 });
 
-// Ensure uploads directory exists
+// Ensure uploads directories exist
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configure multer for file uploads
+// Create subdirectories for navettes and bilans
+if (!fs.existsSync(uploadsNavettes)) {
+  fs.mkdirSync(uploadsNavettes, { recursive: true });
+}
+if (!fs.existsSync(uploadsBilans)) {
+  fs.mkdirSync(uploadsBilans, { recursive: true });
+}
+
+// Configure multer for file uploads (CAP documents) → uploads/navettes
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, uploadsDir);
+      cb(null, uploadsNavettes);
     },
     filename: (req, file, cb) => {
       // Generate UUID-based filename with original extension
@@ -177,11 +190,11 @@ const uploadContractPDF = multer({
   }
 });
 
-// Configure multer for workshop report PDF uploads
+// Configure multer for workshop report PDF uploads (bilans d'ateliers) → uploads/bilans
 const uploadReportPDF = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, uploadsDir);
+      cb(null, uploadsBilans);
     },
     filename: (req, file, cb) => {
       // Generate UUID-based filename with original extension
@@ -683,15 +696,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // File uploads
+  // File uploads (CAP documents) → uploads/navettes
   app.post('/api/uploads', requireAuth, upload.single('file'), validateUploadedFileMimeType, async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: 'Aucun fichier fourni' });
       }
 
-      const fileUrl = `/uploads/${req.file.filename}`;
-      
+      const fileUrl = `/uploads/navettes/${req.file.filename}`;
+
       res.json({
         url: fileUrl,
         name: req.file.originalname,
@@ -725,19 +738,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Rename uploaded file to conventional name: final-report-{ficheId}.pdf
-      const oldPath = path.join(uploadsDir, req.file.filename);
+      const oldPath = path.join(uploadsNavettes, req.file.filename);
       const newFilename = `final-report-${id}.pdf`;
-      const newPath = path.join(uploadsDir, newFilename);
-      
+      const newPath = path.join(uploadsNavettes, newFilename);
+
       // Remove old file if exists
       if (fs.existsSync(newPath)) {
         fs.unlinkSync(newPath);
       }
-      
+
       // Rename to conventional name
       fs.renameSync(oldPath, newPath);
 
-      const fileUrl = `/uploads/${newFilename}`;
+      const fileUrl = `/uploads/navettes/${newFilename}`;
       
       // Transition fiche to FINAL_REPORT_RECEIVED
       await transitionFicheState(id, 'FINAL_REPORT_RECEIVED', req.user.userId, {
@@ -758,16 +771,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve uploaded files
-  app.get('/uploads/:filename', (req, res) => {
-    const { filename } = req.params;
-    const filePath = path.join(uploadsDir, filename);
-    
+  // Serve uploaded files (supports subdirectories: navettes and bilans)
+  app.get('/uploads/:subfolder/:filename', (req, res) => {
+    const { subfolder, filename } = req.params;
+
+    // Validate subfolder to prevent directory traversal
+    if (!['navettes', 'bilans'].includes(subfolder)) {
+      return res.status(400).json({ message: 'Sous-dossier invalide' });
+    }
+
+    const filePath = path.join(uploadsRoot, subfolder, filename);
+
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ message: 'Fichier non trouvé' });
     }
 
     res.sendFile(filePath);
+  });
+
+  // Legacy route for backwards compatibility (checks both subdirectories)
+  app.get('/uploads/:filename', (req, res) => {
+    const { filename } = req.params;
+
+    // Try navettes first, then bilans
+    const navettesPath = path.join(uploadsNavettes, filename);
+    const bilansPath = path.join(uploadsBilans, filename);
+
+    if (fs.existsSync(navettesPath)) {
+      return res.sendFile(navettesPath);
+    }
+
+    if (fs.existsSync(bilansPath)) {
+      return res.sendFile(bilansPath);
+    }
+
+    // Fallback to old location for backwards compatibility
+    const oldPath = path.join(uploadsDir, filename);
+    if (fs.existsSync(oldPath)) {
+      return res.sendFile(oldPath);
+    }
+
+    return res.status(404).json({ message: 'Fichier non trouvé' });
   });
 
   // Reference data routes
@@ -1886,7 +1930,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à uploader le bilan pour cette inscription' });
         }
 
-        const fileUrl = `/uploads/${req.file.filename}`;
+        const fileUrl = `/uploads/bilans/${req.file.filename}`;
         const updatedEnrollment = await storage.uploadEnrollmentReport(enrollmentId, fileUrl, userId);
 
         res.json({
