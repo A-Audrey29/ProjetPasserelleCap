@@ -21,6 +21,7 @@ import { auditMiddleware } from './services/auditLogger.js';
 import { transitionFicheState, getValidTransitions } from './services/stateTransitions.js';
 import emailService from './services/emailService.js';
 import notificationService from './services/notificationService.js';
+import { uploadToSFTP } from './utils/sftpUpload.js';
 
 // Configuration des chemins de stockage pour les uploads
 const uploadsRoot = path.resolve("uploads");
@@ -165,11 +166,11 @@ const uploadCSV = multer({
   }
 });
 
-// Configure multer for PDF contract uploads  
+// Configure multer for PDF contract uploads → uploads/navettes
 const uploadContractPDF = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, uploadsDir);
+      cb(null, uploadsNavettes);
     },
     filename: (req, file, cb) => {
       // Generate UUID-based filename with original extension
@@ -1621,13 +1622,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const filename = req.file.filename;
-        const fileUrl = `/uploads/${filename}`;
+        const fileUrl = `/uploads/navettes/${filename}`;
+        const localFilePath = path.join(uploadsNavettes, filename);
+        
+        // Upload vers o2switch via SFTP (uniquement en production)
+        const sftpSuccess = await uploadToSFTP(localFilePath, 'navettes');
+        
+        // En production, logger les échecs SFTP
+        if (!sftpSuccess && process.env.NODE_ENV === 'production') {
+          console.error(`⚠️ [SFTP] Échec du transfert SFTP pour ${filename} - Le fichier reste disponible localement comme fallback`);
+        }
         
         res.json({ 
           success: true, 
           filename,
           url: fileUrl,
-          message: 'Fichier uploadé avec succès' 
+          message: 'Fichier uploadé avec succès',
+          warning: !sftpSuccess && process.env.NODE_ENV === 'production' 
+            ? 'Fichier disponible localement seulement (échec synchronisation SFTP)' 
+            : undefined
         });
       } catch (error) {
         console.error('Error uploading contract:', error);
@@ -1930,14 +1943,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à uploader le bilan pour cette inscription' });
         }
 
-        const fileUrl = `/uploads/bilans/${req.file.filename}`;
+        const filename = req.file.filename;
+        const fileUrl = `/uploads/bilans/${filename}`;
+        const localFilePath = path.join(uploadsBilans, filename);
+        
+        // Upload vers o2switch via SFTP (uniquement en production)
+        const sftpSuccess = await uploadToSFTP(localFilePath, 'bilans');
+        
+        // En production, logger les échecs SFTP
+        if (!sftpSuccess && process.env.NODE_ENV === 'production') {
+          console.error(`⚠️ [SFTP] Échec du transfert SFTP pour ${filename} - Le fichier reste disponible localement comme fallback`);
+        }
+        
         const updatedEnrollment = await storage.uploadEnrollmentReport(enrollmentId, fileUrl, userId);
 
         res.json({
           success: true,
           message: 'Bilan uploadé avec succès',
           reportUrl: fileUrl,
-          enrollment: updatedEnrollment
+          enrollment: updatedEnrollment,
+          warning: !sftpSuccess && process.env.NODE_ENV === 'production' 
+            ? 'Fichier disponible localement seulement (échec synchronisation SFTP)' 
+            : undefined
         });
       } catch (error) {
         console.error('Error uploading report:', error);

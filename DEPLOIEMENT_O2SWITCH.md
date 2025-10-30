@@ -345,14 +345,49 @@ npm ci
 > 
 > 💡 `npm ci` est plus rapide et plus fiable que `npm install` pour la production
 
-### 4.7 Créer le répertoire uploads
+### 4.7 Créer les répertoires de stockage
 
 ```bash
-mkdir -p uploads
-chmod 755 uploads
+# Répertoires locaux pour les uploads
+mkdir -p uploads/navettes
+mkdir -p uploads/bilans
+chmod 755 uploads uploads/navettes uploads/bilans
+
+# Répertoires distants SFTP (en dehors du répertoire web, pour sécurité)
+mkdir -p ~/uploads/navettes
+mkdir -p ~/uploads/bilans
+chmod 755 ~/uploads ~/uploads/navettes ~/uploads/bilans
 ```
 
-### 4.8 Configuration du process Node.js avec o2switch
+> 🔒 **Sécurité** : Les fichiers PDF sont automatiquement synchronisés vers `~/uploads/` (en dehors du répertoire web) via SFTP pour éviter l'accès direct via URL publique.
+
+### 4.8 Configurer la variable SFTP_PASSWORD
+
+Éditez le fichier `.env.production` sur le serveur et assurez-vous que `SFTP_PASSWORD` est bien renseignée :
+
+```bash
+nano .env.production
+```
+
+Ajoutez ou vérifiez cette ligne :
+
+```env
+SFTP_PASSWORD=votre_mot_de_passe_sftp_o2switch
+```
+
+> ⚠️ **Important** : Cette variable est **uniquement** utilisée en production pour synchroniser automatiquement les fichiers PDF uploadés (contrats, bilans) vers le stockage sécurisé SFTP.
+> 
+> En développement (NODE_ENV=development), la synchronisation SFTP est **désactivée** - les fichiers restent locaux uniquement.
+
+**Comment ça fonctionne** :
+- Lors d'un upload de PDF (contrat commune ou bilan d'atelier)
+- Le fichier est sauvegardé localement dans `/uploads/navettes/` ou `/uploads/bilans/`
+- **Automatiquement**, en production, le fichier est aussi transféré via SFTP vers :
+  - `/home/kalo4499/uploads/navettes/` (hors répertoire web)
+  - `/home/kalo4499/uploads/bilans/` (hors répertoire web)
+- En cas d'échec SFTP, le fichier local reste disponible (fallback)
+
+### 4.9 Configuration du process Node.js avec o2switch
 
 O2switch utilise un système de gestion de processus Node.js. Voici comment configurer votre application :
 
