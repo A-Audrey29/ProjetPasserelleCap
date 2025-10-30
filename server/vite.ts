@@ -18,10 +18,7 @@ export function log(message: string, source = "express") {
 export async function setupVite(app: Express, server: Server) {
   // Import dynamique de vite pour éviter de le charger en production
   const { createServer: createViteServer, createLogger } = await import("vite");
-  const [react, runtimeErrorOverlay] = await Promise.all([
-    import("@vitejs/plugin-react").then(m => m.default()),
-    import("@replit/vite-plugin-runtime-error-modal").then(m => m.default()),
-  ]);
+  const react = await import("@vitejs/plugin-react").then(m => m.default());
   const viteLogger = createLogger();
 
   const serverOptions = {
@@ -31,7 +28,7 @@ export async function setupVite(app: Express, server: Server) {
   };
 
   const vite = await createViteServer({
-    plugins: [react, runtimeErrorOverlay],
+    plugins: [react],
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "..", "client", "src"),
