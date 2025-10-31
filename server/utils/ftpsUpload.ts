@@ -45,8 +45,8 @@ function getFTPSConfig(): FTPSConfig {
  * - Utiliser simplement: /uploads/navettes/ ou /uploads/bilans/
  */
 export const REMOTE_PATHS = {
-  navettes: '/navettes/',
-  bilans: '/bilans/',
+  navettes: '/uploads/navettes/',
+  bilans: '/uploads/bilans/',
 };
 
 export type UploadType = 'navettes' | 'bilans';
