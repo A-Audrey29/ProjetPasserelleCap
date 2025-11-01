@@ -1,5 +1,0 @@
-INSTRUCTIONS DEPLOIEMENT - Version 
-1. Extraire l'archive sur O2Switch.
-2. Lancer npm ci --omit=dev.
-3. Démarrer l'application avec NODE_ENV=production node dist/index.js.
-4. Vérifier le port 3000 et la base Neon.

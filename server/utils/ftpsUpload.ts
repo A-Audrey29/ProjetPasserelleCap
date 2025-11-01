@@ -26,11 +26,11 @@ function getFTPSConfig(): FTPSConfig {
   }
 
   return {
-    host: process.env.FTP_HOST || 'millet.o2switch.net',
+    host: process.env.FTP_HOST || 'kalo4499.odns.fr',
     port: parseInt(process.env.FTP_PORT || '21', 10),
-    user: process.env.FTP_USER || 'kalo4499',
+    user: process.env.FTP_USER || 'render@kalo4499.odns.fr',
     password: process.env.FTP_PASSWORD,
-    secure: process.env.FTP_SECURE !== 'false', // Par défaut: true (FTPS activé)
+    secure: process.env.FTP_SECURE === 'true', // Par défaut: false (FTP simple)
     timeout: parseInt(process.env.FTP_TIMEOUT || '30000', 10), // 30 secondes par défaut
     verbose: process.env.NODE_ENV !== 'production', // Logs détaillés en dev
   };
@@ -290,9 +290,9 @@ export async function testFTPSConnection(): Promise<{
       success: false,
       message: `Échec de connexion: ${error.message}`,
       details: {
-        host: process.env.FTP_HOST || 'millet.o2switch.net',
+        host: process.env.FTP_HOST || 'kalo4499.odns.fr',
         port: process.env.FTP_PORT || '21',
-        user: process.env.FTP_USER || 'kalo4499',
+        user: process.env.FTP_USER || 'render@kalo4499.odns.fr',
         error: error.message,
         stack: error.stack,
       },
