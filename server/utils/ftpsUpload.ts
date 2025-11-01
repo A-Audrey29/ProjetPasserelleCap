@@ -149,8 +149,19 @@ class FTPSClient {
       throw new Error("Client FTPS non connecté. Appelez connect() d'abord.");
     }
 
+    // 🧩 Correction du chemin distant pour éviter "uploads/uploads"
     const fileName = path.basename(localFilePath);
-    const remoteFilePath = path.posix.join(remoteDirectory, fileName);
+
+    // Nettoyage du répertoire distant pour éviter le doublon "uploads/uploads"
+    let cleanRemoteDir = remoteDirectory.replace(/^\/+/, ""); // retire un slash initial
+    if (cleanRemoteDir.startsWith("uploads/uploads")) {
+      cleanRemoteDir = cleanRemoteDir.replace("uploads/uploads", "uploads");
+    } else if (!cleanRemoteDir.startsWith("uploads")) {
+      cleanRemoteDir = path.posix.join("uploads", cleanRemoteDir);
+    }
+
+    // Construction finale du chemin distant
+    const remoteFilePath = path.posix.join(cleanRemoteDir, fileName);
 
     console.log(`📍 [FTPS] Fichier local: ${localFilePath}`);
     console.log(`📍 [FTPS] Fichier distant: ${remoteFilePath}`);
