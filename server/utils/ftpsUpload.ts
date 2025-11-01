@@ -92,15 +92,18 @@ class FTPSClient {
           port: this.config.port,
           user: this.config.user,
           password: this.config.password,
-          secure: this.config.secure, // Explicit FTPS (TLS over FTP)
+          secure: this.config.secure, // Active FTPS si FTP_SECURE=true
           secureOptions: {
-            // En production: valider strictement les certificats
-            // En dev: accepter les certificats auto-signés
-            rejectUnauthorized: process.env.NODE_ENV === 'production',
-            minVersion: 'TLSv1.2', // TLS 1.2 minimum pour sécurité
+            // O2Switch a un certificat TLS valide sur millet.o2switch.net
+            // Si tu utilises ce host, on garde la vérification stricte
+            // Sinon (autre domaine), on accepte le certificat sans bloquer
+            rejectUnauthorized:
+              process.env.FTP_HOST === "millet.o2switch.net"
+                ? true
+                : false,
+            minVersion: "TLSv1.2", // TLS 1.2 minimum pour sécurité
           },
         });
-
         this.connected = true;
         console.log(`✅ [FTPS] Connexion réussie au serveur o2switch`);
         

@@ -908,8 +908,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const fileUrl = `/uploads/navettes/${req.file.filename}`;
 
+        // --- Envoi FTPS vers O2Switch (fiches navettes) ---
+        const localPath = path.join(uploadsNavettes, req.file.filename);
+        const ftpsOk = await uploadToFTPS(localPath, "navettes");
+        const publicUrl = ftpsOk
+          ? `https://projetcap.feves971.fr/uploads/navettes/${req.file.filename}`
+          : `/uploads/navettes/${req.file.filename}`;
+
         res.json({
-          url: fileUrl,
+          url: publicUrl,
           name: req.file.originalname,
           mime: req.file.mimetype,
           size: req.file.size,
@@ -2428,6 +2435,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`📄 [DEBUG] Chemin du fichier local : ${localFilePath}`);
         const ftpsSuccess = await uploadToFTPS(localFilePath, "bilans");
 
+        // URL finale : O2Switch si transfert OK, sinon fallback local
+        const publicUrl = ftpsSuccess
+          ? `https://projetcap.feves971.fr/uploads/bilans/${filename}`
+          : fileUrl;
+
+
         // En production, logger les échecs FTPS
         if (!ftpsSuccess && process.env.NODE_ENV === "production") {
           console.error(
@@ -2441,10 +2454,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId,
         );
 
+        if (process.env.NODE_ENV === "production" && ftpsSuccess) {
+          try {
+            fs.unlinkSync(localFilePath);
+          } catch (e) {
+            console.warn("⚠️ Impossible de supprimer le fichier local après upload :", e.message);
+          }
+        }
+
         res.json({
           success: true,
           message: "Bilan uploadé avec succès",
-          reportUrl: fileUrl,
+          reportUrl: publicUrl,
           enrollment: updatedEnrollment,
           warning:
             !ftpsSuccess && process.env.NODE_ENV === "production"
