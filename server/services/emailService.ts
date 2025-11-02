@@ -1,21 +1,32 @@
-import sgMail from '@sendgrid/mail';
+import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 import { storage } from '../storage.js';
 import type { InsertEmailLog } from '@shared/schema';
 
 class EmailService {
   private isInterceptMode: boolean;
+  private transporter?: Transporter;
 
   constructor() {
     // Determine if we should intercept emails (development mode)
     this.isInterceptMode = 
       process.env.EMAIL_INTERCEPT === 'true' || 
       process.env.NODE_ENV !== 'production' || 
-      !process.env.SENDGRID_API_KEY;
+      !process.env.EMAIL_HOST || 
+      !process.env.EMAIL_USER;
 
-    // Configure SendGrid API key
-    if (process.env.SENDGRID_API_KEY && !this.isInterceptMode) {
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      console.log('SendGrid configured for production sending');
+    // Configure Brevo SMTP transporter
+    if (!this.isInterceptMode && process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      this.transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: parseInt(process.env.EMAIL_PORT || '587'),
+        secure: false, // TLS, not SSL
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+      console.log('✅ Brevo SMTP configured for production sending');
     } else {
       console.log(`🚫 EMAIL INTERCEPTION ACTIVE - All emails will be logged to database instead of being sent!`);
     }
@@ -47,24 +58,32 @@ class EmailService {
         return { success: false, error: error.message, intercepted: true };
       }
     } else {
-      // In production mode, send via SendGrid and log
+      // In production mode, send via Brevo SMTP and log
+      if (!this.transporter) {
+        console.error('❌ SMTP transporter not configured - cannot send email');
+        emailLog.status = 'error';
+        emailLog.error = 'SMTP transporter not configured';
+        await storage.createEmailLog(emailLog);
+        return { success: false, error: 'SMTP transporter not configured', intercepted: false };
+      }
+
       try {
-        const result = await sgMail.send(mailOptions);
+        const result = await this.transporter.sendMail(mailOptions);
         
         // Log successful send
         emailLog.status = 'sent';
-        emailLog.messageId = result[0].headers['x-message-id'];
+        emailLog.messageId = result.messageId;
         await storage.createEmailLog(emailLog);
         
-        console.log('Email sent successfully:', result[0].statusCode);
-        return { success: true, messageId: result[0].headers['x-message-id'], intercepted: false };
+        console.log('✅ Email sent successfully via Brevo:', result.messageId);
+        return { success: true, messageId: result.messageId, intercepted: false };
       } catch (error: any) {
         // Log error
         emailLog.status = 'error';
         emailLog.error = error.message;
         await storage.createEmailLog(emailLog);
         
-        console.error('Failed to send email:', error);
+        console.error('❌ Failed to send email via Brevo:', error);
         return { success: false, error: error.message, intercepted: false };
       }
     }
@@ -78,7 +97,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: contactEmail,
       subject: 'Nouvelle fiche CAP assignée',
@@ -149,7 +168,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: contactEmail,
       subject: `Atelier prêt à démarrer : ${workshopName} - Session ${sessionNumber}`,
@@ -227,7 +246,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: emitterEmail,
       subject: 'Fiche CAP renvoyée pour modification',
@@ -299,7 +318,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: cdEmails.join(','),
       subject: 'Nouvelle fiche CAP soumise pour validation',
@@ -353,7 +372,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Nouvelle fiche CAP à traiter',
@@ -409,7 +428,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - CD',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: emitterEmail,
       subject: 'Fiche CAP renvoyée par le Conseil Départemental',
@@ -464,7 +483,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: emitterEmail,
       subject: `Fiche ${ficheRef} - Corrections requises`,
@@ -519,7 +538,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP acceptée par l\'EVS',
@@ -573,7 +592,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP refusée par l\'EVS - Réassignation nécessaire',
@@ -632,7 +651,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Contrat CAP signé - Acompte de 70% à verser',
@@ -689,7 +708,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - EVS',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Activité CAP terminée - Contrôle terrain requis',
@@ -747,7 +766,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - FEVES',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: 'Contrôle terrain validé - Solde de 30% à verser',
@@ -824,7 +843,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - Test',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: testEmail,
       subject: '🧪 Test Configuration SMTP - Passerelle CAP',
@@ -890,7 +909,7 @@ Email envoyé automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - Ateliers',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails,
       subject: `Atelier terminé - ${workshopName} (Session ${sessionNumber})`,
@@ -959,7 +978,7 @@ Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - Ateliers',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: `Contrat EVS/CS signé - Déblocage subvention 70% : ${workshopName} Session ${sessionNumber}`,
@@ -1042,7 +1061,7 @@ Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
     const mailOptions = {
       from: {
         name: 'Passerelle CAP - Ateliers',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: fevesEmails.join(','),
       subject: `Contrat Commune signé - Atelier prêt : ${workshopName} Session ${sessionNumber}`,
@@ -1123,7 +1142,7 @@ Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
     const mailOptions = {
       from: {
         name: 'Passerelle CAP',
-        email: 'studio.makeawave@gmail.com'
+        address: 'studio.makeawave@gmail.com'
       },
       to: emails,
       subject: `Fiche clôturée - ${ficheRef}`,
