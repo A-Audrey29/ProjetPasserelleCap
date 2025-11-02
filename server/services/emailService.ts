@@ -96,8 +96,8 @@ class EmailService {
   async sendEvsAssignmentNotification({ contactEmail, contactName, orgName, ficheId, ficheRef }: { contactEmail: string; contactName?: string; orgName?: string; ficheId: string; ficheRef: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - FEVES',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: contactEmail,
       subject: 'Nouvelle fiche CAP assignée',
@@ -167,8 +167,8 @@ class EmailService {
   async sendWorkshopReadyNotification({ contactEmail, contactName, orgName, workshopName, sessionNumber, participantCount, ficheList }: { contactEmail: string; contactName?: string; orgName?: string; workshopName: string; sessionNumber: number; participantCount: number; ficheList: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - FEVES',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: contactEmail,
       subject: `Atelier prêt à démarrer : ${workshopName} - Session ${sessionNumber}`,
@@ -245,8 +245,8 @@ class EmailService {
   async sendEmitterReturnNotification({ emitterEmail, emitterName, ficheId, reason }: { emitterEmail: string; emitterName?: string; ficheId: string; reason?: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - FEVES',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: emitterEmail,
       subject: 'Fiche CAP renvoyée pour modification',
@@ -317,8 +317,8 @@ class EmailService {
   async sendSubmittedToCdNotification({ cdEmails, emitterName, ficheId, ficheRef }: { cdEmails: string[]; emitterName?: string; ficheId: string; ficheRef: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - FEVES',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: cdEmails.join(','),
       subject: 'Nouvelle fiche CAP soumise pour validation',
@@ -371,8 +371,8 @@ class EmailService {
   async sendSubmittedToFevesNotification({ fevesEmails, emitterName, emitterStructure, ficheId, ficheRef }: { fevesEmails: string[]; emitterName?: string; emitterStructure?: string; ficheId: string; ficheRef: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Nouvelle fiche CAP à traiter',
@@ -427,8 +427,8 @@ class EmailService {
   async sendCdRejectionNotification({ emitterEmail, emitterName, ficheId, ficheRef, reason }: { emitterEmail: string; emitterName?: string; ficheId: string; ficheRef: string; reason?: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - CD',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: emitterEmail,
       subject: 'Fiche CAP renvoyée par le Conseil Départemental',
@@ -482,8 +482,8 @@ class EmailService {
   async sendFevesRejectionNotification({ emitterEmail, emitterName, ficheId, ficheRef, reason }: { emitterEmail: string; emitterName?: string; ficheId: string; ficheRef: string; reason?: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - FEVES',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: emitterEmail,
       subject: `Fiche ${ficheRef} - Corrections requises`,
@@ -537,8 +537,8 @@ class EmailService {
   async sendEvsAcceptanceNotification({ fevesEmails, evsOrgName, ficheId, ficheRef }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - EVS',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP acceptée par l\'EVS',
@@ -591,8 +591,8 @@ class EmailService {
   async sendEvsRejectionNotification({ fevesEmails, evsOrgName, ficheId, ficheRef, reason }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; reason?: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - EVS',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Fiche CAP refusée par l\'EVS - Réassignation nécessaire',
@@ -650,8 +650,8 @@ class EmailService {
 
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - EVS',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Contrat CAP signé - Acompte de 70% à verser',
@@ -707,8 +707,8 @@ class EmailService {
   async sendActivityCompletedNotification({ fevesEmails, evsOrgName, ficheId, ficheRef }: { fevesEmails: string[]; evsOrgName?: string; ficheId: string; ficheRef: string; }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - EVS',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Activité CAP terminée - Contrôle terrain requis',
@@ -765,8 +765,8 @@ class EmailService {
     // Email to RELATIONS_EVS only
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - FEVES',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: fevesEmails.join(','),
       subject: 'Contrôle terrain validé - Solde de 30% à verser',
@@ -842,8 +842,8 @@ class EmailService {
     
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - Test',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: testEmail,
       subject: '🧪 Test Configuration SMTP - Passerelle CAP',
@@ -908,8 +908,8 @@ Email envoyé automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${
   }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - Ateliers',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: fevesEmails,
       subject: `Atelier terminé - ${workshopName} (Session ${sessionNumber})`,
@@ -977,8 +977,8 @@ Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
   }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - Ateliers',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: fevesEmails.join(','),
       subject: `Contrat EVS/CS signé - Déblocage subvention 70% : ${workshopName} Session ${sessionNumber}`,
@@ -1060,8 +1060,8 @@ Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
   }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP - Ateliers',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: fevesEmails.join(','),
       subject: `Contrat Commune signé - Atelier prêt : ${workshopName} Session ${sessionNumber}`,
@@ -1141,8 +1141,8 @@ Veuillez vous connecter à la plateforme pour effectuer le contrôle terrain.`
   }) {
     const mailOptions = {
       from: {
-        name: 'Passerelle CAP',
-        address: 'studio.makeawave@gmail.com'
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
       },
       to: emails,
       subject: `Fiche clôturée - ${ficheRef}`,
