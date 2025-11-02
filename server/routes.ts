@@ -28,7 +28,7 @@ import {
 } from "./services/stateTransitions.js";
 import emailService from "./services/emailService.js";
 import notificationService from "./services/notificationService.js";
-import { uploadToFTPS } from "./utils/ftpsUpload.js";
+import { uploadNavette, uploadBilan, uploadFile, healthCheck } from "./utils/ftpsUpload.js";
 
 // Configuration des chemins de stockage pour les uploads
 const uploadsRoot = path.resolve("uploads");
@@ -910,10 +910,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // --- Envoi FTPS vers O2Switch (fiches navettes) ---
         const localPath = path.join(uploadsNavettes, req.file.filename);
-        const ftpsOk = await uploadToFTPS(localPath, "navettes");
+        const result = await uploadNavette(localPath, req.file.filename);
+        const ftpsOk = result.success;
         const publicUrl = ftpsOk
           ? `https://projetcap.feves971.fr/uploads/navettes/${req.file.filename}`
           : `/uploads/navettes/${req.file.filename}`;
+
 
         res.json({
           url: publicUrl,
@@ -2043,8 +2045,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const localFilePath = path.join(uploadsNavettes, filename);
 
         // Upload vers o2switch via FTPS (uniquement en production)
-        console.log(`📄 [DEBUG] Chemin du fichier local : ${localFilePath}`);
-        const ftpsSuccess = await uploadToFTPS(localFilePath, "navettes");
+        console.log(`[DEBUG] Chemin du fichier local : ${localFilePath}`);
+        const result = await uploadNavette(localFilePath, filename);
+        const ftpsSuccess = result.success;
+
 
         // En production, logger les échecs FTPS
         if (!ftpsSuccess && process.env.NODE_ENV === "production") {
@@ -2432,8 +2436,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const localFilePath = path.join(uploadsBilans, filename);
 
         // Upload vers o2switch via FTPS (uniquement en production)
-        console.log(`📄 [DEBUG] Chemin du fichier local : ${localFilePath}`);
-        const ftpsSuccess = await uploadToFTPS(localFilePath, "bilans");
+        console.log(`[DEBUG] Chemin du fichier local : ${localFilePath}`);
+        const result = await uploadBilan(localFilePath, filename);
+        const ftpsSuccess = result.success;
+
 
         // URL finale : O2Switch si transfert OK, sinon fallback local
         const publicUrl = ftpsSuccess
@@ -2523,7 +2529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         res.json(result);
       } catch (error: any) {
-        console.error("Test FTPS error:", error);
+        console.error("Test FTPS error: ", error);
         res.status(500).json({
           success: false,
           message: "Erreur lors du test FTPS",
@@ -2532,6 +2538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
+
 
   const httpServer = createServer(app);
   return httpServer;
