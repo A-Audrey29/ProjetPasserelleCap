@@ -548,7 +548,7 @@ class EmailService {
           
           <p>Bonjour,</p>
           
-          <p>L'EVS a accepté la prise en charge de la fiche CAP et peut maintenant procéder à la signature du contrat.</p>
+          <p>L'EVS a accepté la prise en charge de la fiche CAP qui qui s'intègre dans l'organisation de leurs ateliers.</p>
           
           <div style="background-color: #F5F6F7; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p><strong>Référence :</strong> ${ficheRef}</p>
