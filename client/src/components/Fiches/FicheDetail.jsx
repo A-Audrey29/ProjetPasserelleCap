@@ -108,10 +108,11 @@ export default function FicheDetail({ ficheId }) {
     enabled: showAssignModal
   });
 
-  // Query for EPCIs (for RELATIONS_EVS selection)
+  // Query for EPCIs (for RELATIONS_EVS and ADMIN selection)
+  const canTransmitToEvs = ['ADMIN', 'RELATIONS_EVS'].includes(user?.user?.role) || ['ADMIN', 'RELATIONS_EVS'].includes(user?.role);
   const { data: epcis = [] } = useQuery({
     queryKey: ['/api/epcis'],
-    enabled: (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche?.state === 'SUBMITTED_TO_FEVES'
+    enabled: canTransmitToEvs && fiche?.state === 'SUBMITTED_TO_FEVES'
   });
 
   // Query for organizations by selected EPCI
@@ -125,7 +126,7 @@ export default function FicheDetail({ ficheId }) {
       if (!response.ok) throw new Error('Failed to fetch organizations by EPCI');
       return response.json();
     },
-    enabled: !!selectedEpciId && (user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche?.state === 'SUBMITTED_TO_FEVES'
+    enabled: !!selectedEpciId && canTransmitToEvs && fiche?.state === 'SUBMITTED_TO_FEVES'
   });
 
   // Query for audit logs
@@ -1780,8 +1781,8 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
-          {/* Archive option for RELATIONS_EVS with CLOSED status */}
-          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'CLOSED' && (
+          {/* Archive option for RELATIONS_EVS and ADMIN with CLOSED status */}
+          {canTransmitToEvs && fiche.state === 'CLOSED' && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Gestion de la fiche
@@ -1807,8 +1808,8 @@ export default function FicheDetail({ ficheId }) {
             </div>
           )}
 
-          {/* EPCI Selection for RELATIONS_EVS with SUBMITTED_TO_FEVES status */}
-          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'SUBMITTED_TO_FEVES' && (
+          {/* EPCI Selection for RELATIONS_EVS and ADMIN with SUBMITTED_TO_FEVES status */}
+          {canTransmitToEvs && fiche.state === 'SUBMITTED_TO_FEVES' && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Transmission vers EVS/CS
