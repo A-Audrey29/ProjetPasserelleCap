@@ -121,7 +121,8 @@ export default function Home() {
                 </h1>
                 <p className={styles.heroSubtitle}>
                   La plateforme numérique dédiée à l'accompagnement personnalisé des familles. 
-                  Simplifiez la gestion de vos fiches navettes CAP et optimisez vos parcours d'accompagnement.
+                  Simplifiez la gestion de vos fiches navettes CAP et optimisez vos parcours d'accompagnement. 
+                  Projet financé par le Fonds social européen plus (FSE+).
                 </p>
                 <Link href="/login" className={styles.ctaButton}>
                   Accéder à la plateforme
