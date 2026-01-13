@@ -160,7 +160,7 @@ export default function Header() {
             {/* Logo/Title */}
             <div className={styles.logoSection}>
               <img src={logoFEVES} alt="FEVES Guadeloupe & St Martin" className={styles.logoImage} />
-              <img src={logoFSE} alt="Agence FSE - Fonds Social Européen" className={styles.logoImage} />
+              <img src={logoFSE} alt="L'Europe s'engage en Guadeloupe - Cofinancé par l'Union Européenne" className={styles.logoImageLarge} />
               <Link href="/" className={styles.logo}>
                 Passerelle CAP
               </Link>

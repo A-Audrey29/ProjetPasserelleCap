@@ -44,9 +44,19 @@
   object-fit: contain;
 }
 
+.logoImageLarge {
+  height: 65px;
+  width: auto;
+  object-fit: contain;
+}
+
 @media (max-width: 640px) {
   .logoImage {
     height: 35px;
+  }
+  
+  .logoImageLarge {
+    height: 50px;
   }
 }
 
