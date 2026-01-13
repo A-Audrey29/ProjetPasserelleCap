@@ -41,11 +41,19 @@
 .heroSubtitle {
   font-size: 1.25rem;
   color: rgb(var(--muted-foreground));
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   max-width: 48rem;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
+}
+
+.heroFseNotice {
+  font-size: 1rem;
+  font-style: italic;
+  color: rgb(var(--muted-foreground));
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
 .ctaButton {

@@ -7,7 +7,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import styles from './Header.module.css';
 import logoFEVES from '@assets/LOGO FEVES_1759841302878.jpg';
-import logoFSE from '@assets/logoFSE_1768341789607.png';
+import logoFSE from '@assets/BLOC-MARQUE_GRAND-FORMAT_1768343603227.webp';
 
 export default function Header() {
   const [location] = useLocation();
