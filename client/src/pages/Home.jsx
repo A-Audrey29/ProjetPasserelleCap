@@ -5,6 +5,7 @@ import { getRoleActionSuggestions } from '@/utils/permissions';
 import Header from '@/components/Layout/Header';
 import Footer from '@/components/Layout/Footer';
 import styles from './Home.module.css';
+import logoEurope from '@assets/BLOC-MARQUE_GRAND-FORMAT_1768343603227.webp';
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -130,6 +131,14 @@ export default function Home() {
                   Accéder à la plateforme
                   <ArrowRight className="w-4 h-4" />
                 </Link>
+                
+                <div className={styles.heroLogoContainer}>
+                  <img 
+                    src={logoEurope} 
+                    alt="L'Europe s'engage en Guadeloupe - Région Guadeloupe - Cofinancé par l'Union Européenne" 
+                    className={styles.heroLogoEurope}
+                  />
+                </div>
               </div>
             </section>
 

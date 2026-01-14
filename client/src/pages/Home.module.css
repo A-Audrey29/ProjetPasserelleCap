@@ -56,6 +56,32 @@
   margin-bottom: 2rem;
 }
 
+.heroLogoContainer {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin: 2rem 0 0 auto;
+  padding-top: 1.5rem;
+}
+
+.heroLogoEurope {
+  max-width: 280px;
+  height: auto;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .heroLogoEurope {
+    max-width: 350px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroLogoEurope {
+    max-width: 420px;
+  }
+}
+
 .ctaButton {
   background-color: rgb(var(--primary));
   color: rgb(var(--primary-foreground));
