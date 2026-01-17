@@ -1,0 +1,178 @@
+Nous validons la V3 – Auth machine-to-machine Make + upload PDF sécurisé + migrations versionnées.
+Ce message sert de référence unique et définitive pour l’implémentation.
+
+1) Objectif fonctionnel
+
+Permettre à Make de :
+
+créer une fiche navette uniquement en état DRAFT
+
+uploader un PDF signé sur une fiche DRAFT
+
+Sans jamais :
+
+changer l’état de la fiche
+
+modifier ou supprimer une fiche
+
+accéder aux autres routes de l’API
+
+2) Authentification
+
+Frontend : cookie auth_token (JWT) → inchangé
+
+Make : header X-API-Key
+
+Règles :
+
+Middleware hybride requireAuthOrApiKey
+
+Priorité au cookie JWT si présent
+
+Sinon, validation de X-API-Key
+
+Clés définies via MAKE_API_KEYS (liste séparée par virgules)
+
+Injection d’un pseudo-user :
+
+{ userId: "make-integration", role: "INTEGRATION_MAKE", authSource: "API_KEY" }
+
+3) Rôle INTEGRATION_MAKE
+
+Autorisations strictes :
+
+✅ POST /api/fiches → création DRAFT uniquement
+
+✅ POST /api/fiches/:id/documents → upload PDF si fiche DRAFT
+
+❌ PATCH / transition / delete / autres routes
+
+Règles métier :
+
+externalId obligatoire si authSource === API_KEY
+
+state toujours forcé à DRAFT
+
+capDocuments ajoutés uniquement via la route upload
+
+4) Upload PDF (navettes)
+
+Route :
+
+POST /api/fiches/:id/documents
+
+
+Contraintes :
+
+PDF uniquement (%PDF- magic bytes)
+
+Taille max : 10 MB
+
+Fiche doit exister et être en DRAFT
+
+Upload via uploadNavette() (FTPS → /uploads/navettes/{uuid}.pdf)
+
+Stockage URL relative /uploads/navettes/{uuid}.pdf
+
+Multer :
+
+memoryStorage
+
+écriture temporaire via os.tmpdir()
+
+I/O async (fs.promises)
+
+5) Idempotence (upload)
+
+Header optionnel :
+
+X-Idempotency-Key
+
+
+Validation :
+
+string
+
+trim
+
+non vide
+
+max 255 chars
+
+sinon → 400 INVALID_IDEMPOTENCY_KEY
+
+Comportement :
+
+même clé + même fichier → 200 (retry)
+
+même clé + fichier différent → 409
+
+Table :
+
+idempotency_keys(key, fiche_id, file_hash, response_json, created_at)
+
+
+Rétention : 24h
+Purge horaire au runtime
+
+6) Rate limiting
+
+Uniquement si X-API-Key présent
+
+100 req / 15 min / IP
+
+Fonctionne derrière proxy (Render) :
+
+app.set("trust proxy", 1)
+keyGenerator: req.ip
+
+7) Logging
+
+Logs JSON structurés (JAMAIS la clé API) :
+
+route
+
+authSource
+
+userId / role
+
+ficheId / externalId si dispo
+
+status / code
+
+ip
+
+8) Migrations production
+
+Migrations SQL versionnées dans /migrations
+
+Table schema_migrations
+
+Runner scripts/migrate.ts
+
+Règles :
+
+Exécution AVANT démarrage serveur
+
+Stop immédiat + exit code ≠ 0 si erreur
+
+Pas d’écriture dans schema_migrations en cas d’échec
+
+Transactions :
+
+migrations normales → transaction
+
+migrations avec CONCURRENTLY → fichier suffixé _notx, exécuté hors transaction
+
+Build prod :
+
+scripts/migrate.ts compilé via esbuild → dist/migrate.js
+
+npm run start = node dist/migrate.js && node dist/index.js
+
+9) État
+
+👉 V3 VALIDÉE
+👉 Tu peux lancer l’implémentation complète conformément à ce cadrage.
+
+Merci de signaler toute divergence avant commit.

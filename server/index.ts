@@ -17,6 +17,7 @@ import { logError } from "./utils/errorLogger";
 import { getErrorMessage, getErrorCode, ErrorCodes } from "./utils/errorCodes";
 import { requireAuth } from "./middleware/rbac";
 import { protectUploadAccess } from "./middleware/uploadSecurity";
+import { storage } from "./storage";
 
 const app = express();
 
@@ -162,4 +163,21 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
+
+  // Purge idempotency keys older than 24 hours - run every hour
+  const PURGE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+  const PURGE_HOURS_OLD = 24;
+  
+  setInterval(async () => {
+    try {
+      const purgedCount = await storage.purgeOldIdempotencyKeys(PURGE_HOURS_OLD);
+      if (purgedCount > 0) {
+        log(`[IdempotencyKeys] Purged ${purgedCount} expired keys (older than ${PURGE_HOURS_OLD}h)`);
+      }
+    } catch (err) {
+      console.error("[IdempotencyKeys] Purge error:", err);
+    }
+  }, PURGE_INTERVAL_MS);
+  
+  log(`[IdempotencyKeys] Purge scheduled every ${PURGE_INTERVAL_MS / 1000 / 60}min (keys older than ${PURGE_HOURS_OLD}h)`);
 })();
