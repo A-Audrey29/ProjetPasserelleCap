@@ -748,11 +748,24 @@ export default function FicheForm({
     }));
   };
 
+  // TEMPORAIRE: Sélection multiple d'ateliers par objectif autorisée
+  // Pour rétablir la logique "1 atelier par objectif", décommenter le bloc ci-dessous
+  // et commenter la version simplifiée
   const toggleWorkshopSelection = (workshopId, objectiveId) => {
     setSelectedWorkshops((prev) => {
       const newSelected = { ...prev };
       
-      // Si on sélectionne cet atelier
+      // Version simplifiée: sélection multiple autorisée
+      newSelected[workshopId] = !prev[workshopId];
+      
+      return newSelected;
+    });
+    
+    /* 
+    // VERSION "1 ATELIER PAR OBJECTIF" - Décommenter pour réactiver
+    setSelectedWorkshops((prev) => {
+      const newSelected = { ...prev };
+      
       if (!prev[workshopId]) {
         // Désélectionner tous les autres ateliers du même objectif
         const currentObjectiveWorkshops = objectivesData
@@ -764,15 +777,14 @@ export default function FicheForm({
           }
         });
         
-        // Sélectionner l'atelier actuel
         newSelected[workshopId] = true;
       } else {
-        // Désélectionner l'atelier actuel
         newSelected[workshopId] = false;
       }
       
       return newSelected;
     });
+    */
   };
 
   const validateObjectivesStep = () => {
