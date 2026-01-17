@@ -32,7 +32,7 @@ const mapFamilyFromApi = (src = {}) => ({
   father: src.father ?? "",
   tiers: src.tiers ?? "",
   lienAvecEnfants: src.lienAvecEnfants ?? "",
-  autoriteParentale: src.autoriteParentale ?? "",
+  autoriteParentale: Array.isArray(src.autoriteParentale) ? src.autoriteParentale : (src.autoriteParentale ? [src.autoriteParentale] : []),
   situationFamiliale: src.situationFamiliale ?? "",
   situationSocioProfessionnelle: src.situationSocioProfessionnelle ?? "",
   adresse: src.adresse ?? src.address ?? "",
@@ -79,7 +79,7 @@ export default function FicheForm({
       father: "",
       tiers: "",
       lienAvecEnfants: "",
-      autoriteParentale: "",
+      autoriteParentale: [],
       situationFamiliale: "",
       situationSocioProfessionnelle: "",
       adresse: "",
@@ -394,9 +394,9 @@ export default function FicheForm({
       isValid = false;
     }
 
-    // Champs obligatoires
-    if (!autoriteParentale) {
-      setFieldError('family.autoriteParentale', 'Veuillez sélectionner l\'autorité parentale');
+    // Champs obligatoires - autoriteParentale doit avoir au moins une valeur
+    if (!autoriteParentale || !Array.isArray(autoriteParentale) || autoriteParentale.length === 0) {
+      setFieldError('family.autoriteParentale', 'Veuillez sélectionner au moins une autorité parentale');
       isValid = false;
     }
 
@@ -1017,25 +1017,35 @@ export default function FicheForm({
         )}
 
         <div className={styles.formField}>
-          <label className={styles.fieldLabel} htmlFor="family-autorite">
+          <label className={styles.fieldLabel}>
             Autorité parentale
             <span className={styles.requiredAsterisk}> *</span>
           </label>
-          <select
-            id="family-autorite"
-            className={`${styles.fieldSelect} ${getFieldError('family.autoriteParentale') ? styles.fieldWithError : ''}`}
-            value={formData.family.autoriteParentale}
-            onChange={(e) => {
-              updateFamilyField("autoriteParentale", e.target.value);
-              clearFieldError('family.autoriteParentale');
-            }}
-            data-testid="select-family-autorite"
-          >
-            <option value="">Sélectionner...</option>
-            <option value="mere">Mère</option>
-            <option value="pere">Père</option>
-            <option value="tiers">Tiers</option>
-          </select>
+          <div className={`${styles.checkboxGroup} ${getFieldError('family.autoriteParentale') ? styles.fieldWithError : ''}`}>
+            {[
+              { value: "mere", label: "Mère" },
+              { value: "pere", label: "Père" },
+              { value: "tiers", label: "Tiers" },
+            ].map((option) => (
+              <label key={option.value} className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  className={styles.checkbox}
+                  checked={(formData.family.autoriteParentale || []).includes(option.value)}
+                  onChange={(e) => {
+                    const currentValues = formData.family.autoriteParentale || [];
+                    const newValues = e.target.checked
+                      ? [...currentValues, option.value]
+                      : currentValues.filter((v) => v !== option.value);
+                    updateFamilyField("autoriteParentale", newValues);
+                    clearFieldError('family.autoriteParentale');
+                  }}
+                  data-testid={`checkbox-autorite-${option.value}`}
+                />
+                <span className={styles.checkboxText}>{option.label}</span>
+              </label>
+            ))}
+          </div>
           <ErrorMessage error={getFieldError('family.autoriteParentale')} fieldPath="family.autoriteParentale" />
         </div>
 
@@ -1825,10 +1835,13 @@ export default function FicheForm({
                 {formData.family.lienAvecEnfants}
               </p>
             )}
-            {formData.family.autoriteParentale && (
+            {formData.family.autoriteParentale && formData.family.autoriteParentale.length > 0 && (
               <p>
                 <strong>Autorité parentale :</strong>{" "}
-                {formData.family.autoriteParentale}
+                {(Array.isArray(formData.family.autoriteParentale) 
+                  ? formData.family.autoriteParentale 
+                  : [formData.family.autoriteParentale]
+                ).map(v => ({ mere: "Mère", pere: "Père", tiers: "Tiers" }[v] || v)).join(", ")}
               </p>
             )}
             {formData.family.situationFamiliale && (

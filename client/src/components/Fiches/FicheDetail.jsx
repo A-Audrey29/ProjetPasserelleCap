@@ -32,7 +32,7 @@ const mapFamilyFromApi = (src = {}) => ({
   father: src.father ?? '',
   tiers: src.tiers ?? '',
   lienAvecEnfants: src.lienAvecEnfants ?? '',
-  autoriteParentale: src.autoriteParentale ?? '',
+  autoriteParentale: Array.isArray(src.autoriteParentale) ? src.autoriteParentale : (src.autoriteParentale ? [src.autoriteParentale] : []),
   situationFamiliale: src.situationFamiliale ?? '',
   situationSocioProfessionnelle: src.situationSocioProfessionnelle ?? '',
   adresse: src.adresse ?? src.address ?? '',
@@ -1176,7 +1176,12 @@ export default function FicheDetail({ ficheId }) {
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Autorité parentale</label>
                       <p className={styles.infoValue} data-testid="text-family-authority">
-                        {family?.autoriteParentale || 'N/A'}
+                        {family?.autoriteParentale && family.autoriteParentale.length > 0
+                          ? (Array.isArray(family.autoriteParentale) 
+                              ? family.autoriteParentale 
+                              : [family.autoriteParentale]
+                            ).map(v => ({ mere: "Mère", pere: "Père", tiers: "Tiers" }[v] || v)).join(", ")
+                          : 'N/A'}
                       </p>
                     </div>
                   </div>
