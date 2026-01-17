@@ -97,6 +97,8 @@ export default function FicheForm({
     workshopPropositions: {},
     participantsCount: 1, // Default number of participants for workshops
     capDocuments: [],
+    familyConsent: false,
+    referentValidation: false,
   });
 
   // Queries for reference data
@@ -168,6 +170,7 @@ export default function FicheForm({
       participantsCount: initialData.participantsCount || 1,
       capDocuments: initialData.capDocuments || [],
       familyConsent: initialData.familyConsent || false,
+      referentValidation: initialData.referentValidation || false,
     }));
 
     // Initialize selectedWorkshops from saved data
