@@ -149,6 +149,9 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   // Family consent
   familyConsent: boolean("family_consent").notNull().default(false),
   
+  // Referent TAS validation (electronic signature certification)
+  referentValidation: boolean("referent_validation").notNull().default(false),
+  
   // Contract verification tracking
   contractSigned: boolean("contract_signed").notNull().default(false),
   advancePaymentSent: boolean("advance_payment_sent").notNull().default(false),
