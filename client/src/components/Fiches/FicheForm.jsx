@@ -1441,6 +1441,7 @@ export default function FicheForm({
         selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
         participantsCount: formData.participantsCount, // Save participants count for workshops
         familyConsent: formData.familyConsent,
+        referentValidation: formData.referentValidation,
         capDocuments: formData.capDocuments, // Save CAP documents
       };
 
@@ -1597,6 +1598,14 @@ export default function FicheForm({
       hasErrors = true;
     }
 
+    // Check for referent TAS validation
+    console.log("✅ Validation référent TAS:", formData.referentValidation);
+    if (!formData.referentValidation) {
+      console.log("❌ ERREUR: Validation référent TAS non cochée");
+      setFieldError('referentValidation', 'Vous devez certifier l\'exactitude des informations et valider la transmission pour signature électronique');
+      hasErrors = true;
+    }
+
     // Check that CAP document PDF is uploaded
     console.log("✅ Documents CAP:", formData.capDocuments);
     if (!formData.capDocuments || formData.capDocuments.length === 0) {
@@ -1697,6 +1706,7 @@ export default function FicheForm({
           selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
           participantsCount: formData.participantsCount, // Save participants count for workshops
           familyConsent: formData.familyConsent,
+          referentValidation: formData.referentValidation,
           capDocuments: formData.capDocuments, // Save CAP documents
         };
 
@@ -1773,7 +1783,7 @@ export default function FicheForm({
   };
 
   const validateAllSteps = () => {
-    if (!formData.familyConsent) {
+    if (!formData.familyConsent || !formData.referentValidation) {
       return false;
     }
     return (
