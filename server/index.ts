@@ -34,12 +34,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // CORS configuration - flexible for dev and production
-const corsOptions = {
+// En dev: accepte toutes les origines
+// En prod: vérifie les origines exactes listées dans CORS_ORIGIN (séparées par virgules)
+// Autorise aussi Origin absent pour les appels serveur-à-serveur (Make, webhooks, etc.)
+const corsOptions: cors.CorsOptions = {
   origin:
     process.env.NODE_ENV === "development"
-      ? true // Accept all origins in development
-      : process.env.CORS_ORIGIN || false, // Use CORS_ORIGIN in production, block if not set
-  credentials: true, // Allow cookies/authentication headers
+      ? true
+      : (origin, callback) => {
+          // Autoriser les appels sans Origin (serveur-à-serveur: Make, cron, webhooks)
+          if (!origin) return callback(null, true);
+
+          const allowedOrigins = (process.env.CORS_ORIGIN || "")
+            .split(",")
+            .map((o) => o.trim())
+            .filter(Boolean);
+
+          if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`Origine non autorisée par CORS: ${origin}`));
+          }
+        },
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
