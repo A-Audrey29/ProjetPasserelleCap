@@ -27,7 +27,7 @@ The client-side is built with React 18, utilizing Wouter for lightweight routing
 The core functionality revolves around a finite state machine managing 16 distinct states for fiche navette workflows, with role-restricted and audited transitions. A centralized audit log interface, accessible only to ADMIN users, provides full-text search, multi-criteria filtering, and pagination. Security enhancements include Helmet middleware for HTTP security headers, robust CORS configuration, login rate limiting, environment-aware error handling, structured error logging, and a demo account guard system to prevent write operations in production. The API integrates with Make.com for automated fiche creation and document uploads, featuring multi-key authentication, rate limiting, idempotency, and structured logging.
 
 ### System Design Choices
-PostgreSQL is the primary database, managed with Drizzle ORM for type-safe operations and migrations. The system employs a robust RBAC model with five roles (ADMIN, SUIVI_PROJETS, EMETTEUR, RELATIONS_EVS, EVS_CS) for granular permission control. Frontend uses Vite for fast development and optimized builds, while the backend utilizes TypeScript for type safety across the stack.
+PostgreSQL is the primary database, managed with Drizzle ORM for type-safe operations and migrations. The system employs a robust RBAC model with six roles (ADMIN, SUIVI_PROJETS, EMETTEUR, RELATIONS_EVS, EVS_CS, INTEGRATION_MAKE) for granular permission control. Frontend uses Vite for fast development and optimized builds, while the backend utilizes TypeScript for type safety across the stack.
 
 ## External Dependencies
 
@@ -49,3 +49,38 @@ PostgreSQL is the primary database, managed with Drizzle ORM for type-safe opera
 - **file-type**: File magic number validation.
 - **@neondatabase/serverless**: Serverless PostgreSQL connection pooling.
 - **dotenv-flow**: Environment variable management.
+
+## Make API Integration (January 2026)
+
+### Authentication
+- **Multi-key support**: `MAKE_API_KEYS` env var accepts comma-separated keys for rotation
+- **Header**: `X-API-Key: <key>`
+- **Role**: Assigns `INTEGRATION_MAKE` role automatically
+
+### Security Restrictions for INTEGRATION_MAKE
+- Can only create fiches in DRAFT state
+- Can only upload documents to DRAFT fiches
+- **capDocuments forbidden in POST /api/fiches**: Returns 400 `CAPDOCUMENTS_NOT_ALLOWED`
+- `externalId` is required (for deduplication)
+- Cannot perform state transitions
+
+### Rate Limiting
+- 100 requests per 15 minutes per IP (API key requests only)
+- Cookie-authenticated requests bypass rate limiting
+
+### POST /api/fiches/:id/documents
+- Upload PDF documents to a DRAFT fiche
+- Validates PDF magic bytes (`%PDF-`)
+- Max file size: 10 MB
+- `X-Idempotency-Key` header for retry safety (24h expiration)
+
+### Idempotency
+- Table `idempotency_keys` stores (key, fiche_id, file_hash, response)
+- Same key + same file hash = returns cached 200 response
+- Same key + different file hash = returns 409 conflict
+- Automatic purge every hour (entries older than 24h)
+
+### Migration Runner
+- `scripts/migrate.ts` for production deployments
+- `_notx.sql` suffix for non-transactional migrations
+- Exit code 1 on failure (blocks server start)
