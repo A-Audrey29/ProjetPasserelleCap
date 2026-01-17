@@ -590,7 +590,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           participantsCount,
           capDocuments,
           familyConsent,
+          referentValidation,
+          externalId,
         } = req.validatedData;
+
+        // Check for duplicate externalId if provided
+        if (externalId) {
+          const existingFiches = await storage.getAllFiches();
+          const duplicate = existingFiches.find(
+            (f) => f.externalId === externalId,
+          );
+          if (duplicate) {
+            return res.status(409).json({
+              message: "Fiche avec cet externalId existe déjà",
+              existingFicheId: duplicate.id,
+              existingFicheRef: duplicate.ref,
+            });
+          }
+        }
 
         // Generate reference number with year-month-counter format
         const now = new Date();
@@ -621,9 +638,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           participantsCount: participantsCount,
           capDocuments: capDocuments || null,
           familyConsent: familyConsent || false,
+          referentValidation: referentValidation ?? false,
+          externalId: externalId || null,
         });
 
-        res.status(201).json(fiche);
+        // Ensure referentValidation is always returned as boolean
+        res.status(201).json({
+          ...fiche,
+          referentValidation: fiche.referentValidation ?? false,
+        });
       } catch (error) {
         console.error("Create fiche error:", error);
         res.status(500).json({ message: "Erreur interne du serveur" });

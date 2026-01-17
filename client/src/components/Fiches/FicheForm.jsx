@@ -89,7 +89,7 @@ export default function FicheForm({
     children: [
       {
         name: "",
-        dateNaissance: "",
+        birthYear: "",
         niveauScolaire: "",
       },
     ],
@@ -135,11 +135,10 @@ export default function FicheForm({
       },
       children: childrenData.map((child) => ({
         name: child.name || child.firstName || "",
-        dateNaissance:
-          child.dateNaissance ||
-          (child.birthDate
-            ? new Date(child.birthDate).toISOString().split("T")[0]
-            : ""),
+        birthYear:
+          child.birthYear ||
+          (child.dateNaissance ? parseInt(child.dateNaissance.substring(0, 4), 10) : "") ||
+          (child.birthDate ? new Date(child.birthDate).getFullYear() : ""),
         niveauScolaire: child.niveauScolaire || child.level || "",
       })),
       referent: initialData.referentData
@@ -437,7 +436,7 @@ export default function FicheForm({
         ...prev.children,
         {
           name: "",
-          dateNaissance: "",
+          birthYear: "",
           niveauScolaire: "",
         },
       ],
@@ -466,7 +465,7 @@ export default function FicheForm({
     // Clear previous child errors
     for (let i = 0; i < formData.children.length; i++) {
       clearFieldError(`children.${i}.name`);
-      clearFieldError(`children.${i}.dateNaissance`);
+      clearFieldError(`children.${i}.birthYear`);
       clearFieldError(`children.${i}.niveauScolaire`);
     }
     
@@ -478,8 +477,8 @@ export default function FicheForm({
         isValid = false;
       }
 
-      if (!child.dateNaissance) {
-        setFieldError(`children.${i}.dateNaissance`, `La date de naissance de l'enfant ${i + 1} est obligatoire`);
+      if (!child.birthYear) {
+        setFieldError(`children.${i}.birthYear`, `L'année de naissance de l'enfant ${i + 1} est obligatoire`);
         isValid = false;
       }
 
@@ -620,20 +619,24 @@ export default function FicheForm({
                   className={styles.fieldLabel}
                   htmlFor={`child-birth-${index}`}
                 >
-                  Date de naissance *
+                  Année de naissance *
                 </label>
                 <input
                   id={`child-birth-${index}`}
-                  type="date"
-                  className={`${styles.fieldInput} ${getFieldError(`children.${index}.dateNaissance`) ? styles.fieldWithError : ''}`}
-                  value={child.dateNaissance}
+                  type="number"
+                  min="1900"
+                  max="2030"
+                  className={`${styles.fieldInput} ${getFieldError(`children.${index}.birthYear`) ? styles.fieldWithError : ''}`}
+                  value={child.birthYear}
                   onChange={(e) => {
-                    updateChildField(index, "dateNaissance", e.target.value);
-                    clearFieldError(`children.${index}.dateNaissance`);
+                    const value = e.target.value ? parseInt(e.target.value, 10) : "";
+                    updateChildField(index, "birthYear", value);
+                    clearFieldError(`children.${index}.birthYear`);
                   }}
+                  placeholder="Ex: 2015"
                   data-testid={`input-child-birth-${index}`}
                 />
-                <ErrorMessage error={getFieldError(`children.${index}.dateNaissance`)} fieldPath={`children.${index}.dateNaissance`} />
+                <ErrorMessage error={getFieldError(`children.${index}.birthYear`)} fieldPath={`children.${index}.birthYear`} />
               </div>
               <div className={styles.formField}>
                 <label
@@ -1920,7 +1923,7 @@ export default function FicheForm({
                   <strong>Nom et Prénom :</strong> {child.name}
                 </p>
                 <p>
-                  <strong>Date de naissance :</strong> {child.dateNaissance}
+                  <strong>Année de naissance :</strong> {child.birthYear}
                 </p>
                 <p>
                   <strong>Niveau scolaire :</strong> {child.niveauScolaire}

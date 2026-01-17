@@ -123,6 +123,7 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
 export const ficheNavettes = pgTable("fiche_navettes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ref: text("ref").notNull().unique(),
+  externalId: varchar("external_id", { length: 255 }),
   state: ficheStateEnum("state").notNull().default("DRAFT"),
   emitterId: varchar("emitter_id").notNull(),
   assignedOrgId: varchar("assigned_org_id"),

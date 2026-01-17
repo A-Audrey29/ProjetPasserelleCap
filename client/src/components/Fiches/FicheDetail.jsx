@@ -1223,9 +1223,9 @@ export default function FicheDetail({ ficheId }) {
                         {child.firstName || child.name || 'N/A'}
                       </h3>
                       <div className={styles.childDetails}>
-                        {(child.birthDate || child.dateNaissance) && (
+                        {(child.birthYear || child.birthDate || child.dateNaissance) && (
                           <span className={styles.childAge} data-testid={`text-child-age-${child.id || index}`}>
-                            Né(e) le {formatDate(child.birthDate || child.dateNaissance)}
+                            Né(e) en {child.birthYear || (child.birthDate ? new Date(child.birthDate).getFullYear() : null) || (child.dateNaissance ? child.dateNaissance.substring(0, 4) : 'N/A')}
                           </span>
                         )}
                         {(child.level || child.niveauScolaire) && (
