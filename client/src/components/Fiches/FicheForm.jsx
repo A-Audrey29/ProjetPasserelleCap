@@ -2051,6 +2051,29 @@ export default function FicheForm({
           <ErrorMessage error={getFieldError('familyConsent')} fieldPath="familyConsent" />
         </div>
 
+        {/* Referent TAS Validation Checkbox */}
+        <div className={styles.consentSection}>
+          <label className={styles.consentLabel}>
+            <input
+              type="checkbox"
+              checked={formData.referentValidation || false}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  referentValidation: e.target.checked,
+                }))
+              }
+              className={styles.consentCheckbox}
+              data-testid="checkbox-referent-validation"
+            />
+            <span className={styles.consentText}>
+              En cochant cette case, je certifie l'exactitude des informations transmises et valide la transmission de la présente fiche navette pour signature électronique. Cette validation vaut engagement et signature de ma part.
+              <span className={styles.requiredAsterisk}> *</span>
+            </span>
+          </label>
+          <ErrorMessage error={getFieldError('referentValidation')} fieldPath="referentValidation" />
+        </div>
+
         {/* Action Buttons */}
         <div className={styles.reviewActions}>
           <button
