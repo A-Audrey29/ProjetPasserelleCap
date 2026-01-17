@@ -165,3 +165,37 @@ app.delete('/api/fiches/:id', requireAuth, blockDemoAccountActions('suppression 
 - Includes comprehensive inline documentation
 - Prevents accidental file overwrites
 - Full documentation in `scripts/README.md`
+
+## API Make Integration (January 2026)
+
+### POST /api/fiches - Typed Validation Schema
+
+The fiche creation endpoint now uses fully typed Zod schemas with the following structure:
+
+**Required fields:**
+- `participantsCount`: integer 1-10
+
+**Optional typed fields:**
+- `externalId`: string max 255 chars (unique if present, for Make/Google Forms deduplication)
+- `referentValidation`: boolean (default: false)
+- `description`: string max 5000 chars
+- `familyConsent`: boolean
+
+**Typed sub-schemas:**
+- `referentData`: object with lastName, firstName, structure, phone, email, requestDate (passthrough for extra fields)
+- `familyDetailedData`: object with mother, father, tiers, autoriteParentale (enum: mere|pere|tiers), etc. (passthrough)
+- `childrenData`: array of objects with name (required), birthYear (optional, 1900-2030), niveauScolaire (strict, max 15)
+- `selectedWorkshops`: record<string, boolean> (max 50 keys)
+- `workshopPropositions`: record<string, string max 500> (max 50 keys)
+- `capDocuments`: array of {url, name, size, mime} (max 10)
+
+**Empty string handling:** All optional string fields treat `""` as `undefined` to avoid 400 errors.
+
+**Duplicate detection:** If `externalId` is provided and already exists, returns 409 Conflict with existing fiche info.
+
+### Migration: 001_add_external_id_and_partial_unique_index
+
+Located in `migrations/` directory:
+- Adds `external_id` varchar(255) nullable column
+- Creates partial unique index on `external_id WHERE external_id IS NOT NULL`
+- Rollback script available
