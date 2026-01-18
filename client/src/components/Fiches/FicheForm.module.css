@@ -716,3 +716,44 @@
     transform: rotate(360deg);
   }
 }
+
+/* Checkbox Group Styles for multiple selection */
+.checkboxGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.75rem;
+  background-color: #F5F6F7;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  background-color: #FFFFFF;
+  border-radius: 4px;
+  border: 1px solid #D1D5DB;
+  transition: all 0.15s ease;
+}
+
+.checkboxLabel:hover {
+  border-color: #3B4B61;
+  background-color: #F9FAFB;
+}
+
+.checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: #6A8B74;
+  cursor: pointer;
+}
+
+.checkboxText {
+  font-size: 0.875rem;
+  color: #3B4B61;
+  user-select: none;
+}

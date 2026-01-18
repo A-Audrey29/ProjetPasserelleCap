@@ -1,7 +1,10 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, pgEnum, json, index, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, pgEnum, json, jsonb, index, unique, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Extended role type including API integration role (not stored in DB, used for middleware injection)
+export type UserRole = "ADMIN" | "SUIVI_PROJETS" | "EMETTEUR" | "RELATIONS_EVS" | "EVS_CS" | "CD" | "INTEGRATION_MAKE";
 
 // Enums
 export const roleEnum = pgEnum("role", ["ADMIN", "SUIVI_PROJETS", "EMETTEUR", "RELATIONS_EVS", "EVS_CS", "CD"]);
@@ -123,6 +126,7 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
 export const ficheNavettes = pgTable("fiche_navettes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ref: text("ref").notNull().unique(),
+  externalId: varchar("external_id", { length: 255 }),
   state: ficheStateEnum("state").notNull().default("DRAFT"),
   emitterId: varchar("emitter_id").notNull(),
   assignedOrgId: varchar("assigned_org_id"),
@@ -148,6 +152,9 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   
   // Family consent
   familyConsent: boolean("family_consent").notNull().default(false),
+  
+  // Referent TAS validation (electronic signature certification)
+  referentValidation: boolean("referent_validation").notNull().default(false),
   
   // Contract verification tracking
   contractSigned: boolean("contract_signed").notNull().default(false),
@@ -238,7 +245,18 @@ export const migrations = pgTable("migrations", {
   executedAt: timestamp("executed_at").defaultNow().notNull(),
 }, (table) => ({
   nameIdx: index("migrations_name_idx").on(table.name),
-  executedAtIdx: index("migrations_executed_at_idx").on(table.executedAt),
+}));
+
+// Idempotency keys for Make API upload deduplication
+export const idempotencyKeys = pgTable("idempotency_keys", {
+  key: varchar("key", { length: 255 }).notNull(),
+  ficheId: varchar("fiche_id", { length: 255 }).notNull(),
+  fileHash: varchar("file_hash", { length: 64 }).notNull(),
+  responseJson: jsonb("response_json").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.key, table.ficheId] }),
+  createdAtIdx: index("idx_idempotency_keys_created_at").on(table.createdAt),
 }));
 
 // Relations
@@ -356,6 +374,10 @@ export const insertMigrationSchema = createInsertSchema(migrations).omit({
   executedAt: true,
 });
 
+export const insertIdempotencyKeySchema = createInsertSchema(idempotencyKeys).omit({
+  createdAt: true,
+});
+
 // Schema pour workshop_enrollments avec validation renforcée
 export const insertWorkshopEnrollmentSchema = createInsertSchema(workshopEnrollments).omit({
   id: true,
@@ -389,3 +411,5 @@ export type Migration = typeof migrations.$inferSelect;
 export type InsertMigration = z.infer<typeof insertMigrationSchema>;
 export type WorkshopEnrollment = typeof workshopEnrollments.$inferSelect;
 export type InsertWorkshopEnrollment = z.infer<typeof insertWorkshopEnrollmentSchema>;
+export type IdempotencyKey = typeof idempotencyKeys.$inferSelect;
+export type InsertIdempotencyKey = z.infer<typeof insertIdempotencyKeySchema>;

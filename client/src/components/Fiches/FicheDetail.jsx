@@ -32,7 +32,7 @@ const mapFamilyFromApi = (src = {}) => ({
   father: src.father ?? '',
   tiers: src.tiers ?? '',
   lienAvecEnfants: src.lienAvecEnfants ?? '',
-  autoriteParentale: src.autoriteParentale ?? '',
+  autoriteParentale: Array.isArray(src.autoriteParentale) ? src.autoriteParentale : (src.autoriteParentale ? [src.autoriteParentale] : []),
   situationFamiliale: src.situationFamiliale ?? '',
   situationSocioProfessionnelle: src.situationSocioProfessionnelle ?? '',
   adresse: src.adresse ?? src.address ?? '',
@@ -1176,7 +1176,12 @@ export default function FicheDetail({ ficheId }) {
                     <div className={styles.infoItem}>
                       <label className={styles.infoLabel}>Autorité parentale</label>
                       <p className={styles.infoValue} data-testid="text-family-authority">
-                        {family?.autoriteParentale || 'N/A'}
+                        {family?.autoriteParentale && family.autoriteParentale.length > 0
+                          ? (Array.isArray(family.autoriteParentale) 
+                              ? family.autoriteParentale 
+                              : [family.autoriteParentale]
+                            ).map(v => ({ mere: "Mère", pere: "Père", tiers: "Tiers" }[v] || v)).join(", ")
+                          : 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -1218,9 +1223,9 @@ export default function FicheDetail({ ficheId }) {
                         {child.firstName || child.name || 'N/A'}
                       </h3>
                       <div className={styles.childDetails}>
-                        {(child.birthDate || child.dateNaissance) && (
+                        {(child.birthYear || child.birthDate || child.dateNaissance) && (
                           <span className={styles.childAge} data-testid={`text-child-age-${child.id || index}`}>
-                            Né(e) le {formatDate(child.birthDate || child.dateNaissance)}
+                            Né(e) en {child.birthYear || (child.birthDate ? new Date(child.birthDate).getFullYear() : null) || (child.dateNaissance ? child.dateNaissance.substring(0, 4) : 'N/A')}
                           </span>
                         )}
                         {(child.level || child.niveauScolaire) && (

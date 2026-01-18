@@ -21,7 +21,13 @@ import {
   requireRole,
   requireFicheAccess,
 } from "./middleware/rbac.js";
+import { requireAuthOrApiKey } from "./middleware/requireAuthOrApiKey.js";
+import { makeRateLimiter } from "./middleware/makeRateLimiter.js";
+import { logMakeRequest } from "./utils/makeLogger.js";
 import { auditMiddleware } from "./services/auditLogger.js";
+import crypto from "crypto";
+import os from "os";
+import { promises as fsPromises } from "fs";
 import {
   transitionFicheState,
   getValidTransitions,
@@ -574,8 +580,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(
     "/api/fiches",
-    requireAuth,
-    requireRole("ADMIN", "EMETTEUR", "RELATIONS_EVS"),
+    makeRateLimiter,
+    requireAuthOrApiKey,
+    requireRole("ADMIN", "EMETTEUR", "RELATIONS_EVS", "INTEGRATION_MAKE"),
     validateRequest(ficheCreationSchema),
     auditMiddleware("create", "FicheNavette"),
     async (req, res) => {
@@ -590,7 +597,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
           participantsCount,
           capDocuments,
           familyConsent,
+          referentValidation,
+          externalId,
         } = req.validatedData;
+
+        // Security: capDocuments is forbidden for API_KEY requests
+        // Documents must be uploaded via POST /api/fiches/:id/documents
+        if (req.user.authSource === "API_KEY" && capDocuments !== undefined) {
+          logMakeRequest(req, 400, "CAPDOCUMENTS_NOT_ALLOWED", { externalId: externalId || null });
+          return res.status(400).json({
+            message: "capDocuments interdit via API key. Utiliser POST /api/fiches/:id/documents.",
+            code: "CAPDOCUMENTS_NOT_ALLOWED",
+          });
+        }
+
+        // externalId is required for Make API integration
+        if (req.user.authSource === "API_KEY" && !externalId) {
+          logMakeRequest(req, 400, "EXTERNAL_ID_REQUIRED", {});
+          return res.status(400).json({
+            message: "externalId obligatoire pour intégration Make",
+            code: "EXTERNAL_ID_REQUIRED",
+          });
+        }
+
+        // Check for duplicate externalId if provided
+        if (externalId) {
+          const existingFiches = await storage.getAllFiches();
+          const duplicate = existingFiches.find(
+            (f) => f.externalId === externalId,
+          );
+          if (duplicate) {
+            logMakeRequest(req, 409, "DUPLICATE_EXTERNAL_ID", { externalId });
+            return res.status(409).json({
+              message: "Fiche avec cet externalId existe déjà",
+              code: "DUPLICATE_EXTERNAL_ID",
+              existingFicheId: duplicate.id,
+              existingFicheRef: duplicate.ref,
+            });
+          }
+        }
 
         // Generate reference number with year-month-counter format
         const now = new Date();
@@ -607,7 +652,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ).length + 1;
         const ref = `${monthPrefix}-${count.toString().padStart(3, "0")}`;
 
-        // Create fiche with all detailed data
+        // Create fiche with all detailed data (always DRAFT for INTEGRATION_MAKE)
         const fiche = await storage.createFiche({
           ref,
           emitterId: req.user.userId,
@@ -621,11 +666,190 @@ export async function registerRoutes(app: Express): Promise<Server> {
           participantsCount: participantsCount,
           capDocuments: capDocuments || null,
           familyConsent: familyConsent || false,
+          referentValidation: referentValidation ?? false,
+          externalId: externalId || null,
         });
 
-        res.status(201).json(fiche);
+        // Log success for Make API
+        if (req.user.authSource === "API_KEY") {
+          logMakeRequest(req, 201, "SUCCESS", { ficheId: fiche.id, externalId: fiche.externalId });
+        }
+
+        // Ensure referentValidation is always returned as boolean
+        res.status(201).json({
+          ...fiche,
+          referentValidation: fiche.referentValidation ?? false,
+        });
       } catch (error) {
         console.error("Create fiche error:", error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+      }
+    },
+  );
+
+  // ===== Make API: Upload document to fiche =====
+  const multerMemory = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  }).single("file");
+
+  app.post(
+    "/api/fiches/:id/documents",
+    makeRateLimiter,
+    requireAuthOrApiKey,
+    requireRole("ADMIN", "EMETTEUR", "RELATIONS_EVS", "INTEGRATION_MAKE"),
+    (req, res, next) => {
+      multerMemory(req, res, (err) => {
+        if (err?.code === "LIMIT_FILE_SIZE") {
+          logMakeRequest(req, 413, "FILE_TOO_LARGE", { ficheId: req.params.id });
+          return res.status(413).json({
+            message: "Fichier trop volumineux (max 10 MB)",
+            code: "FILE_TOO_LARGE",
+          });
+        }
+        if (err) {
+          console.error("Multer error:", err);
+          return res.status(500).json({ message: "Erreur upload", code: "UPLOAD_ERROR" });
+        }
+        next();
+      });
+    },
+    async (req, res) => {
+      const { id } = req.params;
+
+      try {
+        // 0. Check file is present
+        if (!req.file) {
+          logMakeRequest(req, 400, "FILE_REQUIRED", { ficheId: id });
+          return res.status(400).json({ message: "Fichier requis", code: "FILE_REQUIRED" });
+        }
+
+        // 1. Check fiche exists and is DRAFT
+        const fiche = await storage.getFiche(id);
+        if (!fiche) {
+          logMakeRequest(req, 404, "FICHE_NOT_FOUND", { ficheId: id });
+          return res.status(404).json({ message: "Fiche non trouvée", code: "FICHE_NOT_FOUND" });
+        }
+        if (fiche.state !== "DRAFT") {
+          logMakeRequest(req, 403, "FICHE_NOT_DRAFT", { ficheId: id });
+          return res.status(403).json({
+            message: "Action interdite - La fiche n'est pas en état DRAFT",
+            code: "FICHE_NOT_DRAFT",
+          });
+        }
+
+        // 2. Validate X-Idempotency-Key header
+        const rawIdempotencyKey = req.headers["x-idempotency-key"];
+        let idempotencyKey: string | undefined;
+
+        if (rawIdempotencyKey) {
+          if (typeof rawIdempotencyKey !== "string") {
+            return res.status(400).json({
+              message: "X-Idempotency-Key doit être une chaîne unique",
+              code: "INVALID_IDEMPOTENCY_KEY",
+            });
+          }
+          const trimmed = rawIdempotencyKey.trim();
+          if (trimmed.length === 0) {
+            return res.status(400).json({
+              message: "X-Idempotency-Key ne peut pas être vide",
+              code: "INVALID_IDEMPOTENCY_KEY",
+            });
+          }
+          if (trimmed.length > 255) {
+            return res.status(400).json({
+              message: "X-Idempotency-Key trop long (max 255 caractères)",
+              code: "INVALID_IDEMPOTENCY_KEY",
+            });
+          }
+          idempotencyKey = trimmed;
+        }
+
+        // 3. Verify PDF magic bytes (%PDF-)
+        const buffer = req.file.buffer;
+        const magicBytes = buffer.slice(0, 5).toString("ascii");
+        if (magicBytes !== "%PDF-") {
+          logMakeRequest(req, 400, "INVALID_MIME_TYPE", { ficheId: id });
+          return res.status(400).json({
+            message: "Seuls les fichiers PDF sont acceptés",
+            code: "INVALID_MIME_TYPE",
+          });
+        }
+
+        // 4. Calculate SHA256 hash (once)
+        const fileHash = crypto.createHash("sha256").update(buffer).digest("hex");
+
+        // 5. Check idempotency
+        if (idempotencyKey) {
+          const existing = await storage.getIdempotencyKey(idempotencyKey, id);
+          if (existing) {
+            if (existing.fileHash === fileHash) {
+              logMakeRequest(req, 200, "IDEMPOTENT_RETRY", { ficheId: id });
+              return res.status(200).json(existing.responseJson);
+            }
+            return res.status(409).json({
+              message: "Clé idempotence déjà utilisée avec fichier différent",
+              code: "IDEMPOTENCY_KEY_MISMATCH",
+            });
+          }
+        }
+
+        // 6. Write temp file and upload via FTPS
+        const fileUuid = uuidv4();
+        const filename = `${fileUuid}.pdf`;
+        const tempPath = path.join(os.tmpdir(), filename);
+
+        try {
+          await fsPromises.writeFile(tempPath, buffer);
+
+          const result = await uploadNavette(tempPath, filename);
+          await fsPromises.unlink(tempPath);
+
+          if (!result.success) {
+            logMakeRequest(req, 500, "FTPS_ERROR", { ficheId: id, error: result.message });
+            return res.status(500).json({
+              message: "Erreur transfert fichier",
+              code: "FTPS_ERROR",
+            });
+          }
+
+          // 7. Build response
+          const documentUrl = `/uploads/navettes/${filename}`;
+          const response = {
+            documentUrl,
+            ficheId: id,
+            filename: req.file.originalname,
+            size: req.file.size,
+          };
+
+          // 8. Attach document to fiche (with dedup by URL)
+          await storage.attachDocumentToFiche(id, {
+            url: documentUrl,
+            name: req.file.originalname,
+            size: req.file.size,
+            mime: "application/pdf",
+          });
+
+          // 9. Store idempotency key
+          if (idempotencyKey) {
+            await storage.createIdempotencyKey({
+              key: idempotencyKey,
+              ficheId: id,
+              fileHash,
+              responseJson: response,
+            });
+          }
+
+          logMakeRequest(req, 201, "SUCCESS", { ficheId: id, documentUrl });
+          res.status(201).json(response);
+        } catch (err) {
+          try {
+            await fsPromises.unlink(tempPath);
+          } catch {}
+          throw err;
+        }
+      } catch (error) {
+        console.error("Upload document error:", error);
         res.status(500).json({ message: "Erreur interne du serveur" });
       }
     },

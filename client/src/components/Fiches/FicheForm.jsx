@@ -32,7 +32,7 @@ const mapFamilyFromApi = (src = {}) => ({
   father: src.father ?? "",
   tiers: src.tiers ?? "",
   lienAvecEnfants: src.lienAvecEnfants ?? "",
-  autoriteParentale: src.autoriteParentale ?? "",
+  autoriteParentale: Array.isArray(src.autoriteParentale) ? src.autoriteParentale : (src.autoriteParentale ? [src.autoriteParentale] : []),
   situationFamiliale: src.situationFamiliale ?? "",
   situationSocioProfessionnelle: src.situationSocioProfessionnelle ?? "",
   adresse: src.adresse ?? src.address ?? "",
@@ -79,7 +79,7 @@ export default function FicheForm({
       father: "",
       tiers: "",
       lienAvecEnfants: "",
-      autoriteParentale: "",
+      autoriteParentale: [],
       situationFamiliale: "",
       situationSocioProfessionnelle: "",
       adresse: "",
@@ -89,7 +89,7 @@ export default function FicheForm({
     children: [
       {
         name: "",
-        dateNaissance: "",
+        birthYear: "",
         niveauScolaire: "",
       },
     ],
@@ -97,6 +97,8 @@ export default function FicheForm({
     workshopPropositions: {},
     participantsCount: 1, // Default number of participants for workshops
     capDocuments: [],
+    familyConsent: false,
+    referentValidation: false,
   });
 
   // Queries for reference data
@@ -133,11 +135,10 @@ export default function FicheForm({
       },
       children: childrenData.map((child) => ({
         name: child.name || child.firstName || "",
-        dateNaissance:
-          child.dateNaissance ||
-          (child.birthDate
-            ? new Date(child.birthDate).toISOString().split("T")[0]
-            : ""),
+        birthYear:
+          child.birthYear ||
+          (child.dateNaissance ? parseInt(child.dateNaissance.substring(0, 4), 10) : "") ||
+          (child.birthDate ? new Date(child.birthDate).getFullYear() : ""),
         niveauScolaire: child.niveauScolaire || child.level || "",
       })),
       referent: initialData.referentData
@@ -168,6 +169,7 @@ export default function FicheForm({
       participantsCount: initialData.participantsCount || 1,
       capDocuments: initialData.capDocuments || [],
       familyConsent: initialData.familyConsent || false,
+      referentValidation: initialData.referentValidation || false,
     }));
 
     // Initialize selectedWorkshops from saved data
@@ -394,9 +396,9 @@ export default function FicheForm({
       isValid = false;
     }
 
-    // Champs obligatoires
-    if (!autoriteParentale) {
-      setFieldError('family.autoriteParentale', 'Veuillez sélectionner l\'autorité parentale');
+    // Champs obligatoires - autoriteParentale doit avoir au moins une valeur
+    if (!autoriteParentale || !Array.isArray(autoriteParentale) || autoriteParentale.length === 0) {
+      setFieldError('family.autoriteParentale', 'Veuillez sélectionner au moins une autorité parentale');
       isValid = false;
     }
 
@@ -434,7 +436,7 @@ export default function FicheForm({
         ...prev.children,
         {
           name: "",
-          dateNaissance: "",
+          birthYear: "",
           niveauScolaire: "",
         },
       ],
@@ -463,7 +465,7 @@ export default function FicheForm({
     // Clear previous child errors
     for (let i = 0; i < formData.children.length; i++) {
       clearFieldError(`children.${i}.name`);
-      clearFieldError(`children.${i}.dateNaissance`);
+      clearFieldError(`children.${i}.birthYear`);
       clearFieldError(`children.${i}.niveauScolaire`);
     }
     
@@ -475,8 +477,8 @@ export default function FicheForm({
         isValid = false;
       }
 
-      if (!child.dateNaissance) {
-        setFieldError(`children.${i}.dateNaissance`, `La date de naissance de l'enfant ${i + 1} est obligatoire`);
+      if (!child.birthYear) {
+        setFieldError(`children.${i}.birthYear`, `L'année de naissance de l'enfant ${i + 1} est obligatoire`);
         isValid = false;
       }
 
@@ -617,20 +619,24 @@ export default function FicheForm({
                   className={styles.fieldLabel}
                   htmlFor={`child-birth-${index}`}
                 >
-                  Date de naissance *
+                  Année de naissance *
                 </label>
                 <input
                   id={`child-birth-${index}`}
-                  type="date"
-                  className={`${styles.fieldInput} ${getFieldError(`children.${index}.dateNaissance`) ? styles.fieldWithError : ''}`}
-                  value={child.dateNaissance}
+                  type="number"
+                  min="1900"
+                  max="2030"
+                  className={`${styles.fieldInput} ${getFieldError(`children.${index}.birthYear`) ? styles.fieldWithError : ''}`}
+                  value={child.birthYear}
                   onChange={(e) => {
-                    updateChildField(index, "dateNaissance", e.target.value);
-                    clearFieldError(`children.${index}.dateNaissance`);
+                    const value = e.target.value ? parseInt(e.target.value, 10) : "";
+                    updateChildField(index, "birthYear", value);
+                    clearFieldError(`children.${index}.birthYear`);
                   }}
+                  placeholder="Ex: 2015"
                   data-testid={`input-child-birth-${index}`}
                 />
-                <ErrorMessage error={getFieldError(`children.${index}.dateNaissance`)} fieldPath={`children.${index}.dateNaissance`} />
+                <ErrorMessage error={getFieldError(`children.${index}.birthYear`)} fieldPath={`children.${index}.birthYear`} />
               </div>
               <div className={styles.formField}>
                 <label
@@ -748,11 +754,24 @@ export default function FicheForm({
     }));
   };
 
+  // TEMPORAIRE: Sélection multiple d'ateliers par objectif autorisée
+  // Pour rétablir la logique "1 atelier par objectif", décommenter le bloc ci-dessous
+  // et commenter la version simplifiée
   const toggleWorkshopSelection = (workshopId, objectiveId) => {
     setSelectedWorkshops((prev) => {
       const newSelected = { ...prev };
       
-      // Si on sélectionne cet atelier
+      // Version simplifiée: sélection multiple autorisée
+      newSelected[workshopId] = !prev[workshopId];
+      
+      return newSelected;
+    });
+    
+    /* 
+    // VERSION "1 ATELIER PAR OBJECTIF" - Décommenter pour réactiver
+    setSelectedWorkshops((prev) => {
+      const newSelected = { ...prev };
+      
       if (!prev[workshopId]) {
         // Désélectionner tous les autres ateliers du même objectif
         const currentObjectiveWorkshops = objectivesData
@@ -764,15 +783,14 @@ export default function FicheForm({
           }
         });
         
-        // Sélectionner l'atelier actuel
         newSelected[workshopId] = true;
       } else {
-        // Désélectionner l'atelier actuel
         newSelected[workshopId] = false;
       }
       
       return newSelected;
     });
+    */
   };
 
   const validateObjectivesStep = () => {
@@ -1017,25 +1035,35 @@ export default function FicheForm({
         )}
 
         <div className={styles.formField}>
-          <label className={styles.fieldLabel} htmlFor="family-autorite">
+          <label className={styles.fieldLabel}>
             Autorité parentale
             <span className={styles.requiredAsterisk}> *</span>
           </label>
-          <select
-            id="family-autorite"
-            className={`${styles.fieldSelect} ${getFieldError('family.autoriteParentale') ? styles.fieldWithError : ''}`}
-            value={formData.family.autoriteParentale}
-            onChange={(e) => {
-              updateFamilyField("autoriteParentale", e.target.value);
-              clearFieldError('family.autoriteParentale');
-            }}
-            data-testid="select-family-autorite"
-          >
-            <option value="">Sélectionner...</option>
-            <option value="mere">Mère</option>
-            <option value="pere">Père</option>
-            <option value="tiers">Tiers</option>
-          </select>
+          <div className={`${styles.checkboxGroup} ${getFieldError('family.autoriteParentale') ? styles.fieldWithError : ''}`}>
+            {[
+              { value: "mere", label: "Mère" },
+              { value: "pere", label: "Père" },
+              { value: "tiers", label: "Tiers" },
+            ].map((option) => (
+              <label key={option.value} className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  className={styles.checkbox}
+                  checked={(formData.family.autoriteParentale || []).includes(option.value)}
+                  onChange={(e) => {
+                    const currentValues = formData.family.autoriteParentale || [];
+                    const newValues = e.target.checked
+                      ? [...currentValues, option.value]
+                      : currentValues.filter((v) => v !== option.value);
+                    updateFamilyField("autoriteParentale", newValues);
+                    clearFieldError('family.autoriteParentale');
+                  }}
+                  data-testid={`checkbox-autorite-${option.value}`}
+                />
+                <span className={styles.checkboxText}>{option.label}</span>
+              </label>
+            ))}
+          </div>
           <ErrorMessage error={getFieldError('family.autoriteParentale')} fieldPath="family.autoriteParentale" />
         </div>
 
@@ -1416,6 +1444,7 @@ export default function FicheForm({
         selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
         participantsCount: formData.participantsCount, // Save participants count for workshops
         familyConsent: formData.familyConsent,
+        referentValidation: formData.referentValidation,
         capDocuments: formData.capDocuments, // Save CAP documents
       };
 
@@ -1572,6 +1601,14 @@ export default function FicheForm({
       hasErrors = true;
     }
 
+    // Check for referent TAS validation
+    console.log("✅ Validation référent TAS:", formData.referentValidation);
+    if (!formData.referentValidation) {
+      console.log("❌ ERREUR: Validation référent TAS non cochée");
+      setFieldError('referentValidation', 'Vous devez certifier l\'exactitude des informations et valider la transmission pour signature électronique');
+      hasErrors = true;
+    }
+
     // Check that CAP document PDF is uploaded
     console.log("✅ Documents CAP:", formData.capDocuments);
     if (!formData.capDocuments || formData.capDocuments.length === 0) {
@@ -1672,6 +1709,7 @@ export default function FicheForm({
           selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
           participantsCount: formData.participantsCount, // Save participants count for workshops
           familyConsent: formData.familyConsent,
+          referentValidation: formData.referentValidation,
           capDocuments: formData.capDocuments, // Save CAP documents
         };
 
@@ -1748,7 +1786,7 @@ export default function FicheForm({
   };
 
   const validateAllSteps = () => {
-    if (!formData.familyConsent) {
+    if (!formData.familyConsent || !formData.referentValidation) {
       return false;
     }
     return (
@@ -1825,10 +1863,13 @@ export default function FicheForm({
                 {formData.family.lienAvecEnfants}
               </p>
             )}
-            {formData.family.autoriteParentale && (
+            {formData.family.autoriteParentale && formData.family.autoriteParentale.length > 0 && (
               <p>
                 <strong>Autorité parentale :</strong>{" "}
-                {formData.family.autoriteParentale}
+                {(Array.isArray(formData.family.autoriteParentale) 
+                  ? formData.family.autoriteParentale 
+                  : [formData.family.autoriteParentale]
+                ).map(v => ({ mere: "Mère", pere: "Père", tiers: "Tiers" }[v] || v)).join(", ")}
               </p>
             )}
             {formData.family.situationFamiliale && (
@@ -1882,7 +1923,7 @@ export default function FicheForm({
                   <strong>Nom et Prénom :</strong> {child.name}
                 </p>
                 <p>
-                  <strong>Date de naissance :</strong> {child.dateNaissance}
+                  <strong>Année de naissance :</strong> {child.birthYear}
                 </p>
                 <p>
                   <strong>Niveau scolaire :</strong> {child.niveauScolaire}
@@ -2021,6 +2062,29 @@ export default function FicheForm({
             </span>
           </label>
           <ErrorMessage error={getFieldError('familyConsent')} fieldPath="familyConsent" />
+        </div>
+
+        {/* Referent TAS Validation Checkbox */}
+        <div className={styles.consentSection}>
+          <label className={styles.consentLabel}>
+            <input
+              type="checkbox"
+              checked={formData.referentValidation || false}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  referentValidation: e.target.checked,
+                }))
+              }
+              className={styles.consentCheckbox}
+              data-testid="checkbox-referent-validation"
+            />
+            <span className={styles.consentText}>
+              En cochant cette case, je certifie l'exactitude des informations transmises et valide la transmission de la présente fiche navette pour signature électronique. Cette validation vaut engagement et signature de ma part.
+              <span className={styles.requiredAsterisk}> *</span>
+            </span>
+          </label>
+          <ErrorMessage error={getFieldError('referentValidation')} fieldPath="referentValidation" />
         </div>
 
         {/* Action Buttons */}

@@ -1,14 +1,23 @@
 import {
   epcis, users, organizations, workshopObjectives, workshops,
-  ficheNavettes, auditLogs, comments, emailLogs, workshopEnrollments,
+  ficheNavettes, auditLogs, comments, emailLogs, workshopEnrollments, idempotencyKeys,
   type Epci, type InsertEpci, type User, type InsertUser, type Organization,
   type InsertOrganization, type WorkshopObjective, type InsertWorkshopObjective, type Workshop, type InsertWorkshop,
   type FicheNavette, type InsertFicheNavette,
   type AuditLog, type InsertAuditLog, type Comment, type InsertComment,
-  type EmailLog, type InsertEmailLog, type WorkshopEnrollment, type InsertWorkshopEnrollment
+  type EmailLog, type InsertEmailLog, type WorkshopEnrollment, type InsertWorkshopEnrollment,
+  type IdempotencyKey, type InsertIdempotencyKey
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, like, ilike, count, sql, inArray } from "drizzle-orm";
+import { eq, and, or, desc, asc, like, ilike, count, sql, inArray, lt } from "drizzle-orm";
+
+// Type for CAP document stored in fiche
+export interface CapDocument {
+  url: string;
+  name: string;
+  size: number;
+  mime: string;
+}
 
 export interface IStorage {
   // EPCIs
@@ -114,6 +123,14 @@ export interface IStorage {
   uploadEnrollmentReport(enrollmentId: string, reportUrl: string, userId: string): Promise<WorkshopEnrollment>;
   scheduleSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
   validateSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
+
+  // Idempotency Keys (Make API)
+  getIdempotencyKey(key: string, ficheId: string): Promise<IdempotencyKey | null>;
+  createIdempotencyKey(data: InsertIdempotencyKey): Promise<IdempotencyKey>;
+  purgeOldIdempotencyKeys(hoursOld: number): Promise<number>;
+  
+  // Document attachment
+  attachDocumentToFiche(ficheId: string, doc: CapDocument): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -947,6 +964,54 @@ export class DatabaseStorage implements IStorage {
       updatedCount: enrollments.length,
       enrollments
     };
+  }
+
+  // Idempotency Keys (Make API)
+  async getIdempotencyKey(key: string, ficheId: string): Promise<IdempotencyKey | null> {
+    const [result] = await db.select()
+      .from(idempotencyKeys)
+      .where(and(
+        eq(idempotencyKeys.key, key),
+        eq(idempotencyKeys.ficheId, ficheId)
+      ));
+    return result || null;
+  }
+
+  async createIdempotencyKey(data: InsertIdempotencyKey): Promise<IdempotencyKey> {
+    const [result] = await db.insert(idempotencyKeys)
+      .values(data)
+      .returning();
+    return result;
+  }
+
+  async purgeOldIdempotencyKeys(hoursOld: number): Promise<number> {
+    const cutoff = new Date(Date.now() - hoursOld * 60 * 60 * 1000);
+    const result = await db.delete(idempotencyKeys)
+      .where(lt(idempotencyKeys.createdAt, cutoff));
+    return result.rowCount || 0;
+  }
+
+  // Attach document to fiche with deduplication by URL
+  async attachDocumentToFiche(ficheId: string, doc: CapDocument): Promise<void> {
+    const fiche = await this.getFiche(ficheId);
+    if (!fiche) {
+      throw new Error("Fiche not found");
+    }
+
+    const currentDocs: CapDocument[] = (fiche.capDocuments as CapDocument[]) || [];
+    
+    // Dedup by URL: avoid duplicates
+    const alreadyExists = currentDocs.some(d => d.url === doc.url);
+    if (alreadyExists) {
+      return; // Document already attached, no modification
+    }
+
+    await db.update(ficheNavettes)
+      .set({ 
+        capDocuments: [...currentDocs, doc],
+        updatedAt: new Date()
+      })
+      .where(eq(ficheNavettes.id, ficheId));
   }
 }
 

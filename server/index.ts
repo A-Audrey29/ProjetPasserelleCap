@@ -17,6 +17,7 @@ import { logError } from "./utils/errorLogger";
 import { getErrorMessage, getErrorCode, ErrorCodes } from "./utils/errorCodes";
 import { requireAuth } from "./middleware/rbac";
 import { protectUploadAccess } from "./middleware/uploadSecurity";
+import { storage } from "./storage";
 
 const app = express();
 
@@ -34,12 +35,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // CORS configuration - flexible for dev and production
-const corsOptions = {
+// En dev: accepte toutes les origines
+// En prod: vérifie les origines exactes listées dans CORS_ORIGIN (séparées par virgules)
+// Autorise aussi Origin absent pour les appels serveur-à-serveur (Make, webhooks, etc.)
+const corsOptions: cors.CorsOptions = {
   origin:
     process.env.NODE_ENV === "development"
-      ? true // Accept all origins in development
-      : process.env.CORS_ORIGIN || false, // Use CORS_ORIGIN in production, block if not set
-  credentials: true, // Allow cookies/authentication headers
+      ? true
+      : (origin, callback) => {
+          // Autoriser les appels sans Origin (serveur-à-serveur: Make, cron, webhooks)
+          if (!origin) return callback(null, true);
+
+          const allowedOrigins = (process.env.CORS_ORIGIN || "")
+            .split(",")
+            .map((o) => o.trim())
+            .filter(Boolean);
+
+          if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`Origine non autorisée par CORS: ${origin}`));
+          }
+        },
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
@@ -145,4 +163,21 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
+
+  // Purge idempotency keys older than 24 hours - run every hour
+  const PURGE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+  const PURGE_HOURS_OLD = 24;
+  
+  setInterval(async () => {
+    try {
+      const purgedCount = await storage.purgeOldIdempotencyKeys(PURGE_HOURS_OLD);
+      if (purgedCount > 0) {
+        log(`[IdempotencyKeys] Purged ${purgedCount} expired keys (older than ${PURGE_HOURS_OLD}h)`);
+      }
+    } catch (err) {
+      console.error("[IdempotencyKeys] Purge error:", err);
+    }
+  }, PURGE_INTERVAL_MS);
+  
+  log(`[IdempotencyKeys] Purge scheduled every ${PURGE_INTERVAL_MS / 1000 / 60}min (keys older than ${PURGE_HOURS_OLD}h)`);
 })();
