@@ -603,7 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Security: capDocuments is forbidden for API_KEY requests
         // Documents must be uploaded via POST /api/fiches/:id/documents
-        if (req.user.authSource === "API_KEY" && req.body.capDocuments !== undefined) {
+        if (req.user.authSource === "API_KEY" && capDocuments !== undefined) {
           logMakeRequest(req, 400, "CAPDOCUMENTS_NOT_ALLOWED", { externalId: externalId || null });
           return res.status(400).json({
             message: "capDocuments interdit via API key. Utiliser POST /api/fiches/:id/documents.",
