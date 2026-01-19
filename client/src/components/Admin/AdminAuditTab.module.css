@@ -630,3 +630,48 @@
     justify-content: center;
   }
 }
+
+/* Error Banner Styles */
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.errorIcon {
+  color: #8C4A4A;
+  flex-shrink: 0;
+}
+
+.errorContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.errorMessage {
+  color: #8C4A4A;
+  font-weight: 500;
+}
+
+.loginButton {
+  background-color: #8C4A4A;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.loginButton:hover {
+  background-color: #7a3f3f;
+}

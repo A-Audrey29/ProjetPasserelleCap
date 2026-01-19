@@ -119,21 +119,21 @@ export default function FicheDetail({ ficheId }) {
   const { data: epciOrganizations = [] } = useQuery({
     queryKey: ['/api/epcis', selectedEpciId, 'organizations'],
     queryFn: async ({ queryKey }) => {
+      const { apiFetch } = await import('@/lib/apiFetch');
       const [, epciId] = queryKey;
-      const response = await fetch(`/api/epcis/${epciId}/organizations`, {
-        credentials: 'include'
-      });
+      const response = await apiFetch(`/api/epcis/${epciId}/organizations`);
       if (!response.ok) throw new Error('Failed to fetch organizations by EPCI');
       return response.json();
     },
     enabled: !!selectedEpciId && canTransmitToEvs && fiche?.state === 'SUBMITTED_TO_FEVES'
   });
 
-  // Query for audit logs
+  // Query for audit logs - using apiFetch for credentials
   const { data: auditLogs = [], isLoading: auditLoading } = useQuery({
     queryKey: ['/api/audit', ficheId, 'FicheNavette'],
     queryFn: async () => {
-      const response = await fetch(`/api/audit?entityId=${ficheId}&entity=FicheNavette`);
+      const { apiFetch } = await import('@/lib/apiFetch');
+      const response = await apiFetch(`/api/audit?entityId=${ficheId}&entity=FicheNavette`);
       if (!response.ok) throw new Error('Failed to fetch audit logs');
       return response.json();
     },
@@ -517,13 +517,13 @@ export default function FicheDetail({ ficheId }) {
 
     setUploadingReportFor(enrollmentId);
     try {
+      const { apiFetch } = await import('@/lib/apiFetch');
       const formData = new FormData();
       formData.append('reportFile', file);
 
-      const response = await fetch(`/api/enrollments/${enrollmentId}/upload-report`, {
+      const response = await apiFetch(`/api/enrollments/${enrollmentId}/upload-report`, {
         method: 'POST',
-        body: formData,
-        credentials: 'include'
+        body: formData
       });
 
       if (!response.ok) {
@@ -585,13 +585,13 @@ export default function FicheDetail({ ficheId }) {
 
     setUploadingFinalReport(true);
     try {
+      const { apiFetch } = await import('@/lib/apiFetch');
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`/api/fiches/${ficheId}/upload-final-report`, {
+      const response = await apiFetch(`/api/fiches/${ficheId}/upload-final-report`, {
         method: 'POST',
-        body: formData,
-        credentials: 'include'
+        body: formData
       });
 
       if (!response.ok) {
