@@ -79,16 +79,8 @@ export default function Fiches() {
   // Use centralized useFiches hook (uses apiRequest with credentials:'include')
   const { fiches, isLoading: loading, error } = useFiches(buildFilters());
 
-  // Gestion explicite du 401 : redirection vers login
+  // Gestion explicite du 401 : banner visible avec bouton (pas de redirection auto)
   const isAuthError = error?.message?.includes('401') || error?.message?.includes('Session expirée');
-  
-  useEffect(() => {
-    if (isAuthError) {
-      // Délai court pour laisser voir le message d'erreur
-      const timer = setTimeout(() => setLocation('/login'), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthError, setLocation]);
 
   // Get appropriate page title based on user role
   const getPageTitle = () => {
@@ -226,7 +218,7 @@ export default function Fiches() {
             <div className={styles.errorContent}>
               <p className={styles.errorMessage}>
                 {isAuthError 
-                  ? 'Session expirée - redirection vers la page de connexion...'
+                  ? 'Session expirée'
                   : error.message || 'Erreur lors du chargement des fiches'}
               </p>
               {isAuthError && (

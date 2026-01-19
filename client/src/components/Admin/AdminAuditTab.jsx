@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import styles from './AdminAuditTab.module.css';
 import { Search, History, Calendar, User, FileText, Activity, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -130,15 +130,8 @@ export default function AdminAuditTab() {
   const totalLogs = auditData?.total || 0;
   const totalPages = Math.ceil(totalLogs / itemsPerPage);
   
-  // Gestion explicite du 401 : redirection vers login
+  // Gestion explicite du 401 : banner visible avec bouton (pas de redirection auto)
   const isAuthError = auditError?.message?.includes('401') || auditError?.message?.includes('Session expirée');
-  
-  useEffect(() => {
-    if (isAuthError) {
-      const timer = setTimeout(() => window.location.href = '/login', 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthError]);
 
   /**
    * Gestion de la recherche avec réinitialisation de la page
@@ -281,7 +274,7 @@ export default function AdminAuditTab() {
           <div className={styles.errorContent}>
             <span className={styles.errorMessage}>
               {isAuthError 
-                ? 'Session expirée - redirection vers la connexion...'
+                ? 'Session expirée'
                 : auditError.message || 'Erreur lors du chargement des logs'}
             </span>
             {isAuthError && (

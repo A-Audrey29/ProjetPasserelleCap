@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import styles from './AdminEmailsTab.module.css';
@@ -43,15 +43,8 @@ export default function AdminEmailsTab() {
     retry: false
   });
   
-  // Gestion explicite du 401 : redirection vers login
+  // Gestion explicite du 401 : banner visible avec bouton (pas de redirection auto)
   const isAuthError = emailsError?.message?.includes('401') || emailsError?.message?.includes('Session expirée');
-  
-  useEffect(() => {
-    if (isAuthError) {
-      const timer = setTimeout(() => window.location.href = '/login', 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthError]);
 
   // Mutation pour marquer un email comme lu
   const markAsViewed = useMutation({
@@ -213,7 +206,7 @@ export default function AdminEmailsTab() {
           <div className={styles.errorContent}>
             <span className={styles.errorMessage}>
               {isAuthError 
-                ? 'Session expirée - redirection vers la connexion...'
+                ? 'Session expirée'
                 : emailsError.message || 'Erreur lors du chargement des emails'}
             </span>
             {isAuthError && (
