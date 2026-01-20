@@ -106,39 +106,54 @@ export default function Fiches() {
   };
 
   const getGuardianName = (fiche) => {
-    const family = fiche.family;
-    const familyData = fiche.familyDetailedData;
+    try {
+      const family = fiche.family;
+      const familyData = fiche.familyDetailedData;
 
-    if (!family && !familyData) return 'Nom non disponible';
+      if (!family && !familyData) return 'Nom non disponible';
 
-    if (familyData?.autoriteParentale) {
-      const authority = familyData.autoriteParentale
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+      if (familyData?.autoriteParentale) {
+        // Handle both array (new schema) and string (legacy) formats
+        let authorityRaw;
+        if (Array.isArray(familyData.autoriteParentale)) {
+          authorityRaw = familyData.autoriteParentale[0]; // Take first authority
+        } else if (typeof familyData.autoriteParentale === 'string') {
+          authorityRaw = familyData.autoriteParentale;
+        }
 
-      switch (authority) {
-        case 'mere':
-          return familyData.mother || family?.mother || 'Nom non disponible';
-        case 'pere':
-          return familyData.father || family?.father || 'Nom non disponible';
-        case 'tiers':
-          return (
-            familyData.tiers ||
-            family?.guardian ||
-            family?.tiers ||
-            'Nom non disponible'
-          );
-        default:
-          break;
+        if (authorityRaw) {
+          const authority = authorityRaw
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+
+          switch (authority) {
+            case 'mere':
+              return familyData.mother || family?.mother || 'Nom non disponible';
+            case 'pere':
+              return familyData.father || family?.father || 'Nom non disponible';
+            case 'tiers':
+              return (
+                familyData.tiers ||
+                family?.guardian ||
+                family?.tiers ||
+                'Nom non disponible'
+              );
+            default:
+              break;
+          }
+        }
       }
+
+      if (family?.mother) return family.mother;
+      if (family?.father) return family.father;
+      if (family?.guardian) return family.guardian;
+
+      return 'Nom non disponible';
+    } catch (err) {
+      console.error('getGuardianName error:', err, fiche);
+      return 'Nom non disponible';
     }
-
-    if (family?.mother) return family.mother;
-    if (family?.father) return family.father;
-    if (family?.guardian) return family.guardian;
-
-    return 'Nom non disponible';
   };
 
   return (
