@@ -93,7 +93,8 @@ export default function AdminAuditTab() {
   const { data: users = [] } = useQuery({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      const response = await fetch('/api/users');
+      const { apiFetch } = await import('@/lib/apiFetch');
+      const response = await apiFetch('/api/users');
       if (!response.ok) throw new Error('Erreur lors du chargement des utilisateurs');
       return response.json();
     }
@@ -103,9 +104,10 @@ export default function AdminAuditTab() {
    * Récupération des logs d'audit avec pagination et filtres
    * Query key inclut tous les paramètres pour une mise en cache optimale
    */
-  const { data: auditData, isLoading } = useQuery({
+  const { data: auditData, isLoading, error: auditError } = useQuery({
     queryKey: ['/api/admin/audit-logs', currentPage, actionFilter, entityFilter, actorFilter, searchTerm],
     queryFn: async () => {
+      const { apiFetch } = await import('@/lib/apiFetch');
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
@@ -115,17 +117,21 @@ export default function AdminAuditTab() {
         ...(searchTerm && { search: searchTerm })
       });
       
-      const response = await fetch(`/api/admin/audit-logs?${params}`);
+      const response = await apiFetch(`/api/admin/audit-logs?${params}`);
       if (!response.ok) {
         throw new Error(`Erreur ${response.status}: ${response.statusText}`);
       }
       return response.json();
-    }
+    },
+    retry: false
   });
 
   const logs = auditData?.logs || [];
   const totalLogs = auditData?.total || 0;
   const totalPages = Math.ceil(totalLogs / itemsPerPage);
+  
+  // Gestion explicite du 401 : banner visible avec bouton (pas de redirection auto)
+  const isAuthError = auditError?.message?.includes('401') || auditError?.message?.includes('Session expirée');
 
   /**
    * Gestion de la recherche avec réinitialisation de la page
@@ -261,6 +267,28 @@ export default function AdminAuditTab() {
 
   return (
     <div className={styles.auditTab}>
+      {/* Banner d'erreur explicite (pas de liste vide silencieuse) */}
+      {auditError && (
+        <div className={styles.errorBanner}>
+          <AlertCircle size={20} className={styles.errorIcon} />
+          <div className={styles.errorContent}>
+            <span className={styles.errorMessage}>
+              {isAuthError 
+                ? 'Session expirée'
+                : auditError.message || 'Erreur lors du chargement des logs'}
+            </span>
+            {isAuthError && (
+              <button 
+                onClick={() => window.location.href = '/login'}
+                className={styles.loginButton}
+              >
+                Se reconnecter
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* En-tête avec titre et statistiques */}
       <div className={styles.header}>
         <div className={styles.headerContent}>

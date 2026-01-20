@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
-import { Eye, FileText, Plus, Search, Filter, Calendar, User, Building } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
+import { Eye, FileText, Plus, Search, Filter, Calendar, User, Building, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useFiches } from '@/hooks/useFiches';
 import { hasPermission, ROLES, ACTIONS } from '@/utils/permissions';
 import Header from '@/components/Layout/Header';
 import Footer from '@/components/Layout/Footer';
@@ -55,11 +55,13 @@ export default function Fiches() {
     }
   }, []);
 
-  // Build query parameters for API call
-  const buildQueryParams = () => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.append('search', searchTerm);
-    if (stateFilter && stateFilter !== 'all') params.append('state', stateFilter);
+  const [, setLocation] = useLocation();
+
+  // Build filters object for useFiches hook
+  const buildFilters = () => {
+    const filters = {};
+    if (searchTerm) filters.search = searchTerm;
+    if (stateFilter && stateFilter !== 'all') filters.state = stateFilter;
     
     // For CD role filtering - check URL to determine which CD action
     if (userRole === ROLES.CD) {
@@ -67,26 +69,18 @@ export default function Fiches() {
       const isValidationPage = urlParams.get('state') === 'SUBMITTED_TO_CD';
       
       if (isValidationPage) {
-        // This is the "Fiches en attente de validations" action
-        params.set('state', 'SUBMITTED_TO_CD'); // Use set() to avoid duplicates
+        filters.state = 'SUBMITTED_TO_CD';
       }
-      // If not validation page, show all fiches ("Consulter les Fiches" action)
     }
     
-    return params.toString();
+    return filters;
   };
 
-  // Fetch fiches using TanStack Query for proper cache management
-  const queryParams = buildQueryParams();
-  const { data: fiches = [], isLoading: loading } = useQuery({
-    queryKey: ['/api/fiches', queryParams],
-    queryFn: async () => {
-      const response = await fetch(`/api/fiches?${queryParams}`);
-      if (!response.ok) throw new Error('Failed to fetch fiches');
-      return response.json();
-    },
-    enabled: !!userRole
-  });
+  // Use centralized useFiches hook (uses apiRequest with credentials:'include')
+  const { fiches, isLoading: loading, error } = useFiches(buildFilters());
+
+  // Gestion explicite du 401 : banner visible avec bouton (pas de redirection auto)
+  const isAuthError = error?.message?.includes('401') || error?.message?.includes('Session expirée');
 
   // Get appropriate page title based on user role
   const getPageTitle = () => {
@@ -112,39 +106,54 @@ export default function Fiches() {
   };
 
   const getGuardianName = (fiche) => {
-    const family = fiche.family;
-    const familyData = fiche.familyDetailedData;
+    try {
+      const family = fiche.family;
+      const familyData = fiche.familyDetailedData;
 
-    if (!family && !familyData) return 'Nom non disponible';
+      if (!family && !familyData) return 'Nom non disponible';
 
-    if (familyData?.autoriteParentale) {
-      const authority = familyData.autoriteParentale
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+      if (familyData?.autoriteParentale) {
+        // Handle both array (new schema) and string (legacy) formats
+        let authorityRaw;
+        if (Array.isArray(familyData.autoriteParentale)) {
+          authorityRaw = familyData.autoriteParentale[0]; // Take first authority
+        } else if (typeof familyData.autoriteParentale === 'string') {
+          authorityRaw = familyData.autoriteParentale;
+        }
 
-      switch (authority) {
-        case 'mere':
-          return familyData.mother || family?.mother || 'Nom non disponible';
-        case 'pere':
-          return familyData.father || family?.father || 'Nom non disponible';
-        case 'tiers':
-          return (
-            familyData.tiers ||
-            family?.guardian ||
-            family?.tiers ||
-            'Nom non disponible'
-          );
-        default:
-          break;
+        if (authorityRaw) {
+          const authority = authorityRaw
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+
+          switch (authority) {
+            case 'mere':
+              return familyData.mother || family?.mother || 'Nom non disponible';
+            case 'pere':
+              return familyData.father || family?.father || 'Nom non disponible';
+            case 'tiers':
+              return (
+                familyData.tiers ||
+                family?.guardian ||
+                family?.tiers ||
+                'Nom non disponible'
+              );
+            default:
+              break;
+          }
+        }
       }
+
+      if (family?.mother) return family.mother;
+      if (family?.father) return family.father;
+      if (family?.guardian) return family.guardian;
+
+      return 'Nom non disponible';
+    } catch (err) {
+      console.error('getGuardianName error:', err, fiche);
+      return 'Nom non disponible';
     }
-
-    if (family?.mother) return family.mother;
-    if (family?.father) return family.father;
-    if (family?.guardian) return family.guardian;
-
-    return 'Nom non disponible';
   };
 
   return (
@@ -217,13 +226,35 @@ export default function Fiches() {
           )}
         </div>
 
+        {/* Error banner with explicit 401 handling */}
+        {error && (
+          <div className={styles.errorBanner}>
+            <AlertTriangle className={styles.errorIcon} />
+            <div className={styles.errorContent}>
+              <p className={styles.errorMessage}>
+                {isAuthError 
+                  ? 'Session expirée'
+                  : error.message || 'Erreur lors du chargement des fiches'}
+              </p>
+              {isAuthError && (
+                <Button 
+                  onClick={() => window.location.href = '/login'}
+                  className={styles.loginButton}
+                >
+                  Se reconnecter
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Fiches list */}
         {loading ? (
           <div className={styles.loadingState}>
             <div className={styles.spinner}></div>
             <p>Chargement des fiches...</p>
           </div>
-        ) : (
+        ) : !error && (
           <div className={styles.fichesGrid}>
             {fiches.length > 0 ? (
               fiches.map((fiche) => (

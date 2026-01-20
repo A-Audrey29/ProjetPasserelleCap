@@ -23,9 +23,10 @@ export default function AdminEmailsTab() {
   const itemsPerPage = 10;
 
   // Récupération des emails avec pagination et filtres
-  const { data: emailsData, isLoading } = useQuery({
+  const { data: emailsData, isLoading, error: emailsError } = useQuery({
     queryKey: ['/api/admin/email-logs', currentPage, statusFilter, searchTerm],
     queryFn: async () => {
+      const { apiFetch } = await import('@/lib/apiFetch');
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
@@ -33,13 +34,17 @@ export default function AdminEmailsTab() {
         ...(searchTerm && { search: searchTerm })
       });
       
-      const response = await fetch(`/api/admin/email-logs?${params}`);
+      const response = await apiFetch(`/api/admin/email-logs?${params}`);
       if (!response.ok) {
         throw new Error(`Erreur ${response.status}: ${response.statusText}`);
       }
       return response.json();
-    }
+    },
+    retry: false
   });
+  
+  // Gestion explicite du 401 : banner visible avec bouton (pas de redirection auto)
+  const isAuthError = emailsError?.message?.includes('401') || emailsError?.message?.includes('Session expirée');
 
   // Mutation pour marquer un email comme lu
   const markAsViewed = useMutation({
@@ -187,6 +192,32 @@ export default function AdminEmailsTab() {
       <div className={styles.container}>
         <div className={styles.loading} data-testid="loading-emails">
           Chargement des emails...
+        </div>
+      </div>
+    );
+  }
+
+  // Banner d'erreur explicite (pas de liste vide silencieuse)
+  if (emailsError) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.errorBanner}>
+          <AlertCircle size={20} className={styles.errorIcon} />
+          <div className={styles.errorContent}>
+            <span className={styles.errorMessage}>
+              {isAuthError 
+                ? 'Session expirée'
+                : emailsError.message || 'Erreur lors du chargement des emails'}
+            </span>
+            {isAuthError && (
+              <button 
+                onClick={() => window.location.href = '/login'}
+                className={styles.loginButton}
+              >
+                Se reconnecter
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
