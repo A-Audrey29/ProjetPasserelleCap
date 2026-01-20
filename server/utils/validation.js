@@ -65,10 +65,26 @@ const childDataSchema = z.object({
   niveauScolaire: optionalString
 }).strict();
 
-// childrenData - array with anti-abuse limit
-const childrenDataSchema = z.array(childDataSchema)
-  .max(15, 'Maximum 15 enfants autorisés')
-  .optional();
+// Helper: filter out children with empty/null/undefined/whitespace-only name before validation
+const filterEmptyChildren = (arr) => {
+  if (!Array.isArray(arr)) return arr;
+  return arr.filter((child) => {
+    if (!child || typeof child !== 'object') return false;
+    const name = child.name;
+    // Keep only children with a non-empty, non-whitespace name
+    if (name === undefined || name === null) return false;
+    if (typeof name === 'string' && name.trim() === '') return false;
+    return true;
+  });
+};
+
+// childrenData - preprocess to filter empty children, then validate with anti-abuse limit
+const childrenDataSchema = z.preprocess(
+  filterEmptyChildren,
+  z.array(childDataSchema)
+    .max(15, 'Maximum 15 enfants autorisés')
+    .optional()
+);
 
 // selectedWorkshops - record with anti-abuse limit (max 50 keys, boolean values)
 const selectedWorkshopsSchema = z.record(z.string(), z.boolean())
