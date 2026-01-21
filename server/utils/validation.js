@@ -8,11 +8,8 @@ export const loginSchema = z.object({
 
 // === Preprocess helpers ===
 
-// Convert empty strings to undefined for optional string fields
-const emptyStringToUndefined = (val) => (val === "" || val === null) ? undefined : val;
-
-// Robust sanitizer for optional strings (handles Make.com placeholders)
-const sanitizeOptionalString = (val) => {
+// Robust sanitizer for ALL strings (handles Make.com placeholders: null, n/a, -, etc.)
+const sanitizeString = (val) => {
   if (val === null || val === undefined) return undefined;
   if (typeof val !== 'string') return undefined;
   
@@ -21,18 +18,16 @@ const sanitizeOptionalString = (val) => {
   
   // Treat common "empty" placeholders as undefined
   const lowerVal = trimmed.toLowerCase();
-  if (['null', 'n/a', 'na', 'none', '-', 'undefined'].includes(lowerVal)) return undefined;
+  if (['null', 'n/a', 'na', 'none', '-', 'undefined', ''].includes(lowerVal)) return undefined;
   
   return trimmed;
 };
 
 // Convert invalid emails to undefined (robust for Make.com integration)
 const sanitizeEmail = (val) => {
-  // Handle null, undefined, empty
   if (val === null || val === undefined) return undefined;
   if (typeof val !== 'string') return undefined;
   
-  // Trim and check for empty/whitespace
   const trimmed = val.trim();
   if (trimmed === '') return undefined;
   
@@ -40,79 +35,139 @@ const sanitizeEmail = (val) => {
   const lowerVal = trimmed.toLowerCase();
   if (['null', 'n/a', 'na', 'none', '-', 'undefined'].includes(lowerVal)) return undefined;
   
-  // Basic email validation regex
+  // Basic email validation regex - invalid emails become undefined (no error)
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(trimmed)) return undefined;
   
   return trimmed;
 };
 
-// Preprocess for optional strings (email, phone, text fields)
-const optionalString = z.preprocess(emptyStringToUndefined, z.string().optional());
-const optionalEmail = z.preprocess(sanitizeEmail, z.string().email('Email invalide').optional());
-const optionalPhone = z.preprocess(emptyStringToUndefined, z.string().optional());
+// Sanitize phone numbers - keep only valid formats
+const sanitizePhone = (val) => {
+  if (val === null || val === undefined) return undefined;
+  if (typeof val !== 'string') return undefined;
+  
+  const trimmed = val.trim();
+  if (trimmed === '') return undefined;
+  
+  const lowerVal = trimmed.toLowerCase();
+  if (['null', 'n/a', 'na', 'none', '-', 'undefined'].includes(lowerVal)) return undefined;
+  
+  return trimmed;
+};
 
-// Preprocess for optional number (birthYear)
-const optionalBirthYear = z.preprocess(
-  (val) => (val === "" || val === null || val === undefined) ? undefined : val,
-  z.coerce.number().int('Année de naissance doit être un entier').min(1900, 'Année minimum: 1900').max(2030, 'Année maximum: 2030').optional()
+// Sanitize dates - return undefined if invalid format
+const sanitizeDate = (val) => {
+  if (val === null || val === undefined) return undefined;
+  if (typeof val !== 'string') return undefined;
+  
+  const trimmed = val.trim();
+  if (trimmed === '') return undefined;
+  
+  const lowerVal = trimmed.toLowerCase();
+  if (['null', 'n/a', 'na', 'none', '-', 'undefined'].includes(lowerVal)) return undefined;
+  
+  // Check YYYY-MM-DD format
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return undefined;
+  
+  return trimmed;
+};
+
+// Sanitize number with default fallback
+const sanitizeNumber = (val, defaultVal = undefined) => {
+  if (val === null || val === undefined || val === '') return defaultVal;
+  if (typeof val === 'string') {
+    const lowerVal = val.trim().toLowerCase();
+    if (['null', 'n/a', 'na', 'none', '-', 'undefined', ''].includes(lowerVal)) return defaultVal;
+  }
+  const num = Number(val);
+  if (isNaN(num)) return defaultVal;
+  return num;
+};
+
+// Sanitize and truncate long strings
+const sanitizeAndTruncate = (val, maxLen = 5000) => {
+  const sanitized = sanitizeString(val);
+  if (!sanitized) return undefined;
+  return sanitized.substring(0, maxLen);
+};
+
+// === Permissive field types (all become optional with sanitization) ===
+const permissiveString = z.preprocess(sanitizeString, z.string().optional());
+const permissiveEmail = z.preprocess(sanitizeEmail, z.string().optional());
+const permissivePhone = z.preprocess(sanitizePhone, z.string().optional());
+const permissiveDate = z.preprocess(sanitizeDate, z.string().optional());
+
+// Permissive birthYear (1900-2030 or undefined)
+const permissiveBirthYear = z.preprocess(
+  (val) => {
+    const num = sanitizeNumber(val);
+    if (num === undefined) return undefined;
+    if (num < 1900 || num > 2030) return undefined;
+    return num;
+  },
+  z.number().optional()
 );
 
 // === Sub-schemas ===
 
-// Enum for autorité parentale
-const autoriteParentaleEnum = z.enum(['mere', 'pere', 'tiers'], {
-  errorMap: () => ({ message: "Valeur autorisée: 'mere', 'pere', ou 'tiers'" })
-});
+// Sanitize autoriteParentale array - filter + normalize to lowercase
+const sanitizeAutoriteParentale = (val) => {
+  if (!Array.isArray(val)) return undefined;
+  const validValues = ['mere', 'pere', 'tiers'];
+  const normalized = val
+    .filter(v => typeof v === 'string' && validValues.includes(v.toLowerCase()))
+    .map(v => v.toLowerCase()); // Normalize to lowercase for enum validation
+  return normalized.length > 0 ? normalized : undefined;
+};
 
-// referentData - .passthrough() for flexibility
+// referentData - all fields permissive
 const referentDataSchema = z.object({
-  lastName: optionalString,
-  firstName: optionalString,
-  structure: optionalString,
-  phone: optionalPhone,
-  email: optionalEmail,
-  requestDate: z.preprocess(
-    emptyStringToUndefined,
-    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format date: YYYY-MM-DD').optional()
-  )
+  lastName: permissiveString,
+  firstName: permissiveString,
+  structure: permissiveString,
+  phone: permissivePhone,
+  email: permissiveEmail,
+  requestDate: permissiveDate
 }).passthrough().optional();
 
-// familyDetailedData - .passthrough() for flexibility
-// Robust optional string for Make.com integration (sanitizes placeholders)
-const robustOptionalString = z.preprocess(sanitizeOptionalString, z.string().optional());
-
+// familyDetailedData - all fields permissive
 const familyDetailedDataSchema = z.object({
-  mother: optionalString,
-  father: optionalString,
-  tiers: optionalString,
-  lienAvecEnfants: optionalString,
-  autoriteParentale: z.array(autoriteParentaleEnum).min(1, 'Au moins une autorité parentale requise').optional(),
-  situationFamiliale: optionalString,
-  situationSocioProfessionnelle: optionalString,
-  adresse: optionalString,
-  email: optionalEmail,
-  telephonePortable: optionalPhone,
-  telephoneFixe: optionalPhone,
-  code: robustOptionalString
+  mother: permissiveString,
+  father: permissiveString,
+  tiers: permissiveString,
+  lienAvecEnfants: permissiveString,
+  autoriteParentale: z.preprocess(sanitizeAutoriteParentale, z.array(z.enum(['mere', 'pere', 'tiers'])).optional()),
+  situationFamiliale: permissiveString,
+  situationSocioProfessionnelle: permissiveString,
+  adresse: permissiveString,
+  email: permissiveEmail,
+  telephonePortable: permissivePhone,
+  telephoneFixe: permissivePhone,
+  code: permissiveString
 }).passthrough().optional();
 
-// childData - .strict() for control
+// childData - permissive (name becomes optional too)
 const childDataSchema = z.object({
-  name: z.preprocess(emptyStringToUndefined, z.string().min(1, 'Nom enfant requis')),
-  birthYear: optionalBirthYear,
-  niveauScolaire: optionalString
-}).strict();
+  name: permissiveString,
+  birthYear: permissiveBirthYear,
+  niveauScolaire: permissiveString
+}).passthrough();
 
-// Helper: filter out children with empty/null/undefined/whitespace-only name before validation
+// Helper: filter out children with empty/null/placeholder name before validation
 const filterEmptyChildren = (arr) => {
-  if (!Array.isArray(arr)) return arr;
+  if (!Array.isArray(arr)) return [];
   return arr.filter((child) => {
     if (!child || typeof child !== 'object') return false;
     const name = child.name;
-    // Keep only children with a non-empty, non-whitespace name
+    // Check if name is valid (not empty, not placeholder)
     if (name === undefined || name === null) return false;
-    if (typeof name === 'string' && name.trim() === '') return false;
+    if (typeof name !== 'string') return false;
+    const trimmed = name.trim();
+    if (trimmed === '') return false;
+    // Also filter out placeholder values
+    const lowerName = trimmed.toLowerCase();
+    if (['null', 'n/a', 'na', 'none', '-', 'undefined'].includes(lowerName)) return false;
     return true;
   });
 };
@@ -125,22 +180,53 @@ const childrenDataSchema = z.preprocess(
     .optional()
 );
 
-// selectedWorkshops - record with anti-abuse limit (max 50 keys, boolean values)
-const selectedWorkshopsSchema = z.record(z.string(), z.boolean())
-  .refine(
-    (obj) => Object.keys(obj).length <= 50,
-    { message: 'Maximum 50 ateliers autorisés' }
-  )
-  .optional();
+// Sanitize selectedWorkshops - filter invalid entries, limit to 50 keys (anti-abuse)
+const sanitizeSelectedWorkshops = (val) => {
+  if (val === null || val === undefined) return undefined;
+  if (typeof val !== 'object' || Array.isArray(val)) return undefined;
+  const result = {};
+  let count = 0;
+  for (const [key, value] of Object.entries(val)) {
+    if (count >= 50) break; // Anti-abuse limit
+    if (typeof key === 'string' && typeof value === 'boolean') {
+      result[key] = value;
+      count++;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+};
 
-// workshopPropositions - record with anti-abuse limit (max 50 keys, string values max 500 chars)
-const workshopPropositionsSchema = z.record(
-  z.string(),
-  z.string().max(500, 'Proposition trop longue (max 500 caractères)')
-).refine(
-  (obj) => Object.keys(obj).length <= 50,
-  { message: 'Maximum 50 propositions autorisées' }
-).optional();
+// selectedWorkshops - permissive with anti-abuse limit
+const selectedWorkshopsSchema = z.preprocess(
+  sanitizeSelectedWorkshops,
+  z.record(z.string(), z.boolean()).optional()
+);
+
+// Sanitize workshopPropositions - filter invalid entries, limit to 50 keys, truncate long values
+const sanitizeWorkshopPropositions = (val) => {
+  if (val === null || val === undefined) return undefined;
+  if (typeof val !== 'object' || Array.isArray(val)) return undefined;
+  const result = {};
+  let count = 0;
+  for (const [key, value] of Object.entries(val)) {
+    if (count >= 50) break; // Anti-abuse limit
+    if (typeof key === 'string' && typeof value === 'string') {
+      const sanitized = sanitizeString(value);
+      if (sanitized) {
+        // Truncate to 500 chars instead of rejecting
+        result[key] = sanitized.substring(0, 500);
+        count++;
+      }
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+};
+
+// workshopPropositions - permissive with anti-abuse limits
+const workshopPropositionsSchema = z.preprocess(
+  sanitizeWorkshopPropositions,
+  z.record(z.string(), z.string()).optional()
+);
 
 // capDocument - individual document
 const capDocumentSchema = z.object({
@@ -168,20 +254,28 @@ const capDocumentSchema = z.object({
 
 // externalId - safe string max 255 (no prefix constraint)
 const externalIdSchema = z.preprocess(
-  emptyStringToUndefined,
+  sanitizeString,
   z.string().max(255, 'externalId trop long (max 255)').optional()
+);
+
+// Permissive participantsCount - defaults to 1 if invalid
+const permissiveParticipantsCount = z.preprocess(
+  (val) => {
+    const num = sanitizeNumber(val, 1);
+    if (num < 1) return 1;
+    if (num > 10) return 10;
+    return Math.floor(num);
+  },
+  z.number().int().min(1).max(10)
 );
 
 // === Main schema ===
 export const ficheCreationSchema = z.object({
-  // Required field
-  participantsCount: z.coerce.number()
-    .int('Doit être un entier')
-    .min(1, 'Minimum 1 participant')
-    .max(10, 'Maximum 10 participants'),
+  // Permissive - defaults to 1 if invalid/missing
+  participantsCount: permissiveParticipantsCount,
   
-  // Typed optional fields
-  description: z.preprocess(emptyStringToUndefined, z.string().max(5000, 'Description trop longue').optional()),
+  // All fields permissive
+  description: z.preprocess((val) => sanitizeAndTruncate(val, 5000), z.string().optional()),
   referentData: referentDataSchema,
   familyDetailedData: familyDetailedDataSchema,
   childrenData: childrenDataSchema,
