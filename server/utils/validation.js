@@ -11,9 +11,45 @@ export const loginSchema = z.object({
 // Convert empty strings to undefined for optional string fields
 const emptyStringToUndefined = (val) => (val === "" || val === null) ? undefined : val;
 
+// Robust sanitizer for optional strings (handles Make.com placeholders)
+const sanitizeOptionalString = (val) => {
+  if (val === null || val === undefined) return undefined;
+  if (typeof val !== 'string') return undefined;
+  
+  const trimmed = val.trim();
+  if (trimmed === '') return undefined;
+  
+  // Treat common "empty" placeholders as undefined
+  const lowerVal = trimmed.toLowerCase();
+  if (['null', 'n/a', 'na', 'none', '-', 'undefined'].includes(lowerVal)) return undefined;
+  
+  return trimmed;
+};
+
+// Convert invalid emails to undefined (robust for Make.com integration)
+const sanitizeEmail = (val) => {
+  // Handle null, undefined, empty
+  if (val === null || val === undefined) return undefined;
+  if (typeof val !== 'string') return undefined;
+  
+  // Trim and check for empty/whitespace
+  const trimmed = val.trim();
+  if (trimmed === '') return undefined;
+  
+  // Treat common "empty" placeholders as undefined
+  const lowerVal = trimmed.toLowerCase();
+  if (['null', 'n/a', 'na', 'none', '-', 'undefined'].includes(lowerVal)) return undefined;
+  
+  // Basic email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(trimmed)) return undefined;
+  
+  return trimmed;
+};
+
 // Preprocess for optional strings (email, phone, text fields)
 const optionalString = z.preprocess(emptyStringToUndefined, z.string().optional());
-const optionalEmail = z.preprocess(emptyStringToUndefined, z.string().email('Email invalide').optional());
+const optionalEmail = z.preprocess(sanitizeEmail, z.string().email('Email invalide').optional());
 const optionalPhone = z.preprocess(emptyStringToUndefined, z.string().optional());
 
 // Preprocess for optional number (birthYear)
@@ -43,6 +79,9 @@ const referentDataSchema = z.object({
 }).passthrough().optional();
 
 // familyDetailedData - .passthrough() for flexibility
+// Robust optional string for Make.com integration (sanitizes placeholders)
+const robustOptionalString = z.preprocess(sanitizeOptionalString, z.string().optional());
+
 const familyDetailedDataSchema = z.object({
   mother: optionalString,
   father: optionalString,
@@ -55,7 +94,7 @@ const familyDetailedDataSchema = z.object({
   email: optionalEmail,
   telephonePortable: optionalPhone,
   telephoneFixe: optionalPhone,
-  code: optionalString
+  code: robustOptionalString
 }).passthrough().optional();
 
 // childData - .strict() for control
