@@ -638,19 +638,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Generate reference number with year-month-counter format
+        // Support X-Test-Mode header for test fiches (prefix TEST- instead of FN-)
+        const isTestMode = req.headers['x-test-mode'] === 'true';
+        const prefix = isTestMode ? 'TEST' : 'FN';
+        
         const now = new Date();
         const year = now.getFullYear();
         const month = (now.getMonth() + 1).toString().padStart(2, "0"); // Months are 0-indexed, pad to 2 digits
-        const monthPrefix = `FN-${year}-${month}`;
+        const monthPrefix = `${prefix}-${year}-${month}`;
 
         const existingFiches = await storage.getAllFiches();
-        // Only count fiches with the NEW format (FN-YYYY-MM-XXX) to avoid collision with legacy format (FN-YYYY-XXX)
-        const newFormatRegex = new RegExp(`^FN-${year}-${month}-\\d{3}$`);
-        const count =
-          existingFiches.filter(
-            (f) => typeof f.ref === "string" && newFormatRegex.test(f.ref),
-          ).length + 1;
-        const ref = `${monthPrefix}-${count.toString().padStart(3, "0")}`;
+        // Find MAX number from existing refs with same prefix (not count, to avoid conflicts after deletion)
+        const refRegex = new RegExp(`^${prefix}-${year}-${month}-(\\d{3})$`);
+        const maxNumber = existingFiches
+          .filter((f) => typeof f.ref === "string" && refRegex.test(f.ref))
+          .map((f) => {
+            const match = f.ref.match(refRegex);
+            return match ? parseInt(match[1], 10) : 0;
+          })
+          .reduce((max, n) => Math.max(max, n), 0);
+        const ref = `${monthPrefix}-${(maxNumber + 1).toString().padStart(3, "0")}`;
 
         // Create fiche with all detailed data (always DRAFT for INTEGRATION_MAKE)
         const fiche = await storage.createFiche({
