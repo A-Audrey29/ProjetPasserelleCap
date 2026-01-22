@@ -854,14 +854,13 @@ export default function FicheDetail({ ficheId }) {
         const userRoleForFeves = user.user?.role || user.role;
         return userRoleForFeves === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
       case 'edit':
-        const userRoleEdit = user?.role ?? user?.user?.role;
-        const userIdEdit = user?.id ?? user?.user?.id;
         // ADMIN can edit any fiche
-        if (userRoleEdit === 'ADMIN') return true;
+        if (userRole === 'ADMIN') return true;
         // EVS_CS can edit fiches in SUBMITTED_TO_FEVES state
-        if (userRoleEdit === 'EVS_CS' && fiche.state === 'SUBMITTED_TO_FEVES') return true;
+        if (userRole === 'EVS_CS' && fiche.state === 'SUBMITTED_TO_FEVES') return true;
         // EMETTEUR can edit their own DRAFT fiches
-        return fiche.state === 'DRAFT' && fiche.emitterId === userIdEdit;
+        const currentUserId = user?.id ?? user?.user?.id;
+        return fiche.state === 'DRAFT' && fiche.emitterId === currentUserId;
       default:
         return false;
     }

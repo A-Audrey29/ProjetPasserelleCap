@@ -24,7 +24,8 @@ export function AuthProvider({ children }) {
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
-        return await response.json();
+        const data = await response.json();
+        return data.user; // Extract user object for consistent structure
       } catch (error) {
         return null; // Return null on any error
       }
