@@ -902,15 +902,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // EVS_CS can only edit fiches in SUBMITTED_TO_FEVES state
-        if (userRole === "EVS_CS" && fiche.state !== "SUBMITTED_TO_FEVES") {
+        // RELATIONS_EVS can only edit fiches in SUBMITTED_TO_FEVES state
+        if (userRole === "RELATIONS_EVS" && fiche.state !== "SUBMITTED_TO_FEVES") {
           return res
             .status(403)
             .json({ message: "Modification interdite - La fiche doit être en attente FEVES" });
         }
         
         // Other roles (except ADMIN) cannot edit
-        if (!["ADMIN", "EMETTEUR", "EVS_CS"].includes(userRole)) {
+        if (!["ADMIN", "EMETTEUR", "RELATIONS_EVS"].includes(userRole)) {
           return res.status(403).json({ message: "Modification non autorisée pour ce rôle" });
         }
 
@@ -938,8 +938,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           familyConsent: familyConsent || false,
         };
         
-        // Track modification for EVS_CS and ADMIN only
-        if (userRole === "EVS_CS" || userRole === "ADMIN") {
+        // Track modification for RELATIONS_EVS and ADMIN only
+        if (userRole === "RELATIONS_EVS" || userRole === "ADMIN") {
           const user = await storage.getUser(userId);
           const modifierName = user?.email || user?.username || userId;
           updateData.lastModifiedBy = modifierName;
