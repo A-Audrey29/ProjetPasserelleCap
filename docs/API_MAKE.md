@@ -265,6 +265,7 @@ POST /api/fiches/{ficheId}/documents
   "externalId": "make-scenario-12345",
   "participantsCount": 2,
   "description": "Description optionnelle",
+  "commentaires": "Commentaire initial de la fiche",
   "referentData": { ... },
   "familyDetailedData": { ... },
   "childrenData": [ ... ],
@@ -282,6 +283,7 @@ POST /api/fiches/{ficheId}/documents
 | `externalId` | string | **Oui** (Make) | Identifiant unique externe (max 255 chars) |
 | `participantsCount` | number | Non | Nombre de participants (1-10, défaut: 1) |
 | `description` | string | Non | Description libre (max 5000 chars, tronqué si plus long) |
+| `commentaires` | string | Non | Commentaires libres (affiché dans la zone "Commentaires" de la fiche) |
 | `familyConsent` | boolean | Non | Consentement famille |
 | `referentValidation` | boolean | Non | Validation référent (défaut: false) |
 
@@ -528,6 +530,7 @@ curl -X POST "https://votre-domaine.replit.app/api/fiches" \
   -d '{
     "externalId": "make-scenario-12345",
     "participantsCount": 2,
+    "commentaires": "Demande urgente - famille en difficulté",
     "referentData": {
       "lastName": "Dupont",
       "firstName": "Marie",
