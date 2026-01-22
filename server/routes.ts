@@ -887,17 +887,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Check edit permissions
-        if (
-          req.ficheAccess.role === "EMETTEUR" &&
-          fiche.emitterId !== req.ficheAccess.userId
-        ) {
-          return res.status(403).json({ message: "Accès interdit" });
+        const userRole = req.ficheAccess.role;
+        const userId = req.ficheAccess.userId;
+        
+        // EMETTEUR can only edit their own fiches in DRAFT state
+        if (userRole === "EMETTEUR") {
+          if (fiche.emitterId !== userId) {
+            return res.status(403).json({ message: "Accès interdit" });
+          }
+          if (fiche.state !== "DRAFT") {
+            return res
+              .status(403)
+              .json({ message: "Modification interdite - Fiche déjà envoyée" });
+          }
         }
-
-        if (req.ficheAccess.role === "EMETTEUR" && fiche.state !== "DRAFT") {
+        
+        // EVS_CS can only edit fiches in SUBMITTED_TO_FEVES state
+        if (userRole === "EVS_CS" && fiche.state !== "SUBMITTED_TO_FEVES") {
           return res
             .status(403)
-            .json({ message: "Modification interdite - Fiche déjà envoyée" });
+            .json({ message: "Modification interdite - La fiche doit être en attente FEVES" });
+        }
+        
+        // Other roles (except ADMIN) cannot edit
+        if (!["ADMIN", "EMETTEUR", "EVS_CS"].includes(userRole)) {
+          return res.status(403).json({ message: "Modification non autorisée pour ce rôle" });
         }
 
         // Extract the detailed form data from request body
@@ -912,7 +926,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...otherFields
         } = req.body;
 
-        const updateData = {
+        // Build update data
+        const updateData: Record<string, any> = {
           ...otherFields,
           description,
           referentData: referentData || null,
@@ -922,6 +937,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           capDocuments: capDocuments || null,
           familyConsent: familyConsent || false,
         };
+        
+        // Track modification for EVS_CS and ADMIN only
+        if (userRole === "EVS_CS" || userRole === "ADMIN") {
+          const user = await storage.getUser(userId);
+          const modifierName = user?.email || user?.username || userId;
+          updateData.lastModifiedBy = modifierName;
+          updateData.lastModifiedAt = new Date();
+        }
 
         const updatedFiche = await storage.updateFiche(id, updateData);
         res.json(updatedFiche);

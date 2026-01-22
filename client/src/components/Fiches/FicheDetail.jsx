@@ -856,7 +856,12 @@ export default function FicheDetail({ ficheId }) {
       case 'edit':
         const userRole = user.user?.role || user.role;
         const userId = user.user?.id || user.id;
-        return userRole === 'ADMIN' || (fiche.state === 'DRAFT' && fiche.emitterId === userId);
+        // ADMIN can edit any fiche
+        if (userRole === 'ADMIN') return true;
+        // EVS_CS can edit fiches in SUBMITTED_TO_FEVES state
+        if (userRole === 'EVS_CS' && fiche.state === 'SUBMITTED_TO_FEVES') return true;
+        // EMETTEUR can edit their own DRAFT fiches
+        return fiche.state === 'DRAFT' && fiche.emitterId === userId;
       default:
         return false;
     }
@@ -899,6 +904,20 @@ export default function FicheDetail({ ficheId }) {
             <p className={styles.ficheRef} data-testid="text-fiche-ref">
               #{fiche.ref}
             </p>
+            {fiche.lastModifiedBy && fiche.lastModifiedAt && (
+              <p className={styles.modificationBanner} data-testid="modification-banner">
+                Modifié par {fiche.lastModifiedBy} le{' '}
+                {new Date(fiche.lastModifiedAt).toLocaleDateString('fr-FR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric'
+                })} à{' '}
+                {new Date(fiche.lastModifiedAt).toLocaleTimeString('fr-FR', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            )}
           </div>
           
           {/* Action Buttons Row */}
