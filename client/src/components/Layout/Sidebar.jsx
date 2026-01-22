@@ -59,7 +59,7 @@ export default function Sidebar() {
   ];
 
   const visibleItems = navigationItems.filter(item => 
-    item.roles.includes(user?.user?.role || user?.role)
+    item.roles.includes(user?.role ?? user?.user?.role)
   );
 
   const isActive = (href) => {

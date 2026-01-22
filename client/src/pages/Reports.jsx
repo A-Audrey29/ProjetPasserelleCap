@@ -19,7 +19,8 @@ export default function Reports() {
 
   // Redirect if not authenticated or not authorized
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || !['ADMIN', 'SUIVI_PROJETS', 'RELATIONS_EVS'].includes(user?.user?.role))) {
+    const currentRole = user?.role ?? user?.user?.role;
+    if (!authLoading && (!isAuthenticated || !['ADMIN', 'SUIVI_PROJETS', 'RELATIONS_EVS'].includes(currentRole))) {
       setLocation('/');
     }
   }, [isAuthenticated, authLoading, user, setLocation]);
@@ -56,7 +57,7 @@ export default function Reports() {
         ]
       };
     },
-    enabled: isAuthenticated && ['ADMIN', 'SUIVI_PROJETS', 'RELATIONS_EVS'].includes(user?.user?.role)
+    enabled: isAuthenticated && ['ADMIN', 'SUIVI_PROJETS', 'RELATIONS_EVS'].includes(user?.role ?? user?.user?.role)
   });
 
   const reportTypes = [
@@ -83,7 +84,8 @@ export default function Reports() {
     );
   }
 
-  if (!isAuthenticated || !['ADMIN', 'SUIVI_PROJETS', 'RELATIONS_EVS'].includes(user?.user?.role)) {
+  const userRoleCheck = user?.role ?? user?.user?.role;
+  if (!isAuthenticated || !['ADMIN', 'SUIVI_PROJETS', 'RELATIONS_EVS'].includes(userRoleCheck)) {
     return null; // Will redirect
   }
 

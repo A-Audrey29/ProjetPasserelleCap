@@ -1421,7 +1421,7 @@ export default function FicheForm({
 
   const handleSave = async () => {
     try {
-      const userRole = user?.user?.role || user?.role;
+      const userRole = user?.role ?? user?.user?.role;
       const currentState = initialData?.state || "DRAFT";
       const isAdmin = userRole === "ADMIN";
       const isDraft = currentState === "DRAFT";
@@ -2124,7 +2124,7 @@ export default function FicheForm({
             </button>
 
             {/* Admin-only actions - only show if user is ADMIN and fiche exists */}
-            {user?.user?.role === "ADMIN" && initialData?.id && (
+            {(user?.role ?? user?.user?.role) === "ADMIN" && initialData?.id && (
               <>
                 <button
                   type="button"

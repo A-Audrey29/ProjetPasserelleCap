@@ -12,7 +12,8 @@ export default function Admin() {
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || user?.user?.role !== 'ADMIN')) {
+    const currentRole = user?.role ?? user?.user?.role;
+    if (!authLoading && (!isAuthenticated || currentRole !== 'ADMIN')) {
       setLocation('/');
     }
   }, [isAuthenticated, authLoading, user, setLocation]);
@@ -28,7 +29,8 @@ export default function Admin() {
     );
   }
 
-  if (!isAuthenticated || user?.user?.role !== 'ADMIN') {
+  const displayRole = user?.role ?? user?.user?.role;
+  if (!isAuthenticated || displayRole !== 'ADMIN') {
     return null; // Will redirect
   }
 

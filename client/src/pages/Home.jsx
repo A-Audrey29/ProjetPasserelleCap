@@ -29,7 +29,7 @@ export default function Home() {
 
   // Get role-specific actions using the permissions system
   const getRoleActions = () => {
-    const userRole = user?.user?.role;
+    const userRole = user?.role ?? user?.user?.role;
     if (!user || !userRole) {
       return [];
     }

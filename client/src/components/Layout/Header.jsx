@@ -63,8 +63,9 @@ export default function Header() {
     }
   ];
 
+  const currentUserRole = user?.role ?? user?.user?.role;
   const visibleItems = authenticatedNavItems.filter(item => 
-    item.roles.includes(user?.user?.role)
+    item.roles.includes(currentUserRole)
   );
 
   const isActive = (href) => {
@@ -318,7 +319,7 @@ export default function Header() {
                   <input 
                     type="text" 
                     className={`${styles.input} ${styles.readOnly}`}
-                    value={user?.user?.firstName || user?.firstName || ''}
+                    value={user?.firstName ?? user?.user?.firstName ?? ''}
                     disabled
                     data-testid="input-readonly-firstname"
                   />
@@ -328,7 +329,7 @@ export default function Header() {
                   <input 
                     type="text" 
                     className={`${styles.input} ${styles.readOnly}`}
-                    value={user?.user?.lastName || user?.lastName || ''}
+                    value={user?.lastName ?? user?.user?.lastName ?? ''}
                     disabled
                     data-testid="input-readonly-lastname"
                   />
@@ -338,7 +339,7 @@ export default function Header() {
                   <input 
                     type="email" 
                     className={`${styles.input} ${styles.readOnly}`}
-                    value={user?.user?.email || user?.email || ''}
+                    value={user?.email ?? user?.user?.email ?? ''}
                     disabled
                     data-testid="input-readonly-email"
                   />

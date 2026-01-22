@@ -28,7 +28,7 @@ export default function FicheCreation() {
 
   // Redirect if not authenticated or not authorized
   useEffect(() => {
-    const userRole = user?.user?.role || user?.role;
+    const userRole = user?.role ?? user?.user?.role;
     if (!authLoading && (!isAuthenticated || !['ADMIN', 'EMETTEUR', 'RELATIONS_EVS'].includes(userRole))) {
       setLocation('/');
     }
@@ -105,8 +105,8 @@ export default function FicheCreation() {
     );
   }
 
-  const userRole = user?.user?.role || user?.role;
-  if (!isAuthenticated || !['ADMIN', 'EMETTEUR', 'RELATIONS_EVS'].includes(userRole)) {
+  const userRoleCheck = user?.role ?? user?.user?.role;
+  if (!isAuthenticated || !['ADMIN', 'EMETTEUR', 'RELATIONS_EVS'].includes(userRoleCheck)) {
     return null; // Will redirect
   }
 
