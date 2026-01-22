@@ -831,7 +831,8 @@ export default function FicheDetail({ ficheId }) {
     
     switch (action) {
       case 'assign':
-        return user.role === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
+        // Bouton Affecter désactivé pour tous les rôles
+        return false;
       case 'accept':
       case 'reject':
         const userRoleEvs = user.user?.role || user.role;
