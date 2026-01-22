@@ -644,6 +644,30 @@
   box-shadow: 0 2px 4px rgba(217, 160, 102, 0.2);
 }
 
+.buttonSuccess {
+  background-color: #6A8B74;
+  color: #FFFFFF;
+  border: 1px solid #6A8B74;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.buttonSuccess:hover {
+  background-color: #5A7A64;
+  border-color: #5A7A64;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(106, 139, 116, 0.2);
+}
+
+.buttonSuccess:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Consent Section Styles */
 .consentSection {
   background-color: #FFFFFF;

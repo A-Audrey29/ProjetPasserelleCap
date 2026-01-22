@@ -39,7 +39,7 @@ export default function Fiches() {
   const [searchTerm, setSearchTerm] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   
-  const userRole = user?.user?.role || user?.role;
+  const userRole = user?.role ?? user?.user?.role;
 
   // Read URL parameters on component mount
   useEffect(() => {

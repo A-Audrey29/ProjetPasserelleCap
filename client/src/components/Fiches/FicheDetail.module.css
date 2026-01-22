@@ -42,6 +42,17 @@
   font-family: 'Courier New', monospace;
 }
 
+.modificationBanner {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #E8EDF3;
+  border-left: 3px solid #6A8B74;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.8125rem;
+  color: #3B4B61;
+  font-style: italic;
+}
+
 .actionButtons {
   display: flex;
   gap: 0.75rem;

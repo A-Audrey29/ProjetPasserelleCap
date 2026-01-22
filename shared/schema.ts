@@ -184,6 +184,10 @@ export const ficheNavettes = pgTable("fiche_navettes", {
   // CAP documents uploaded with fiche
   capDocuments: json("cap_documents"), // Store array of uploaded CAP documents
   
+  // Modification tracking (for EVS_CS and ADMIN edits)
+  lastModifiedBy: varchar("last_modified_by"), // Email/name of user who modified
+  lastModifiedAt: timestamp("last_modified_at"), // When the modification was made
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

@@ -109,7 +109,7 @@ export default function FicheDetail({ ficheId }) {
   });
 
   // Query for EPCIs (for RELATIONS_EVS and ADMIN selection)
-  const canTransmitToEvs = ['ADMIN', 'RELATIONS_EVS'].includes(user?.user?.role) || ['ADMIN', 'RELATIONS_EVS'].includes(user?.role);
+  const canTransmitToEvs = ['ADMIN', 'RELATIONS_EVS'].includes(userRole);
   const { data: epcis = [] } = useQuery({
     queryKey: ['/api/epcis'],
     enabled: canTransmitToEvs && fiche?.state === 'SUBMITTED_TO_FEVES'
@@ -831,7 +831,8 @@ export default function FicheDetail({ ficheId }) {
     
     switch (action) {
       case 'assign':
-        return user.role === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
+        // Bouton Affecter désactivé pour tous les rôles
+        return false;
       case 'accept':
       case 'reject':
         const userRoleEvs = user.user?.role || user.role;
@@ -854,9 +855,13 @@ export default function FicheDetail({ ficheId }) {
         const userRoleForFeves = user.user?.role || user.role;
         return userRoleForFeves === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES';
       case 'edit':
-        const userRole = user.user?.role || user.role;
-        const userId = user.user?.id || user.id;
-        return userRole === 'ADMIN' || (fiche.state === 'DRAFT' && fiche.emitterId === userId);
+        // ADMIN can edit any fiche
+        if (userRole === 'ADMIN') return true;
+        // RELATIONS_EVS can edit fiches in SUBMITTED_TO_FEVES state
+        if (userRole === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES') return true;
+        // EMETTEUR can edit their own DRAFT fiches
+        const currentUserId = user?.id ?? user?.user?.id;
+        return fiche.state === 'DRAFT' && fiche.emitterId === currentUserId;
       default:
         return false;
     }
@@ -899,6 +904,20 @@ export default function FicheDetail({ ficheId }) {
             <p className={styles.ficheRef} data-testid="text-fiche-ref">
               #{fiche.ref}
             </p>
+            {fiche.lastModifiedBy && fiche.lastModifiedAt && (
+              <p className={styles.modificationBanner} data-testid="modification-banner">
+                Modifié par {fiche.lastModifiedBy} le{' '}
+                {new Date(fiche.lastModifiedAt).toLocaleDateString('fr-FR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric'
+                })} à{' '}
+                {new Date(fiche.lastModifiedAt).toLocaleTimeString('fr-FR', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            )}
           </div>
           
           {/* Action Buttons Row */}
@@ -998,7 +1017,7 @@ export default function FicheDetail({ ficheId }) {
             )}
             
             {/* Admin-only actions */}
-            {user?.user?.role === 'ADMIN' && (
+            {userRole === 'ADMIN' && (
               <>
                 <button 
                   onClick={handleArchive}
@@ -1545,7 +1564,7 @@ export default function FicheDetail({ ficheId }) {
           )}
 
           {/* Contract Verification for RELATIONS_EVS with ACCEPTED_EVS status */}
-          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'ACCEPTED_EVS' && (
+          {userRole === 'RELATIONS_EVS' && fiche.state === 'ACCEPTED_EVS' && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Vérification du contrat
@@ -1619,8 +1638,8 @@ export default function FicheDetail({ ficheId }) {
           )}
 
           {/* Activity Completion Verification for EVS_CS with CONTRACT_SIGNED status */}
-          {(user?.user?.role === 'EVS_CS' || user?.role === 'EVS_CS') && fiche.state === 'CONTRACT_SIGNED' && 
-           (user?.user?.orgId === fiche.assignedOrgId || user?.orgId === fiche.assignedOrgId) && (
+          {userRole === 'EVS_CS' && fiche.state === 'CONTRACT_SIGNED' && 
+           (user?.orgId ?? user?.user?.orgId) === fiche.assignedOrgId && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Validation de l'activité
@@ -1669,7 +1688,7 @@ export default function FicheDetail({ ficheId }) {
           )}
 
           {/* Field Check Verification for RELATIONS_EVS with FIELD_CHECK_SCHEDULED status */}
-          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && fiche.state === 'FIELD_CHECK_SCHEDULED' && (
+          {userRole === 'RELATIONS_EVS' && fiche.state === 'FIELD_CHECK_SCHEDULED' && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Vérification terrain
@@ -1718,7 +1737,7 @@ export default function FicheDetail({ ficheId }) {
           )}
 
           {/* Final Verification for RELATIONS_EVS with FIELD_CHECK_DONE or FINAL_REPORT_RECEIVED status */}
-          {(user?.user?.role === 'RELATIONS_EVS' || user?.role === 'RELATIONS_EVS') && (fiche.state === 'FIELD_CHECK_DONE' || fiche.state === 'FINAL_REPORT_RECEIVED') && (
+          {userRole === 'RELATIONS_EVS' && (fiche.state === 'FIELD_CHECK_DONE' || fiche.state === 'FINAL_REPORT_RECEIVED') && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>
                 Vérification finale

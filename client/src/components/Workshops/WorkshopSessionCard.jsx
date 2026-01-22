@@ -532,9 +532,8 @@ export default function WorkshopSessionCard({ session }) {
           </div>
 
           {/* Control Section - Only for RELATIONS_EVS and not yet validated */}
-          {(user?.role === "RELATIONS_EVS" ||
-            user?.user?.role === "RELATIONS_EVS" ||
-            user?.role === "ADMIN") &&
+          {((user?.role ?? user?.user?.role) === "RELATIONS_EVS" ||
+            (user?.role ?? user?.user?.role) === "ADMIN") &&
             !controlValidatedAt && (
               <div className={styles.controlSection}>
                 <h4 className={styles.controlTitle}>Contrôle :</h4>
@@ -595,9 +594,8 @@ export default function WorkshopSessionCard({ session }) {
             )}
 
           {/* Control Badges for other roles */}
-          {user?.role !== "RELATIONS_EVS" &&
-            user?.user?.role !== "RELATIONS_EVS" &&
-            user?.role !== "ADMIN" && (
+          {(user?.role ?? user?.user?.role) !== "RELATIONS_EVS" &&
+            (user?.role ?? user?.user?.role) !== "ADMIN" && (
               <div className={styles.controlBadgesSection}>
                 {controlScheduled && (
                   <div

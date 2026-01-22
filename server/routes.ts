@@ -887,17 +887,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Check edit permissions
-        if (
-          req.ficheAccess.role === "EMETTEUR" &&
-          fiche.emitterId !== req.ficheAccess.userId
-        ) {
-          return res.status(403).json({ message: "Accès interdit" });
+        const userRole = req.ficheAccess.role;
+        const userId = req.ficheAccess.userId;
+        
+        // EMETTEUR can only edit their own fiches in DRAFT state
+        if (userRole === "EMETTEUR") {
+          if (fiche.emitterId !== userId) {
+            return res.status(403).json({ message: "Accès interdit" });
+          }
+          if (fiche.state !== "DRAFT") {
+            return res
+              .status(403)
+              .json({ message: "Modification interdite - Fiche déjà envoyée" });
+          }
         }
-
-        if (req.ficheAccess.role === "EMETTEUR" && fiche.state !== "DRAFT") {
+        
+        // RELATIONS_EVS can only edit fiches in SUBMITTED_TO_FEVES state
+        if (userRole === "RELATIONS_EVS" && fiche.state !== "SUBMITTED_TO_FEVES") {
           return res
             .status(403)
-            .json({ message: "Modification interdite - Fiche déjà envoyée" });
+            .json({ message: "Modification interdite - La fiche doit être en attente FEVES" });
+        }
+        
+        // Other roles (except ADMIN) cannot edit
+        if (!["ADMIN", "EMETTEUR", "RELATIONS_EVS"].includes(userRole)) {
+          return res.status(403).json({ message: "Modification non autorisée pour ce rôle" });
         }
 
         // Extract the detailed form data from request body
@@ -912,16 +926,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...otherFields
         } = req.body;
 
-        const updateData = {
+        // Build update data
+        const updateData: Record<string, any> = {
           ...otherFields,
           description,
-          referentData: referentData || null,
-          familyDetailedData: familyDetailedData || null,
-          childrenData: childrenData || null,
-          workshopPropositions: workshopPropositions || null,
-          capDocuments: capDocuments || null,
           familyConsent: familyConsent || false,
         };
+        
+        // Only update referentData if explicitly provided (preserve existing data otherwise)
+        if (referentData !== undefined) {
+          updateData.referentData = referentData || null;
+        }
+        
+        // Only update familyDetailedData if explicitly provided (preserve existing data otherwise)
+        if (familyDetailedData !== undefined) {
+          updateData.familyDetailedData = familyDetailedData || null;
+        }
+        
+        // Only update childrenData if explicitly provided (preserve existing data including birth dates)
+        if (childrenData !== undefined) {
+          updateData.childrenData = childrenData || null;
+        }
+        
+        // Only update workshopPropositions if explicitly provided (preserve existing data otherwise)
+        if (workshopPropositions !== undefined) {
+          updateData.workshopPropositions = workshopPropositions || null;
+        }
+        
+        // Only update capDocuments if explicitly provided (preserve existing documents otherwise)
+        if (capDocuments !== undefined) {
+          updateData.capDocuments = capDocuments || null;
+        }
+        
+        // Track modification for RELATIONS_EVS and ADMIN only
+        if (userRole === "RELATIONS_EVS" || userRole === "ADMIN") {
+          const user = await storage.getUser(userId);
+          const modifierName = user?.email || user?.username || userId;
+          updateData.lastModifiedBy = modifierName;
+          updateData.lastModifiedAt = new Date();
+        }
 
         const updatedFiche = await storage.updateFiche(id, updateData);
         res.json(updatedFiche);
