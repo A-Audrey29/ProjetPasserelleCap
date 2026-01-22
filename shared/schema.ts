@@ -251,6 +251,13 @@ export const migrations = pgTable("migrations", {
   nameIdx: index("migrations_name_idx").on(table.name),
 }));
 
+// Legacy schema_migrations table (preserved from previous migration system)
+// This table is kept to prevent data loss during db:push operations
+export const schemaMigrations = pgTable("schema_migrations", {
+  version: varchar("version", { length: 255 }).primaryKey(),
+  appliedAt: timestamp("applied_at").defaultNow(),
+});
+
 // Idempotency keys for Make API upload deduplication
 export const idempotencyKeys = pgTable("idempotency_keys", {
   key: varchar("key", { length: 255 }).notNull(),
