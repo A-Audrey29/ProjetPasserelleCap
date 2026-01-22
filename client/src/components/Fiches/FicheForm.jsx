@@ -232,7 +232,7 @@ export default function FicheForm({
     },
     {
       id: 5,
-      title: "Revoir et transmettre au Conseil Départemental",
+      title: "Récapitulatif",
       icon: Send,
       allowedRoles: ["ADMIN", "EMETTEUR", "RELATIONS_EVS"],
     },
@@ -1808,7 +1808,7 @@ export default function FicheForm({
     <div className={styles.card}>
       <h2 className={styles.cardTitle}>
         <Send className={styles.cardTitleIcon} />
-        Revoir et transmettre au Conseil Départemental
+        Récapitulatif
       </h2>
 
       <div className={styles.formSection}>
