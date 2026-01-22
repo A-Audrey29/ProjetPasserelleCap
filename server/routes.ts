@@ -930,12 +930,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const updateData: Record<string, any> = {
           ...otherFields,
           description,
-          referentData: referentData || null,
-          familyDetailedData: familyDetailedData || null,
-          childrenData: childrenData || null,
-          workshopPropositions: workshopPropositions || null,
           familyConsent: familyConsent || false,
         };
+        
+        // Only update referentData if explicitly provided (preserve existing data otherwise)
+        if (referentData !== undefined) {
+          updateData.referentData = referentData || null;
+        }
+        
+        // Only update familyDetailedData if explicitly provided (preserve existing data otherwise)
+        if (familyDetailedData !== undefined) {
+          updateData.familyDetailedData = familyDetailedData || null;
+        }
+        
+        // Only update childrenData if explicitly provided (preserve existing data including birth dates)
+        if (childrenData !== undefined) {
+          updateData.childrenData = childrenData || null;
+        }
+        
+        // Only update workshopPropositions if explicitly provided (preserve existing data otherwise)
+        if (workshopPropositions !== undefined) {
+          updateData.workshopPropositions = workshopPropositions || null;
+        }
         
         // Only update capDocuments if explicitly provided (preserve existing documents otherwise)
         if (capDocuments !== undefined) {

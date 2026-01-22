@@ -17,6 +17,7 @@ import {
   Archive,
   Loader2,
   AlertCircle,
+  Save,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,6 +57,7 @@ export default function FicheForm({
   const [isReferentEditable, setIsReferentEditable] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState({});
@@ -1420,10 +1422,12 @@ export default function FicheForm({
   };
 
   const handleSave = async () => {
+    setIsSaving(true);
     try {
       const userRole = user?.role ?? user?.user?.role;
       const currentState = initialData?.state || "DRAFT";
       const isAdmin = userRole === "ADMIN";
+      const isRelationsEvs = userRole === "RELATIONS_EVS";
       const isDraft = currentState === "DRAFT";
 
       // Build a dynamic mapping from the technical form id → real DB id
@@ -1448,13 +1452,13 @@ export default function FicheForm({
         capDocuments: formData.capDocuments, // Save CAP documents
       };
 
-      // For draft fiches or admin users, save as draft
-      // For non-draft fiches with non-admin users, save without changing state
-      if (isDraft || isAdmin) {
+      // For draft fiches, save as draft
+      // For RELATIONS_EVS and ADMIN on non-draft fiches, save without changing state
+      if (isDraft) {
         ficheData.state = "DRAFT";
         await onSaveDraft(ficheData);
       } else {
-        // For non-admin editing non-draft fiches, update without state change
+        // For RELATIONS_EVS and ADMIN editing non-draft fiches, update without state change
         await apiRequest("PATCH", `/api/fiches/${initialData.id}`, ficheData);
         queryClient.invalidateQueries(["/api/fiches"]);
         queryClient.invalidateQueries(["/api/fiches", initialData.id]);
@@ -1464,10 +1468,10 @@ export default function FicheForm({
       setDraftSaved(true);
       setTimeout(() => setDraftSaved(false), 3000); // Reset after 3 seconds
 
-      const toastTitle = isDraft ? "Brouillon sauvegardé" : "Fiche sauvegardée";
+      const toastTitle = isDraft ? "Brouillon sauvegardé" : "Modifications enregistrées";
       const toastDescription = isDraft
         ? "Votre fiche a été sauvegardée en brouillon avec succès."
-        : "Les modifications de la fiche ont été sauvegardées avec succès.";
+        : "Les modifications de la fiche ont été enregistrées avec succès.";
 
       toast({
         title: toastTitle,
@@ -1482,6 +1486,8 @@ export default function FicheForm({
           error.message || "Une erreur est survenue lors de la sauvegarde.",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -2108,6 +2114,25 @@ export default function FicheForm({
               <Edit className={styles.buttonIcon} />
               Modifier
             </button>
+            
+            {/* Save button for RELATIONS_EVS and ADMIN when editing existing fiche */}
+            {['RELATIONS_EVS', 'ADMIN'].includes(user?.role ?? user?.user?.role) && initialData?.id && (
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`${styles.button} ${styles.buttonSuccess}`}
+                data-testid="button-save-modifications"
+              >
+                {isSaving ? (
+                  <Loader2 className={`${styles.buttonIcon} ${styles.spinner}`} />
+                ) : (
+                  <Save className={styles.buttonIcon} />
+                )}
+                {isSaving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </button>
+            )}
+            
             <button
               type="button"
               onClick={handleTransmit}
