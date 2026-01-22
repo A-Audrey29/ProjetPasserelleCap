@@ -2133,20 +2133,23 @@ export default function FicheForm({
               </button>
             )}
             
-            <button
-              type="button"
-              onClick={handleTransmit}
-              disabled={isTransitioning || isSubmitting}
-              className={`${styles.button} ${styles.buttonPrimary}`}
-              data-testid="button-transmit"
-            >
-              {(isTransitioning || isSubmitting) ? (
-                <Loader2 className={`${styles.buttonIcon} ${styles.spinner}`} />
-              ) : (
-                <Send className={styles.buttonIcon} />
-              )}
-              {(isTransitioning || isSubmitting) ? 'Transmission en cours...' : 'Transmettre'}
-            </button>
+            {/* Transmit button - hidden for RELATIONS_EVS and ADMIN (they use the transmission section on detail page) */}
+            {!['RELATIONS_EVS', 'ADMIN'].includes(user?.role ?? user?.user?.role) && (
+              <button
+                type="button"
+                onClick={handleTransmit}
+                disabled={isTransitioning || isSubmitting}
+                className={`${styles.button} ${styles.buttonPrimary}`}
+                data-testid="button-transmit"
+              >
+                {(isTransitioning || isSubmitting) ? (
+                  <Loader2 className={`${styles.buttonIcon} ${styles.spinner}`} />
+                ) : (
+                  <Send className={styles.buttonIcon} />
+                )}
+                {(isTransitioning || isSubmitting) ? 'Transmission en cours...' : 'Transmettre'}
+              </button>
+            )}
 
             {/* Admin-only actions - only show if user is ADMIN and fiche exists */}
             {(user?.role ?? user?.user?.role) === "ADMIN" && initialData?.id && (
