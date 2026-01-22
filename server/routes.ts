@@ -934,9 +934,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           familyDetailedData: familyDetailedData || null,
           childrenData: childrenData || null,
           workshopPropositions: workshopPropositions || null,
-          capDocuments: capDocuments || null,
           familyConsent: familyConsent || false,
         };
+        
+        // Only update capDocuments if explicitly provided (preserve existing documents otherwise)
+        if (capDocuments !== undefined) {
+          updateData.capDocuments = capDocuments || null;
+        }
         
         // Track modification for RELATIONS_EVS and ADMIN only
         if (userRole === "RELATIONS_EVS" || userRole === "ADMIN") {
