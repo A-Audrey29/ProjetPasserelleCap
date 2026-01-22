@@ -276,6 +276,7 @@ export const ficheCreationSchema = z.object({
   
   // All fields permissive
   description: z.preprocess((val) => sanitizeAndTruncate(val, 5000), z.string().optional()),
+  commentaires: z.preprocess((val) => sanitizeAndTruncate(val, 5000), z.string().optional()),
   referentData: referentDataSchema,
   familyDetailedData: familyDetailedDataSchema,
   childrenData: childrenDataSchema,

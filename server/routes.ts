@@ -589,6 +589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const {
           description,
+          commentaires,
           referentData,
           familyDetailedData,
           childrenData,
@@ -676,6 +677,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           referentValidation: referentValidation ?? false,
           externalId: externalId || null,
         });
+
+        // If commentaires is provided, create an internal comment
+        if (commentaires && commentaires.trim()) {
+          await storage.createComment({
+            ficheId: fiche.id,
+            authorId: req.user.userId,
+            content: commentaires.trim(),
+          });
+        }
 
         // Log success for Make API
         if (req.user.authSource === "API_KEY") {
