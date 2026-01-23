@@ -11,6 +11,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { logError } from "./utils/errorLogger";
@@ -62,6 +63,9 @@ const corsOptions: cors.CorsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Cookie parser - MUST be before any route that uses req.cookies
+app.use(cookieParser());
 
 // FTPS Proxy for uploaded files - streams files from o2switch via FTPS
 // Regex to validate filename: UUID.pdf or similar safe patterns
