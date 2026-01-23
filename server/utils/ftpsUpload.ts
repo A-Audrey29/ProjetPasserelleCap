@@ -102,8 +102,7 @@ class FTPSUploader {
     const client = new Client();
     client.ftp.verbose = this.cfg.verbose;
 
-    // Timeout de connexion
-    client.ftp.socketTimeout = this.cfg.connTimeoutMs;
+    // Timeout de connexion (basic-ftp uses ftp.socket after connection)
 
     const access: AccessOptions = {
       host: this.cfg.host,
@@ -217,4 +216,152 @@ export async function uploadNavette(localPath: string, fileName: string): Promis
 
 export async function uploadBilan(localPath: string, fileName: string): Promise<UploadResult> {
   return uploadFile(localPath, fileName, "bilans");
+}
+
+// =======================
+// Download API (streaming)
+// =======================
+
+export interface DownloadResult {
+  success: boolean;
+  stream?: NodeJS.ReadableStream;
+  size?: number;
+  message?: string;
+  errorCode?: "NOT_FOUND" | "TIMEOUT" | "CONNECTION_ERROR" | "UNKNOWN";
+}
+
+/**
+ * Download a file from o2switch via FTPS and return a readable stream.
+ * Does NOT load the entire file into memory.
+ * 
+ * @param subfolder - "navettes" or "bilans"
+ * @param filename - The filename (e.g., "uuid.pdf")
+ * @param onClose - Callback to close the FTP connection when stream ends/errors
+ * @returns DownloadResult with stream if successful
+ */
+export async function downloadFile(
+  subfolder: UploadKind,
+  filename: string,
+  onClose?: () => void
+): Promise<DownloadResult> {
+  const cfg = getFTPSConfig();
+  const client = new Client(cfg.connTimeoutMs);
+  client.ftp.verbose = cfg.verbose;
+
+  const remotePath = `${cfg.baseDir}/${subfolder}/${filename}`.replace(/\/{2,}/g, "/");
+
+  try {
+    await client.access({
+      host: cfg.host,
+      port: cfg.port,
+      user: cfg.user,
+      password: cfg.password,
+      secure: cfg.secure,
+      secureOptions: cfg.secureOptions,
+    });
+
+    // Check if file exists and get size
+    const dir = path.posix.dirname(remotePath);
+    const name = path.posix.basename(remotePath);
+    
+    let fileSize: number | undefined;
+    try {
+      const list = await client.list(dir);
+      const fileInfo = list.find((f) => f.name === name);
+      if (!fileInfo) {
+        client.close();
+        return {
+          success: false,
+          message: `File not found: ${remotePath}`,
+          errorCode: "NOT_FOUND",
+        };
+      }
+      fileSize = fileInfo.size;
+    } catch (listError: any) {
+      client.close();
+      if (listError.code === 550 || listError.message?.includes("550")) {
+        return {
+          success: false,
+          message: `Directory not found: ${dir}`,
+          errorCode: "NOT_FOUND",
+        };
+      }
+      throw listError;
+    }
+
+    // Use downloadTo with a PassThrough stream for streaming
+    const { PassThrough } = await import("stream");
+    const passThrough = new PassThrough();
+
+    // Handle stream cleanup
+    const cleanup = () => {
+      try {
+        client.close();
+      } catch (e) {
+        // Ignore close errors
+      }
+      if (onClose) onClose();
+    };
+
+    passThrough.on("end", cleanup);
+    passThrough.on("error", cleanup);
+    passThrough.on("close", cleanup);
+
+    // Start download in background (don't await - let it stream)
+    client.downloadTo(passThrough, remotePath).catch((err) => {
+      passThrough.destroy(err);
+      cleanup();
+    });
+
+    return {
+      success: true,
+      stream: passThrough,
+      size: fileSize,
+    };
+  } catch (error: any) {
+    client.close();
+
+    // Categorize errors
+    if (error.code === "ETIMEDOUT" || error.message?.includes("timeout")) {
+      return {
+        success: false,
+        message: `Connection timeout to FTPS server`,
+        errorCode: "TIMEOUT",
+      };
+    }
+
+    if (error.code === "ENOTFOUND" || error.code === "ECONNREFUSED") {
+      return {
+        success: false,
+        message: `Cannot connect to FTPS server: ${error.message}`,
+        errorCode: "CONNECTION_ERROR",
+      };
+    }
+
+    return {
+      success: false,
+      message: `FTPS download failed: ${error.message || error}`,
+      errorCode: "UNKNOWN",
+    };
+  }
+}
+
+/**
+ * Download a navette PDF file
+ */
+export async function downloadNavette(
+  filename: string,
+  onClose?: () => void
+): Promise<DownloadResult> {
+  return downloadFile("navettes", filename, onClose);
+}
+
+/**
+ * Download a bilan PDF file
+ */
+export async function downloadBilan(
+  filename: string,
+  onClose?: () => void
+): Promise<DownloadResult> {
+  return downloadFile("bilans", filename, onClose);
 }
