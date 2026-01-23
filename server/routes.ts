@@ -1285,48 +1285,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  // Serve uploaded files (supports subdirectories: navettes and bilans)
-  app.get("/uploads/:subfolder/:filename", (req, res) => {
-    const { subfolder, filename } = req.params;
-
-    // Validate subfolder to prevent directory traversal
-    if (!["navettes", "bilans"].includes(subfolder)) {
-      return res.status(400).json({ message: "Sous-dossier invalide" });
-    }
-
-    const filePath = path.join(uploadsRoot, subfolder, filename);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: "Fichier non trouvé" });
-    }
-
-    res.sendFile(filePath);
-  });
-
-  // Legacy route for backwards compatibility (checks both subdirectories)
-  app.get("/uploads/:filename", (req, res) => {
-    const { filename } = req.params;
-
-    // Try navettes first, then bilans
-    const navettesPath = path.join(uploadsNavettes, filename);
-    const bilansPath = path.join(uploadsBilans, filename);
-
-    if (fs.existsSync(navettesPath)) {
-      return res.sendFile(navettesPath);
-    }
-
-    if (fs.existsSync(bilansPath)) {
-      return res.sendFile(bilansPath);
-    }
-
-    // Fallback to old location for backwards compatibility
-    const oldPath = path.join(uploadsDir, filename);
-    if (fs.existsSync(oldPath)) {
-      return res.sendFile(oldPath);
-    }
-
-    return res.status(404).json({ message: "Fichier non trouvé" });
-  });
+  // NOTE: /uploads routes have been moved to server/index.ts as FTPS proxy
+  // Files are served via streaming from o2switch FTPS server, not local filesystem
 
   // Reference data routes
 
