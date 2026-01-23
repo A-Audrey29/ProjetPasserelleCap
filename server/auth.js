@@ -69,6 +69,7 @@ export function setAuthCookie(res, token) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
+    path: '/', // Ensure cookie is sent on all routes including /uploads
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   });
 }
@@ -78,5 +79,6 @@ export function clearAuthCookie(res) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
+    path: '/', // Must match the path used in setAuthCookie
   });
 }
