@@ -18,6 +18,7 @@ import { getErrorMessage, getErrorCode, ErrorCodes } from "./utils/errorCodes";
 import { requireAuth } from "./middleware/rbac";
 import { protectUploadAccess } from "./middleware/uploadSecurity";
 import { storage } from "./storage";
+import { downloadFile, type UploadKind } from "./utils/ftpsUpload";
 
 const app = express();
 
@@ -62,13 +63,87 @@ const corsOptions: cors.CorsOptions = {
 
 app.use(cors(corsOptions));
 
-// Serve uploaded files statically with authentication and RBAC protection
-app.use(
-  "/uploads",
-  requireAuth,
-  protectUploadAccess,
-  express.static(path.join(process.cwd(), "uploads")),
-);
+// FTPS Proxy for uploaded files - streams files from o2switch via FTPS
+// Regex to validate filename: UUID.pdf or similar safe patterns
+const SAFE_FILENAME_REGEX = /^[a-f0-9-]{8,64}\.pdf$/i;
+
+app.get("/uploads/:subfolder/:filename", requireAuth, protectUploadAccess, async (req: Request, res: Response) => {
+  const { subfolder, filename } = req.params;
+
+  // Validate subfolder (only navettes or bilans allowed)
+  if (subfolder !== "navettes" && subfolder !== "bilans") {
+    return res.status(400).json({ message: "Dossier invalide" });
+  }
+
+  // Validate filename against path traversal and accept only safe patterns
+  if (!filename || !SAFE_FILENAME_REGEX.test(filename)) {
+    return res.status(400).json({ message: "Nom de fichier invalide" });
+  }
+
+  try {
+    const result = await downloadFile(subfolder as UploadKind, filename);
+
+    if (!result.success) {
+      // Handle specific error codes
+      if (result.errorCode === "NOT_FOUND") {
+        return res.status(404).json({ message: "Fichier introuvable" });
+      }
+      if (result.errorCode === "TIMEOUT") {
+        return res.status(504).json({ message: "Timeout serveur de fichiers" });
+      }
+      if (result.errorCode === "CONNECTION_ERROR") {
+        return res.status(503).json({ message: "Serveur de fichiers indisponible" });
+      }
+      return res.status(500).json({ message: "Erreur serveur" });
+    }
+
+    // Set headers for PDF streaming
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    if (result.size) {
+      res.setHeader("Content-Length", result.size);
+    }
+
+    // Handle client disconnect to cleanup FTPS connection
+    // Only destroy stream on abnormal termination (client abort), not on normal completion
+    let streamEnded = false;
+    let pipeFinished = false;
+    
+    const cleanup = (reason: string) => {
+      if (streamEnded) return;
+      streamEnded = true;
+      log(`FTPS cleanup for ${filename}: ${reason}`);
+      if (!pipeFinished && result.stream?.destroy) {
+        result.stream.destroy();
+      }
+    };
+
+    // Only cleanup on client abort (before stream completes)
+    req.on("aborted", () => cleanup("client aborted"));
+    
+    // Track normal pipe completion
+    result.stream!.on("end", () => {
+      pipeFinished = true;
+    });
+
+    // Pipe the stream to response
+    result.stream!.pipe(res);
+
+    result.stream!.on("error", (err) => {
+      log(`FTPS stream error for ${filename}: ${err.message}`);
+      cleanup("stream error");
+      if (!res.headersSent) {
+        res.status(500).json({ message: "Erreur de transfert" });
+      }
+    });
+
+  } catch (error: any) {
+    log(`FTPS proxy error for ${filename}: ${error.message}`);
+    if (!res.headersSent) {
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+});
 
 // Serve legal documents (markdown files) - public access
 app.use("/legal", express.static(path.join(process.cwd(), "legal")));
