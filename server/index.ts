@@ -67,7 +67,7 @@ app.use(cors(corsOptions));
 // Regex to validate filename: UUID.pdf or similar safe patterns
 const SAFE_FILENAME_REGEX = /^[a-f0-9-]{8,64}\.pdf$/i;
 
-app.get("/uploads/:subfolder/:filename", requireAuth, async (req: Request, res: Response) => {
+app.get("/uploads/:subfolder/:filename", requireAuth, protectUploadAccess, async (req: Request, res: Response) => {
   const { subfolder, filename } = req.params;
 
   // Validate subfolder (only navettes or bilans allowed)
@@ -105,24 +105,33 @@ app.get("/uploads/:subfolder/:filename", requireAuth, async (req: Request, res: 
     }
 
     // Handle client disconnect to cleanup FTPS connection
+    // Only destroy stream on abnormal termination (client abort), not on normal completion
     let streamEnded = false;
-    const cleanup = () => {
-      if (!streamEnded && result.stream) {
-        streamEnded = true;
-        result.stream.destroy?.();
+    let pipeFinished = false;
+    
+    const cleanup = (reason: string) => {
+      if (streamEnded) return;
+      streamEnded = true;
+      log(`FTPS cleanup for ${filename}: ${reason}`);
+      if (!pipeFinished && result.stream?.destroy) {
+        result.stream.destroy();
       }
     };
 
-    req.on("aborted", cleanup);
-    req.on("close", cleanup);
-    res.on("close", cleanup);
+    // Only cleanup on client abort (before stream completes)
+    req.on("aborted", () => cleanup("client aborted"));
+    
+    // Track normal pipe completion
+    result.stream!.on("end", () => {
+      pipeFinished = true;
+    });
 
     // Pipe the stream to response
     result.stream!.pipe(res);
 
     result.stream!.on("error", (err) => {
       log(`FTPS stream error for ${filename}: ${err.message}`);
-      cleanup();
+      cleanup("stream error");
       if (!res.headersSent) {
         res.status(500).json({ message: "Erreur de transfert" });
       }
