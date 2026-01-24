@@ -8,8 +8,8 @@ import { ErrorCodes } from '../utils/errorCodes';
  */
 export async function protectUploadAccess(req: Request, res: Response, next: NextFunction) {
   try {
-    // Extract filename from path (e.g., /uploads/file.pdf -> file.pdf)
-    const filename = req.path.replace('/uploads/', '').replace('/', '');
+    // Extract subfolder and filename from route params
+    const { subfolder, filename } = req.params;
     const user = (req as any).user;
 
     if (!user) {
@@ -19,7 +19,7 @@ export async function protectUploadAccess(req: Request, res: Response, next: Nex
       throw error;
     }
 
-    const fileUrl = `/uploads/${filename}`;
+    const fileUrl = `/uploads/${subfolder}/${filename}`;
     
     // Find which fiche this file belongs to by checking database directly
     const allFiches = await storage.getAllFiches();
