@@ -53,6 +53,7 @@ export async function protectUploadAccess(req: Request, res: Response, next: Nex
 
     // Construct RELATIVE URL for comparison (normalized format)
     const requestedFileUrl = `/uploads/${subfolder}/${filename}`;
+    console.log(`[protectUploadAccess] Checking access for: ${requestedFileUrl}`);
 
     // Find which fiche this file belongs to by checking database directly
     // BACKWARD COMPATIBLE: Normalize DB URLs to handle both absolute (legacy) and relative (new) formats
@@ -103,22 +104,27 @@ export async function protectUploadAccess(req: Request, res: Response, next: Nex
 
     if (!ownerFiche) {
       // File doesn't belong to any fiche - could be orphaned or doesn't exist
+      console.log(`[protectUploadAccess] ❌ File NOT FOUND in database: ${requestedFileUrl}`);
       const error: any = new Error('Fichier non trouvé');
       error.status = 404;
       error.code = ErrorCodes.NOT_FOUND;
       throw error;
     }
 
+    console.log(`[protectUploadAccess] ✅ File found in database, checking RBAC for fiche: ${ownerFiche.id}`);
+
     // Check if user has access to this fiche based on RBAC rules
     const hasAccess = await checkFicheAccess(user, ownerFiche);
-    
+
     if (!hasAccess) {
+      console.log(`[protectUploadAccess] ❌ Access DENIED for user ${user.email} (role: ${user.role})`);
       const error: any = new Error('Accès refusé à ce fichier');
       error.status = 403;
       error.code = ErrorCodes.AUTHORIZATION_ERROR;
       throw error;
     }
 
+    console.log(`[protectUploadAccess] ✅ Access GRANTED for user ${user.email} - proceeding to file download`);
     // User has access, proceed to file delivery
     next();
     
