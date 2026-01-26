@@ -376,6 +376,10 @@ export async function downloadFile(
 
     // Start download in background (don't await - let it stream)
     client.downloadTo(passThrough, remotePath).catch((err) => {
+      console.error(`[FTPS] 🚨 CRITICAL DOWNLOAD ERROR`);
+      console.error(`[FTPS] Error Code: ${(err as any).code}`);
+      console.error(`[FTPS] Error Message: ${(err as any).message}`);
+      console.error(`[FTPS] Stack Trace: ${err}`);
       passThrough.destroy(err);
       cleanup();
     });
