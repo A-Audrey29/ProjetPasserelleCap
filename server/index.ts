@@ -86,7 +86,13 @@ app.get("/uploads/:subfolder/:filename", requireAuth, protectUploadAccess, async
   }
 
   try {
+    // Log FTP configuration for debugging
+    const ftpBaseDir = process.env.FTP_BASE_DIR || '/uploads';
+    const expectedRemotePath = `${ftpBaseDir}/${subfolder}/${filename}`.replace(/\/{2,}/g, '/');
+    log(`[FTPS] FTP_BASE_DIR: ${ftpBaseDir}`);
+    log(`[FTPS] Expected remote path: ${expectedRemotePath}`);
     log(`[FTPS] Attempting download: ${subfolder}/${filename}`);
+
     const result = await downloadFile(subfolder as UploadKind, filename);
 
     if (!result.success) {

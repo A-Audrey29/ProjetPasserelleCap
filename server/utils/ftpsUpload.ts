@@ -32,7 +32,10 @@ function required(name: string, value: string | undefined): string {
 }
 
 function getFTPSConfig(): FTPSConfig {
-  const baseDirEnv = process.env.FTP_BASE_DIR || "/uploads";
+  // CRITICAL: In production, o2switch stores files in /uploads/uploads/
+  // In development, files are in /uploads/
+  const defaultBaseDir = process.env.NODE_ENV === 'production' ? '/uploads/uploads' : '/uploads';
+  const baseDirEnv = process.env.FTP_BASE_DIR || defaultBaseDir;
 
   // On évite les chemins parasites "uploads/uploads"
   const normalizedBase = normalizeRemoteDir(baseDirEnv);
@@ -249,6 +252,10 @@ export async function downloadFile(
   client.ftp.verbose = cfg.verbose;
 
   const remotePath = `${cfg.baseDir}/${subfolder}/${filename}`.replace(/\/{2,}/g, "/");
+
+  // Log the actual remote path being used for download
+  console.log(`[downloadFile] cfg.baseDir: ${cfg.baseDir}`);
+  console.log(`[downloadFile] Remote path constructed: ${remotePath}`);
 
   try {
     await client.access({
