@@ -86,19 +86,24 @@ app.get("/uploads/:subfolder/:filename", requireAuth, protectUploadAccess, async
   }
 
   try {
+    log(`[FTPS] Attempting download: ${subfolder}/${filename}`);
     const result = await downloadFile(subfolder as UploadKind, filename);
 
     if (!result.success) {
       // Handle specific error codes
       if (result.errorCode === "NOT_FOUND") {
+        log(`[FTPS] File not found on remote server: ${subfolder}/${filename}`);
         return res.status(404).json({ message: "Fichier introuvable" });
       }
       if (result.errorCode === "TIMEOUT") {
+        log(`[FTPS] Timeout downloading: ${subfolder}/${filename}`);
         return res.status(504).json({ message: "Timeout serveur de fichiers" });
       }
       if (result.errorCode === "CONNECTION_ERROR") {
+        log(`[FTPS] Connection error: ${subfolder}/${filename}`);
         return res.status(503).json({ message: "Serveur de fichiers indisponible" });
       }
+      log(`[FTPS] Unknown error downloading: ${subfolder}/${filename}`);
       return res.status(500).json({ message: "Erreur serveur" });
     }
 
