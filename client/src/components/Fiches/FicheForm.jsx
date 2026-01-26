@@ -731,11 +731,13 @@ export default function FicheForm({
     return {
       id: objective.order || objective.id,
       title: objective.name,
-      workshops: filteredWorkshops.map((w) => ({
-        id: w.id,
-        name: w.name,
-        objective: w.description,
-      })),
+      workshops: filteredWorkshops
+        .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
+        .map((w) => ({
+          id: w.id,
+          name: w.name,
+          objective: w.description,
+        })),
     };
   });
 
