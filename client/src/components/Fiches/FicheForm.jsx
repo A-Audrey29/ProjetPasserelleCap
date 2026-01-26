@@ -1804,6 +1804,33 @@ export default function FicheForm({
     );
   };
 
+  /**
+   * Determine if the "Transmit" button should be displayed based on user role and fiche state
+   * Business Rules:
+   * - EMETTEUR: Can transmit only DRAFT fiches (creation or draft editing)
+   * - ADMIN/RELATIONS_EVS: Can always transmit when in form (creation or editing)
+   * - Other roles: Cannot transmit
+   *
+   * @returns {boolean} True if the button should be visible
+   */
+  const canShowTransmitButton = () => {
+    const userRole = user?.role ?? user?.user?.role;
+    const ficheState = initialData?.state;
+
+    // EMETTEUR: Can only transmit DRAFT fiches
+    if (userRole === 'EMETTEUR') {
+      return ficheState === 'DRAFT' || !initialData?.id; // New fiche or draft fiche
+    }
+
+    // ADMIN and RELATIONS_EVS: Can always transmit when editing (new or existing fiche)
+    if (userRole === 'ADMIN' || userRole === 'RELATIONS_EVS') {
+      return true;
+    }
+
+    // All other roles (EVS_CS, CD, SUIVI_PROJETS, etc.): Cannot transmit
+    return false;
+  };
+
   const renderReviewStep = () => (
     <div className={styles.card}>
       <h2 className={styles.cardTitle}>
@@ -2114,32 +2141,32 @@ export default function FicheForm({
               <Edit className={styles.buttonIcon} />
               Modifier
             </button>
-            
-            {/* Save button for RELATIONS_EVS and ADMIN when editing existing fiche */}
-            {['RELATIONS_EVS', 'ADMIN'].includes(user?.role ?? user?.user?.role) && initialData?.id && (
+
+            {/* Save button - visible for creation (all roles) or editing (ADMIN/RELATIONS_EVS only) */}
+            {(!initialData?.id || ['RELATIONS_EVS', 'ADMIN'].includes(user?.role ?? user?.user?.role)) && (
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className={`${styles.button} ${styles.buttonSuccess}`}
-                data-testid="button-save-modifications"
+                className={`${styles.button} ${styles.buttonSecondary}`}
+                data-testid="button-save"
               >
                 {isSaving ? (
                   <Loader2 className={`${styles.buttonIcon} ${styles.spinner}`} />
                 ) : (
                   <Save className={styles.buttonIcon} />
                 )}
-                {isSaving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                {isSaving ? 'Enregistrement...' : (initialData?.id ? 'Enregistrer les modifications' : 'Enregistrer')}
               </button>
             )}
-            
-            {/* Transmit button - hidden for RELATIONS_EVS and ADMIN (they use the transmission section on detail page) */}
-            {!['RELATIONS_EVS', 'ADMIN'].includes(user?.role ?? user?.user?.role) && (
+
+            {/* Transmit button - visible based on role-specific business rules */}
+            {canShowTransmitButton() && (
               <button
                 type="button"
                 onClick={handleTransmit}
                 disabled={isTransitioning || isSubmitting}
-                className={`${styles.button} ${styles.buttonPrimary}`}
+                className={`${styles.button} ${styles.buttonSuccess}`}
                 data-testid="button-transmit"
               >
                 {(isTransitioning || isSubmitting) ? (
@@ -2147,7 +2174,7 @@ export default function FicheForm({
                 ) : (
                   <Send className={styles.buttonIcon} />
                 )}
-                {(isTransitioning || isSubmitting) ? 'Transmission en cours...' : 'Transmettre'}
+                {(isTransitioning || isSubmitting) ? 'Transmission en cours...' : 'Valider et transmettre'}
               </button>
             )}
 
