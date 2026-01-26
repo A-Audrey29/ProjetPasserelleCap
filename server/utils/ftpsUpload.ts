@@ -32,9 +32,12 @@ function required(name: string, value: string | undefined): string {
 }
 
 function getFTPSConfig(): FTPSConfig {
-  // CRITICAL: In production, o2switch stores files in /uploads/uploads/
-  // In development, files are in /uploads/
-  const defaultBaseDir = process.env.NODE_ENV === 'production' ? '/uploads/uploads' : '/uploads';
+  // CRITICAL: o2switch FTP client lands at system root (/) but files are in user home directory
+  // Production: /home/kalo4499/uploads/uploads/ (absolute path on o2switch server)
+  // Development: /uploads/ (relative path or local)
+  const defaultBaseDir = process.env.NODE_ENV === 'production'
+    ? '/home/kalo4499/uploads/uploads'
+    : '/uploads';
   const baseDirEnv = process.env.FTP_BASE_DIR || defaultBaseDir;
 
   // On évite les chemins parasites "uploads/uploads"
