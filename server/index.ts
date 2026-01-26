@@ -1,6 +1,7 @@
 // Load environment variables FIRST (before any other imports)
 // dotenv-flow will load .env, .env.local, .env.{NODE_ENV}, .env.{NODE_ENV}.local
 // in order of priority, with Replit Secrets taking precedence over file-based variables
+import 'dotenv/config'; // Cette ligne charge le fichier .env dans process.env
 import fetch from 'node-fetch';
 globalThis.fetch = fetch;
 
@@ -226,11 +227,11 @@ app.use((req, res, next) => {
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
+  // Other ports are firewalled. Default to 3000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  // changement du port 5000 pour 3000 pour le faire tourner en local
-  const port = parseInt(process.env.PORT || "5000", 10);
+  // changement du port 3000 pour 3000 pour le faire tourner en local
+  const port = parseInt(process.env.PORT || "3000", 10);
   server.listen(
     {
       port,
