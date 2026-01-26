@@ -250,11 +250,6 @@ export async function downloadFile(
 
   const remotePath = `${cfg.baseDir}/${subfolder}/${filename}`.replace(/\/{2,}/g, "/");
 
-  console.log('📍 FTP_BASE_DIR:', cfg.baseDir);
-  console.log('📍 Subfolder:', subfolder);
-  console.log('📍 Filename:', filename);
-  console.log('📍 Chemin FTPS construit:', remotePath);
-
   try {
     await client.access({
       host: cfg.host,

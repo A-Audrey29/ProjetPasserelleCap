@@ -3,8 +3,40 @@ import { storage } from '../storage';
 import { ErrorCodes } from '../utils/errorCodes';
 
 /**
+ * Normalize URL to relative pathname format for consistent comparison
+ * Handles both absolute URLs (legacy DB entries) and relative URLs (new entries)
+ *
+ * @param url - URL string (absolute or relative)
+ * @returns Normalized relative pathname (e.g., "/uploads/navettes/uuid.pdf")
+ *
+ * @example
+ * normalizeUrl("https://domain.com/uploads/navettes/uuid.pdf") → "/uploads/navettes/uuid.pdf"
+ * normalizeUrl("/uploads/navettes/uuid.pdf") → "/uploads/navettes/uuid.pdf"
+ */
+function normalizeUrl(url: string | null | undefined): string {
+  if (!url) return '';
+
+  // If URL is absolute (starts with http:// or https://), extract pathname
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const parsed = new URL(url);
+      return parsed.pathname; // Extract path only: "/uploads/navettes/uuid.pdf"
+    } catch (error) {
+      // If URL parsing fails, return as-is (defensive programming)
+      console.warn(`[uploadSecurity] Failed to parse absolute URL: ${url}`);
+      return url;
+    }
+  }
+
+  // Already relative, return as-is
+  return url;
+}
+
+/**
  * Middleware to protect uploaded files with RBAC
  * Checks if the authenticated user has access to the fiche associated with the requested file
+ *
+ * BACKWARD COMPATIBLE: Handles both absolute URLs (legacy DB) and relative URLs (new standard)
  */
 export async function protectUploadAccess(req: Request, res: Response, next: NextFunction) {
   try {
@@ -19,28 +51,32 @@ export async function protectUploadAccess(req: Request, res: Response, next: Nex
       throw error;
     }
 
-    const fileUrl = `/uploads/${subfolder}/${filename}`;
-    
+    // Construct RELATIVE URL for comparison (normalized format)
+    const requestedFileUrl = `/uploads/${subfolder}/${filename}`;
+
     // Find which fiche this file belongs to by checking database directly
+    // BACKWARD COMPATIBLE: Normalize DB URLs to handle both absolute (legacy) and relative (new) formats
     const allFiches = await storage.getAllFiches();
-    
+
     let ownerFiche = null;
     for (const fiche of allFiches) {
       // Get full fiche details to check all fields
       const fullFiche = await storage.getFiche(fiche.id);
       if (!fullFiche) continue;
-      
-      // Check contractCommunePdfUrl
-      if ((fullFiche as any).contractCommunePdfUrl === fileUrl) {
+
+      // Check contractCommunePdfUrl (normalize for comparison)
+      const contractUrl = normalizeUrl((fullFiche as any).contractCommunePdfUrl);
+      if (contractUrl && contractUrl === requestedFileUrl) {
         ownerFiche = fullFiche;
         break;
       }
-      
+
       // Check capDocuments (JSON array)
       if ((fullFiche as any).capDocuments) {
         const docs = Array.isArray((fullFiche as any).capDocuments) ? (fullFiche as any).capDocuments : [];
         for (const doc of docs) {
-          if (doc?.url === fileUrl) {
+          const docUrl = normalizeUrl(doc?.url);
+          if (docUrl && docUrl === requestedFileUrl) {
             ownerFiche = fullFiche;
             break;
           }
@@ -53,7 +89,8 @@ export async function protectUploadAccess(req: Request, res: Response, next: Nex
     if (!ownerFiche) {
       const enrollments = await storage.getWorkshopEnrollments({});
       for (const enrollment of enrollments) {
-        if ((enrollment as any).reportUrl === fileUrl) {
+        const reportUrl = normalizeUrl((enrollment as any).reportUrl);
+        if (reportUrl && reportUrl === requestedFileUrl) {
           // Get the fiche associated with this enrollment
           const fiche = await storage.getFiche(enrollment.ficheId);
           if (fiche) {

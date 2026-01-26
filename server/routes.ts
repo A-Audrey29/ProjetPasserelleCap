@@ -1190,19 +1190,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Aucun fichier fourni" });
         }
 
+        // URL RELATIVE for DB consistency (backward-compatible with middleware)
         const fileUrl = `/uploads/navettes/${req.file.filename}`;
 
         // --- Envoi FTPS vers O2Switch (fiches navettes) ---
         const localPath = path.join(uploadsNavettes, req.file.filename);
         const result = await uploadNavette(localPath, req.file.filename);
         const ftpsOk = result.success;
-        const publicUrl = ftpsOk
-          ? `https://projetcap.feves971.fr/uploads/navettes/${req.file.filename}`
-          : `/uploads/navettes/${req.file.filename}`;
 
+        // Log FTPS upload status for monitoring
+        if (!ftpsOk && process.env.NODE_ENV === "production") {
+          console.warn(`⚠️ [FTPS] Upload failed for ${req.file.filename} - file available locally as fallback`);
+        }
 
         res.json({
-          url: publicUrl,
+          url: fileUrl,
           name: req.file.originalname,
           mime: req.file.mimetype,
           size: req.file.size,
@@ -2285,19 +2287,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const filename = req.file.filename;
+        // URL RELATIVE for DB consistency (backward-compatible with middleware)
         const fileUrl = `/uploads/navettes/${filename}`;
         const localFilePath = path.join(uploadsNavettes, filename);
 
         // Upload vers o2switch via FTPS (uniquement en production)
-        console.log(`[DEBUG] Chemin du fichier local : ${localFilePath}`);
         const result = await uploadNavette(localFilePath, filename);
         const ftpsSuccess = result.success;
 
-
-        // En production, logger les échecs FTPS
+        // En production, logger les échecs FTPS pour monitoring
         if (!ftpsSuccess && process.env.NODE_ENV === "production") {
-          console.error(
-            `⚠️ [FTPS] Échec du transfert FTPS pour ${filename} - Le fichier reste disponible localement comme fallback`,
+          console.warn(
+            `⚠️ [FTPS] Upload failed for ${filename} - file available locally as fallback`,
           );
         }
 
@@ -2676,46 +2677,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const filename = req.file.filename;
+        // URL RELATIVE for DB consistency (backward-compatible with middleware)
         const fileUrl = `/uploads/bilans/${filename}`;
         const localFilePath = path.join(uploadsBilans, filename);
 
         // Upload vers o2switch via FTPS (uniquement en production)
-        console.log(`[DEBUG] Chemin du fichier local : ${localFilePath}`);
         const result = await uploadBilan(localFilePath, filename);
         const ftpsSuccess = result.success;
 
-
-        // URL finale : O2Switch si transfert OK, sinon fallback local
-        const publicUrl = ftpsSuccess
-          ? `https://projetcap.feves971.fr/uploads/bilans/${filename}`
-          : fileUrl;
-
-
-        // En production, logger les échecs FTPS
+        // En production, logger les échecs FTPS pour monitoring
         if (!ftpsSuccess && process.env.NODE_ENV === "production") {
-          console.error(
-            `⚠️ [FTPS] Échec du transfert FTPS pour ${filename} - Le fichier reste disponible localement comme fallback`,
+          console.warn(
+            `⚠️ [FTPS] Upload failed for ${filename} - file available locally as fallback`,
           );
         }
 
+        // Store RELATIVE URL in database (consistent with middleware expectations)
         const updatedEnrollment = await storage.uploadEnrollmentReport(
           enrollmentId,
           fileUrl,
           userId,
         );
 
+        // Cleanup local file after successful FTPS upload in production
         if (process.env.NODE_ENV === "production" && ftpsSuccess) {
           try {
             fs.unlinkSync(localFilePath);
           } catch (e) {
-            console.warn("⚠️ Impossible de supprimer le fichier local après upload :", e.message);
+            console.warn(`⚠️ Unable to delete local file after upload: ${e.message}`);
           }
         }
 
         res.json({
           success: true,
           message: "Bilan uploadé avec succès",
-          reportUrl: publicUrl,
+          reportUrl: fileUrl,
           enrollment: updatedEnrollment,
           warning:
             !ftpsSuccess && process.env.NODE_ENV === "production"
