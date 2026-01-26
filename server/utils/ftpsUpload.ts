@@ -275,6 +275,22 @@ export async function downloadFile(
     const currentDir = await client.pwd();
     console.log(`[FTPS] 📍 Current Working Directory (where the client landed): ${currentDir}`);
 
+    // List root directory to understand FTP server structure
+    try {
+      const rootList = await client.list('/');
+      console.log('[FTPS] 🏁 LISTING ROOT / :', JSON.stringify(rootList.map(i => i.name)));
+    } catch (rootErr: any) {
+      console.log(`[FTPS] ⚠️ Failed to list root /: ${rootErr.message}`);
+    }
+
+    // List /uploads directory to check if it exists at root level
+    try {
+      const uploadsList = await client.list('/uploads');
+      console.log('[FTPS] 🏁 LISTING /uploads :', JSON.stringify(uploadsList.map(i => i.name)));
+    } catch (uploadsErr: any) {
+      console.log(`[FTPS] ⚠️ Failed to list /uploads: ${uploadsErr.message}`);
+    }
+
     // Parse remote path for directory listing
     const dir = path.posix.dirname(remotePath);
     const name = path.posix.basename(remotePath);
