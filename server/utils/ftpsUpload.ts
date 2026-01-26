@@ -267,9 +267,41 @@ export async function downloadFile(
       secureOptions: cfg.secureOptions,
     });
 
-    // Check if file exists and get size
+    // === FORENSIC LOGGING START ===
+    // Show where FTP client landed after connection
+    const currentDir = await client.pwd();
+    console.log(`[FTPS] 📍 Current Working Directory (where the client landed): ${currentDir}`);
+
+    // Parse remote path for directory listing
     const dir = path.posix.dirname(remotePath);
     const name = path.posix.basename(remotePath);
+
+    console.log(`[FTPS] 📂 Target directory: ${dir}`);
+    console.log(`[FTPS] 📄 Target filename: ${name}`);
+    console.log(`[FTPS] 🎯 Full remote path: ${remotePath}`);
+
+    // List directory contents to verify file visibility
+    try {
+      console.log(`[FTPS] 📋 Listing directory contents of: ${dir}`);
+      const dirListing = await client.list(dir);
+      console.log(`[FTPS] 📋 Found ${dirListing.length} items in ${dir}:`);
+      dirListing.forEach(item => {
+        console.log(`   - ${item.name} (${item.size} bytes, type: ${item.type})`);
+      });
+
+      const targetFile = dirListing.find(f => f.name === name);
+      if (targetFile) {
+        console.log(`[FTPS] ✅ Target file FOUND in listing: ${name} (${targetFile.size} bytes)`);
+      } else {
+        console.log(`[FTPS] ❌ Target file NOT FOUND in listing: ${name}`);
+        console.log(`[FTPS] 💡 Available files: ${dirListing.map(f => f.name).join(', ')}`);
+      }
+    } catch (listErr: any) {
+      console.log(`[FTPS] ⚠️ Failed to list directory ${dir}: ${listErr.message}`);
+    }
+    // === FORENSIC LOGGING END ===
+
+    // Check if file exists and get size
     
     let fileSize: number | undefined;
     try {
