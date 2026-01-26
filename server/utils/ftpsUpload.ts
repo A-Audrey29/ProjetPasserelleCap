@@ -291,6 +291,15 @@ export async function downloadFile(
       console.log(`[FTPS] ⚠️ Failed to list /uploads: ${uploadsErr.message}`);
     }
 
+    // List /navettes directory at root level to check if files are stored there directly
+    try {
+      const rootNavettesList = await client.list('/navettes');
+      const rootNavettesFilenames = rootNavettesList.map(i => i.name);
+      console.log(`[FTPS] 🏁 LISTING ROOT /navettes : ${JSON.stringify(rootNavettesFilenames)}`);
+    } catch (navettesErr: any) {
+      console.log(`[FTPS] ⚠️ Failed to list /navettes: ${navettesErr.message}`);
+    }
+
     // Parse remote path for directory listing
     const dir = path.posix.dirname(remotePath);
     const name = path.posix.basename(remotePath);
