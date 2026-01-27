@@ -161,18 +161,18 @@ h3, .h3 {
 .input-field {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid rgb(var(--border));
   border-radius: var(--radius);
   font-size: 14px;
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
   font-family: var(--font-sans);
 }
 
 .input-field:focus {
   outline: none;
-  border-color: hsl(var(--ring));
-  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+  border-color: rgb(var(--ring));
+  box-shadow: 0 0 0 2px rgb(var(--ring) / 0.2);
 }
 
 .input-field:disabled {
@@ -182,8 +182,8 @@ h3, .h3 {
 
 /* Card component - 8px radius as specified */
 .card {
-  background-color: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
   border-radius: var(--radius);
   padding: 16px;
   box-shadow: var(--shadow-sm);
@@ -204,33 +204,33 @@ h3, .h3 {
 
 /* Status colors matching the exact design states */
 .status-draft { 
-  background-color: hsl(var(--muted)); 
-  color: hsl(var(--muted-foreground)); 
+  background-color: rgb(var(--muted)); 
+  color: rgb(var(--muted-foreground)); 
 }
 
 .status-submitted { 
-  background-color: hsl(var(--warning)); 
-  color: hsl(var(--warning-foreground)); 
+  background-color: rgb(var(--warning)); 
+  color: rgb(var(--warning-foreground)); 
 }
 
 .status-assigned { 
-  background-color: hsl(var(--accent)); 
-  color: hsl(var(--accent-foreground)); 
+  background-color: rgb(var(--accent)); 
+  color: rgb(var(--accent-foreground)); 
 }
 
 .status-accepted { 
-  background-color: hsl(var(--success)); 
-  color: hsl(var(--success-foreground)); 
+  background-color: rgb(var(--success)); 
+  color: rgb(var(--success-foreground)); 
 }
 
 .status-rejected { 
-  background-color: hsl(var(--destructive)); 
-  color: hsl(var(--destructive-foreground)); 
+  background-color: rgb(var(--destructive)); 
+  color: rgb(var(--destructive-foreground)); 
 }
 
 .status-closed { 
-  background-color: hsl(var(--primary)); 
-  color: hsl(var(--primary-foreground)); 
+  background-color: rgb(var(--primary)); 
+  color: rgb(var(--primary-foreground)); 
 }
 
 /* Timeline component styles */
@@ -248,7 +248,7 @@ h3, .h3 {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: hsl(var(--primary));
+  background-color: rgb(var(--primary));
 }
 
 .timeline-item:not(:last-child)::after {
@@ -258,27 +258,27 @@ h3, .h3 {
   top: 16px;
   width: 2px;
   height: calc(100% - 8px);
-  background-color: hsl(var(--border));
+  background-color: rgb(var(--border));
 }
 
 .timeline-item.timeline-current::before {
-  background-color: hsl(var(--primary));
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
+  background-color: rgb(var(--primary));
+  box-shadow: 0 0 0 3px rgb(var(--primary) / 0.2);
 }
 
 .timeline-item.timeline-completed::before {
-  background-color: hsl(var(--success));
+  background-color: rgb(var(--success));
 }
 
 .timeline-item.timeline-pending::before {
-  background-color: hsl(var(--muted-foreground));
+  background-color: rgb(var(--muted-foreground));
 }
 
 /* Layout components */
 .sidebar {
   width: 250px;
-  background-color: hsl(var(--card));
-  border-right: 1px solid hsl(var(--border));
+  background-color: rgb(var(--card));
+  border-right: 1px solid rgb(var(--border));
   height: 100vh;
   position: fixed;
   left: 0;
@@ -297,7 +297,7 @@ h3, .h3 {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  color: hsl(var(--foreground));
+  color: rgb(var(--foreground));
   text-decoration: none;
   border-radius: var(--radius);
   margin: 4px 8px;
@@ -306,8 +306,8 @@ h3, .h3 {
 }
 
 .nav-link:hover, .nav-link.active {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  background-color: rgb(var(--accent));
+  color: rgb(var(--accent-foreground));
 }
 
 .nav-icon {
@@ -417,24 +417,24 @@ h3, .h3 {
 .text-left { text-align: left; }
 .text-right { text-align: right; }
 
-.border { border: 1px solid hsl(var(--border)); }
-.border-b { border-bottom: 1px solid hsl(var(--border)); }
-.border-t { border-top: 1px solid hsl(var(--border)); }
+.border { border: 1px solid rgb(var(--border)); }
+.border-b { border-bottom: 1px solid rgb(var(--border)); }
+.border-t { border-top: 1px solid rgb(var(--border)); }
 .border-dashed { border-style: dashed; }
 .border-2 { border-width: 2px; }
 
 .rounded { border-radius: var(--radius); }
 .rounded-md { border-radius: calc(var(--radius) - 2px); }
 
-.bg-muted { background-color: hsl(var(--muted)); }
-.bg-accent { background-color: hsl(var(--accent)); }
+.bg-muted { background-color: rgb(var(--muted)); }
+.bg-accent { background-color: rgb(var(--accent)); }
 
-.text-primary { color: hsl(var(--primary)); }
-.text-success { color: hsl(var(--success)); }
-.text-warning { color: hsl(var(--warning)); }
-.text-destructive { color: hsl(var(--destructive)); }
-.text-muted-foreground { color: hsl(var(--muted-foreground)); }
-.text-foreground { color: hsl(var(--foreground)); }
+.text-primary { color: rgb(var(--primary)); }
+.text-success { color: rgb(var(--success)); }
+.text-warning { color: rgb(var(--warning)); }
+.text-destructive { color: rgb(var(--destructive)); }
+.text-muted-foreground { color: rgb(var(--muted-foreground)); }
+.text-foreground { color: rgb(var(--foreground)); }
 
 .cursor-pointer { cursor: pointer; }
 .opacity-50 { opacity: 0.5; }
@@ -460,8 +460,8 @@ h3, .h3 {
 .transition-colors { transition: color 0.2s ease, background-color 0.2s ease; }
 
 .hover\:shadow-md:hover { box-shadow: var(--shadow-md); }
-.hover\:bg-muted\/50:hover { background-color: hsl(var(--muted) / 0.5); }
-.hover\:text-foreground:hover { color: hsl(var(--foreground)); }
+.hover\:bg-muted\/50:hover { background-color: rgb(var(--muted) / 0.5); }
+.hover\:text-foreground:hover { color: rgb(var(--foreground)); }
 
 .max-w-md { max-width: 28rem; }
 .max-w-2xl { max-width: 42rem; }
@@ -472,7 +472,7 @@ h3, .h3 {
 
 /* Custom component styles for the application */
 .demo-accounts {
-  background-color: hsl(var(--muted));
+  background-color: rgb(var(--muted));
   border-radius: var(--radius);
   padding: 1rem;
   margin-top: 1.5rem;
@@ -485,17 +485,17 @@ h3, .h3 {
 
 /* File upload area styling */
 .upload-area {
-  border: 2px dashed hsl(var(--border));
+  border: 2px dashed rgb(var(--border));
   border-radius: var(--radius);
   padding: 2rem;
   text-align: center;
   transition: border-color 0.2s ease;
-  background-color: hsl(var(--background));
+  background-color: rgb(var(--background));
 }
 
 .upload-area:hover {
-  border-color: hsl(var(--ring));
-  background-color: hsl(var(--muted) / 0.3);
+  border-color: rgb(var(--ring));
+  background-color: rgb(var(--muted) / 0.3);
 }
 
 /* Animation utilities */
@@ -526,7 +526,7 @@ h3, .h3 {
 
 /* Focus styles for accessibility */
 *:focus-visible {
-  outline: 2px solid hsl(var(--ring));
+  outline: 2px solid rgb(var(--ring));
   outline-offset: 2px;
 }
 
@@ -544,15 +544,15 @@ table td {
 
 /* Ensure proper contrast for all text */
 .contrast-text {
-  color: hsl(var(--foreground));
+  color: rgb(var(--foreground));
 }
 
 /* Loading states */
 .loading-spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid hsl(var(--muted));
-  border-top: 2px solid hsl(var(--primary));
+  border: 2px solid rgb(var(--muted));
+  border-top: 2px solid rgb(var(--primary));
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -564,13 +564,13 @@ table td {
 }
 
 /* Special emphasis colors for specific use cases */
-.text-obj1 { color: hsl(var(--primary)); }
-.text-obj2 { color: hsl(var(--success)); }
+.text-obj1 { color: rgb(var(--primary)); }
+.text-obj2 { color: rgb(var(--success)); }
 .text-obj3 { color: hsl(59 75 97); /* Dark blue consistent with theme */ }
 
-.bg-obj1 { background-color: hsl(var(--primary)); }
-.bg-obj2 { background-color: hsl(var(--success)); }
-.bg-obj3 { background-color: hsl(var(--warning)); }
+.bg-obj1 { background-color: rgb(var(--primary)); }
+.bg-obj2 { background-color: rgb(var(--success)); }
+.bg-obj3 { background-color: rgb(var(--warning)); }
 
 /* Print styles */
 @media print {
