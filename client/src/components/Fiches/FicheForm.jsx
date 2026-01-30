@@ -1617,12 +1617,15 @@ export default function FicheForm({
       hasErrors = true;
     }
 
-    // Check that CAP document PDF is uploaded
+    // Check that CAP document PDF is uploaded (SKIPPED in development mode)
     console.log("✅ Documents CAP:", formData.capDocuments);
-    if (!formData.capDocuments || formData.capDocuments.length === 0) {
+    const isDevMode = import.meta.env.DEV;
+    if (!isDevMode && (!formData.capDocuments || formData.capDocuments.length === 0)) {
       console.log("❌ ERREUR: Aucun document CAP uploadé");
       setFieldError('capDocuments', 'Vous devez télécharger la fiche navette CAP (PDF) avant de transmettre');
       hasErrors = true;
+    } else if (isDevMode && (!formData.capDocuments || formData.capDocuments.length === 0)) {
+      console.log("⚠️ DEV MODE: Document CAP non uploadé, mais validation skippée");
     }
 
     // Run all step validations to show field-specific errors
