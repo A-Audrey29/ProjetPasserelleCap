@@ -857,8 +857,8 @@ export default function FicheDetail({ ficheId }) {
       case 'edit':
         // ADMIN can edit any fiche
         if (userRole === 'ADMIN') return true;
-        // RELATIONS_EVS can edit fiches in SUBMITTED_TO_FEVES state
-        if (userRole === 'RELATIONS_EVS' && fiche.state === 'SUBMITTED_TO_FEVES') return true;
+        // RELATIONS_EVS can edit any fiche (no state restriction)
+        if (userRole === 'RELATIONS_EVS') return true;
         // EMETTEUR can edit their own DRAFT fiches
         const currentUserId = user?.id ?? user?.user?.id;
         return fiche.state === 'DRAFT' && fiche.emitterId === currentUserId;
