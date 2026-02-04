@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiches } from '@/hooks/useFiches';
+import { apiRequest } from '@/lib/queryClient';
 import Header from '@/components/Layout/Header';
 import Footer from '@/components/Layout/Footer';
 import FicheForm from '@/components/Fiches/FicheForm';
@@ -15,10 +16,11 @@ export default function FicheCreation() {
   const params = useParams();
   const ficheId = params.id; // Will be undefined for new fiches
   const isEditMode = !!ficheId;
-  
+
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { createFiche, updateFiche } = useFiches();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Query for existing fiche data if in edit mode
   const { data: existingFiche, isLoading: ficheLoading } = useQuery({
@@ -69,28 +71,42 @@ export default function FicheCreation() {
     try {
       let fiche;
       if (isEditMode) {
-        // Update existing fiche as draft
+        // Update existing fiche as draft - use direct API call like handleSave
         const ficheData = { ...formData, state: 'DRAFT' };
-        fiche = await updateFiche({ id: ficheId, data: ficheData });
+        const response = await apiRequest('PATCH', `/api/fiches/${ficheId}`, ficheData);
+        fiche = await response.json();
+
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['/api/fiches', ficheId] });
+        queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/fiches' });
+
+        toast({
+          title: "Brouillon sauvegardé",
+          description: `La fiche ${fiche.ref} a été sauvegardée en brouillon`,
+          variant: "default"
+        });
+        // Don't redirect - stay on edit page for further modifications
+        return fiche;
       } else {
-        // Save as draft by setting state to DRAFT
+        // Save new draft - use createFiche mutation
         const ficheData = { ...formData, state: 'DRAFT' };
         fiche = await createFiche(ficheData);
+        toast({
+          title: "Brouillon sauvegardé",
+          description: `La fiche ${fiche.ref} a été sauvegardée en brouillon`,
+          variant: "default"
+        });
+        // Redirect to detail page for new fiches
+        setLocation(`/fiches/${fiche.id}`);
+        return fiche;
       }
-      
-      toast({
-        title: "Brouillon sauvegardé",
-        description: `La fiche ${fiche.ref} a été sauvegardée en brouillon`,
-        variant: "default"
-      });
-
-      setLocation(`/fiches/${fiche.id}`);
     } catch (error) {
       toast({
         title: "Erreur lors de la sauvegarde",
         description: error.message || "Une erreur est survenue",
         variant: "destructive"
       });
+      throw error;
     }
   };
 

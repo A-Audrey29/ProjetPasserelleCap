@@ -69,12 +69,15 @@ export function useFiches(filters = {}) {
     onSuccess: (updatedFiche) => {
       // Update individual fiche data for immediate access
       queryClient.setQueryData(['/api/fiches', updatedFiche.id], updatedFiche);
-      
-      // Invalidate only fiche lists, not individual fiche detail queries
-      queryClient.invalidateQueries({ 
-        predicate: (query) => 
-          query.queryKey[0] === '/api/fiches' && 
-          query.queryKey.length >= 2 && 
+
+      // Invalidate the specific fiche query to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/fiches', updatedFiche.id] });
+
+      // Invalidate fiche lists (queries with query strings)
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === '/api/fiches' &&
+          query.queryKey.length >= 2 &&
           (query.queryKey[1] === '' || String(query.queryKey[1]).includes('='))
       });
     }
