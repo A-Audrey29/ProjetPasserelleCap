@@ -149,29 +149,22 @@ async function checkFicheAccess(user: any, fiche: any): Promise<boolean> {
     return true;
   }
 
-  // EMETTEUR can access fiches they created
-  if (role === 'EMETTEUR') {
-    return fiche.createdById === user.userId;
-  }
-
-  // RELATIONS_EVS can access fiches assigned to their organization
+  // RELATIONS_EVS has access to all fiches
   if (role === 'RELATIONS_EVS') {
-    if (!user.orgId) {
-      return false;
-    }
-    return fiche.assignedToOrganisationId === user.orgId;
+    return true;
   }
 
-  // EVS_CS can access fiches for families they manage
+  // EMETTEUR can only access fiches they created
+  if (role === 'EMETTEUR') {
+    return fiche.emitterId === user.userId;
+  }
+
+  // EVS_CS can only access fiches assigned to their organization
   if (role === 'EVS_CS') {
     if (!user.orgId) {
       return false;
     }
-    // Check if fiche is assigned to user's organization AND user is assigned to the fiche
-    if (fiche.assignedToOrganisationId === user.orgId) {
-      return fiche.assignedToUserId === user.userId || fiche.assignedToUserId === null;
-    }
-    return false;
+    return fiche.assignedOrgId === user.orgId;
   }
 
   return false;
