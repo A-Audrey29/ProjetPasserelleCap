@@ -239,10 +239,12 @@ const uploadReportPDF = multer({
   },
 });
 
-// Rate limiter for login attempts - 5 attempts max per 15 minutes
+// Rate limiter for login attempts
+// - Production: 5 attempts max per 15 minutes to prevent brute force attacks
+// - Development: Unlimited (9999) to facilitate testing with different user roles
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: process.env.NODE_ENV === "production" ? 5 : 9999, // Unlimited in dev
   message: {
     message:
       "Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes.",
@@ -902,11 +904,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // RELATIONS_EVS can only edit fiches in SUBMITTED_TO_FEVES state
-        if (userRole === "RELATIONS_EVS" && fiche.state !== "SUBMITTED_TO_FEVES") {
+        // RELATIONS_EVS can edit fiches in DRAFT or SUBMITTED_TO_FEVES states
+        // (they can modify draft fiches and fiches waiting for FEVES assignment)
+        if (userRole === "RELATIONS_EVS" &&
+            !["DRAFT", "SUBMITTED_TO_FEVES"].includes(fiche.state)) {
           return res
             .status(403)
-            .json({ message: "Modification interdite - La fiche doit être en attente FEVES" });
+            .json({ message: "Modification interdite - La fiche doit être en brouillon ou en attente FEVES" });
         }
         
         // Other roles (except ADMIN) cannot edit

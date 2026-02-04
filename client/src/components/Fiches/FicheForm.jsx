@@ -127,14 +127,10 @@ export default function FicheForm({
 
     const childrenData = initialData.childrenData || initialData.children || [];
 
-    // 2) set state using the mapper
-    setFormData((prev) => ({
-      ...prev,
+    // 2) Build complete new form state (no merge with prev to avoid stale data)
+    const newFormData = {
       description: initialData.description || "",
-      family: {
-        ...prev.family,
-        ...mapFamilyFromApi(familyData),
-      },
+      family: mapFamilyFromApi(familyData),
       children: childrenData.map((child) => ({
         name: child.name || child.firstName || "",
         birthYear:
@@ -150,8 +146,7 @@ export default function FicheForm({
             structure: initialData.referentData.structure || "",
             phone: initialData.referentData.phone || "",
             email: initialData.referentData.email || "",
-            requestDate:
-              initialData.referentData.requestDate || prev.referent.requestDate,
+            requestDate: initialData.referentData.requestDate || new Date().toISOString().split("T")[0],
           }
         : initialData.emitter
           ? {
@@ -162,9 +157,16 @@ export default function FicheForm({
               email: initialData.emitter.email || "",
               requestDate: initialData.createdAt
                 ? new Date(initialData.createdAt).toISOString().split("T")[0]
-                : prev.referent.requestDate,
+                : new Date().toISOString().split("T")[0],
             }
-          : prev.referent,
+          : {
+              lastName: "",
+              firstName: "",
+              structure: "",
+              phone: "",
+              email: "",
+              requestDate: new Date().toISOString().split("T")[0],
+            },
       descriptionSituation:
         initialData.description || initialData.descriptionSituation || "",
       workshopPropositions: initialData.workshopPropositions || {},
@@ -172,11 +174,21 @@ export default function FicheForm({
       capDocuments: initialData.capDocuments || [],
       familyConsent: initialData.familyConsent || false,
       referentValidation: initialData.referentValidation || false,
-    }));
+    };
+
+    // 3) Set state with complete new data (replace, don't merge)
+    setFormData(newFormData);
 
     // Initialize selectedWorkshops from saved data
     if (initialData.selectedWorkshops) {
       setSelectedWorkshops(initialData.selectedWorkshops);
+    } else {
+      setSelectedWorkshops([]);
+    }
+
+    // Initialize objectives if available
+    if (initialData.objectiveIds) {
+      // objectives are loaded separately via query, so we don't set them here
     }
   }, [initialData]);
 
@@ -1454,16 +1466,20 @@ export default function FicheForm({
         capDocuments: formData.capDocuments, // Save CAP documents
       };
 
-      // For draft fiches, save as draft
-      // For RELATIONS_EVS and ADMIN on non-draft fiches, save without changing state
-      if (isDraft) {
+      // Unified save logic: always use PATCH for existing fiches
+      // - For draft fiches, keep DRAFT state
+      // - For non-draft fiches, update without changing state
+      // - For new fiches, use onSaveDraft to create
+      if (!initialData?.id) {
+        // New fiche creation
         ficheData.state = "DRAFT";
         await onSaveDraft(ficheData);
       } else {
-        // For RELATIONS_EVS and ADMIN editing non-draft fiches, update without state change
+        // Existing fiche update - always use PATCH
         await apiRequest("PATCH", `/api/fiches/${initialData.id}`, ficheData);
-        queryClient.invalidateQueries(["/api/fiches"]);
-        queryClient.invalidateQueries(["/api/fiches", initialData.id]);
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['/api/fiches', initialData.id] });
+        queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/fiches' });
       }
 
       // Set visual feedback
