@@ -382,7 +382,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.ficheAccess.role === "EMETTEUR") {
         filters.emitterId = req.ficheAccess.userId;
       } else if (req.ficheAccess.role === "EVS_CS") {
-        // EVS users should only see fiches assigned to their organization
+        // EVS_CS users should only see fiches assigned to their organization
+        // If orgId is missing, deny access (same behavior in dev and prod)
+        if (!req.ficheAccess.orgId) {
+          return res.status(403).json({
+            message: "Accès refusé - Votre compte n'est pas associé à une organisation"
+          });
+        }
         filters.assignedOrgId = req.ficheAccess.orgId;
       }
 
@@ -472,9 +478,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Fiche non trouvée" });
         }
 
-        // Check access rights for EVS users
+        // Check access rights for EVS_CS users
         if (req.ficheAccess.role === "EVS_CS") {
-          // EVS users can access fiches assigned to their organization
+          // EVS_CS users can only access fiches assigned to their organization
+          if (!req.ficheAccess.orgId) {
+            return res.status(403).json({
+              message: "Accès refusé - Votre compte n'est pas associé à une organisation"
+            });
+          }
           if (fiche.assignedOrgId !== req.ficheAccess.orgId) {
             return res.status(403).json({ message: "Accès interdit" });
           }
