@@ -1444,27 +1444,8 @@ export default function FicheForm({
       const isRelationsEvs = userRole === "RELATIONS_EVS";
       const isDraft = currentState === "DRAFT";
 
-      // Build a dynamic mapping from the technical form id → real DB id
-      const cleanPropositions = Object.fromEntries(
-        Object.entries(formData.workshopPropositions || {}).filter(
-          ([_, v]) => (v ?? "").toString().trim()
-        )
-      );
-
-      const ficheData = {
-        description: formData.descriptionSituation || "",
-        objectiveIds: (formData.objectives || []).map((obj) => obj.id || obj),
-        // Map form data to detailed JSON fields
-        referentData: formData.referent,
-        familyDetailedData: formData.family,
-        childrenData: formData.children,
-        workshopPropositions: cleanPropositions,
-        selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
-        participantsCount: formData.participantsCount, // Save participants count for workshops
-        familyConsent: formData.familyConsent,
-        referentValidation: formData.referentValidation,
-        capDocuments: formData.capDocuments, // Save CAP documents
-      };
+      // Use the helper function to prepare fiche data
+      const ficheData = prepareFicheData();
 
       // Unified save logic: always use PATCH for existing fiches
       // - For draft fiches, keep DRAFT state
@@ -1602,6 +1583,30 @@ export default function FicheForm({
     }
   };
 
+  // Helper function to prepare fiche data for submission (reused across handleSave and handleTransmit)
+  const prepareFicheData = () => {
+    const cleanPropositions = Object.fromEntries(
+      Object.entries(formData.workshopPropositions || {}).filter(
+        ([_, v]) => (v ?? "").toString().trim()
+      )
+    );
+
+    return {
+      description: formData.descriptionSituation || "",
+      objectiveIds: (formData.objectives || []).map((obj) => obj.id || obj),
+      // Map form data to detailed JSON fields
+      referentData: formData.referent,
+      familyDetailedData: formData.family,
+      childrenData: formData.children,
+      workshopPropositions: cleanPropositions,
+      selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
+      participantsCount: formData.participantsCount, // Save participants count for workshops
+      familyConsent: formData.familyConsent,
+      referentValidation: formData.referentValidation,
+      capDocuments: formData.capDocuments, // Save CAP documents
+    };
+  };
+
   const handleTransmit = async () => {
     // Prevent double submissions
     if (isSubmitting || isTransitioning) {
@@ -1703,9 +1708,28 @@ export default function FicheForm({
     try {
       let ficheId;
 
-      // If we have an existing fiche (initialData with id), transition its state
+      // If we have an existing fiche (initialData with id), save changes first then transition
       if (initialData && initialData.id) {
         ficheId = initialData.id;
+
+        // STEP 1: Save form data before transition (fixes data loss bug)
+        console.log("📝 STEP 1: Sauvegarde des modifications du formulaire...");
+        const ficheData = prepareFicheData();
+
+        try {
+          await apiRequest("PATCH", `/api/fiches/${initialData.id}`, ficheData);
+          console.log("✅ Modifications sauvegardées avec succès");
+
+          // Invalidate queries to ensure fresh data
+          queryClient.invalidateQueries({ queryKey: ['/api/fiches', initialData.id] });
+          queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/fiches' });
+        } catch (saveError) {
+          console.error("❌ Erreur lors de la sauvegarde des modifications:", saveError);
+          throw new Error("Impossible de sauvegarder les modifications. Veuillez réessayer.");
+        }
+
+        // STEP 2: Transition the fiche state
+        console.log("📤 STEP 2: Transition de la fiche vers SUBMITTED_TO_FEVES...");
         await transitionFiche({
           id: initialData.id,
           newState: "SUBMITTED_TO_FEVES",
@@ -1714,44 +1738,28 @@ export default function FicheForm({
             transmissionDate: new Date().toISOString(),
           },
         });
+        console.log("✅ Transition effectuée avec succès");
       } else {
+        // New fiche creation flow
         if (!onSubmit) {
           throw new Error("onSubmit prop is required to create a new fiche.");
         }
 
-        const cleanPropositions = Object.fromEntries(
-          Object.entries(formData.workshopPropositions || {}).filter(
-            ([_, v]) => (v ?? "").toString().trim()
-          )
-        );
-
-        const ficheData = {
-          description:
-            formData.description || formData.descriptionSituation || "",
-          // Map form data to detailed JSON fields
-          referentData: formData.referent,
-          familyDetailedData: formData.family,
-          childrenData: formData.children,
-          workshopPropositions: cleanPropositions,
-          selectedWorkshops: selectedWorkshops, // Save selected workshops (checkboxes)
-          participantsCount: formData.participantsCount, // Save participants count for workshops
-          familyConsent: formData.familyConsent,
-          referentValidation: formData.referentValidation,
-          capDocuments: formData.capDocuments, // Save CAP documents
-        };
-
+        const ficheData = prepareFicheData();
 
         // Create the fiche as DRAFT
+        console.log("📝 Création d'une nouvelle fiche...");
         const newFiche = await onSubmit(ficheData);
 
         if (!newFiche || !newFiche.id) {
-          // Don’t hard-crash; allow transition + redirect fallback to list.
+          // Don't hard-crash; allow transition + redirect fallback to list.
           console.warn("onSubmit returned no id. Value was:", newFiche);
         } else {
           ficheId = newFiche.id;
         }
 
         // Then transition it to SUBMITTED_TO_FEVES (nouveau workflow)
+        console.log("📤 Transition de la nouvelle fiche vers SUBMITTED_TO_FEVES...");
         await transitionFiche({
           id: ficheId || newFiche?.id,
           newState: "SUBMITTED_TO_FEVES",
@@ -1760,6 +1768,7 @@ export default function FicheForm({
             transmissionDate: new Date().toISOString(),
           },
         });
+        console.log("✅ Transition effectuée avec succès");
       }
 
       toast({
