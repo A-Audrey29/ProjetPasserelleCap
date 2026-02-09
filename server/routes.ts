@@ -2089,7 +2089,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard stats
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
-      const allFiches = await storage.getAllFiches();
+      // Apply role-based filtering for statistics (same logic as /api/fiches)
+      const userRole = req.user.role;
+      const userOrgId = req.user.orgId;
+      const userId = req.user.userId;
+
+      let filters = {};
+
+      if (userRole === "EMETTEUR") {
+        // EMETTEUR: Only see their own fiches
+        filters.emitterId = userId;
+      } else if (userRole === "EVS_CS") {
+        // EVS_CS: Only see fiches assigned to their organization
+        if (!userOrgId) {
+          return res.status(403).json({
+            message: "Accès refusé - Votre compte n'est pas associé à une organisation"
+          });
+        }
+        filters.assignedOrgId = userOrgId;
+      }
+      // ADMIN, RELATIONS_EVS, CD, SUIVI_PROJETS: See all fiches (no filter)
+
+      const allFiches = await storage.getAllFiches(filters);
 
       // Calculate basic stats
       const activeFiches = allFiches.filter(
