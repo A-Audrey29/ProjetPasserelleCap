@@ -331,6 +331,8 @@ export class DatabaseStorage implements IStorage {
     evsUserId?: string;
     search?: string;
   }): Promise<FicheNavette[]> {
+    console.log("🔍 [DEBUG] getAllFiches - Filters received:", filters);
+
     let query: any = db.select().from(ficheNavettes);
     
     const conditions = [];
