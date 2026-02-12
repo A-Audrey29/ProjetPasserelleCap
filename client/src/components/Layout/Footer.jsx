@@ -7,6 +7,9 @@ export default function Footer() {
   return (
     <footer className={styles.footer} data-testid="footer">
       <div className={styles.container}>
+        <div className={styles.copyright}>
+          By Selfie Me Digital Concept
+        </div>
         <div className={styles.legalLinks}>
           <Link
             href="/mentions-legales"
@@ -22,9 +25,6 @@ export default function Footer() {
           >
             Politique de confidentialité
           </Link>
-          <span className={styles.copyright}>
-            By Selfie Me Digital Concept
-          </span>
         </div>
       </div>
     </footer>

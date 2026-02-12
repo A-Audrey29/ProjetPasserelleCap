@@ -11,6 +11,11 @@
   max-width: 80rem;
   margin: 0 auto;
   padding: 1.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 @media (min-width: 640px) {
@@ -27,7 +32,7 @@
 
 .legalLinks {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   gap: 2rem;
   flex-wrap: wrap;
@@ -57,15 +62,27 @@
   font-size: 0.875rem;
   color: rgba(245, 246, 247, 0.7);
   margin: 0;
+  text-align: left;
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
+  .container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .legalLink {
     font-size: 0.8125rem;
   }
-  
+
   .legalLinks {
     gap: 1.5rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .copyright {
+    width: 100%;
   }
 }
