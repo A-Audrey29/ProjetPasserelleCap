@@ -341,10 +341,14 @@ export class DatabaseStorage implements IStorage {
       // Filtering by EVS user is currently not implemented since organizations do not track user assignments
     }
     if (filters?.search) {
+      // Use ilike for case-insensitive search (PostgreSQL)
+      const searchPattern = `%${filters.search}%`;
       conditions.push(
         or(
-          like(ficheNavettes.ref, `%${filters.search}%`),
-          like(ficheNavettes.description, `%${filters.search}%`)
+          ilike(ficheNavettes.ref, searchPattern),
+          ilike(ficheNavettes.description, searchPattern),
+          // Search in familyDetailedData.code field (JSON)
+          sql`CAST(${ficheNavettes.familyDetailedData}->>'code' AS VARCHAR) ILIKE ${searchPattern}`
         )
       );
     }
