@@ -58,12 +58,12 @@ export default function FilterBar({
           </select>
         </div>
         
-        {userRole !== 'EMETTEUR' && (
+        {userRole !== 'EMETTEUR' && userRole !== 'EVS_CS' && (
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel}>
               EVS/CS
             </label>
-            <select 
+            <select
               className={styles.selectInput}
               value={filters.assignedOrgId || ''}
               onChange={(e) => handleFilterChange('assignedOrgId', e.target.value)}
