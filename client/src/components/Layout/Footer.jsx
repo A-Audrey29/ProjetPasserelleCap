@@ -24,11 +24,11 @@ export default function Footer() {
           </Link>
         </div>
 
-        {/* <div className={styles.bottom}>
+        <div className={styles.bottom}>
           <p className={styles.copyright}>
-            © {currentYear} SELFIE ME - Tous droits réservés
+            By Selfie Me Digital Concept
           </p>
-        </div> */}
+        </div>
       </div>
     </footer>
   );
