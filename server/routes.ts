@@ -2094,8 +2094,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userOrgId = req.user.orgId;
       const userId = req.user.userId;
 
-      console.log("📊 [DEBUG] /api/dashboard/stats - User:", { userRole, userOrgId, userId });
-
       let filters = {};
 
       if (userRole === "EMETTEUR") {
@@ -2113,8 +2111,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // ADMIN, RELATIONS_EVS, CD, SUIVI_PROJETS: See all fiches (no filter)
 
       const allFiches = await storage.getAllFiches(filters);
-
-      console.log("📊 [DEBUG] /api/dashboard/stats - Fiches returned:", allFiches.length, "Total vs filtered");
 
       // Calculate basic stats
       const activeFiches = allFiches.filter(
