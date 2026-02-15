@@ -10,7 +10,7 @@
 
 **Adresse du siège social** : 28 rue Léon Blum, 97111 Morne-à-l’Eau
 
-**Contact** : cap-projet@fevesguadeloupeetsaint.org
+**Contact** : cap-cd@fevesguadeloupeetsaint.org
 
 **Directeur de la publication** : Françoise GACE (Présidente)
 
@@ -54,7 +54,7 @@ Pour plus d'informations, consultez notre [Politique de confidentialité](/polit
 ### Exercice des droits
 
 Pour exercer vos droits (accès, rectification, effacement, opposition, limitation), contactez-nous à :
-cap-projet@fevesguadeloupeetsaint.org
+cap-cd@fevesguadeloupeetsaint.org
 
 Vous pouvez également introduire une réclamation auprès de la CNIL : [www.cnil.fr](https://www.cnil.fr)
 

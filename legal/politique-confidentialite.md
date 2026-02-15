@@ -8,7 +8,7 @@ Le responsable du traitement des données est :
 
 **FEVES - Fédération des espaces et des centres sociaux de Guadeloupe et Saint-Martin (FEVES)**  
 28 rue Léon Blum, 97111 Morne-à-l’Eau  
-cap-projet@fevesguadeloupeetsaint.org
+cap-cd@fevesguadeloupeetsaint.org
 
 ## 2. Données collectées
 
@@ -74,7 +74,7 @@ Conformément au RGPD et à la loi Informatique et Libertés, vous disposez des 
 
 Vous pouvez exercer vos droits à tout moment en nous contactant :
 
-📧 **Par e-mail** : cap-projet@fevesguadeloupeetsaint.org  
+📧 **Par e-mail** : cap-cd@fevesguadeloupeetsaint.org  
 📬 **Par courrier postal** : 28 rue Léon Blum, 97111 Morne-à-l’Eau
 
 En cas de difficulté, vous avez également le droit d'introduire une réclamation auprès de la **CNIL** : [www.cnil.fr](https://www.cnil.fr)
