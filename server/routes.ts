@@ -1340,6 +1340,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create organization
+  app.post(
+    "/api/organizations",
+    requireAuth,
+    requireRole("ADMIN"),
+    async (req, res) => {
+      try {
+        const { name, epciId, ...rest } = req.body;
+
+        // Validate required fields
+        if (!name || !epciId) {
+          return res.status(400).json({
+            message: "Le nom et l'EPCI sont requis",
+          });
+        }
+
+        // Check for duplicate organization name
+        const existingOrg = await storage.getOrganizationByName(name);
+        if (existingOrg) {
+          return res.status(409).json({
+            message: "Une organisation avec ce nom existe déjà",
+          });
+        }
+
+        // Create the organization
+        const newOrganization = await storage.createOrganization({
+          name,
+          epciId,
+          ...rest,
+        });
+
+        res.status(201).json(newOrganization);
+      } catch (error) {
+        console.error("Create organization error:", error);
+        res.status(500).json({
+          message: "Erreur lors de la création de l'organisation",
+        });
+      }
+    },
+  );
+
   // Update organization
   app.put(
     "/api/organizations/:id",

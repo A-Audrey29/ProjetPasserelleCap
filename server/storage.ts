@@ -247,6 +247,12 @@ export class DatabaseStorage implements IStorage {
       return org || undefined;
     }
 
+    async getOrganizationByName(name: string): Promise<Organization | undefined> {
+      const [org] = await db.select().from(organizations)
+        .where(ilike(organizations.name, name));
+      return org || undefined;
+    }
+
     async upsertOrganization(insertOrg: InsertOrganization): Promise<{ organization: Organization, isNew: boolean }> {
       // Check if organization already exists
       const existing = await this.findOrganizationByNameAndEpci(insertOrg.name, insertOrg.epciId);
