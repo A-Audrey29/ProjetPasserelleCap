@@ -102,25 +102,27 @@ export default function Ateliers() {
               </select>
             </div>
 
-            <div className={styles.filterGroup}>
-              <label htmlFor="organization-filter" className={styles.filterLabel}>
-                Filtrer par structure :
-              </label>
-              <select
-                id="organization-filter"
-                value={organizationFilter}
-                onChange={(e) => setOrganizationFilter(e.target.value)}
-                className={styles.filterSelect}
-                data-testid="select-organization-filter"
-              >
-                <option value="">Toutes les structures</option>
-                {organizations.map((org) => (
-                  <option key={org.orgId} value={org.orgId}>
-                    {org.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {user?.role !== 'EVS_CS' && (
+              <div className={styles.filterGroup}>
+                <label htmlFor="organization-filter" className={styles.filterLabel}>
+                  Filtrer par structure :
+                </label>
+                <select
+                  id="organization-filter"
+                  value={organizationFilter}
+                  onChange={(e) => setOrganizationFilter(e.target.value)}
+                  className={styles.filterSelect}
+                  data-testid="select-organization-filter"
+                >
+                  <option value="">Toutes les structures</option>
+                  {organizations.map((org) => (
+                    <option key={org.orgId} value={org.orgId}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 

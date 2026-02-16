@@ -93,6 +93,23 @@ export default function Contact() {
               </div>
             </div>
 
+            {/* Contact Support Technique */}
+            <div className={styles.contactCard}>
+              <h2 className={styles.cardTitle}>
+                Contact support technique
+              </h2>
+
+              <div className={styles.contactDetails}>
+                <div className={styles.contactItem}>
+                  <Mail className={`w-5 h-5 ${styles.contactIcon}`} />
+                  <div className={styles.contactItemContent}>
+                    <p>Email</p>
+                    <p>pole-it@fevesguedeloupeetsaintmartin.org</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* MASQUÉ TEMPORAIREMENT - Section Horaires d'ouverture
             <div className={styles.contactCard}>
               <h2 className={styles.cardTitle}>

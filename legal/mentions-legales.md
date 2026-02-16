@@ -8,13 +8,13 @@
 
 **Forme juridique** : Association loi 1901
 
-**Adresse du siège social** : 28 rue Léon Blum 97111 Morne-à-l'eau
+**Adresse du siège social** : 28 rue Léon Blum, 97111 Morne-à-l’Eau
 
-**Contact** : relation-membre@fevesguadeloupeetsaint.org
+**Contact** : cap-cd@fevesguadeloupeetsaint.org
 
 **Directeur de la publication** : Françoise GACE (Présidente)
 
-**Numéro d'immatriculation** : [921 972 592 00023](https://annuaire-entreprises.data.gouv.fr/etablissement/92197259200023)
+**Numéro d'immatriculation (SIRET)** : [921 972 592 00023](https://annuaire-entreprises.data.gouv.fr/etablissement/92197259200023)
 
 **Numéro de TVA intracommunautaire** : Non applicable
 
@@ -30,17 +30,17 @@
 
 ## 3. Propriété intellectuelle
 
-Tous les contenus présents sur ce site (textes, images, vidéos, logos, etc.) sont protégés par le droit d'auteur.
+Tous les contenus présents sur la plateforme Passerelle CAP (textes, documents, logos, éléments graphiques, etc.) sont protégés par le droit d'auteur et, plus largement, par le droit de la propriété intellectuelle.
 
-Toute reproduction, distribution, modification, adaptation, retransmission ou publication de ces différents éléments est strictement interdite sans l'accord express de la FEVES.
+Toute reproduction, distribution, modification, adaptation, retransmission ou publication, totale ou partielle, est interdite sans l'accord écrit préalable de la FEVES.
 
 ## 4. Responsabilité
 
-La FEVES s'efforce d'assurer au mieux l'exactitude et la mise à jour des informations diffusées sur ce site. Toutefois, elle ne peut garantir l'exactitude, la précision ou l'exhaustivité des informations mises à disposition sur ce site.
+La FEVES s'efforce d'assurer au mieux l'exactitude et la mise à jour des informations diffusées sur la plateforme. Toutefois, elle ne peut garantir l'exactitude, la précision ou l'exhaustivité des informations mises à disposition.
 
 La FEVES ne saurait être tenue responsable :
-- Des interruptions du site et des éventuelles pannes ou dysfonctionnements
-- De l'utilisation du site par les utilisateurs
+- Des interruptions du service et des éventuelles pannes ou dysfonctionnements
+- De l'utilisation de la plateforme par les utilisateurs
 - Des liens hypertextes pointant vers d'autres sites dont elle ne maîtrise pas le contenu
 
 ## 5. Données personnelles & Cookies (RGPD)
@@ -51,22 +51,20 @@ La collecte, le traitement et la conservation des données personnelles sont eff
 
 Pour plus d'informations, consultez notre [Politique de confidentialité](/politique-confidentialite).
 
-### Droits des utilisateurs
+### Exercice des droits
 
-Conformément à la réglementation en vigueur, vous disposez des droits suivants :
-- Droit d'accès
-- Droit de rectification
-- Droit d'effacement
-- Droit d'opposition
-- Droit à la limitation du traitement
-- Droit à la portabilité
+Pour exercer vos droits (accès, rectification, effacement, opposition, limitation), contactez-nous à :
+cap-cd@fevesguadeloupeetsaint.org
 
-Pour exercer vos droits, contactez-nous à : contact@fevesdeguadeloupeetsaintmartin.org
+Vous pouvez également introduire une réclamation auprès de la CNIL : [www.cnil.fr](https://www.cnil.fr)
 
 ### Cookies
 
-Ce site utilise des cookies techniques nécessaires à son bon fonctionnement. Aucun cookie de suivi ou publicitaire n'est utilisé sans votre consentement préalable.
+La plateforme utilise des cookies techniques nécessaires à son fonctionnement et à la sécurisation des connexions.
+
+Aucun cookie de suivi ou publicitaire n'est utilisé sans votre consentement préalable.
 
 ---
 
-**Dernière mise à jour** : Octobre 2025
+**Dernière mise à jour** : Février 2026
+

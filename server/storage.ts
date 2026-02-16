@@ -9,7 +9,8 @@ import {
   type IdempotencyKey, type InsertIdempotencyKey
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, like, ilike, count, sql, inArray, lt } from "drizzle-orm";
+import { eq, and, or, desc, asc, like, ilike, count, sql, inArray, lt  } from "drizzle-orm";
+import * as DrizzlePg from "drizzle-orm/pg-core";
 
 // Type for CAP document stored in fiche
 export interface CapDocument {
@@ -246,6 +247,12 @@ export class DatabaseStorage implements IStorage {
       return org || undefined;
     }
 
+    async getOrganizationByName(name: string): Promise<Organization | undefined> {
+      const [org] = await db.select().from(organizations)
+        .where(ilike(organizations.name, name));
+      return org || undefined;
+    }
+
     async upsertOrganization(insertOrg: InsertOrganization): Promise<{ organization: Organization, isNew: boolean }> {
       // Check if organization already exists
       const existing = await this.findOrganizationByNameAndEpci(insertOrg.name, insertOrg.epciId);
@@ -331,8 +338,29 @@ export class DatabaseStorage implements IStorage {
     evsUserId?: string;
     search?: string;
   }): Promise<FicheNavette[]> {
-    let query: any = db.select().from(ficheNavettes);
-    
+    // Explicit select to avoid Ghost JOINs (nested structure from leftJoin)
+    let query = db.select({
+      // On sélectionne explicitement pour aplatir le résultat (Ghost JOINs)
+      id: ficheNavettes.id,
+      ref: ficheNavettes.ref,
+      state: ficheNavettes.state,
+      description: ficheNavettes.description,
+      createdAt: ficheNavettes.createdAt,
+      updatedAt: ficheNavettes.updatedAt,
+      emitterId: ficheNavettes.emitterId,
+      assignedOrgId: ficheNavettes.assignedOrgId,
+      referentData: ficheNavettes.referentData,
+      familyDetailedData: ficheNavettes.familyDetailedData,
+      childrenData: ficheNavettes.childrenData,
+    }).from(ficheNavettes);
+
+    // Add JOINs dynamically only when searching (invisible JOIN pattern)
+    if (filters?.search) {
+      query = query
+        .leftJoin(users, eq(ficheNavettes.emitterId, users.id))
+        .leftJoin(organizations, eq(ficheNavettes.assignedOrgId, organizations.orgId));
+    }
+
     const conditions = [];
     if (filters?.state) conditions.push(eq(ficheNavettes.state, filters.state as any));
     if (filters?.assignedOrgId) conditions.push(eq(ficheNavettes.assignedOrgId, filters.assignedOrgId));
@@ -341,10 +369,26 @@ export class DatabaseStorage implements IStorage {
       // Filtering by EVS user is currently not implemented since organizations do not track user assignments
     }
     if (filters?.search) {
+      // Use ilike for case-insensitive search (PostgreSQL)
+      const searchPattern = `%${filters.search}%`;
       conditions.push(
         or(
-          like(ficheNavettes.ref, `%${filters.search}%`),
-          like(ficheNavettes.description, `%${filters.search}%`)
+          // Direct fields from ficheNavettes
+          ilike(ficheNavettes.ref, searchPattern),
+          ilike(ficheNavettes.description, searchPattern),
+
+          // Emitter (from joined users table)
+          sql`CONCAT(${users.firstName}, ' ', ${users.lastName}) ILIKE ${searchPattern}`,
+          ilike(users.email, searchPattern),
+
+          // Organization (from joined organizations table)
+          ilike(organizations.name, searchPattern),
+
+          // Family - search in all JSON fields with proper PostgreSQL JSON operators
+          sql`${ficheNavettes.familyDetailedData}->>'code' ILIKE ${searchPattern}`,
+          sql`${ficheNavettes.familyDetailedData}->>'email' ILIKE ${searchPattern}`,
+          sql`${ficheNavettes.familyDetailedData}->>'mother' ILIKE ${searchPattern}`,
+          sql`${ficheNavettes.familyDetailedData}->>'father' ILIKE ${searchPattern}`
         )
       );
     }
