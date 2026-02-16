@@ -332,14 +332,22 @@ export class DatabaseStorage implements IStorage {
     evsUserId?: string;
     search?: string;
   }): Promise<FicheNavette[]> {
-    let query: any = db.select().from(ficheNavettes);
+    // Explicit select to avoid Ghost JOINs (nested structure from leftJoin)
+    let query = db.select({
+      // On sélectionne explicitement pour aplatir le résultat (Ghost JOINs)
+      id: ficheNavettes.id,
+      ref: ficheNavettes.ref,
+      state: ficheNavettes.state,
+      description: ficheNavettes.description,
+      createdAt: ficheNavettes.createdAt,
+      updatedAt: ficheNavettes.updatedAt,
+      emitterId: ficheNavettes.emitterId,
+      assignedOrgId: ficheNavettes.assignedOrgId,
+      referentData: ficheNavettes.referentData,
+      familyDetailedData: ficheNavettes.familyDetailedData,
+      childrenData: ficheNavettes.childrenData,
+    }).from(ficheNavettes);
 
-    // Add JOINs dynamically only when searching (invisible JOIN pattern)
-    // if (filters?.search) {
-    //   query = query
-    //     .leftJoin(users, eq(ficheNavettes.emitterId, users.id))
-    //     .leftJoin(organizations, eq(ficheNavettes.assignedOrgId, organizations.orgId));
-    // }
     // Add JOINs dynamically only when searching (invisible JOIN pattern)
     if (filters?.search) {
       query = query
@@ -383,14 +391,7 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions));
     }
 
-    const result = await query.orderBy(desc(ficheNavettes.createdAt));
-
-    // Debug log to verify JSON structure
-    if (filters?.search && result && result.length > 0) {
-      console.log('🔍 DEBUG JSON STRUCTURE:', JSON.stringify(result[0].familyDetailedData, null, 2));
-    }
-
-    return result;
+    return await query.orderBy(desc(ficheNavettes.createdAt));
   }
 
   async getFiche(id: string): Promise<FicheNavette | undefined> {
