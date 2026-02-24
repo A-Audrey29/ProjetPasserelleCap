@@ -3,8 +3,6 @@ import { Link } from 'wouter';
 import { ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import Header from '@/components/Layout/Header';
-import Footer from '@/components/Layout/Footer';
 import styles from './LegalPage.module.css';
 
 export default function PolitiqueConfidentialite() {
@@ -26,7 +24,6 @@ export default function PolitiqueConfidentialite() {
 
   return (
     <div className={styles.pageContainer}>
-      <Header />
       <main className={styles.main}>
         <div className={styles.container}>
           <Link href="/" className={styles.backLink} data-testid="link-back-home">
@@ -41,7 +38,7 @@ export default function PolitiqueConfidentialite() {
             </div>
           ) : (
             <article className={styles.article}>
-              <ReactMarkdown 
+              <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
                   h1: ({node, ...props}) => <h1 className={styles.h1} {...props} />,
@@ -61,7 +58,6 @@ export default function PolitiqueConfidentialite() {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

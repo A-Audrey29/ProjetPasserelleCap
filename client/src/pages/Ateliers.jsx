@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import Header from '@/components/Layout/Header';
-import Footer from '@/components/Layout/Footer';
 import WorkshopSessionCard from '@/components/Workshops/WorkshopSessionCard';
 import styles from './Ateliers.module.css';
 
@@ -41,7 +39,6 @@ export default function Ateliers() {
   if (isLoading) {
     return (
       <div className={styles.ateliersContainer}>
-        <Header />
         <main className={styles.mainContent}>
           <div className={styles.loadingContainer}>
             <div className={styles.spinner}></div>
@@ -55,7 +52,6 @@ export default function Ateliers() {
   if (error) {
     return (
       <div className={styles.ateliersContainer}>
-        <Header />
         <main className={styles.mainContent}>
           <div className={styles.errorContainer}>
             <p>Erreur lors du chargement des ateliers: {error.message}</p>
@@ -67,8 +63,6 @@ export default function Ateliers() {
 
   return (
     <div className={styles.ateliersContainer}>
-      <Header />
-
       <main className={styles.mainContent}>
         {/* Header */}
         <div className={styles.headerSection}>
@@ -148,7 +142,6 @@ export default function Ateliers() {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

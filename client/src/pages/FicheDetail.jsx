@@ -4,8 +4,6 @@ import { useLocation, useParams } from 'wouter';
 import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiche } from '@/hooks/useFiches';
-import Header from '@/components/Layout/Header';
-import Footer from '@/components/Layout/Footer';
 import FicheDetail from '@/components/Fiches/FicheDetail';
 import StatusBadge from '@/components/Common/StatusBadge';
 import styles from './FicheDetail.module.css';
@@ -26,7 +24,6 @@ export default function FicheDetailPage() {
   if (authLoading || isLoading) {
     return (
       <div className={styles.container}>
-        <Header />
         <main className={styles.main}>
           <div className={styles.loadingContainer}>
             <div className={styles.loadingContent}>
@@ -46,7 +43,6 @@ export default function FicheDetailPage() {
   if (error || !fiche) {
     return (
       <div className={styles.container}>
-        <Header />
         <main className={styles.main}>
           <div className={styles.errorContainer}>
             <div className={styles.errorContent}>
@@ -56,7 +52,7 @@ export default function FicheDetailPage() {
               <p className={styles.errorMessage}>
                 {error?.message || 'Fiche non trouvée'}
               </p>
-              <button 
+              <button
                 className={styles.backButton}
                 onClick={() => setLocation('/')}
                 data-testid="button-back-dashboard"
@@ -72,11 +68,10 @@ export default function FicheDetailPage() {
 
   return (
     <div className={styles.container}>
-      <Header />
       <main className={styles.main}>
         <div className={styles.pageHeader}>
           <div className={styles.breadcrumb}>
-            <button 
+            <button
               onClick={() => setLocation('/')}
               className={styles.breadcrumbLink}
               data-testid="link-dashboard"
@@ -103,7 +98,6 @@ export default function FicheDetailPage() {
 
         <FicheDetail ficheId={id} />
       </main>
-      <Footer />
     </div>
   );
 }

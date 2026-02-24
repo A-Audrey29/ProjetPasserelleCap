@@ -2,23 +2,21 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { 
-  Users, 
-  UserPlus, 
-  Edit3, 
-  Search, 
-  Filter, 
-  Shield, 
-  ToggleLeft, 
-  ToggleRight, 
+import {
+  Users,
+  UserPlus,
+  Edit3,
+  Search,
+  Filter,
+  Shield,
+  ToggleLeft,
+  ToggleRight,
   Key,
   Calendar,
   Mail,
   Building,
   Phone
 } from 'lucide-react';
-import Header from '@/components/Layout/Header';
-import Footer from '@/components/Layout/Footer';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
@@ -116,7 +114,6 @@ export default function Administration() {
   if (isLoading) {
     return (
       <div className={styles.administrationContainer}>
-        <Header />
         <main className={styles.mainContent}>
           <div className={styles.loadingState}>
             <div className={styles.spinner}></div>
@@ -129,7 +126,6 @@ export default function Administration() {
 
   return (
     <div className={styles.administrationContainer}>
-      <Header />
       <main className={styles.mainContent}>
         <div className={styles.headerSection}>
           <div className={styles.headerContent}>
@@ -346,7 +342,6 @@ export default function Administration() {
           />
         )}
       </main>
-      <Footer />
     </div>
   );
 }
