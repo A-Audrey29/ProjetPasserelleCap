@@ -32,6 +32,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUsersByRole(role: string): Promise<User[]>;
+  getUsersByRoles(roles: string[]): Promise<User[]>;
   getUsersBySearch(search: string): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
@@ -70,6 +71,7 @@ export interface IStorage {
     emitterId?: string;
     evsUserId?: string;
     search?: string;
+    excludeStates?: string;
   }): Promise<FicheNavette[]>;
   getFiche(id: string): Promise<FicheNavette | undefined>;
   getFicheByRef(ref: string): Promise<FicheNavette | undefined>;
@@ -172,6 +174,10 @@ export class DatabaseStorage implements IStorage {
 
   async getUsersByRole(role: string): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, role as any)).orderBy(asc(users.lastName));
+  }
+
+  async getUsersByRoles(roles: string[]): Promise<User[]> {
+    return await db.select().from(users).where(inArray(users.role, roles as any)).orderBy(asc(users.lastName));
   }
 
   /**
@@ -337,6 +343,7 @@ export class DatabaseStorage implements IStorage {
     emitterId?: string;
     evsUserId?: string;
     search?: string;
+    excludeStates?: string;
   }): Promise<FicheNavette[]> {
     // Explicit select to avoid Ghost JOINs (nested structure from leftJoin)
     let query = db.select({
@@ -367,6 +374,11 @@ export class DatabaseStorage implements IStorage {
     if (filters?.emitterId) conditions.push(eq(ficheNavettes.emitterId, filters.emitterId));
     if (filters?.evsUserId) {
       // Filtering by EVS user is currently not implemented since organizations do not track user assignments
+    }
+    // Exclude specified states (comma-separated string)
+    if (filters?.excludeStates) {
+      const statesToExclude = filters.excludeStates.split(',').map(s => s.trim());
+      conditions.push(sql`${ficheNavettes.state} NOT IN ${statesToExclude}`);
     }
     if (filters?.search) {
       // Use ilike for case-insensitive search (PostgreSQL)
@@ -645,7 +657,7 @@ export class DatabaseStorage implements IStorage {
     isLocked?: boolean;
   }): Promise<WorkshopEnrollment[]> {
     const conditions = [];
-    
+
     if (filters?.ficheId) {
       conditions.push(eq(workshopEnrollments.ficheId, filters.ficheId));
     }
@@ -660,12 +672,60 @@ export class DatabaseStorage implements IStorage {
     }
 
     let query = db.select().from(workshopEnrollments);
-    
+
     if (conditions.length > 0) {
       query = query.where(and(...conditions)) as any;
     }
-    
+
     return await query.orderBy(asc(workshopEnrollments.createdAt));
+  }
+
+  /**
+   * Calcule l'état des ateliers pour une fiche donnée
+   *
+   * États possibles :
+   * - NOT_STARTED : Aucun atelier commencé (pas de contrat signé)
+   * - IN_PROGRESS : Au moins un atelier en cours (contrat signé mais pas terminé)
+   * - COMPLETED : Tous les ateliers sont terminés
+   * - PARTIAL : Mixe (certains terminés, d'autres en cours)
+   *
+   * @param ficheId - ID de la fiche navette
+   * @returns L'état des ateliers (NOT_STARTED, IN_PROGRESS, COMPLETED, PARTIAL)
+   */
+  async getFicheWorkshopsState(ficheId: string): Promise<string> {
+    const enrollments = await this.getWorkshopEnrollments({ ficheId });
+
+    // Cas 1 : Aucun atelier
+    if (enrollments.length === 0) {
+      return 'NOT_STARTED';
+    }
+
+    // Compter les états
+    const allCompleted = enrollments.every(e => e.activityDone);
+    const anyInProgress = enrollments.some(e =>
+      (e.contractSignedByEVS || e.contractSignedByCommune) && !e.activityDone
+    );
+    const noneStarted = enrollments.every(e =>
+      !e.contractSignedByEVS && !e.contractSignedByCommune && !e.activityDone
+    );
+
+    // Cas 2 : Tous les ateliers sont terminés
+    if (allCompleted) {
+      return 'COMPLETED';
+    }
+
+    // Cas 3 : Aucun atelier commencé
+    if (noneStarted) {
+      return 'NOT_STARTED';
+    }
+
+    // Cas 4 : Au moins un atelier en cours
+    if (anyInProgress) {
+      return 'IN_PROGRESS';
+    }
+
+    // Cas par défaut : Mixe (certains terminés, d'autres pas encore commencés)
+    return 'PARTIAL';
   }
 
   async getWorkshopEnrollment(id: string): Promise<WorkshopEnrollment | undefined> {

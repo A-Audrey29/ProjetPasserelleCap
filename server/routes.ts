@@ -35,6 +35,7 @@ import {
 import emailService from "./services/emailService.js";
 import notificationService from "./services/notificationService.js";
 import { uploadNavette, uploadBilan, uploadFile, healthCheck } from "./utils/ftpsUpload.js";
+import { syncUserToStream, generateStreamToken, createFicheSupportChannel, createTechSupportChannel } from './services/streamService.js';
 
 // Configuration des chemins de stockage pour les uploads
 const uploadsRoot = path.resolve("uploads");
@@ -370,12 +371,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Fiches routes
   app.get("/api/fiches", requireAuth, requireFicheAccess, async (req, res) => {
     try {
-      const { state, assignedOrgId, search } = req.query;
+      const { state, assignedOrgId, search, excludeStates, workshopState } = req.query;
 
       let filters = {
         state: state as string,
         assignedOrgId: assignedOrgId as string,
         search: search as string,
+        excludeStates: excludeStates as string,
       };
 
       // Apply role-based filtering
@@ -392,7 +394,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filters.assignedOrgId = req.ficheAccess.orgId;
       }
 
-      const fiches = await storage.getAllFiches(filters);
+      let fiches = await storage.getAllFiches(filters);
+
+      // Filtrer par état des ateliers si demandé
+      if (workshopState) {
+        const fichesWithWorkshopState = await Promise.all(
+          fiches.map(async (fiche) => ({
+            fiche,
+            workshopState: await storage.getFicheWorkshopsState(fiche.id)
+          }))
+        );
+
+        fiches = fichesWithWorkshopState
+          .filter(item => item.workshopState === workshopState)
+          .map(item => item.fiche);
+      }
 
       // Get related data for each fiche
       const fichesWithDetails = await Promise.all(
@@ -1722,6 +1738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           passwordHash,
         });
 
+        await syncUserToStream(user);
         res.status(201).json(user);
       } catch (error) {
         console.error("Create user error:", error);
@@ -1803,6 +1820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const user = await storage.updateUser(id, updateData);
 
+        await syncUserToStream(user);
         res.json(user);
       } catch (error) {
         console.error("Update user error:", error);
@@ -2855,6 +2873,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
+
+  // Stream.io Chat Integration Routes
+  // POST /api/stream/token - Generate token for authenticated user
+  app.post('/api/stream/token', requireAuth, async (req, res) => {
+    try {
+      const token = await generateStreamToken(req.user.userId);
+      res.json({ token, userId: req.user.userId });
+    } catch (e) {
+      res.status(500).json({ error: "Erreur génération token" });
+    }
+  });
+
+  // POST /api/stream/channels/fiche - Create support channel for a fiche
+  app.post('/api/stream/channels/fiche', requireAuth, async (req, res) => {
+    try {
+      const { ficheId } = req.body;
+      if (!ficheId) return res.status(400).json({ error: "Missing ficheId" });
+      const channel = await createFicheSupportChannel(ficheId, req.user.userId);
+      res.json({ channelId: channel.id, channelName: channel.data.name });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // POST /api/stream/channels/tech - Create technical support channel
+  app.post('/api/stream/channels/tech', requireAuth, async (req, res) => {
+    try {
+      const channel = await createTechSupportChannel(req.user.userId);
+      res.json({ channelId: channel.id });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
 
 
   const httpServer = createServer(app);

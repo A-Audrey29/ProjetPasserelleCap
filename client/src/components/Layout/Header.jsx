@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'wouter';
-import { Menu, X, User } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X, User, MessageCircle } from 'lucide-react';
+import { useState, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth.jsx';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import styles from './Header.module.css';
 import logoFEVES from '@assets/LOGO FEVES_1759841302878.jpg';
 import logoFSE from '@assets/BLOC-MARQUE_GRAND-FORMAT_1768343603227.webp';
+import { ChatContext } from '@/App';
 
 export default function Header() {
   const [location] = useLocation();
@@ -18,6 +19,11 @@ export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { toggleChat, isChatOpen, unreadCount } = useContext(ChatContext);
+
+  const handleToggleChat = () => {
+    window.toggleChatGlobal();
+  };
 
   const authenticatedNavItems = [
     {
@@ -40,12 +46,6 @@ export default function Header() {
       label: 'Gestion Ateliers',
       roles: ['ADMIN', 'RELATIONS_EVS', 'EVS_CS', 'CD']
     },
-    // Commenté temporairement - CD n'a plus de droits de validation (nouveau workflow DRAFT → SUBMITTED_TO_FEVES)
-    // {
-    //   href: '/fiches?state=SUBMITTED_TO_CD',
-    //   label: 'Fiches en attente de validations',
-    //   roles: ['CD']
-    // },
     {
       href: '/fiches',
       label: 'Consulter les Fiches',
@@ -69,9 +69,11 @@ export default function Header() {
   );
 
   const isActive = (href) => {
-    if (href === '/dashboard') return location === '/dashboard';
-    if (href === '/') return location === '/';
-    return location.startsWith(href);
+    const currentUrl = new URL(window.location.href);
+    const targetUrl = new URL(href, window.location.origin);
+
+    return currentUrl.pathname === targetUrl.pathname &&
+           currentUrl.search === targetUrl.search;
   };
 
   const toggleMobileMenu = () => {
@@ -189,7 +191,24 @@ export default function Header() {
                 
                 {/* User Actions */}
                 <div className={styles.userActions}>
-                  <button 
+                  {/* Chat Button */}
+                  <button
+                    className={`${styles.profileButton} relative`}
+                    onClick={handleToggleChat}
+                    data-testid="button-chat"
+                    title="Chat"
+                  >
+                    <MessageCircle className={styles.iconSmall} />
+                    Chat
+                    {/* Badge de notification avec compteur */}
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex items-center justify-center h-5 min-w-[20px] px-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
                     className={styles.profileButton}
                     onClick={openProfileModal}
                     data-testid="button-profile"
@@ -197,7 +216,7 @@ export default function Header() {
                     <User className={styles.iconSmall} />
                     Mon compte
                   </button>
-                  <button 
+                  <button
                     className={styles.logoutButton}
                     onClick={handleLogout}
                     data-testid="button-logout"
@@ -251,7 +270,24 @@ export default function Header() {
                     </Link>
                   ))}
                   <div className={styles.mobileUserSection}>
-                    <button 
+                    <button
+                      className={styles.mobileProfileButton}
+                      onClick={() => {
+                        handleToggleChat();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      data-testid="mobile-button-chat"
+                    >
+                      <MessageCircle className={styles.iconSmall} />
+                      Chat
+                      {/* Badge de notification avec compteur */}
+                      {unreadCount > 0 && (
+                        <span className="relative ml-2 flex items-center justify-center h-5 min-w-[20px] px-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </button>
+                    <button
                       className={styles.mobileProfileButton}
                       onClick={() => {
                         openProfileModal();
