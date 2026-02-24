@@ -21,6 +21,7 @@ import PolitiqueConfidentialite from "@/pages/PolitiqueConfidentialite";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.jsx";
 import { ChatSidePanel } from "@/components/Chat/ChatSidePanel";
 import Layout from "@/components/Layout/Layout.jsx";
+import "stream-chat-react/dist/scss/v2/index.scss"
 
 // Composants wrapper pour les routes avec Layout
 const withLayout = (Component) => {

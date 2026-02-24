@@ -4,6 +4,8 @@ import { useStream } from '@/hooks/useStream';
 import { useState, useEffect, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ChatContext } from '@/App';
+import { chatTheme } from '@/theme/chatTheme';
+
 
 interface ChatSidePanelProps {
   isOpen: boolean;
@@ -192,7 +194,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
 
       {/* Stream Chat Content */}
       {isConnected ? (
-        <Chat client={client}>
+        <Chat client={client} theme={chatTheme}>
           {(() => {
             const filters = { type: 'messaging', members: { $in: [client.userID!].filter(Boolean) } };
             return (
