@@ -35,8 +35,8 @@ import {
 import emailService from "./services/emailService.js";
 import notificationService from "./services/notificationService.js";
 import { uploadNavette, uploadBilan, uploadFile, healthCheck } from "./utils/ftpsUpload.js";
-// import { syncUserToStream, generateStreamToken, createFicheSupportChannel, createTechSupportChannel } from './services/streamService.js';
-import { syncUserToStream, generateStreamToken, createFicheSupportChannel, createTechSupportChannel } from './services/streamService.js';
+// import { syncUserToStream, generateStreamToken, createSupportChannel } from './services/streamService.js';
+import { syncUserToStream, generateStreamToken, createSupportChannel } from './services/streamService.js';
 
 // Configuration des chemins de stockage pour les uploads
 const uploadsRoot = path.resolve("uploads");
@@ -2907,58 +2907,39 @@ app.post('/api/stream/token', requireAuth, async (req, res) => {
 });
 
 /**
- * POST /api/stream/channels/fiche
- * Crée un canal de support pour une fiche navette spécifique
+ * POST /api/stream/channels/support
+ * Crée un canal de support générique (fiche, atelier, tech, autre)
  */
-app.post('/api/stream/channels/fiche', requireAuth, async (req, res) => {
+app.post('/api/stream/channels/support', requireAuth, async (req, res) => {
   try {
-    const { ficheId } = req.body;
+    const { type, ficheId } = req.body;
     const requesterId = req.user.userId;
 
-    if (!ficheId) {
-      return res.status(400).json({ error: 'Missing ficheId' });
+    // Validation du type
+    const validTypes = ['fiche', 'atelier', 'tech', 'autre'];
+    if (!type || !validTypes.includes(type)) {
+      return res.status(400).json({ error: 'Invalid or missing type. Must be one of: fiche, atelier, tech, autre' });
+    }
+
+    // Validation : ficheId requis pour type='fiche'
+    if (type === 'fiche' && !ficheId) {
+      return res.status(400).json({ error: 'Missing ficheId (required for type="fiche")' });
     }
 
     if (!requesterId) {
       return res.status(400).json({ error: 'User not authenticated' });
     }
 
-    const channel = await createFicheSupportChannel(ficheId, requesterId);
+    const channel = await createSupportChannel(type, requesterId, ficheId);
 
     res.json({
       channelId: channel.id,
       channelName: channel.data?.name || 'Support Channel',
     });
   } catch (error) {
-    console.error('[API] Fiche support channel creation error:', error);
+    console.error('[API] Support channel creation error:', error);
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Failed to create support channel',
-    });
-  }
-});
-
-/**
- * POST /api/stream/channels/tech
- * Crée un canal de support technique
- */
-app.post('/api/stream/channels/tech', requireAuth, async (req, res) => {
-  try {
-    const requesterId = req.user.userId;
-
-    if (!requesterId) {
-      return res.status(400).json({ error: 'User not authenticated' });
-    }
-
-    const channel = await createTechSupportChannel(requesterId);
-
-    res.json({
-      channelId: channel.id,
-      channelName: channel.data?.name || 'Technical Support Channel',
-    });
-  } catch (error) {
-    console.error('[API] Tech support channel creation error:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'Failed to create tech support channel',
     });
   }
 });

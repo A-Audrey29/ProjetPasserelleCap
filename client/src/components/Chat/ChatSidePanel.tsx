@@ -57,7 +57,37 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
     }
   }, [isOpen, client, setUnreadCount]);
 
-  const handleCreateFicheSupport = async () => {
+  // Configuration des messages de succès pour chaque type de support
+  const supportConfig = {
+    fiche: {
+      toastDescription: "Votre demande concernant la fiche navette a été créée avec succès.",
+      buttonText: "💬 Besoin pour cette fiche navette",
+      buttonColor: "bg-blue-600 hover:bg-blue-700",
+      requiresFicheId: true
+    },
+    atelier: {
+      toastDescription: "Votre demande concernant les ateliers a été créée avec succès.",
+      buttonText: "🛠️ Besoin concernant un atelier",
+      buttonColor: "bg-blue-500 hover:bg-blue-600",
+      requiresFicheId: false
+    },
+    tech: {
+      toastDescription: "Votre demande de support technique a été créée avec succès.",
+      buttonText: "🔧 Support technique",
+      buttonColor: "bg-blue-900 hover:bg-blue-950",
+      requiresFicheId: false
+    },
+    autre: {
+      toastDescription: "Votre demande a été créée avec succès.",
+      buttonText: "❓ Autre demande",
+      buttonColor: "bg-blue-700 hover:bg-blue-800",
+      requiresFicheId: false
+    }
+  };
+
+  type SupportType = keyof typeof supportConfig;
+
+  const handleCreateSupport = async (type: SupportType) => {
     if (!client?.userID) {
       toast({
         title: "Erreur",
@@ -67,26 +97,34 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
       return;
     }
 
-    try {
-      const pathname = window.location.pathname;
-      const ficheIdMatch = pathname.match(/^\/fiches\/([a-f0-9-]+)$/);
+    const config = supportConfig[type];
 
-      if (!ficheIdMatch) {
-        toast({
-          title: "Action impossible",
-          description: "Veuillez aller sur une page de fiche navette.",
-          variant: "destructive"
-        });
-        return;
+    try {
+      let ficheId: string | undefined;
+
+      // Pour le type 'fiche', vérifier qu'on est sur une page de fiche navette
+      if (config.requiresFicheId) {
+        const pathname = window.location.pathname;
+        const ficheIdMatch = pathname.match(/^\/fiches\/([a-f0-9-]+)$/);
+
+        if (!ficheIdMatch) {
+          toast({
+            title: "Action impossible",
+            description: "Veuillez aller sur une page de fiche navette.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        ficheId = ficheIdMatch[1];
       }
 
-      const ficheId = ficheIdMatch[1];
-
-      const response = await fetch('/api/stream/channels/fiche', {
+      // Appeler l'endpoint générique
+      const response = await fetch('/api/stream/channels/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ficheId })
+        body: JSON.stringify({ type, ficheId })
       });
 
       if (!response.ok) {
@@ -95,24 +133,14 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
       }
 
       const data = await response.json();
-      const ficheRef = data.channelName?.replace('Support ', '') || '';
 
-      // ✅ Attendre que le channel soit initialisé
+      // Attendre que le channel soit initialisé
       const channel = client.channel('messaging', data.channelId);
       await channel.watch();
 
-      // ✅ Vérifier userID avant sendMessage
-      const userId = client.userID;
-      if (!userId) throw new Error("User not connected");
-
-      await channel.sendMessage({
-        text: `Bonjour, j'ai besoin d'aide pour la fiche ${ficheRef}.`,
-        user_id: userId
-      });
-
       toast({
         title: "Discussion créée",
-        description: "Votre discussion a été créée avec succès.",
+        description: config.toastDescription,
       });
     } catch (error) {
       toast({
@@ -123,53 +151,10 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
     }
   };
 
-  const handleCreateTechSupport = async () => {
-    if (!client?.userID) {
-      toast({
-        title: "Erreur",
-        description: "Chat non connecté",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/stream/channels/tech', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
-        throw new Error(errorData.error || `Erreur ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      const channel = client.channel('messaging', data.channelId);
-      await channel.watch();
-
-      const userId = client.userID;
-      if (!userId) throw new Error("User not connected");
-
-      await channel.sendMessage({
-        text: `Bonjour, j'ai un problème technique.`,
-        user_id: userId
-      });
-
-      toast({
-        title: "Discussion créée",
-        description: "Votre demande de support technique a été envoyée.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Erreur",
-        variant: "destructive"
-      });
-    }
-  };
+  const handleCreateFicheSupport = () => handleCreateSupport('fiche');
+  const handleCreateAtelierSupport = () => handleCreateSupport('atelier');
+  const handleCreateTechSupport = () => handleCreateSupport('tech');
+  const handleCreateAutreSupport = () => handleCreateSupport('autre');
 
   const panelClass = `chat-side-panel ${isOpen ? 'open' : ''} bg-gray-50 shadow-2xl border-l border-gray-200 flex flex-col`;
 
@@ -187,20 +172,44 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
       </div>
 
       {client ? (
-        <>
-          {/* ✅ NOUVEAU: Boutons d'action - HORS du provider Stream Chat - 100% notre CSS */}
+        <div className="flex flex-col flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+          {/* ✅ Boutons d'action - HORS du provider Stream Chat - 100% notre CSS */}
           <div id="chat-quick-actions" className="p-3 border-b border-gray-200 flex flex-col gap-2 flex-shrink-0">
+            {/* Titre de la section */}
+            <h3 className="text-sm font-medium text-gray-700 mb-1 text-center">
+              Comment pouvons nous vous aider ?
+            </h3>
+
+            {/* Bouton Fiche navette - bg-blue-600 */}
             <button
               onClick={handleCreateFicheSupport}
-              className="w-full px-4 py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
+              className={`w-full px-4 py-2.5 text-white rounded-md transition-colors text-sm font-medium ${supportConfig.fiche.buttonColor}`}
             >
               💬 Besoin pour cette fiche navette
             </button>
+
+            {/* Bouton Atelier - bg-blue-500 */}
+            <button
+              onClick={handleCreateAtelierSupport}
+              className={`w-full px-4 py-2.5 text-white rounded-md transition-colors text-sm font-medium ${supportConfig.atelier.buttonColor}`}
+            >
+              🛠️ Besoin concernant un atelier
+            </button>
+
+            {/* Bouton Support technique - bg-blue-900 */}
             <button
               onClick={handleCreateTechSupport}
-              className="w-full px-4 py-2.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm font-medium"
+              className={`w-full px-4 py-2.5 text-white rounded-md transition-colors text-sm font-medium ${supportConfig.tech.buttonColor}`}
             >
               🔧 Support technique
+            </button>
+
+            {/* Bouton Autre - bg-blue-700 */}
+            <button
+              onClick={handleCreateAutreSupport}
+              className={`w-full px-4 py-2.5 text-white rounded-md transition-colors text-sm font-medium ${supportConfig.autre.buttonColor}`}
+            >
+              ❓ Autre demande
             </button>
           </div>
 
@@ -208,7 +217,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
           <Chat client={client}>
             <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0, flexDirection: 'row' }}>
             {/* ChannelList */}
-            <div className="border-r border-gray-200 overflow-y-auto" style={{ width: '200px', minWidth: '200px' }}>
+            <div className="border-r border-gray-200 overflow-y-auto" style={{ width: '280px', minWidth: '280px' }}>
               <ChannelList
                 filters={{
                   type: 'messaging',
@@ -239,7 +248,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
             </div>
           </div>
           </Chat>
-        </>
+        </div>
       ) : (
         <div className="flex-1 flex items-center justify-center bg-gray-50">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
