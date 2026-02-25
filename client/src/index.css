@@ -574,8 +574,6 @@ table td {
 .bg-obj3 { background-color: rgb(var(--warning)); }
 
 /* Chat Side Panel Specific Styles */
-/* Ensure the chat panel is positioned correctly on the right side */
-/* Chat Side Panel Specific Styles */
 .chat-side-panel {
   position: fixed !important;
   top: 0 !important;
@@ -592,4 +590,17 @@ table td {
 
 .chat-side-panel.open {
   transform: translateX(0);
+}
+
+/* Force Stream Chat ChannelList width */
+.chat-side-panel .str-chat__channel-list {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+}
+
+.chat-side-panel .str-channel-list-main {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
 }

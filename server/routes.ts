@@ -35,6 +35,7 @@ import {
 import emailService from "./services/emailService.js";
 import notificationService from "./services/notificationService.js";
 import { uploadNavette, uploadBilan, uploadFile, healthCheck } from "./utils/ftpsUpload.js";
+// import { syncUserToStream, generateStreamToken, createFicheSupportChannel, createTechSupportChannel } from './services/streamService.js';
 import { syncUserToStream, generateStreamToken, createFicheSupportChannel, createTechSupportChannel } from './services/streamService.js';
 
 // Configuration des chemins de stockage pour les uploads
@@ -2874,40 +2875,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  // Stream.io Chat Integration Routes
-  // POST /api/stream/token - Generate token for authenticated user
-  app.post('/api/stream/token', requireAuth, async (req, res) => {
-    try {
-      const token = await generateStreamToken(req.user.userId);
-      res.json({ token, userId: req.user.userId });
-    } catch (e) {
-      res.status(500).json({ error: "Erreur génération token" });
-    }
-  });
+// ============================================
+// Stream.io Chat Integration Routes
+// ============================================
 
-  // POST /api/stream/channels/fiche - Create support channel for a fiche
-  app.post('/api/stream/channels/fiche', requireAuth, async (req, res) => {
-    try {
-      const { ficheId } = req.body;
-      if (!ficheId) return res.status(400).json({ error: "Missing ficheId" });
-      const channel = await createFicheSupportChannel(ficheId, req.user.userId);
-      res.json({ channelId: channel.id, channelName: channel.data.name });
-    } catch (e) {
-      res.status(500).json({ error: e.message });
-    }
-  });
+/**
+ * POST /api/stream/token
+ * Génère un token JWT pour l'authentification client
+ * Utilisé par useCreateChatClient côté frontend
+ */
+app.post('/api/stream/token', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
 
-  // POST /api/stream/channels/tech - Create technical support channel
-  app.post('/api/stream/channels/tech', requireAuth, async (req, res) => {
-    try {
-      const channel = await createTechSupportChannel(req.user.userId);
-      res.json({ channelId: channel.id });
-    } catch (e) {
-      res.status(500).json({ error: e.message });
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID not found' });
     }
-  });
 
+    const token = await generateStreamToken(userId);
+
+    res.json({
+      token,
+      userId,
+    });
+  } catch (error) {
+    console.error('[API] Stream token generation error:', error);
+    res.status(500).json({
+      error: 'Failed to generate Stream token',
+    });
+  }
+});
+
+/**
+ * POST /api/stream/channels/fiche
+ * Crée un canal de support pour une fiche navette spécifique
+ */
+app.post('/api/stream/channels/fiche', requireAuth, async (req, res) => {
+  try {
+    const { ficheId } = req.body;
+    const requesterId = req.user.userId;
+
+    if (!ficheId) {
+      return res.status(400).json({ error: 'Missing ficheId' });
+    }
+
+    if (!requesterId) {
+      return res.status(400).json({ error: 'User not authenticated' });
+    }
+
+    const channel = await createFicheSupportChannel(ficheId, requesterId);
+
+    res.json({
+      channelId: channel.id,
+      channelName: channel.data?.name || 'Support Channel',
+    });
+  } catch (error) {
+    console.error('[API] Fiche support channel creation error:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Failed to create support channel',
+    });
+  }
+});
+
+/**
+ * POST /api/stream/channels/tech
+ * Crée un canal de support technique
+ */
+app.post('/api/stream/channels/tech', requireAuth, async (req, res) => {
+  try {
+    const requesterId = req.user.userId;
+
+    if (!requesterId) {
+      return res.status(400).json({ error: 'User not authenticated' });
+    }
+
+    const channel = await createTechSupportChannel(requesterId);
+
+    res.json({
+      channelId: channel.id,
+      channelName: channel.data?.name || 'Technical Support Channel',
+    });
+  } catch (error) {
+    console.error('[API] Tech support channel creation error:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Failed to create tech support channel',
+    });
+  }
+});
 
   const httpServer = createServer(app);
   return httpServer;
 }
+
+//   // POST /api/stream/token - Generate token for authenticated user
+// app.post('/api/stream/token', requireAuth, async (req, res) => {
+//   try {
+//     const token = await generateStreamToken(req.user.userId);
+//     // ✅ Token valide 24h minimum
+//     res.json({ token, userId: req.user.userId });
+//   } catch (e) {
+//     res.status(500).json({ error: "Erreur génération token" });
+//   }
+// });
+//   // // POST /api/stream/token - Generate token for authenticated user
+//   // app.post('/api/stream/token', requireAuth, async (req, res) => {
+//   //   try {
+//   //     const token = await generateStreamToken(req.user.userId);
+//   //     res.json({ token, userId: req.user.userId });
+//   //   } catch (e) {
+//   //     res.status(500).json({ error: "Erreur génération token" });
+//   //   }
+//   // });
+
+//   // POST /api/stream/channels/fiche - Create support channel for a fiche
+//   app.post('/api/stream/channels/fiche', requireAuth, async (req, res) => {
+//     try {
+//       const { ficheId } = req.body;
+//       if (!ficheId) return res.status(400).json({ error: "Missing ficheId" });
+//       const channel = await createFicheSupportChannel(ficheId, req.user.userId);
+//       res.json({ channelId: channel.id, channelName: channel.data.name });
+//     } catch (e) {
+//       res.status(500).json({ error: e.message });
+//     }
+//   });
+
+//   // POST /api/stream/channels/tech - Create technical support channel
+//   app.post('/api/stream/channels/tech', requireAuth, async (req, res) => {
+//     try {
+//       const channel = await createTechSupportChannel(req.user.userId);
+//       res.json({ channelId: channel.id });
+//     } catch (e) {
+//       res.status(500).json({ error: e.message });
+//     }
+//   });
+
+
+
+
+
+
