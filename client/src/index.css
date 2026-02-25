@@ -584,6 +584,7 @@ table td {
   max-width: 800px !important;
   height: 100vh !important;
   z-index: 99999 !important;
+  background-color: white !important;
   transform: translateX(100%);
   transition: transform 0.3s ease-in-out;
 }
@@ -603,4 +604,17 @@ table td {
   width: 200px !important;
   min-width: 200px !important;
   max-width: 200px !important;
+}
+
+/* S'assurer que les boutons prennent toute la largeur */
+#chat-quick-actions {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  flex-direction: column !important;
+  display: flex !important;
+}
+
+/* Force les boutons à 100% de largeur */
+#chat-quick-actions > button {
+  width: 100% !important;
 }

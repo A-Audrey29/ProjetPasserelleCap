@@ -187,28 +187,27 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
       </div>
 
       {client ? (
-        <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Quick Actions - sur toute la largeur */}
-          <div className="p-3 border-b border-gray-200 flex flex-col gap-2 flex-shrink-0" style={{ width: '100%' }}>
+        <>
+          {/* ✅ NOUVEAU: Boutons d'action - HORS du provider Stream Chat - 100% notre CSS */}
+          <div id="chat-quick-actions" className="p-3 border-b border-gray-200 flex flex-col gap-2 flex-shrink-0">
             <button
               onClick={handleCreateFicheSupport}
-              className="px-4 py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
-              style={{ width: '100%' }}
+              className="w-full px-4 py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
             >
               💬 Besoin pour cette fiche navette
             </button>
             <button
               onClick={handleCreateTechSupport}
-              className="px-4 py-2.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm font-medium"
-              style={{ width: '100%' }}
+              className="w-full px-4 py-2.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm font-medium"
             >
               🔧 Support technique
             </button>
           </div>
 
-          {/* ChannelList + Channel - zone principale */}
-          <div className="flex-1 flex overflow-hidden" style={{ minHeight: 0 }}>
-            {/* ✅ ChannelList avec filters corrects */}
+          {/* ✅ Zone Stream Chat - AVEC provider <Chat> uniquement autour de la zone de chat */}
+          <Chat client={client}>
+            <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0, flexDirection: 'row' }}>
+            {/* ChannelList */}
             <div className="border-r border-gray-200 overflow-y-auto" style={{ width: '200px', minWidth: '200px' }}>
               <ChannelList
                 filters={{
@@ -221,7 +220,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
               />
             </div>
 
-            {/* ✅ Channel géré par ChannelList (PAS de channel prop) */}
+            {/* Channel + Messages */}
             <div className="flex-1 overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
               <Channel>
                 <Window>
@@ -239,12 +238,38 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
               </Channel>
             </div>
           </div>
-        </div>
+          </Chat>
+        </>
       ) : (
         <div className="flex-1 flex items-center justify-center bg-gray-50">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
       )}
+
+      {/* ✅ ANCIEN CODE (commenté pour rollback facile)
+      {client ? (
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <div id="chat-quick-actions" className="p-3 border-b border-gray-200 flex flex-col gap-2 flex-shrink-0" style={{ width: '100%' }}>
+            <button onClick={handleCreateFicheSupport} className="px-4 py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium" style={{ width: '100%' }}>
+              💬 Besoin pour cette fiche navette
+            </button>
+            <button onClick={handleCreateTechSupport} className="px-4 py-2.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm font-medium" style={{ width: '100%' }}>
+              🔧 Support technique
+            </button>
+          </div>
+          <div className="flex-1 flex overflow-hidden" style={{ minHeight: 0 }}>
+            <div className="border-r border-gray-200 overflow-y-auto" style={{ width: '200px', minWidth: '200px' }}>
+              <ChannelList filters={{ type: 'messaging', members: { $in: [client.userID!] } }} sort={{ last_message_at: -1 }} options={{ presence: true, state: true }} showChannelSearch />
+            </div>
+            <div className="flex-1 overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
+              <Channel><Window><ChannelHeader /><MessageList /><div className="relative"><MessageInput />{showSuccess && (<div className="absolute bottom-full left-0 right-0 px-3 py-2 bg-green-100 text-green-800 text-xs text-center border-t border-green-200 animate-fade-in z-10">✓ Demande enregistrée. Réponse sous 24h (jours ouvrés).</div>)}</div></Window></Channel>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>
+      )}
+      */}
     </div>
   );
 }

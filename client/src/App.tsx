@@ -183,14 +183,14 @@ function StreamChatClient({ user, isChatOpen, setIsChatOpen, unreadCount, setUnr
     );
   }
 
-  // Client prêt : on wrappe avec Chat et on affiche le panel
+  // Client prêt : ChatSidePanel DANS le provider <Chat> pour avoir accès au client
   return (
-    <Chat client={client}>
-      <ChatContext.Provider value={{ isChatOpen, unreadCount, toggleChat, isStreamReady: true }}>
+    <ChatContext.Provider value={{ isChatOpen, unreadCount, toggleChat, isStreamReady: true }}>
+      <Chat client={client}>
         <Router />
         <ChatSidePanel isOpen={isChatOpen} setUnreadCount={setUnreadCount} />
-      </ChatContext.Provider>
-    </Chat>
+      </Chat>
+    </ChatContext.Provider>
   );
 }
 
