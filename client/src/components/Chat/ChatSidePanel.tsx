@@ -13,6 +13,7 @@ interface ChatSidePanelProps {
 export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
   const { client } = useChatContext();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showChannels, setShowChannels] = useState(false);
   const { toast } = useToast();
   const { toggleChat } = useContext(ChatContext);
 
@@ -168,18 +169,39 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
         <div className="chat-layout-container">
           {/* ✅ Colonne GAUCHE : Header + Boutons (largeur fixe 300px) */}
           <div className="chat-left-column">
-            {/* Header avec "Messagerie" + croix de fermeture */}
+            {/* Header avec "Messagerie" + toggle channels (mobile) + croix de fermeture */}
             <div className="chat-header-section">
               <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', margin: 0 }}>Messagerie</h2>
-              <button
-                onClick={() => window.toggleChatGlobal?.()}
-                style={{ padding: '4px', borderRadius: '4px', cursor: 'pointer', transition: 'background-color 0.2s', border: 'none', background: 'transparent' }}
-                title="Fermer"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <X size={18} style={{ color: '#4b5563' }} />
-              </button>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  className="chat-channels-toggle-button"
+                  onClick={() => setShowChannels(!showChannels)}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                    border: 'none',
+                    background: showChannels ? '#3b82f6' : 'transparent',
+                    color: showChannels ? '#ffffff' : '#4b5563',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    display: 'none'
+                  }}
+                  title="Channels"
+                >
+                  Channels
+                </button>
+                <button
+                  onClick={() => window.toggleChatGlobal?.()}
+                  style={{ padding: '4px', borderRadius: '4px', cursor: 'pointer', transition: 'background-color 0.2s', border: 'none', background: 'transparent' }}
+                  title="Fermer"
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <X size={18} style={{ color: '#4b5563' }} />
+                </button>
+              </div>
             </div>
 
             {/* Boutons d'action */}
@@ -236,9 +258,28 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
 
           {/* ✅ Colonne DROITE : Zone Stream Chat */}
           <Chat client={client}>
-            <div className="chat-right-column">
+            <div className={`chat-right-column ${showChannels ? 'show-channels-overlay' : ''}`}>
               {/* ChannelList */}
-              <div className="chat-channel-list">
+              <div className={`chat-channel-list ${showChannels ? 'chat-channel-list-open' : ''}`}>
+                <div className="chat-channels-overlay-header" style={{ display: 'none' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', margin: 0, flex: 1 }}>Channels</h3>
+                  <button
+                    onClick={() => setShowChannels(false)}
+                    style={{
+                      padding: '4px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s',
+                      border: 'none',
+                      background: 'transparent'
+                    }}
+                    title="Fermer"
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <X size={16} style={{ color: '#4b5563' }} />
+                  </button>
+                </div>
                 <ChannelList
                   filters={{
                     type: 'messaging',
