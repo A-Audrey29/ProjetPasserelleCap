@@ -556,8 +556,8 @@ table td {
 .chat-channel-list {
   border-right: 1px solid #e5e7eb;
   overflow-y: auto;
-  width: 280px;
-  min-width: 280px;
+  width: 320px;
+  min-width: 320px;
 }
 
 .chat-messages-area {
