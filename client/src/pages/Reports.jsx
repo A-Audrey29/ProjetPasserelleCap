@@ -202,13 +202,17 @@ export default function Reports() {
 
             {/* By Objective */}
             <div className="card">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Répartition par objectif</h3>
-              <div className="space-y-3">
+              {/* TODO: Nettoyer - Ancien code Tailwind à supprimer après vérification front */}
+              {/* Ancien: className="text-lg font-semibold text-foreground mb-4" */}
+              <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'rgb(var(--foreground))', marginBottom: '1rem' }}>Répartition par objectif</h3>
+              <div style={{ marginTop: '0.75rem' }}>
                 {Object.entries(reportData.byObjective).map(([obj, data]) => (
-                  <div key={obj} className="flex items-center justify-between p-3 bg-muted rounded-md">
+                  <div key={obj} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'rgb(var(--muted))', borderRadius: '6px' }}>
                     <div>
-                      <span className="font-medium text-foreground">{obj}</span>
-                      <span className="text-sm text-muted-foreground ml-2">({data.count} fiches)</span>
+                      {/* Ancien: className="font-medium text-foreground" */}
+                      <span style={{ fontWeight: '500', color: 'rgb(var(--foreground))' }}>{obj}</span>
+                      {/* Ancien: className="text-sm text-muted-foreground ml-2" */}
+                      <span style={{ fontSize: '14px', color: 'rgb(var(--muted-foreground))', marginLeft: '8px' }}>({data.count} fiches)</span>
                     </div>
                   </div>
                 ))}
@@ -254,7 +258,8 @@ export default function Reports() {
         ) : (
           <div className="card">
             <div className="text-center py-12">
-              <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              {/* TODO: Ancien: className="w-12 h-12 text-muted-foreground mx-auto mb-4" */}
+              <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" style={{ width: '48px', height: '48px', color: 'rgb(var(--muted-foreground))', marginLeft: 'auto', marginRight: 'auto', marginBottom: '1rem' }} />
               <p className="text-foreground font-medium mb-2">Rapport en cours de développement</p>
               <p className="text-muted-foreground">Ce type de rapport sera disponible prochainement</p>
             </div>

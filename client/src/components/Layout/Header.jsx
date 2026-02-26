@@ -282,7 +282,9 @@ export default function Header() {
                       Chat
                       {/* Badge de notification avec compteur */}
                       {unreadCount > 0 && (
-                        <span className="relative ml-2 flex items-center justify-center h-5 min-w-[20px] px-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                        // TODO: Nettoyer - Ancien code Tailwind à supprimer après vérification front
+                        // Ancien: className="relative ml-2 flex items-center justify-center h-5 min-w-[20px] px-1 bg-red-500 text-white text-xs font-bold rounded-full"
+                        <span style={{ position: 'relative', marginLeft: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '20px', minWidth: '20px', padding: '0 4px', backgroundColor: '#ef4444', color: 'white', fontSize: '12px', fontWeight: 'bold', borderRadius: '9999px' }}>
                           {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                       )}
