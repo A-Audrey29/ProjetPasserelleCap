@@ -62,25 +62,29 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
     fiche: {
       toastDescription: "Votre demande concernant la fiche navette a été créée avec succès.",
       buttonText: "💬 Besoin pour cette fiche navette",
-      buttonColor: "bg-blue-600 hover:bg-blue-700",
+      buttonColor: "#2563eb", // Blue 600
+      buttonHoverColor: "#1d4ed8", // Blue 700
       requiresFicheId: true
     },
     atelier: {
       toastDescription: "Votre demande concernant les ateliers a été créée avec succès.",
       buttonText: "🛠️ Besoin concernant un atelier",
-      buttonColor: "bg-blue-500 hover:bg-blue-600",
+      buttonColor: "#3b82f6", // Blue 500
+      buttonHoverColor: "#2563eb", // Blue 600
       requiresFicheId: false
     },
     tech: {
       toastDescription: "Votre demande de support technique a été créée avec succès.",
       buttonText: "🔧 Support technique",
-      buttonColor: "bg-blue-900 hover:bg-blue-950",
+      buttonColor: "#1e3a8a", // Blue 900
+      buttonHoverColor: "#172554", // Blue 950
       requiresFicheId: false
     },
     autre: {
       toastDescription: "Votre demande a été créée avec succès.",
       buttonText: "❓ Autre demande",
-      buttonColor: "bg-blue-700 hover:bg-blue-800",
+      buttonColor: "#1d4ed8", // Blue 700
+      buttonHoverColor: "#1e40af", // Blue 800
       requiresFicheId: false
     }
   };
@@ -156,102 +160,119 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
   const handleCreateTechSupport = () => handleCreateSupport('tech');
   const handleCreateAutreSupport = () => handleCreateSupport('autre');
 
-  const panelClass = `chat-side-panel ${isOpen ? 'open' : ''} bg-gray-50 shadow-2xl border-l border-gray-200 flex flex-col`;
+  const panelClass = `chat-side-panel ${isOpen ? 'open' : ''}`;
 
   return (
     <div className={panelClass}>
-      <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 flex-shrink-0" style={{ padding: '8px 12px', height: '44px', minHeight: '44px' }}>
-        <h2 className="text-base font-semibold text-gray-800 m-0">Messagerie</h2>
-        <button
-          onClick={() => window.toggleChatGlobal?.()}
-          className="p-1 rounded hover:bg-gray-200 transition-colors"
-          title="Fermer"
-        >
-          <X size={18} className="text-gray-600" />
-        </button>
-      </div>
-
       {client ? (
-        <div className="flex flex-col flex-1 overflow-hidden" style={{ minHeight: 0 }}>
-          {/* ✅ Boutons d'action - HORS du provider Stream Chat - 100% notre CSS */}
-          <div id="chat-quick-actions" className="p-3 border-b border-gray-200 flex flex-col gap-2 flex-shrink-0">
-            {/* Titre de la section */}
-            <h3 className="text-sm font-medium text-gray-700 mb-1 text-center">
-              Comment pouvons nous vous aider ?
-            </h3>
+        <div className="chat-layout-container">
+          {/* ✅ Colonne GAUCHE : Header + Boutons (largeur fixe 300px) */}
+          <div className="chat-left-column">
+            {/* Header avec "Messagerie" + croix de fermeture */}
+            <div className="chat-header-section">
+              <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', margin: 0 }}>Messagerie</h2>
+              <button
+                onClick={() => window.toggleChatGlobal?.()}
+                style={{ padding: '4px', borderRadius: '4px', cursor: 'pointer', transition: 'background-color 0.2s', border: 'none', background: 'transparent' }}
+                title="Fermer"
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <X size={18} style={{ color: '#4b5563' }} />
+              </button>
+            </div>
 
-            {/* Bouton Fiche navette - bg-blue-600 */}
-            <button
-              onClick={handleCreateFicheSupport}
-              className={`w-full px-4 py-2.5 text-white rounded-md transition-colors text-sm font-medium ${supportConfig.fiche.buttonColor}`}
-            >
-              💬 Besoin pour cette fiche navette
-            </button>
+            {/* Boutons d'action */}
+            <div className="chat-buttons-section">
+              <h3 className="chat-support-title">
+                Comment pouvons nous vous aider ?
+              </h3>
 
-            {/* Bouton Atelier - bg-blue-500 */}
-            <button
-              onClick={handleCreateAtelierSupport}
-              className={`w-full px-4 py-2.5 text-white rounded-md transition-colors text-sm font-medium ${supportConfig.atelier.buttonColor}`}
-            >
-              🛠️ Besoin concernant un atelier
-            </button>
+              {/* Bouton Fiche navette - bg-blue-600 */}
+              <button
+                onClick={handleCreateFicheSupport}
+                className="chat-support-button"
+                style={{ backgroundColor: supportConfig.fiche.buttonColor }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = supportConfig.fiche.buttonHoverColor}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = supportConfig.fiche.buttonColor}
+              >
+                💬 Besoin pour cette fiche navette
+              </button>
 
-            {/* Bouton Support technique - bg-blue-900 */}
-            <button
-              onClick={handleCreateTechSupport}
-              className={`w-full px-4 py-2.5 text-white rounded-md transition-colors text-sm font-medium ${supportConfig.tech.buttonColor}`}
-            >
-              🔧 Support technique
-            </button>
+              {/* Bouton Atelier - bg-blue-500 */}
+              <button
+                onClick={handleCreateAtelierSupport}
+                className="chat-support-button"
+                style={{ backgroundColor: supportConfig.atelier.buttonColor }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = supportConfig.atelier.buttonHoverColor}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = supportConfig.atelier.buttonColor}
+              >
+                🛠️ Besoin concernant un atelier
+              </button>
 
-            {/* Bouton Autre - bg-blue-700 */}
-            <button
-              onClick={handleCreateAutreSupport}
-              className={`w-full px-4 py-2.5 text-white rounded-md transition-colors text-sm font-medium ${supportConfig.autre.buttonColor}`}
-            >
-              ❓ Autre demande
-            </button>
+              {/* Bouton Support technique - bg-blue-900 */}
+              <button
+                onClick={handleCreateTechSupport}
+                className="chat-support-button"
+                style={{ backgroundColor: supportConfig.tech.buttonColor }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = supportConfig.tech.buttonHoverColor}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = supportConfig.tech.buttonColor}
+              >
+                🔧 Support technique
+              </button>
+
+              {/* Bouton Autre - bg-blue-700 */}
+              <button
+                onClick={handleCreateAutreSupport}
+                className="chat-support-button"
+                style={{ backgroundColor: supportConfig.autre.buttonColor }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = supportConfig.autre.buttonHoverColor}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = supportConfig.autre.buttonColor}
+              >
+                ❓ Autre demande
+              </button>
+            </div>
           </div>
 
-          {/* ✅ Zone Stream Chat - AVEC provider <Chat> uniquement autour de la zone de chat */}
+          {/* ✅ Colonne DROITE : Zone Stream Chat */}
           <Chat client={client}>
-            <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0, flexDirection: 'row' }}>
-            {/* ChannelList */}
-            <div className="border-r border-gray-200 overflow-y-auto" style={{ width: '280px', minWidth: '280px' }}>
-              <ChannelList
-                filters={{
-                  type: 'messaging',
-                  members: { $in: [client.userID!] }
-                }}
-                sort={{ last_message_at: -1 }}
-                options={{ presence: true, state: true }}
-                showChannelSearch
-              />
-            </div>
+            <div className="chat-right-column">
+              {/* ChannelList */}
+              <div className="chat-channel-list">
+                <ChannelList
+                  filters={{
+                    type: 'messaging',
+                    members: { $in: [client.userID!] }
+                  }}
+                  sort={{ last_message_at: -1 }}
+                  options={{ presence: true, state: true }}
+                  showChannelSearch
+                />
+              </div>
 
-            {/* Channel + Messages */}
-            <div className="flex-1 overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
-              <Channel>
-                <Window>
-                  <ChannelHeader />
-                  <MessageList />
-                  <div className="relative">
-                    <MessageInput />
-                    {showSuccess && (
-                      <div className="absolute bottom-full left-0 right-0 px-3 py-2 bg-green-100 text-green-800 text-xs text-center border-t border-green-200 animate-fade-in z-10">
-                        ✓ Demande enregistrée. Réponse sous 24h (jours ouvrés).
-                      </div>
-                    )}
-                  </div>
-                </Window>
-              </Channel>
+              {/* Channel + Messages */}
+              <div className="chat-messages-area">
+                <Channel>
+                  <Window>
+                    <ChannelHeader />
+                    <MessageList />
+                    <div style={{ position: 'relative' }}>
+                      <MessageInput />
+                      {showSuccess && (
+                        <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, padding: '8px 12px', backgroundColor: '#dcfce7', color: '#166534', fontSize: '12px', textAlign: 'center', borderTop: '1px solid #86efac', animation: 'fadeIn 0.3s ease', zIndex: 10 }}>
+                          ✓ Demande enregistrée. Réponse sous 24h (jours ouvrés).
+                        </div>
+                      )}
+                    </div>
+                  </Window>
+                </Channel>
+              </div>
             </div>
-          </div>
           </Chat>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center bg-gray-50">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
+          <div style={{ animation: 'spin 1s linear infinite', borderRadius: '50%', height: '32px', width: '32px', borderBottom: '2px solid #111827' }}></div>
         </div>
       )}
 

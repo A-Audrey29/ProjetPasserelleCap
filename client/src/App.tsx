@@ -21,7 +21,7 @@ import PolitiqueConfidentialite from "@/pages/PolitiqueConfidentialite";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.jsx";
 import { ChatSidePanel } from "@/components/Chat/ChatSidePanel";
 import Layout from "@/components/Layout/Layout.jsx";
-import "stream-chat-react/dist/scss/v2/index.scss";
+// import "stream-chat-react/dist/scss/v2/index.scss";
 
 import { Chat } from 'stream-chat-react';
 import { useCreateChatClient } from 'stream-chat-react';
