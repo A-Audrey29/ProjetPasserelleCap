@@ -458,8 +458,8 @@ table td {
   right: 0 !important;
   bottom: 0 !important;
   left: auto !important;
-  width: 100% !important;
-  max-width: 63vw !important;
+  width: auto !important;
+  max-width: 1160px !important;
   height: 100vh !important;
   z-index: 99999 !important;
   background-color: white !important;
@@ -528,6 +528,11 @@ table td {
   min-height: 48px;
 }
 
+/* Masquer le nombre de membres et de membres en ligne dans le ChannelHeader */
+.str-chat__channel-header-info {
+  display: none !important;
+}
+
 .chat-buttons-section {
   flex: 1;
   padding: 12px;
@@ -566,6 +571,8 @@ table td {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 300px;
+  max-width: 500px;
 }
 
 /* Support Buttons */
@@ -678,12 +685,12 @@ table td {
     min-height: 44px;
   }
 
-  /* Bouton toggle channels - visible uniquement sur mobile */
+  /* Bouton toggle conversations - visible uniquement sur mobile */
   .chat-channels-toggle-button {
     display: block !important;
   }
 
-  /* Channel list overlay sur mobile */
+  /* Conversations list overlay sur mobile */
   .chat-channel-list {
     position: fixed;
     top: 0;
@@ -705,7 +712,7 @@ table td {
     transform: translateX(0);
   }
 
-  /* Header de l'overlay channel list */
+  /* Header de l'overlay conversations */
   .chat-channels-overlay-header {
     display: flex !important;
     align-items: center;
@@ -715,7 +722,7 @@ table td {
     flex-shrink: 0;
   }
 
-  /* Overlay sombre quand channels ouverts */
+  /* Overlay sombre quand conversations ouvertes */
   .chat-right-column::before {
     content: '';
     position: fixed;
