@@ -174,13 +174,31 @@ function StreamChatClient({ user, isChatOpen, setIsChatOpen, unreadCount, setUnr
   
   // ✅ MÉMORISER la fonction tokenProvider pour éviter les re-renders infinis
   const tokenProvider = useCallback(async () => {
-    const response = await fetch('/api/stream/token', {
-      method: 'POST',
-      credentials: 'include',
-    });
-    if (!response.ok) throw new Error('Token error');
-    const { token } = await response.json();
-    return token;
+    try {
+      const response = await fetch('/api/stream/token', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Token HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Runtime guard: vérifier que token existe et est une string non vide
+      if (typeof data?.token !== 'string' || data.token.length === 0) {
+        console.error('[Chat] Invalid token response:', data);
+        throw new Error('Invalid token response from server');
+      }
+
+      return data.token;
+
+    } catch (error) {
+      // Log pour monitoring + re-throw pour que Stream Chat gère l'erreur
+      console.error('[Chat] Token fetch failed:', error);
+      throw error;  // Stream Chat va utiliser son mécanisme de retry
+    }
   }, []); // Pas de dépendances = créé une seule fois
 
   // ✅ MÉMORISER userData pour éviter les re-renders infinis
