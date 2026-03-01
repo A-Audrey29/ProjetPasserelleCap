@@ -61,29 +61,29 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
   // Configuration des messages de succès pour chaque type de support
   const supportConfig = {
     fiche: {
-      toastDescription: "Votre demande concernant la fiche navette a été créée avec succès.",
-      buttonText: "💬 Besoin pour cette fiche navette",
+      toastDescription: "Votre demande a été créée. Un membre de l'équipe vous répondra sous 24h (jours ouvrés).",
+      buttonText: "💬 J'ai besoin d'aide pour une fiche navette",
       buttonColor: "#2563eb", // Blue 600
       buttonHoverColor: "#1d4ed8", // Blue 700
-      requiresFicheId: true
+      requiresFicheId: false
     },
     atelier: {
-      toastDescription: "Votre demande concernant les ateliers a été créée avec succès.",
-      buttonText: "🛠️ Besoin concernant un atelier",
+      toastDescription: "Votre demande a été créée. Un membre de l'équipe vous répondra sous 24h (jours ouvrés).",
+      buttonText: "🛠️ J'ai besoin d'aide pour un atelier",
       buttonColor: "#3b82f6", // Blue 500
       buttonHoverColor: "#2563eb", // Blue 600
       requiresFicheId: false
     },
     tech: {
-      toastDescription: "Votre demande de support technique a été créée avec succès.",
-      buttonText: "🔧 Support technique",
+      toastDescription: "Votre demande a été créée. Un membre de l'équipe vous répondra sous 24h (jours ouvrés).",
+      buttonText: "🔧 J'ai un problème technique",
       buttonColor: "#1e3a8a", // Blue 900
       buttonHoverColor: "#172554", // Blue 950
       requiresFicheId: false
     },
     autre: {
-      toastDescription: "Votre demande a été créée avec succès.",
-      buttonText: "❓ Autre demande",
+      toastDescription: "Votre demande a été créée. Un membre de l'équipe vous répondra sous 24h (jours ouvrés).",
+      buttonText: "❓ J'ai une autre demande",
       buttonColor: "#1d4ed8", // Blue 700
       buttonHoverColor: "#1e40af", // Blue 800
       requiresFicheId: false
@@ -105,31 +105,12 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
     const config = supportConfig[type];
 
     try {
-      let ficheId: string | undefined;
-
-      // Pour le type 'fiche', vérifier qu'on est sur une page de fiche navette
-      if (config.requiresFicheId) {
-        const pathname = window.location.pathname;
-        const ficheIdMatch = pathname.match(/^\/fiches\/([a-f0-9-]+)$/);
-
-        if (!ficheIdMatch) {
-          toast({
-            title: "Action impossible",
-            description: "Veuillez aller sur une page de fiche navette.",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        ficheId = ficheIdMatch[1];
-      }
-
-      // Appeler l'endpoint générique
+      // Appeler l'endpoint générique (sans vérification de contexte)
       const response = await fetch('/api/stream/channels/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ type, ficheId })
+        body: JSON.stringify({ type })
       });
 
       if (!response.ok) {
@@ -218,7 +199,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = supportConfig.fiche.buttonHoverColor}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = supportConfig.fiche.buttonColor}
               >
-                💬 Besoin pour cette fiche navette
+                💬 J'ai besoin d'aide pour une fiche navette
               </button>
 
               {/* Bouton Atelier - bg-blue-500 */}
@@ -229,7 +210,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = supportConfig.atelier.buttonHoverColor}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = supportConfig.atelier.buttonColor}
               >
-                🛠️ Besoin concernant un atelier
+                🛠️ J'ai besoin d'aide pour un atelier
               </button>
 
               {/* Bouton Support technique - bg-blue-900 */}
@@ -240,7 +221,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = supportConfig.tech.buttonHoverColor}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = supportConfig.tech.buttonColor}
               >
-                🔧 Support technique
+                🔧 J'ai un problème technique
               </button>
 
               {/* Bouton Autre - bg-blue-700 */}
@@ -251,7 +232,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = supportConfig.autre.buttonHoverColor}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = supportConfig.autre.buttonColor}
               >
-                ❓ Autre demande
+                ❓ J'ai une autre demande
               </button>
             </div>
           </div>

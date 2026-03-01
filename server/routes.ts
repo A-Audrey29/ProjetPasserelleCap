@@ -2921,11 +2921,6 @@ app.post('/api/stream/channels/support', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid or missing type. Must be one of: fiche, atelier, tech, autre' });
     }
 
-    // Validation : ficheId requis pour type='fiche'
-    if (type === 'fiche' && !ficheId) {
-      return res.status(400).json({ error: 'Missing ficheId (required for type="fiche")' });
-    }
-
     if (!requesterId) {
       return res.status(400).json({ error: 'User not authenticated' });
     }

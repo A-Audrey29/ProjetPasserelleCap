@@ -62,17 +62,37 @@ export type SupportType = 'fiche' | 'atelier' | 'tech' | 'autre';
  * Messages système initiaux pour chaque type de support
  */
 const initialMessages: Record<SupportType, string> = {
-  fiche: '👋 Bonjour ! Votre demande concernant la fiche navette a été créée. Merci de compléter votre demande ci-dessous :',
-  atelier: '👋 Bonjour ! Votre demande concernant les ateliers a été créée. Merci de compléter votre demande ci-dessous :',
-  tech: '👋 Bonjour ! Votre demande de support technique a été créée. Merci de compléter votre demande ci-dessous :',
-  autre: '👋 Bonjour ! Votre demande a été créée. Merci de compléter votre demande ci-dessous :'
+  fiche: `👋 Bonjour ! Pour quelle fiche navette avez-vous besoin d'aide ?
+
+Merci d'indiquer :
+• Le numéro de la fiche
+• Le nom de la famille
+
+ℹ️ Un membre de l'équipe CAP vous répondra sous 24h (jours ouvrés).`,
+  atelier: `👋 Bonjour ! Pour quel atelier avez-vous besoin d'aide ?
+
+Merci de décrire votre demande.
+
+ℹ️ Un membre de l'équipe CAP vous répondra sous 24h (jours ouvrés).`,
+  tech: `👋 Bonjour ! Quel problème technique rencontrez-vous ?
+
+Merci de décrire :
+• Ce que vous essayiez de faire
+• Le message d'erreur (s'il y en a un)
+
+ℹ️ Un membre de l'équipe CAP vous répondra sous 24h (jours ouvrés).`,
+  autre: `👋 Bonjour ! Comment pouvons-nous vous aider ?
+
+N'hésitez pas à décrire votre demande.
+
+ℹ️ Un membre de l'équipe CAP vous répondra sous 24h (jours ouvrés).`
 };
 
 /**
  * Créer un canal de support générique
  * @param type - Type de support ('fiche', 'atelier', 'tech', 'autre')
  * @param requesterId - ID de l'utilisateur qui demande le support
- * @param ficheId - ID de la fiche navette (requis uniquement pour type='fiche')
+ * @param ficheId - ID de la fiche navette (optionnel, pour context futur)
  */
 export async function createSupportChannel(
   type: SupportType,
@@ -82,31 +102,32 @@ export async function createSupportChannel(
   try {
     const client = getStreamClient();
 
-    // Validation : ficheId est requis pour type='fiche'
-    if (type === 'fiche' && !ficheId) {
-      throw new Error('ficheId is required for type="fiche"');
-    }
-
     let channelName: string;
     let channelId: string;
 
     // Générer le nom et l'ID du canal selon le type
     switch (type) {
       case 'fiche': {
-        // Récupérer les infos de la fiche
-        const ficheResults = await db
-          .select({ ref: ficheNavettes.ref })
-          .from(ficheNavettes)
-          .where(eq(ficheNavettes.id, ficheId!))
-          .limit(1);
+        // Si ficheId fourni, récupérer les infos de la fiche pour nommer le canal
+        if (ficheId) {
+          const ficheResults = await db
+            .select({ ref: ficheNavettes.ref })
+            .from(ficheNavettes)
+            .where(eq(ficheNavettes.id, ficheId))
+            .limit(1);
 
-        if (!ficheResults.length) {
-          throw new Error(`Fiche not found: ${ficheId}`);
+          if (!ficheResults.length) {
+            throw new Error(`Fiche not found: ${ficheId}`);
+          }
+
+          const ficheRef = ficheResults[0].ref;
+          channelName = `Support ${ficheRef}`;
+          channelId = `fiche-${ficheId}`;
+        } else {
+          // Sans ficheId, créer un canal générique avec timestamp
+          channelName = `Support Fiche Navette - ${new Date().toLocaleDateString('fr-FR')}`;
+          channelId = `fiche-${Date.now()}`;
         }
-
-        const ficheRef = ficheResults[0].ref;
-        channelName = `Support ${ficheRef}`;
-        channelId = `fiche-${ficheId}`;
         break;
       }
       case 'atelier':
