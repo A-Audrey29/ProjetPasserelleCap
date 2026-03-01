@@ -146,6 +146,29 @@ function AppContent() {
   );
 }
 
+/**
+ * Formate le nom d'utilisateur pour le Chat Stream avec fallbacks robustes
+ * @param {Object|null|undefined} user - Objet utilisateur
+ * @returns {string} Nom formaté ou email ou 'Utilisateur'
+ */
+function formatChatName(user) {
+  // Cas 1: User null/undefined (loading state)
+  if (!user) return 'Invité';
+
+  // Cas 2: Construire le nom depuis firstName + lastName
+  const name = `${user.firstName || ''} ${user.lastName || ''}`
+    .trim()                    // Espaces au début/fin
+    .replace(/\s+/g, ' ');     // Espaces multiples → espace unique
+
+  // Cas 3: Si le nom est vide, fallback sur email
+  if (name) return name;
+  if (user.email) return user.email;
+
+  // Cas 4: Dernier recours - Monitoring alert + fallback défaut
+  console.warn('[Chat] User sans nom ni email:', user?.id || 'unknown');
+  return 'Utilisateur';
+}
+
 // Composant qui gère Stream Chat ET le ChatSidePanel
 function StreamChatClient({ user, isChatOpen, setIsChatOpen, unreadCount, setUnreadCount, toggleChat }) {
   
@@ -163,7 +186,7 @@ function StreamChatClient({ user, isChatOpen, setIsChatOpen, unreadCount, setUnr
   // ✅ MÉMORISER userData pour éviter les re-renders infinis
   const userData = useMemo(() => ({
     id: user.id,
-    name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+    name: formatChatName(user),
     email: user.email,
     image: user.avatar || undefined,
   }), [user.id, user.firstName, user.lastName, user.email, user.avatar]);
