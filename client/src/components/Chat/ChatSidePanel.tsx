@@ -14,6 +14,8 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
   const { client } = useChatContext();
   const [showSuccess, setShowSuccess] = useState(false);
   const [showChannels, setShowChannels] = useState(false);
+  type ChatViewState = 'menu' | 'chat';
+  const [chatViewState, setChatViewState] = useState<ChatViewState>('menu');
   const { toast } = useToast();
   const { toggleChat } = useContext(ChatContext);
 
@@ -55,6 +57,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
   useEffect(() => {
     if (isOpen && client) {
       setUnreadCount(0);
+      setChatViewState('menu');
     }
   }, [isOpen, client, setUnreadCount]);
 
@@ -128,6 +131,8 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
         title: "Discussion créée",
         description: config.toastDescription,
       });
+
+      setChatViewState('chat');
     } catch (error) {
       toast({
         title: "Erreur",
@@ -142,49 +147,64 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
   const handleCreateTechSupport = () => handleCreateSupport('tech');
   const handleCreateAutreSupport = () => handleCreateSupport('autre');
 
+  const handleShowMyRequests = () => {
+    if (!client?.userID) {
+      toast({
+        title: "Erreur",
+        description: "Chat non connecté",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setChatViewState('chat');
+  };
+
   const panelClass = `chat-side-panel ${isOpen ? 'open' : ''}`;
 
   return (
     <div className={panelClass}>
       {client ? (
-        <div className="chat-layout-container">
-          {/* ✅ Colonne GAUCHE : Header + Boutons (largeur fixe 300px) */}
-          <div className="chat-left-column">
-            {/* Header avec toggle conversations (mobile) + "Messagerie" + croix de fermeture */}
-            <div className="chat-header-section">
+        <>
+          {/* ✅ Header visible dans tous les cas */}
+          <div className="chat-header-section">
+            <button
+              className="chat-channels-toggle-button"
+              onClick={() => {
+                setChatViewState('chat');
+                setShowChannels(true);
+              }}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                border: 'none',
+                background: showChannels ? '#3b82f6' : 'transparent',
+                color: showChannels ? '#ffffff' : '#4b5563',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+              title="Mes demandes"
+            >
+              Mes demandes
+            </button>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginLeft: 'auto' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', margin: 0 }}>Messagerie</h2>
               <button
-                className="chat-channels-toggle-button"
-                onClick={() => setShowChannels(!showChannels)}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                  border: 'none',
-                  background: showChannels ? '#3b82f6' : 'transparent',
-                  color: showChannels ? '#ffffff' : '#4b5563',
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  display: 'none'
-                }}
-                title="Conversations"
+                onClick={() => window.toggleChatGlobal?.()}
+                style={{ padding: '4px', borderRadius: '4px', cursor: 'pointer', transition: 'background-color 0.2s', border: 'none', background: 'transparent' }}
+                title="Fermer"
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                Conversations
+                <X size={18} style={{ color: '#4b5563' }} />
               </button>
-              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginLeft: 'auto' }}>
-                <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', margin: 0 }}>Messagerie</h2>
-                <button
-                  onClick={() => window.toggleChatGlobal?.()}
-                  style={{ padding: '4px', borderRadius: '4px', cursor: 'pointer', transition: 'background-color 0.2s', border: 'none', background: 'transparent' }}
-                  title="Fermer"
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <X size={18} style={{ color: '#4b5563' }} />
-                </button>
-              </div>
             </div>
+          </div>
 
+          {/* ✅ Colonne GAUCHE : Boutons (largeur fixe 300px) */}
+          <div className={`chat-left-column ${chatViewState === 'chat' ? 'chat-left-column-hidden' : ''}`}>
             {/* Boutons d'action */}
             <div className="chat-buttons-section">
               <h3 className="chat-support-title">
@@ -239,7 +259,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
 
           {/* ✅ Colonne DROITE : Zone Stream Chat */}
           <Chat client={client}>
-            <div className={`chat-right-column ${showChannels ? 'show-channels-overlay' : ''}`}>
+            <div className={`chat-right-column ${chatViewState === 'menu' ? 'chat-right-column-hidden' : ''} ${showChannels ? 'show-channels-overlay' : ''}`}>
               {/* ChannelList */}
               <div className={`chat-channel-list ${showChannels ? 'chat-channel-list-open' : ''}`}>
                 <div className="chat-channels-overlay-header" style={{ display: 'none' }}>
@@ -269,6 +289,35 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
                   sort={{ last_message_at: -1 }}
                   options={{ presence: true, state: true }}
                   showChannelSearch
+                  EmptyStateIndicator={() => (
+                    <div className="chat-empty-state">
+                      <div className="chat-empty-state-emoji">💬</div>
+                      <h3 className="chat-empty-state-title">Aucune demande en cours</h3>
+                      <p className="chat-empty-state-text">Vous n'avez pas encore de conversation avec le support.</p>
+
+                      <div className="chat-empty-state-instructions">
+                        <div className="chat-empty-state-instructions-title">
+                          <span>💡</span>
+                          Pour créer une demande :
+                        </div>
+                        <ol className="chat-empty-state-instructions-list">
+                          <li className="chat-empty-state-list-item">
+                            <strong>Fermez cette fenêtre</strong> en cliquant sur
+                            <span className="chat-empty-state-close-icon">✕</span>
+                            en haut à droite
+                          </li>
+                          <li className="chat-empty-state-list-item">
+                            Cliquez sur <strong>💬 Messagerie</strong> dans le header
+                          </li>
+                          <li className="chat-empty-state-list-item">
+                            Choisissez le type d'aide dont vous avez besoin
+                          </li>
+                        </ol>
+                      </div>
+
+                      <p className="chat-empty-state-note">ℹ️ Un membre de l'équipe CAP vous répondra sous 24h (jours ouvrés)</p>
+                    </div>
+                  )}
                 />
               </div>
 
@@ -291,7 +340,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
               </div>
             </div>
           </Chat>
-        </div>
+        </>
       ) : (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
           <div style={{ animation: 'spin 1s linear infinite', borderRadius: '50%', height: '32px', width: '32px', borderBottom: '2px solid #111827' }}></div>

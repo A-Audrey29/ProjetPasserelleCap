@@ -148,11 +148,11 @@ export default function Home() {
                     </h2>
                     <div className={styles.textContent}>
                       <p>
-                        Le <strong>Contrat d'Accompagnement Personnalisé</strong> (CAP) est un dispositif d'aide aux familles
+                        Le <strong>Carnet d'Accompagnement Personnalisé</strong> (CAP) est un dispositif d'aide aux familles
                         qui facilite l'accès aux services et prestations nécessaires à l'épanouissement familial.
                       </p>
                       <p>
-                        Ce contrat personnalisé permet un accompagnement sur mesure, adapté aux besoins spécifiques
+                        Ce carnet personnalisé permet un accompagnement sur mesure, adapté aux besoins spécifiques
                         de chaque famille, en mobilisant les ressources locales et en coordonnant les interventions
                         des différents acteurs sociaux.
                       </p>
@@ -237,7 +237,7 @@ export default function Home() {
                       Notre mission
                     </h2>
                     <p className={styles.missionDescription}>
-                      Passerelle CAP digitalise et simplifie la gestion des contrats d'accompagnement personnalisé.
+                      Passerelle CAP digitalise et simplifie la gestion des carnets d'accompagnement personnalisé.
                       Notre plateforme permet aux professionnels de l'action sociale de se concentrer sur l'essentiel :
                       <strong> l'accompagnement humain des familles</strong>.
                     </p>

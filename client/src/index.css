@@ -517,6 +517,7 @@ table td {
   display: flex;
   flex-direction: column;
   background-color: #f9fafb;
+  overflow: hidden;
 }
 
 .chat-header-section {
@@ -526,6 +527,9 @@ table td {
   border-bottom: 1px solid #e5e7eb;
   padding: 12px;
   min-height: 48px;
+  flex-shrink: 0;
+  width: 100%;
+  background-color: #ffffff;
 }
 
 /* Masquer le nombre de membres et de membres en ligne dans le ChannelHeader */
@@ -540,6 +544,7 @@ table td {
   flex-direction: column;
   gap: 8px;
   overflow-y: auto;
+  height: 100%;
 }
 
 .chat-support-title {
@@ -685,12 +690,88 @@ table td {
     min-height: 44px;
   }
 
-  /* Bouton toggle conversations - visible uniquement sur mobile */
-  .chat-channels-toggle-button {
-    display: block !important;
+  /* Force le hide sur mobile pour éviter les conflits */
+  .chat-left-column-hidden {
+    display: none !important;
   }
 
-  /* Conversations list overlay sur mobile */
+  .chat-right-column-hidden {
+    display: none !important;
+  }
+
+  /* En mode chat, la zone prend tout l'espace */
+  .chat-right-column:not(.chat-right-column-hidden) {
+    width: 100%;
+    flex: 1;
+  }
+
+  /* Empty state fullscreen sur mobile */
+  .chat-empty-state {
+    padding: 24px 16px !important;
+  }
+
+  .chat-empty-state-emoji {
+    font-size: 48px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .chat-empty-state-title {
+    font-size: 18px !important;
+  }
+
+  .chat-empty-state-text {
+    font-size: 14px !important;
+  }
+
+  .chat-empty-state-instructions {
+    padding: 16px !important;
+    max-width: 100% !important;
+  }
+
+  .chat-empty-state-instructions-title {
+    font-size: 13px !important;
+  }
+
+  .chat-empty-state-instructions-list {
+    font-size: 13px !important;
+  }
+}
+
+/* ============================================================================
+   CHANNEL LIST - Desktop & Tablette (>768px)
+   ============================================================================ */
+
+/* Bouton toggle conversations - visible sur tous les écrans */
+.chat-channels-toggle-button {
+  display: block !important;
+}
+
+/* Par défaut : channel list cachée */
+.chat-channel-list:not(.chat-channel-list-open) {
+  display: none;
+}
+
+/* Channel list visible quand ouverte - Desktop & Tablette */
+.chat-channel-list.chat-channel-list-open {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+  width: 320px;
+  min-width: 320px;
+}
+
+/* Header de l'overlay - caché par défaut (visible uniquement sur mobile) */
+.chat-channels-overlay-header {
+  display: none !important;
+}
+
+/* ============================================================================
+   CHANNEL LIST OVERLAY - Mobile (≤768px)
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  /* Channel list en overlay avec animation slide-in */
   .chat-channel-list {
     position: fixed;
     top: 0;
@@ -698,8 +779,8 @@ table td {
     bottom: 0;
     z-index: 100;
     background-color: white;
-    width: 80%;
-    max-width: 280px;
+    width: 320px;
+    max-width: 85vw;
     min-width: unset !important;
     border-right: 1px solid #e5e7eb;
     transform: translateX(-100%);
@@ -710,9 +791,10 @@ table td {
 
   .chat-channel-list.chat-channel-list-open {
     transform: translateX(0);
+    display: flex;
   }
 
-  /* Header de l'overlay conversations */
+  /* Header de l'overlay visible uniquement sur mobile */
   .chat-channels-overlay-header {
     display: flex !important;
     align-items: center;
@@ -741,4 +823,109 @@ table td {
     opacity: 1;
     pointer-events: auto;
   }
+}
+
+/* ============================================================================
+   ÉTATS DE VUE DU CHAT (menu vs chat) - Global (hors mobile)
+   ============================================================================ */
+
+/* Masquer la colonne gauche (boutons) quand en mode chat */
+.chat-left-column-hidden {
+  display: none;
+}
+
+/* Masquer la colonne droite (chat) quand en mode menu */
+.chat-right-column-hidden {
+  display: none;
+}
+
+/* Empty State Styles */
+.chat-empty-state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.chat-empty-state-emoji {
+  font-size: 56px;
+  margin-bottom: 20px;
+}
+
+.chat-empty-state-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+}
+
+.chat-empty-state-text {
+  font-size: 15px;
+  color: #6b7280;
+  margin: 0 0 32px 0;
+  line-height: 1.6;
+  max-width: 320px;
+}
+
+.chat-empty-state-instructions {
+  background-color: #f3f4f6;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 360px;
+  text-align: left;
+}
+
+.chat-empty-state-instructions-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-empty-state-instructions-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 2;
+}
+
+.chat-empty-state-list-item {
+  margin-bottom: 4px;
+}
+
+.chat-empty-state-list-item strong {
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.chat-empty-state-close-icon {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+.chat-empty-state-note {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 24px 0 0 0;
+  font-style: italic;
 }
