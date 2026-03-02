@@ -1,15 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Eye, FileText, Plus, Search, Filter, Calendar, User, Building, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiches } from '@/hooks/useFiches';
 import { hasPermission, ROLES, ACTIONS } from '@/utils/permissions';
-import Header from '@/components/Layout/Header';
-import Footer from '@/components/Layout/Footer';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
 import { Card, CardContent } from '@/components/common/Card';
+import WorkshopStateFilter from '@/components/Fiches/WorkshopStateFilter';
 import styles from './Fiches.module.css';
 
 // Import state labels from constants
@@ -38,46 +37,72 @@ export default function Fiches() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [stateFilter, setStateFilter] = useState('');
-  
+  const [workshopStateFilter, setWorkshopStateFilter] = useState('');
+  const location = useLocation();
+
   const userRole = user?.role ?? user?.user?.role;
 
-  // Read URL parameters on component mount
+  // 🔴 LOG DE RENDU - Trace l'état actuel du composant
+  console.log('🔴 RENDU COMPOSANT', { stateFilter, location: window.location.href });
+
+  // Read URL parameters on component mount and when location changes
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const stateParam = urlParams.get('state');
     const searchParam = urlParams.get('search');
-    
-    if (stateParam) {
-      setStateFilter(stateParam);
-    }
-    if (searchParam) {
-      setSearchTerm(searchParam);
-    }
-  }, []);
+
+    // 🔵 LOG D'EFFECT - Trace quand l'effect se déclenche
+    console.log('🔵 EFFECT TRIGGER', { url: window.location.search, incomingParam: urlParams.get('state') });
+
+        // IMPORTANT : On gère l'absence du paramètre pour réinitialiser le filtre
+      if (stateParam) {
+        setStateFilter(stateParam);
+      } else {
+        setStateFilter(''); // Reset si le paramètre a disparu de l'URL
+      }
+
+      if (searchParam) {
+        setSearchTerm(searchParam);
+      } else {
+        setSearchTerm(''); // Reset du search aussi
+      }
+  }, [location]);
 
   const [, setLocation] = useLocation();
 
-  // Build filters object for useFiches hook
-  const buildFilters = () => {
-    const filters = {};
-    if (searchTerm) filters.search = searchTerm;
-    if (stateFilter && stateFilter !== 'all') filters.state = stateFilter;
-    
+  // Build filters object for useFiches hook (memoized to prevent unnecessary re-renders)
+  const filters = useMemo(() => {
+    const f = {};
+    if (searchTerm) f.search = searchTerm;
+    if (stateFilter && stateFilter !== 'all') f.state = stateFilter;
+    if (workshopStateFilter) f.workshopState = workshopStateFilter;
+
     // For CD role filtering - check URL to determine which CD action
     if (userRole === ROLES.CD) {
       const urlParams = new URLSearchParams(window.location.search);
       const isValidationPage = urlParams.get('state') === 'SUBMITTED_TO_CD';
-      
+
       if (isValidationPage) {
-        filters.state = 'SUBMITTED_TO_CD';
+        f.state = 'SUBMITTED_TO_CD';
       }
     }
-    
-    return filters;
-  };
+
+    // For EVS_CS role - exclude rejected and closed states
+    if (userRole === ROLES.EVS_CS) {
+      f.excludeStates = 'ARCHIVED,CLOSED,SUBMITTED_TO_FEVES';
+    }
+
+    return f;
+  }, [searchTerm, stateFilter, workshopStateFilter, userRole]);
+
+  // 🔮 LOG : Voir ce qui est envoyé à l'API
+  console.log('🟢 FILTERS SENT TO API', filters);
 
   // Use centralized useFiches hook (uses apiRequest with credentials:'include')
-  const { fiches, isLoading: loading, error } = useFiches(buildFilters());
+  const { fiches, isLoading: loading, error } = useFiches(filters);
+
+  // 🔮 LOG : Voir ce qui est reçu de l'API
+  console.log('🟢 FICHES RECEIVED', { count: fiches.length, states: fiches.map(f => f.state) });
 
   // Gestion explicite du 401 : banner visible avec bouton (pas de redirection auto)
   const isAuthError = error?.message?.includes('401') || error?.message?.includes('Session expirée');
@@ -158,8 +183,6 @@ export default function Fiches() {
 
   return (
     <div className={styles.fichesContainer}>
-      <Header />
-      
       <main className={styles.mainContent}>
         <div className={styles.headerSection}>
           <div className={styles.titleSection}>
@@ -208,21 +231,29 @@ export default function Fiches() {
 
           {/* Only show status filter for non-CD users or CD users in "Consulter les Fiches" mode */}
           {(userRole !== ROLES.CD || (userRole === ROLES.CD && new URLSearchParams(window.location.search).get('state') !== 'SUBMITTED_TO_CD')) && (
-            <div className={styles.filterSection}>
-              <Filter className={styles.filterIcon} />
-              <select 
-                className={styles.stateFilter}
-                value={stateFilter}
-                onChange={(e) => setStateFilter(e.target.value)}
-                data-testid="select-state-filter"
-              >
-                <option value="">Filtrer par état</option>
-                <option value="all">Tous les états</option>
-                {Object.entries(FILTERABLE_STATES).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
-                ))}
-              </select>
-            </div>
+            <>
+              <div className={styles.filterSection}>
+                <Filter className={styles.filterIcon} />
+                <select
+                  className={styles.stateFilter}
+                  value={stateFilter}
+                  onChange={(e) => setStateFilter(e.target.value)}
+                  data-testid="select-state-filter"
+                >
+                  <option value="">Filtrer par état</option>
+                  <option value="all">Tous les états</option>
+                  {Object.entries(FILTERABLE_STATES).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <WorkshopStateFilter
+                value={workshopStateFilter}
+                onChange={setWorkshopStateFilter}
+                className={styles.filterSection}
+              />
+            </>
           )}
         </div>
 
@@ -328,7 +359,6 @@ export default function Fiches() {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 }

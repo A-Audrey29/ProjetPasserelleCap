@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Phone, Mail, MapPin } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import Header from '@/components/Layout/Header';
-import Footer from '@/components/Layout/Footer';
 import styles from './Contact.module.css';
 
 export default function Contact() {
@@ -20,7 +18,6 @@ export default function Contact() {
   if (authLoading) {
     return (
       <div className={styles.contactContainer}>
-        <Header />
         <main className={styles.mainContent}>
           <div className={styles.loadingContainer}>
             <div className={styles.loadingContent}>
@@ -39,8 +36,6 @@ export default function Contact() {
 
   return (
     <div className={styles.contactContainer}>
-      <Header />
-      
       <main className={styles.mainContent}>
         <div className={styles.headerSection}>
           <h1 className={styles.pageTitle}>
@@ -175,7 +170,6 @@ export default function Contact() {
           */}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

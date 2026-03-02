@@ -4,8 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus, Download } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFiches, useDashboardStats } from '@/hooks/useFiches';
-import Header from '@/components/Layout/Header';
-import Footer from '@/components/Layout/Footer';
 import KPICards from '@/components/Dashboard/KPICards';
 import FilterBar from '@/components/Dashboard/FilterBar';
 import FichesList from '@/components/Fiches/FichesList';
@@ -56,8 +54,6 @@ export default function Dashboard() {
 
   return (
     <div className={styles.dashboardContainer}>
-      <Header />
-
       <main className={styles.mainContent}>
         {/* Header */}
         <div className={styles.headerSection}>
@@ -118,7 +114,6 @@ export default function Dashboard() {
           }}
         />
       </main>
-      <Footer />
     </div>
   );
 }

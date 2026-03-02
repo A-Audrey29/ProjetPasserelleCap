@@ -14,13 +14,18 @@ export const STATE_LABELS = {
   ARCHIVED: 'Archivé'
 };
 
-// States available for filtering (excludes obsolete workshop states)
+// States available for filtering (includes all workflow states)
 export const FILTERABLE_STATES = {
   DRAFT: 'Brouillon',
   SUBMITTED_TO_FEVES: 'Envoyé FEVES',
   ASSIGNED_EVS: 'Affecté EVS',
   ACCEPTED_EVS: 'Accepté EVS',
   EVS_REJECTED: 'Refusé EVS',
+  CONTRACT_SIGNED: 'Ateliers en cours',
+  ACTIVITY_DONE: 'Ateliers terminés',
+  FIELD_CHECK_SCHEDULED: 'Vérification programmée',
+  FIELD_CHECK_DONE: 'Vérification effectuée',
+  FINAL_REPORT_RECEIVED: 'Rapport final reçu',
   CLOSED: 'Clôturé',
   ARCHIVED: 'Archivé'
 };
@@ -51,6 +56,21 @@ export const OBJECTIVE_LABELS = {
   OBJ1: 'Compétences parentales',
   OBJ2: 'Communication intergénérationnelle',
   OBJ3: 'Dynamiques par le sport'
+};
+
+// Workshop states (computed from enrollments)
+export const WORKSHOP_STATE_LABELS = {
+  NOT_STARTED: 'En attente',
+  IN_PROGRESS: 'En cours',
+  COMPLETED: 'Terminés',
+  PARTIAL: 'Partiellement terminés'
+};
+
+export const WORKSHOP_STATE = {
+  NOT_STARTED: 'NOT_STARTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  PARTIAL: 'PARTIAL'
 };
 
 // API endpoints

@@ -29,6 +29,8 @@ export async function setupVite(app: Express, server: Server) {
 
   const vite = await createViteServer({
     plugins: [react],
+    mode: process.env.NODE_ENV || 'development',
+    envDir: path.resolve(import.meta.dirname, ".."),
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "..", "client", "src"),

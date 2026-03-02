@@ -17,7 +17,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { logError } from "./utils/errorLogger";
 import { getErrorMessage, getErrorCode, ErrorCodes } from "./utils/errorCodes";
-import { requireAuth } from "./middleware/rbac";
+import { requireAuth } from "./middleware/rbac.js";
 import { protectUploadAccess } from "./middleware/uploadSecurity";
 import { storage } from "./storage";
 import { downloadFile, type UploadKind } from "./utils/ftpsUpload";
