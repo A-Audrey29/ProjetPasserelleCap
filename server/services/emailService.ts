@@ -114,7 +114,7 @@ class EmailService {
             <p><strong>Référence :</strong> ${ficheRef}</p>
           </div>
           
-          <p>Veuillez vous connecter à la plateforme Passerelle CAP pour consulter les détails de cette fiche et commencer l'accompagnement.</p>
+          <p>Veuillez vous connecter à la plateforme Passerelle CAP pour consulter les détails de cette fiche navette et la valider pour commencer l'accompagnement (ou la refuser si besoin).</p>
           
           <div style="text-align: center; margin: 30px 0;">
             <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" 
@@ -188,7 +188,7 @@ class EmailService {
             <p><strong>Fiches concernées :</strong> ${ficheList}</p>
           </div>
           
-          <p>Vous pouvez maintenant organiser le démarrage de cet atelier avec les familles inscrites.</p>
+          <p>Vous avez organisé le démarrage de cet atelier avec les familles inscrites et vos partenaires. Si c'est le cas, allez sur la plateforme, dans votre interface, puis dans l'onglet 'Gestion ateliers', vous trouverez l'atelier 'prêt à démarrer', vous devez cocher l'une des cases correspondantes à la situation de votre stucture (EVS ou communale).</p>
           
           <div style="text-align: center; margin: 30px 0;">
             <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers" 
@@ -218,7 +218,7 @@ class EmailService {
         Nombre de participants : ${participantCount}
         Fiches concernées : ${ficheList}
         
-        Vous pouvez maintenant organiser le démarrage de cet atelier avec les familles inscrites.
+       Vous avez organisé le démarrage de cet atelier avec les familles inscrites et vos partenaires. Si c'est le cas, allez sur la plateforme, dans votre interface, puis dans l'onglet 'Gestion ateliers', vous trouverez l'atelier 'prêt à démarrer', vous devez cocher l'une des cases correspondantes à la situation de votre stucture (EVS ou communale).
         
         Lien : ${process.env.FRONTEND_URL || 'http://localhost:5173'}/ateliers
         
