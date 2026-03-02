@@ -530,6 +530,8 @@ table td {
   flex-shrink: 0;
   width: 100%;
   background-color: #ffffff;
+  z-index: 100;
+  position: relative;
 }
 
 /* Masquer le nombre de membres et de membres en ligne dans le ChannelHeader */
