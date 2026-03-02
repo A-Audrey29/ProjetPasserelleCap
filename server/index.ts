@@ -27,10 +27,22 @@ const app = express();
 // Trust proxy - necessary for rate limiting to work correctly in proxied environments (Replit, etc.)
 app.set("trust proxy", 1);
 
-// Helmet security headers - CSP enabled in production for better security
+// Helmet security headers - CSP enabled in production with Stream Chat support
 app.use(
   helmet({
-    contentSecurityPolicy: process.env.NODE_ENV === "production", // Enable CSP in production only
+    contentSecurityPolicy: process.env.NODE_ENV === "production" ? {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        // Autoriser Stream Chat (WebSocket + HTTPS)
+        "connect-src": ["'self'", "https://chat.stream-io-api.com", "wss://chat.stream-io-api.com"],
+        // Autoriser les styles inline (nécessaire pour certains composants)
+        "style-src": ["'self'", "'unsafe-inline'"],
+        // Autoriser les images data: et HTTPS
+        "img-src": ["'self'", "data:", "https:"],
+        // Autoriser les scripts depuis le même origine uniquement
+        "script-src": ["'self'"],
+      }
+    } : false, // CSP désactivée en développement
   }),
 );
 
