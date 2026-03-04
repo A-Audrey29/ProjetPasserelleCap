@@ -1,15 +1,60 @@
-node_modules
-dist
-.DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
+# ========================================
+# DEPENDENCIES
+# ========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Environment variables - NEVER commit secrets!
-# Ignore ALL .env files EXCEPT .env.example
-.env*
+# ========================================
+# ENVIRONNEMENT & SECRETS
+# ========================================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+
+# Exception: on commit le template
 !.env.example
 
-# Uploads directory
+# ========================================
+# BUILD OUTPUT
+# ========================================
+dist/
+build/
+*.log
+
+# ========================================
+# UPLOADS
+# ========================================
 uploads/
-.claude/
+*.tmp
+temp/
+
+# ========================================
+# IDE & EDITORS
+# ========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ========================================
+# TESTING & COVERAGE
+# ========================================
+coverage/
+.nyc_output/
+*.lcov
+
+# ========================================
+# MISC
+# ========================================
+*.pid
+*.seed
+*.pid.lock
+.cache/
