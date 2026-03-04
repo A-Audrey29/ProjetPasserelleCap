@@ -3,16 +3,29 @@
 // in order of priority, with Replit Secrets taking precedence over file-based variables
 import 'dotenv/config'; // Cette ligne charge le fichier .env dans process.env
 import fetch from 'node-fetch';
+import path from 'path';
+import { fileURLToPath } from 'url';
 globalThis.fetch = fetch;
 
 import dotenvFlow from "dotenv-flow";
-dotenvFlow.config();
+
+// Calculate __dirname for ESM (equivalent to CommonJS __dirname)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure dotenv-flow to search for .env files in the project root (Repo/ directory)
+// This ensures environment variables are loaded before any other modules that depend on them
+// The .env.development file is located in the parent directory (Repo/), not in server/
+dotenvFlow.config({
+  path: path.resolve(__dirname, '..'), // Go up one level from server/ to Repo/
+  default_node_env: 'development'
+});
 
 import express, { type Request, Response, NextFunction } from "express";
-import path from "path";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import * as fs from "fs/promises";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { logError } from "./utils/errorLogger";
@@ -108,21 +121,44 @@ app.get("/uploads/:subfolder/:filename", requireAuth, protectUploadAccess, async
     const result = await downloadFile(subfolder as UploadKind, filename);
 
     if (!result.success) {
-      // Handle specific error codes
-      if (result.errorCode === "NOT_FOUND") {
-        log(`[FTPS] File not found on remote server: ${subfolder}/${filename}`);
-        return res.status(404).json({ message: "Fichier introuvable" });
+      // FTPS download failed - try LOCAL FALLBACK
+      // This allows development without FTPS and provides resilience in production
+      const localPath = path.join(process.cwd(), 'uploads', subfolder, filename);
+
+      try {
+        // Check if file exists locally
+        await fs.access(localPath);
+
+        // File exists locally - serve it
+        log(`[LOCAL] File found locally after FTPS failure: ${subfolder}/${filename}`);
+        log(`[LOCAL] Serving from: ${localPath}`);
+
+        // Set headers for PDF
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+
+        return res.sendFile(localPath);
+      } catch (localErr: any) {
+        // File doesn't exist locally either - return appropriate error
+        log(`[LOCAL] File not found locally after FTPS failure: ${localPath}`);
+        log(`[LOCAL] Error: ${localErr.message}`);
+
+        // Handle specific FTPS error codes
+        if (result.errorCode === "NOT_FOUND") {
+          log(`[FTPS] File not found on remote server: ${subfolder}/${filename}`);
+          return res.status(404).json({ message: "Fichier introuvable" });
+        }
+        if (result.errorCode === "TIMEOUT") {
+          log(`[FTPS] Timeout downloading: ${subfolder}/${filename}`);
+          return res.status(504).json({ message: "Timeout serveur de fichiers" });
+        }
+        if (result.errorCode === "CONNECTION_ERROR") {
+          log(`[FTPS] Connection error: ${subfolder}/${filename}`);
+          return res.status(503).json({ message: "Serveur de fichiers indisponible" });
+        }
+        log(`[FTPS] Unknown error downloading: ${subfolder}/${filename}`);
+        return res.status(500).json({ message: "Erreur serveur" });
       }
-      if (result.errorCode === "TIMEOUT") {
-        log(`[FTPS] Timeout downloading: ${subfolder}/${filename}`);
-        return res.status(504).json({ message: "Timeout serveur de fichiers" });
-      }
-      if (result.errorCode === "CONNECTION_ERROR") {
-        log(`[FTPS] Connection error: ${subfolder}/${filename}`);
-        return res.status(503).json({ message: "Serveur de fichiers indisponible" });
-      }
-      log(`[FTPS] Unknown error downloading: ${subfolder}/${filename}`);
-      return res.status(500).json({ message: "Erreur serveur" });
     }
 
     // Set headers for PDF streaming

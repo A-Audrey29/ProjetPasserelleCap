@@ -31,10 +31,17 @@ function required(name: string, value: string | undefined): string {
   return value;
 }
 
-function getFTPSConfig(): FTPSConfig {
+function getFTPSConfig(): FTPSConfig | null {
   // CRITICAL: o2switch FTP client lands at system root (/) but files are in user home directory
   // Production: /home/kalo4499/uploads/uploads/ (absolute path on o2switch server)
   // Development: /uploads/ (relative path or local)
+
+  // In development, if FTP credentials are not configured, return null
+  // This allows development without FTPS while keeping production functionality
+  if (process.env.NODE_ENV === 'development' && !process.env.FTP_HOST) {
+    return null;
+  }
+
   const defaultBaseDir = process.env.NODE_ENV === 'production'
     ? '/home/kalo4499/uploads/uploads'
     : '/uploads';
@@ -175,6 +182,12 @@ class FTPSUploader {
 /** Vérifie la connexion FTPS et la présence/permissions du dossier /uploads */
 export async function healthCheck(): Promise<{ ok: boolean; cwd?: string; message?: string }> {
   const cfg = getFTPSConfig();
+
+  // En développement sans FTP, retourner OK
+  if (!cfg) {
+    return { ok: true, message: "FTPS not configured (development mode)" };
+  }
+
   const client = new Client();
   client.ftp.verbose = cfg.verbose;
   try {
@@ -197,9 +210,12 @@ export async function healthCheck(): Promise<{ ok: boolean; cwd?: string; messag
 }
 
 /**
- * Upload d’un fichier local (chemin absolu côté Render) vers:
+ * Upload d'un fichier local (chemin absolu côté Render) vers:
  *  - /uploads/navettes/<fileName> si kind="navettes"
  *  - /uploads/bilans/<fileName>   si kind="bilans"
+ *
+ * Note: En développement sans FTP configuré, retourne success=true
+ *       pour permettre le fonctionnement local (fichier stocké localement)
  */
 export async function uploadFile(localPath: string, fileName: string, kind: UploadKind): Promise<UploadResult> {
   const cfg = getFTPSConfig();
@@ -209,6 +225,13 @@ export async function uploadFile(localPath: string, fileName: string, kind: Uplo
   const safeName = (fileName || "").replace(/^.*[/\\]/, "");
   if (!safeName) {
     return { success: false, message: "fileName is empty" };
+  }
+
+  // En développement sans FTP configuré, on considère l'upload comme réussi
+  // Le fichier reste stocké localement dans uploads/
+  if (!cfg) {
+    console.log(`[FTPS] Development mode: No FTP config, keeping file locally at ${localPath}`);
+    return { success: true, message: "File stored locally (development mode)" };
   }
 
   const remotePath = buildRemotePath(cfg.baseDir, kind, safeName);
@@ -251,6 +274,18 @@ export async function downloadFile(
   onClose?: () => void
 ): Promise<DownloadResult> {
   const cfg = getFTPSConfig();
+
+  // En développement sans FTP, retourner une erreur CONNECTION_ERROR
+  // Cela permettra au fallback local dans server/index.ts de prendre le relais
+  if (!cfg) {
+    console.log(`[FTPS] Development mode: No FTP config, triggering local fallback`);
+    return {
+      success: false,
+      errorCode: "CONNECTION_ERROR",
+      message: "FTP not configured in development, using local fallback"
+    };
+  }
+
   const client = new Client(cfg.connTimeoutMs);
   client.ftp.verbose = cfg.verbose;
 
