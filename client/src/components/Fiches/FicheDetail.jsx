@@ -14,7 +14,8 @@ import {
   RotateCcw,
   Archive,
   Trash2,
-  Target
+  Target,
+  Download
 } from 'lucide-react';
 import StatusBadge from '@/components/Common/StatusBadge';
 import StateTimeline from './StateTimeline';
@@ -1353,6 +1354,29 @@ export default function FicheDetail({ ficheId }) {
                             <span className={styles.workshopCompleteBadge}>Bilan disponible</span>
                           )}
                         </div>
+
+                        {/* Template Download Help - Visible for all when no report is uploaded yet */}
+                        {!enrollment.reportUrl && (
+                          <div className={styles.templateHelp}>
+                            <p className={styles.templateHelpText}>
+                              <span className={styles.templateHelpIcon}>💡</span>
+                              Processus à suivre :
+                            </p>
+                            <ol className={styles.templateHelpSteps}>
+                              <li>Télécharger le template vierge</li>
+                              <li>Remplir le formulaire</li>
+                              <li>Uploader le bilan complété ci-dessous</li>
+                            </ol>
+                            <a
+                              href="/templates/FicheDeSuiviAtelier.pdf"
+                              download="FicheDeSuiviAtelier.pdf"
+                              className={styles.downloadTemplateButton}
+                            >
+                              <Download className={styles.buttonIcon} size={16} />
+                              Télécharger le template PDF
+                            </a>
+                          </div>
+                        )}
 
                         <div className={styles.workshopReportActions}>
                           {/* Download button - visible if report exists */}

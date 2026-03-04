@@ -1770,3 +1770,59 @@
 .downloadReportLink:hover {
   background-color: #5A7A64;
 }
+
+/* Template Help Section */
+.templateHelp {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.templateHelpText {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #166534;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.templateHelpIcon {
+  font-size: 1.2rem;
+}
+
+.templateHelpSteps {
+  margin: 0 0 1rem 0;
+  padding-left: 1.25rem;
+  color: #15803D;
+  font-size: 0.875rem;
+}
+
+.templateHelpSteps li {
+  margin-bottom: 0.25rem;
+}
+
+.downloadTemplateButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #6A8B74;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.downloadTemplateButton:hover {
+  background-color: #5A7A64;
+}
+
+.buttonIcon {
+  flex-shrink: 0;
+}
