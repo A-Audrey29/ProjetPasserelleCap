@@ -18,6 +18,7 @@ import Fiches from "@/pages/Fiches";
 import Ateliers from "@/pages/Ateliers.jsx";
 import MentionsLegales from "@/pages/MentionsLegales";
 import PolitiqueConfidentialite from "@/pages/PolitiqueConfidentialite";
+import VideoFAQ from "@/pages/VideoFAQ";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.jsx";
 import { ChatSidePanel } from "@/components/Chat/ChatSidePanel";
 import Layout from "@/components/Layout/Layout.jsx";
@@ -103,6 +104,7 @@ function Router() {
           <Route path="/contact" component={withLayout(Contact)} />
           <Route path="/fiches" component={withLayout(Fiches)} />
           <Route path="/ateliers" component={withLayout(Ateliers)} />
+          <Route path="/video-faq" component={withLayout(VideoFAQ)} />
         </>
       ) : null}
       <Route component={withLayout(NotFound)} />
