@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { Menu, X, User, MessageCircle } from 'lucide-react';
+import { Menu, X, User, MessageCircle, Video } from 'lucide-react';
 import { useState, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth.jsx';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -59,6 +59,11 @@ export default function Header() {
     {
       href: '/contact',
       label: 'Nous contacter',
+      roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS', 'CD']
+    },
+    {
+      href: '/video-faq',
+      label: 'FAQ',
       roles: ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS', 'EVS_CS', 'CD']
     }
   ];

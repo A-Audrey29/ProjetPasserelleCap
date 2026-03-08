@@ -1,0 +1,220 @@
+/* VideoModal component styles */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 32rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+/* Close button */
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.closeButton:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.closeButton svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Info container */
+.infoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 2rem 2rem 2rem;
+  text-align: center;
+}
+
+.iconWrapper {
+  width: 5rem;
+  height: 5rem;
+  background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgb(var(--primary) / 0.7) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: white;
+}
+
+/* Info section */
+.info {
+  width: 100%;
+}
+
+.title {
+  font-family: var(--font-titles);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(var(--foreground));
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.category {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--primary));
+  background-color: rgb(var(--primary) / 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.description {
+  font-size: 1rem;
+  color: rgb(var(--muted-foreground));
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+/* Open link button */
+.openLinkButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.openLinkButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.buttonIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Note */
+.note {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+  line-height: 1.5;
+  margin: 0;
+  padding: 1rem;
+  background-color: rgb(var(--muted) / 0.3);
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .overlay {
+    padding: 0.5rem;
+  }
+
+  .modal {
+    max-height: 95vh;
+  }
+
+  .infoContainer {
+    padding: 2.5rem 1.5rem 1.5rem 1.5rem;
+  }
+
+  .closeButton {
+    width: 2rem;
+    height: 2rem;
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .closeButton svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .iconWrapper {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .icon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .description {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.125rem;
+  }
+
+  .category {
+    font-size: 0.8125rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .description {
+    font-size: 0.875rem;
+  }
+
+  .note {
+    font-size: 0.8125rem;
+  }
+}

@@ -1,0 +1,139 @@
+/* VideoCard component styles */
+.card {
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  border-color: rgb(var(--primary));
+}
+
+.card:focus {
+  outline: 2px solid rgb(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Icon container - remplace le thumbnail YouTube */
+.iconContainer {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* Aspect ratio 16:9 */
+  background: linear-gradient(135deg, rgb(var(--primary)) 0%, rgb(var(--primary) / 0.7) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Play overlay */
+.playOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playButton {
+  width: 4rem;
+  height: 4rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.card:hover .playButton {
+  transform: scale(1.1);
+  background-color: rgb(var(--primary-foreground));
+}
+
+.playIcon {
+  width: 2rem;
+  height: 2rem;
+  color: rgb(var(--primary));
+  margin-left: 0.25rem; /* Optical centering */
+  transition: color 0.3s ease;
+}
+
+.card:hover .playIcon {
+  color: rgb(var(--primary));
+}
+
+/* Content */
+.content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.category {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(var(--primary));
+  background-color: rgb(var(--primary) / 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  align-self: flex-start;
+}
+
+.title {
+  font-family: var(--font-titles);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.description {
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .content {
+    padding: 0.875rem;
+  }
+
+  .playButton {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .playIcon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .description {
+    font-size: 0.8125rem;
+    -webkit-line-clamp: 2;
+  }
+}
