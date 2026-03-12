@@ -54,18 +54,15 @@ export default function Fiches() {
     // 🔵 LOG D'EFFECT - Trace quand l'effect se déclenche
     console.log('🔵 EFFECT TRIGGER', { url: window.location.search, incomingParam: urlParams.get('state') });
 
-        // IMPORTANT : On gère l'absence du paramètre pour réinitialiser le filtre
-      if (stateParam) {
-        setStateFilter(stateParam);
-      } else {
-        setStateFilter(''); // Reset si le paramètre a disparu de l'URL
-      }
+    // IMPORTANT : On ne fait que SETTER les valeurs depuis l'URL, pas de reset automatique
+    // pour permettre la saisie utilisateur sans conflit
+    if (stateParam) {
+      setStateFilter(stateParam);
+    }
 
-      if (searchParam) {
-        setSearchTerm(searchParam);
-      } else {
-        setSearchTerm(''); // Reset du search aussi
-      }
+    if (searchParam) {
+      setSearchTerm(searchParam);
+    }
   }, [location]);
 
   const [, setLocation] = useLocation();

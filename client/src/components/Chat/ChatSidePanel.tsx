@@ -1,4 +1,4 @@
-import { Chat, ChannelList, Channel, Window, ChannelHeader, MessageList, MessageInput, useChatContext } from 'stream-chat-react';
+import { Chat, ChannelList, Channel, Window, ChannelHeader, MessageList, MessageInput, useChatContext, ChannelPreviewUIComponentProps } from 'stream-chat-react';
 import { X } from 'lucide-react';
 import { useState, useEffect, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +8,39 @@ interface ChatSidePanelProps {
   isOpen: boolean;
   setUnreadCount: (count: number) => void;
   onClose?: () => void;
+}
+
+// Composant personnalisé pour afficher le créateur et sa structure dans la liste des canaux
+function CustomChannelPreview(props: ChannelPreviewUIComponentProps) {
+  const { channel, setActiveChannel, activeChannel } = props;
+  const channelDetails = channel?.data?.channel_details;
+
+  return (
+    <div
+      onClick={() => setActiveChannel?.(channel)}
+      style={{
+        padding: '12px 16px',
+        cursor: 'pointer',
+        backgroundColor: activeChannel?.id === channel?.id ? '#f3f4f6' : 'transparent',
+        borderBottom: '1px solid #e5e7eb',
+        transition: 'background-color 0.2s',
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = activeChannel?.id === channel?.id ? '#f3f4f6' : '#f9fafb'}
+      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = activeChannel?.id === channel?.id ? '#f3f4f6' : 'transparent'}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ fontWeight: '500', fontSize: '14px', color: '#1f2937' }}>
+          {channel.data?.name || 'Support'}
+        </div>
+        {channelDetails && (
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            {channelDetails.requester_name || 'Utilisateur'}
+            {channelDetails.requester_structure && ` • ${channelDetails.requester_structure}`}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
@@ -34,24 +67,37 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
     return () => client.off('message.new', handleNewMessage);
   }, [client]);
 
-  // ✅ Gérer les non-lus
+  // ✅ Gérer les non-lus (avec événement global Stream.io)
   useEffect(() => {
     if (!client) return;
 
-    const updateUnreadCount = () => {
-      const unread = client.user?.unread_count || 0;
-      setUnreadCount(unread);
+    // Initialisation du compteur avec la valeur actuelle
+    const initialUnread = client.user?.total_unread_count || 0;
+    setUnreadCount(initialUnread);
+
+    // ✅ Écouter les événements GLOBAUX Stream (méthode officielle)
+    const handleStreamEvent = (event: any) => {
+      // Quand Stream met à jour le compteur total de messages non lus
+      if (event.total_unread_count !== undefined) {
+        setUnreadCount(event.total_unread_count);
+      }
+
+      // Optionnel : log pour debugging (uniquement en dev)
+      if (event.type === 'notification.message_new' || event.type === 'message.read') {
+        if (import.meta.env.DEV) {
+          console.log('[Chat] Event:', event.type, 'total_unread:', event.total_unread_count);
+        }
+      }
     };
 
-    updateUnreadCount();
+    // S'abonner aux événements globaux
+    client.on(handleStreamEvent);
 
-    const handleNotification = (event: any) => {
-      setUnreadCount(prev => prev + 1);
+    // Cleanup : se désabonner des événements
+    return () => {
+      client.off(handleStreamEvent);
     };
-
-    client.on('notification.message_new', handleNotification);
-    return () => client.off('notification.message_new', handleNotification);
-  }, [client, setUnreadCount]);
+  }, [client]);
 
   // ✅ Réinitialiser les non-lus à l'ouverture
   useEffect(() => {
@@ -289,6 +335,7 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
                   sort={{ last_message_at: -1 }}
                   options={{ presence: true, state: true }}
                   showChannelSearch
+                  Preview={CustomChannelPreview}
                   EmptyStateIndicator={() => (
                     <div className="chat-empty-state">
                       <div className="chat-empty-state-emoji">💬</div>
@@ -325,7 +372,25 @@ export function ChatSidePanel({ isOpen, setUnreadCount }: ChatSidePanelProps) {
               <div className="chat-messages-area">
                 <Channel>
                   <Window>
-                    <ChannelHeader />
+                    <ChannelHeader>
+                      {({ channel }) => {
+                        const channelDetails = channel?.data?.channel_details;
+
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontWeight: '600', fontSize: '16px', color: '#1f2937' }}>
+                              {channel.data?.name || 'Support'}
+                            </span>
+                            {channelDetails && (
+                              <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                                Créé par : {channelDetails.requester_name || 'Utilisateur'}
+                                {channelDetails.requester_structure && ` (${channelDetails.requester_structure})`}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      }}
+                    </ChannelHeader>
                     <MessageList />
                     <div style={{ position: 'relative' }}>
                       <MessageInput />
