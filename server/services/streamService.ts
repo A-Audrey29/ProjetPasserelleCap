@@ -44,6 +44,7 @@ export async function syncUserToStream(user: any) {
       name: `${user.firstName} ${user.lastName}`,
       email: user.email,
       image: user.avatar || undefined,
+      structure: user.structure || 'Non renseigné',
     });
 
     console.log(`[Stream] User synced: ${user.id}`);
@@ -160,11 +161,19 @@ export async function createSupportChannel(
     // ✅ CRUCIAL : Synchroniser tous les utilisateurs AVANT créer le canal
     await Promise.all(allUsers.map((user) => syncUserToStream(user)));
 
-    // Créer le canal
+    // Créer le canal avec métadonnées créateur
     const channel = client.channel('messaging', channelId, {
       name: channelName,
       created_by_id: 'system',
       members: memberIds,
+      // Métadonnées pour identifier le créateur réel du ticket
+      channel_details: {
+        requester_id: requester.id,
+        requester_name: `${requester.firstName} ${requester.lastName}`,
+        requester_structure: requester.structure || 'Non renseigné',
+        requester_email: requester.email,
+        requester_role: requester.role,
+      },
     });
 
     await channel.create();
