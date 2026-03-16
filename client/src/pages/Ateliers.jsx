@@ -32,7 +32,7 @@ export default function Ateliers() {
   // Filter sessions based on selected state and organization
   const filteredSessions = sessions.filter((session) => {
     const stateMatch = stateFilter === 'TOUS' || getSessionState(session) === stateFilter;
-    const orgMatch = !organizationFilter || session.evsId === organizationFilter;
+    const orgMatch = !organizationFilter || session.evs.id === organizationFilter;
     return stateMatch && orgMatch;
   });
 
