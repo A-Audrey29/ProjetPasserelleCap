@@ -13,6 +13,41 @@
   margin-bottom: 2rem;
 }
 
+/* Top bar: Titre + Actions */
+.headerTopBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .headerTopBar {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+.headerTitle h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgb(var(--foreground));
+  margin: 0;
+}
+
+.headerDescription {
+  color: rgb(var(--muted-foreground));
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .headerContent h1 {
   font-size: 2rem;
   font-weight: 700;

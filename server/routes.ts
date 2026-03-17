@@ -3027,20 +3027,20 @@ app.get("/api/export/ateliers", requireAuth, requireRole("ADMIN"), async (req, r
     };
     const formatBool = (v: boolean | null | undefined): string => v ? 'OUI' : 'NON';
 
-    const headers = 'Organisation;Atelier;Session;Participants;Contrat EVS;Contrat Commune;Date signature;Terminé;Date fin;Bilan reçu;Contrôle validé;Statut';
+    const headers = 'Organisation;Atelier;Session;Participants;Statut;Contrat EVS;Contrat Commune;Date signature;Terminé;Date fin;Bilan reçu;Contrôle validé';
     const rows = sessions.map((s: any) => [
       s.evs?.name || '',
       s.workshop?.name || '',
       s.sessionNumber?.toString() || '1',
       s.participantCount?.toString() || '0',
+      getSessionState(s),
       formatBool(s.contractSignedByEVS),
       formatBool(s.contractSignedByCommune),
       formatDate(s.contractSignedAt),
       formatBool(s.activityDone),
       formatDate(s.activityCompletedAt),
       formatBool(!!s.reportUrl),
-      formatBool(!!s.controlValidatedAt),
-      getSessionState(s)
+      formatBool(!!s.controlValidatedAt)
     ].join(';'));
 
     const csv = BOM + headers + '\n' + rows.join('\n');

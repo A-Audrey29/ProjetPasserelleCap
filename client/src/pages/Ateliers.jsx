@@ -90,28 +90,33 @@ export default function Ateliers() {
       <main className={styles.mainContent}>
         {/* Header */}
         <div className={styles.headerSection}>
-          <div className={styles.headerContent}>
-            <h1 data-testid="text-ateliers-title">
-              Gestion des Ateliers
-            </h1>
-            <p>
-              Vue d'ensemble des sessions d'ateliers collectifs
-            </p>
+          {/* Top bar: Titre + Actions */}
+          <div className={styles.headerTopBar}>
+            <div className={styles.headerTitle}>
+              <h1 data-testid="text-ateliers-title">
+                Gestion des Ateliers
+              </h1>
+            </div>
+
+            {/* Actions - Export button for ADMIN */}
+            {user?.role === 'ADMIN' && (
+              <div className={styles.headerActions}>
+                <button
+                  className={styles.exportButton}
+                  onClick={handleExport}
+                  data-testid="button-export-ateliers"
+                >
+                  <Download className="w-4 h-4" />
+                  Exporter
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Actions - Export button for ADMIN */}
-          {user?.role === 'ADMIN' && (
-            <div className={styles.actionButtons}>
-              <button
-                className={styles.exportButton}
-                onClick={handleExport}
-                data-testid="button-export-ateliers"
-              >
-                <Download className="w-4 h-4" />
-                Exporter
-              </button>
-            </div>
-          )}
+          {/* Description */}
+          <p className={styles.headerDescription}>
+            Vue d'ensemble des sessions d'ateliers collectifs
+          </p>
 
           {/* Filters */}
           <div className={styles.filterSection}>
