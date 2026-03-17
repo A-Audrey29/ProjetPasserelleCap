@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Download } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import WorkshopSessionCard from '@/components/Workshops/WorkshopSessionCard';
 import styles from './Ateliers.module.css';
@@ -35,6 +36,29 @@ export default function Ateliers() {
     const orgMatch = !organizationFilter || session.evs.id === organizationFilter;
     return stateMatch && orgMatch;
   });
+
+  // Export ateliers handler
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/export/ateliers', {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cap-ateliers-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('[Export] Erreur:', error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -74,7 +98,21 @@ export default function Ateliers() {
               Vue d'ensemble des sessions d'ateliers collectifs
             </p>
           </div>
-          
+
+          {/* Actions - Export button for ADMIN */}
+          {user?.role === 'ADMIN' && (
+            <div className={styles.actionButtons}>
+              <button
+                className={styles.exportButton}
+                onClick={handleExport}
+                data-testid="button-export-ateliers"
+              >
+                <Download className="w-4 h-4" />
+                Exporter
+              </button>
+            </div>
+          )}
+
           {/* Filters */}
           <div className={styles.filterSection}>
             <div className={styles.filterGroup}>
