@@ -43,9 +43,34 @@ export default function Dashboard() {
     setFilters(newFilters);
   };
 
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log('Export data');
+  const handleExport = async () => {
+    try {
+      // Construire les query params avec les filtres actifs
+      const params = new URLSearchParams();
+      if (filters.state) params.append('state', filters.state);
+      if (filters.assignedOrgId) params.append('assignedOrgId', filters.assignedOrgId);
+      if (filters.search) params.append('search', filters.search);
+
+      // Appeler l'endpoint d'export avec auth par cookie
+      const response = await fetch(`/api/export/fiches?${params.toString()}`, {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP ${response.status}`);
+      }
+
+      // Télécharger le fichier
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cap-fiches-navettes-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('[Export] Erreur:', error);
+    }
   };
 
   const handleCreateFiche = () => {

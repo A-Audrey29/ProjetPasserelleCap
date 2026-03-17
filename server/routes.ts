@@ -2939,6 +2939,122 @@ app.post('/api/stream/channels/support', requireAuth, async (req, res) => {
   }
 });
 
+// ========== EXPORT CSV - ADMIN ONLY ==========
+// Export fiches navettes
+app.get("/api/export/fiches", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+    const { state, assignedOrgId, search } = req.query;
+
+    // 1. Récupérer les fiches avec filtres
+    const fiches = await storage.getAllFiches({
+      state: state as string,
+      assignedOrgId: assignedOrgId as string,
+      search: search as string
+    });
+
+    // 2. Récupérer les organisations pour chaque fiche
+    const fichesWithOrg = await Promise.all(
+      fiches.map(async (fiche) => {
+        const org = fiche.assignedOrgId
+          ? await storage.getOrganization(fiche.assignedOrgId)
+          : null;
+        return { ...fiche, organizationName: org?.name || '' };
+      })
+    );
+
+    // 3. Utilitaires de formatage CSV
+    const BOM = '\uFEFF';
+    const formatDate = (d: Date | string | null | undefined): string => {
+      if (!d) return '';
+      const date = new Date(d);
+      return date.toLocaleDateString('fr-FR');
+    };
+    const formatBool = (v: boolean | null | undefined): string => v ? 'OUI' : 'NON';
+    const formatWorkshops = (w: any): string => {
+      if (!w) return '';
+      const arr = typeof w === 'string' ? JSON.parse(w) : w;
+      return Array.isArray(arr) ? arr.join(', ') : '';
+    };
+    const calcDelay = (f: any): string => {
+      if (!['CLOSED', 'ARCHIVED'].includes(f.state)) return '';
+      const days = Math.floor((new Date(f.updatedAt).getTime() - new Date(f.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+      return days.toString();
+    };
+
+    // 4. Générer le CSV
+    const headers = 'Référence;État;Organisation;Ateliers;Participants;Date création;Nb ateliers;Délai (jours)';
+    const rows = fichesWithOrg.map((f: any) => [
+      f.ref || '',
+      f.state || '',
+      f.organizationName,
+      formatWorkshops(f.selectedWorkshops),
+      f.participantsCount?.toString() || '0',
+      formatDate(f.createdAt),
+      (f.selectedWorkshops ? (typeof f.selectedWorkshops === 'string' ? JSON.parse(f.selectedWorkshops).length : f.selectedWorkshops.length) : 0).toString(),
+      calcDelay(f)
+    ].join(';'));
+
+    const csv = BOM + headers + '\n' + rows.join('\n');
+    const filename = `cap-fiches-navettes-${new Date().toISOString().split('T')[0]}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (error) {
+    console.error('[Export] Fiches error:', error);
+    res.status(500).json({ message: 'Erreur lors de l\'export des fiches' });
+  }
+});
+
+// Fonction utilitaire pour calculer le statut d'une session d'atelier
+function getSessionState(session: any): string {
+  if (session.activityDone) return 'TERMINÉE';
+  if (session.contractSignedByEVS || session.contractSignedByCommune) return 'EN COURS';
+  if (session.participantCount >= session.workshop?.minCapacity) return 'PRÊTE';
+  return 'EN ATTENTE';
+}
+
+// Export ateliers
+app.get("/api/export/ateliers", requireAuth, requireRole("ADMIN"), async (req, res) => {
+  try {
+    const sessions = await storage.getWorkshopSessions("ADMIN", null);
+
+    const BOM = '\uFEFF';
+    const formatDate = (d: Date | string | null | undefined): string => {
+      if (!d) return '';
+      const date = new Date(d);
+      return date.toLocaleDateString('fr-FR');
+    };
+    const formatBool = (v: boolean | null | undefined): string => v ? 'OUI' : 'NON';
+
+    const headers = 'Organisation;Atelier;Session;Participants;Contrat EVS;Contrat Commune;Date signature;Terminé;Date fin;Bilan reçu;Contrôle validé;Statut';
+    const rows = sessions.map((s: any) => [
+      s.evs?.name || '',
+      s.workshop?.name || '',
+      s.sessionNumber?.toString() || '1',
+      s.participantCount?.toString() || '0',
+      formatBool(s.contractSignedByEVS),
+      formatBool(s.contractSignedByCommune),
+      formatDate(s.contractSignedAt),
+      formatBool(s.activityDone),
+      formatDate(s.activityCompletedAt),
+      formatBool(!!s.reportUrl),
+      formatBool(!!s.controlValidatedAt),
+      getSessionState(s)
+    ].join(';'));
+
+    const csv = BOM + headers + '\n' + rows.join('\n');
+    const filename = `cap-ateliers-${new Date().toISOString().split('T')[0]}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (error) {
+    console.error('[Export] Ateliers error:', error);
+    res.status(500).json({ message: 'Erreur lors de l\'export des ateliers' });
+  }
+});
+
   const httpServer = createServer(app);
   return httpServer;
 }
