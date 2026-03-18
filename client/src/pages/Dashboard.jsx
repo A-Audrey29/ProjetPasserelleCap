@@ -101,7 +101,7 @@ export default function Dashboard() {
                 Nouvelle fiche navette
               </button>
             )}
-            {user?.role !== 'RELATIONS_EVS' && (
+            {(user?.role === 'ADMIN' || user?.role === 'RELATIONS_EVS' || user?.role === 'CD') && (
               <button 
                 className={styles.exportButton}
                 onClick={handleExport}
