@@ -2939,9 +2939,9 @@ app.post('/api/stream/channels/support', requireAuth, async (req, res) => {
   }
 });
 
-// ========== EXPORT CSV - ADMIN ONLY ==========
+// ========== EXPORT CSV - ADMIN, RELATIONS_EVS, CD ==========
 // Export fiches navettes
-app.get("/api/export/fiches", requireAuth, requireRole("ADMIN"), async (req, res) => {
+app.get("/api/export/fiches", requireAuth, requireRole("ADMIN", "RELATIONS_EVS", "CD"), async (req, res) => {
   try {
     const { state, assignedOrgId, search } = req.query;
 
@@ -3015,7 +3015,7 @@ function getSessionState(session: any): string {
 }
 
 // Export ateliers
-app.get("/api/export/ateliers", requireAuth, requireRole("ADMIN"), async (req, res) => {
+app.get("/api/export/ateliers", requireAuth, requireRole("ADMIN", "RELATIONS_EVS", "CD"), async (req, res) => {
   try {
     const sessions = await storage.getWorkshopSessions("ADMIN", null);
 

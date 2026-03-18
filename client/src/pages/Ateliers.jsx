@@ -98,8 +98,8 @@ export default function Ateliers() {
               </h1>
             </div>
 
-            {/* Actions - Export button for ADMIN */}
-            {user?.role === 'ADMIN' && (
+            {/* Actions - Export button for ADMIN, RELATIONS_EVS, CD */}
+            {(user?.role === 'ADMIN' || user?.role === 'RELATIONS_EVS' || user?.role === 'CD') && (
               <div className={styles.headerActions}>
                 <button
                   className={styles.exportButton}
