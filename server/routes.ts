@@ -2952,7 +2952,15 @@ app.get("/api/export/fiches", requireAuth, requireRole("ADMIN", "RELATIONS_EVS",
       search: search as string
     });
 
-    // 2. Récupérer les organisations pour chaque fiche
+    // 2. Récupérer TOUS les workshops (une seule fois pour toutes les fiches)
+    const allWorkshops = await storage.getAllWorkshops();
+
+    // 3. Créer un Map ID → Nom pour lookup rapide O(1)
+    const workshopMap = new Map(
+      allWorkshops.map(w => [w.id, w.name])
+    );
+
+    // 4. Récupérer les organisations pour chaque fiche
     const fichesWithOrg = await Promise.all(
       fiches.map(async (fiche) => {
         const org = fiche.assignedOrgId
@@ -2962,37 +2970,95 @@ app.get("/api/export/fiches", requireAuth, requireRole("ADMIN", "RELATIONS_EVS",
       })
     );
 
-    // 3. Utilitaires de formatage CSV
+    // 5. Utilitaires de formatage CSV
     const BOM = '\uFEFF';
     const formatDate = (d: Date | string | null | undefined): string => {
       if (!d) return '';
       const date = new Date(d);
       return date.toLocaleDateString('fr-FR');
     };
-    const formatBool = (v: boolean | null | undefined): string => v ? 'OUI' : 'NON';
-    const formatWorkshops = (w: any): string => {
-      if (!w) return '';
-      const arr = typeof w === 'string' ? JSON.parse(w) : w;
-      return Array.isArray(arr) ? arr.join(', ') : '';
+
+    // NOUVELLE fonction getWorkshopsArray - Retourne un array de 3 ateliers max (avec vides)
+    const getWorkshopsArray = (w: any, map: Map<string, string>): string[] => {
+      if (!w) return ['', '', ''];
+
+      // Parser si c'est une string
+      const obj = typeof w === 'string' ? JSON.parse(w) : w;
+
+      let selectedNames: string[] = [];
+
+      // Si c'est un objet { "id": true, "id2": false }
+      if (typeof obj === 'object' && !Array.isArray(obj)) {
+        // Extraire les IDs où la valeur est true (ordre de la BDD)
+        const selectedIds = Object.entries(obj)
+          .filter(([_, isSelected]) => isSelected === true)
+          .map(([id, _]) => id);
+
+        // Convertir les IDs en noms en utilisant le Map (ordre BDD)
+        selectedNames = selectedIds
+          .map(id => map.get(id))
+          .filter(name => name !== undefined) as string[];
+      }
+
+      // Fallback si c'est directement un array d'IDs
+      else if (Array.isArray(obj)) {
+        selectedNames = obj
+          .map(id => map.get(id))
+          .filter(name => name !== undefined) as string[];
+      }
+
+      // Retourner exactement 3 éléments (compléter avec des vides si nécessaire)
+      const result: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        result.push(selectedNames[i] || '');
+      }
+
+      return result;
     };
+
+    // Fonction pour compter le nombre d'ateliers sélectionnés
+    const countWorkshops = (w: any): number => {
+      if (!w) return 0;
+
+      const obj = typeof w === 'string' ? JSON.parse(w) : w;
+
+      // Si c'est un objet { "id": true, "id2": false }
+      if (typeof obj === 'object' && !Array.isArray(obj)) {
+        return Object.values(obj).filter(v => v === true).length;
+      }
+
+      // Si c'est un array
+      if (Array.isArray(obj)) {
+        return obj.length;
+      }
+
+      return 0;
+    };
+
     const calcDelay = (f: any): string => {
       if (!['CLOSED', 'ARCHIVED'].includes(f.state)) return '';
       const days = Math.floor((new Date(f.updatedAt).getTime() - new Date(f.createdAt).getTime()) / (1000 * 60 * 60 * 24));
       return days.toString();
     };
 
-    // 4. Générer le CSV
-    const headers = 'Référence;État;Organisation;Ateliers;Participants;Date création;Nb ateliers;Délai (jours)';
-    const rows = fichesWithOrg.map((f: any) => [
-      f.ref || '',
-      f.state || '',
-      f.organizationName,
-      formatWorkshops(f.selectedWorkshops),
-      f.participantsCount?.toString() || '0',
-      formatDate(f.createdAt),
-      (f.selectedWorkshops ? (typeof f.selectedWorkshops === 'string' ? JSON.parse(f.selectedWorkshops).length : f.selectedWorkshops.length) : 0).toString(),
-      calcDelay(f)
-    ].join(';'));
+    // 6. Générer le CSV
+    const headers = 'Référence;État;Organisation;Atelier 1;Atelier 2;Atelier 3;Nb d\'ateliers;Participants;Date création;Délai (jours)';
+    const rows = fichesWithOrg.map((f: any) => {
+      const workshopsArray = getWorkshopsArray(f.selectedWorkshops, workshopMap);
+
+      return [
+        f.ref || '',
+        f.state || '',
+        f.organizationName,
+        workshopsArray[0],  // ← Atelier 1
+        workshopsArray[1],  // ← Atelier 2
+        workshopsArray[2],  // ← Atelier 3
+        countWorkshops(f.selectedWorkshops).toString(),  // ← Nb d'ateliers
+        f.participantsCount?.toString() || '0',
+        formatDate(f.createdAt),
+        calcDelay(f)
+      ];
+    }).map(row => row.join(';'));
 
     const csv = BOM + headers + '\n' + rows.join('\n');
     const filename = `cap-fiches-navettes-${new Date().toISOString().split('T')[0]}.csv`;

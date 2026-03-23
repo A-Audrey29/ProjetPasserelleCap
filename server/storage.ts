@@ -360,6 +360,7 @@ export class DatabaseStorage implements IStorage {
       familyDetailedData: ficheNavettes.familyDetailedData,
       childrenData: ficheNavettes.childrenData,
       participantsCount: ficheNavettes.participantsCount,
+      selectedWorkshops: ficheNavettes.selectedWorkshops,
     }).from(ficheNavettes);
 
     // Add JOINs dynamically only when searching (invisible JOIN pattern)
