@@ -3085,6 +3085,21 @@ app.get("/api/export/ateliers", requireAuth, requireRole("ADMIN", "RELATIONS_EVS
   try {
     const sessions = await storage.getWorkshopSessions("ADMIN", null);
 
+    // 1. Fonction pour extraire les fiches d'une session et retourner un array de 10
+    const getFichesArray = (session: any): string[] => {
+      // Les fiches sont déjà incluses dans session.fiches par getWorkshopSessions
+      const refs = session.fiches
+        ?.map((f: any) => f.ref)
+        .filter((ref: string) => ref) || [];
+
+      // Retourner un array de 10 éléments (avec vides si moins de 10)
+      const result: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        result.push(refs[i] || '');
+      }
+      return result;
+    };
+
     const BOM = '\uFEFF';
     const formatDate = (d: Date | string | null | undefined): string => {
       if (!d) return '';
@@ -3093,21 +3108,29 @@ app.get("/api/export/ateliers", requireAuth, requireRole("ADMIN", "RELATIONS_EVS
     };
     const formatBool = (v: boolean | null | undefined): string => v ? 'OUI' : 'NON';
 
-    const headers = 'Organisation;Atelier;Session;Participants;Statut;Contrat EVS;Contrat Commune;Date signature;Terminé;Date fin;Bilan reçu;Contrôle validé';
-    const rows = sessions.map((s: any) => [
-      s.evs?.name || '',
-      s.workshop?.name || '',
-      s.sessionNumber?.toString() || '1',
-      s.participantCount?.toString() || '0',
-      getSessionState(s),
-      formatBool(s.contractSignedByEVS),
-      formatBool(s.contractSignedByCommune),
-      formatDate(s.contractSignedAt),
-      formatBool(s.activityDone),
-      formatDate(s.activityCompletedAt),
-      formatBool(!!s.reportUrl),
-      formatBool(!!s.controlValidatedAt)
-    ].join(';'));
+    // 3. Headers avec Fiche 1 à Fiche 10 après Participants
+    const headers = 'Organisation;Atelier;Session;Participants;Fiche 1;Fiche 2;Fiche 3;Fiche 4;Fiche 5;Fiche 6;Fiche 7;Fiche 8;Fiche 9;Fiche 10;Statut;Contrat EVS;Contrat Commune;Date signature;Terminé;Date fin;Bilan reçu;Contrôle validé';
+
+    // 4. Rows avec les 10 colonnes de fiches
+    const rows = sessions.map((s: any) => {
+      const fichesArray = getFichesArray(s);
+
+      return [
+        s.evs?.name || '',
+        s.workshop?.name || '',
+        s.sessionNumber?.toString() || '1',
+        s.participantCount?.toString() || '0',
+        ...fichesArray,  // ← Fiche 1 à Fiche 10
+        getSessionState(s),
+        formatBool(s.contractSignedByEVS),
+        formatBool(s.contractSignedByCommune),
+        formatDate(s.contractSignedAt),
+        formatBool(s.activityDone),
+        formatDate(s.activityCompletedAt),
+        formatBool(!!s.reportUrl),
+        formatBool(!!s.controlValidatedAt)
+      ];
+    }).map(row => row.join(';'));
 
     const csv = BOM + headers + '\n' + rows.join('\n');
     const filename = `cap-ateliers-${new Date().toISOString().split('T')[0]}.csv`;
