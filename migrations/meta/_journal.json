@@ -8,6 +8,13 @@
       "when": 1761028848845,
       "tag": "0000_living_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774535490332,
+      "tag": "0001_bizarre_hex",
+      "breakpoints": true
     }
   ]
 }

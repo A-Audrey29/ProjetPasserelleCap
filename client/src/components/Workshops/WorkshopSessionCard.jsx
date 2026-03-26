@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import WorkshopReportForm from "@/components/WorkshopReport/WorkshopReportForm";
 import styles from "./WorkshopSessionCard.module.css";
 
 export default function WorkshopSessionCard({ session }) {
@@ -35,6 +36,9 @@ export default function WorkshopSessionCard({ session }) {
   const [isMarkingDone, setIsMarkingDone] = useState(false);
   const [isSchedulingControl, setIsSchedulingControl] = useState(false);
   const [isValidatingControl, setIsValidatingControl] = useState(false);
+
+  // État pour le formulaire de bilan d'atelier
+  const [showReportForm, setShowReportForm] = useState(false);
 
   // Sync local state with server data when it changes
   useEffect(() => {
@@ -528,8 +532,33 @@ export default function WorkshopSessionCard({ session }) {
       {isDone && (
         <>
           <div className={styles.completedNote}>
-            <p>✓ Activité terminée - Bilans à uploader dans les fiches</p>
+            <p>✓ Activité terminée - Formulaire de bilan disponible</p>
+
+            {/* Boutons pour ouvrir le formulaire de bilan pour chaque fiche */}
+            {session?.fiches && session.fiches.length > 0 && (
+              <div className={styles.reportButtons}>
+                {session.fiches.map((fiche) => (
+                  <button
+                    key={fiche.id}
+                    onClick={() => setShowReportForm(true)}
+                    className={styles.reportButton}
+                    data-testid={`button-report-${fiche.id}`}
+                  >
+                    📝 Remplir le bilan pour {fiche.ref}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Modal de formulaire de bilan */}
+          {showReportForm && (
+            <WorkshopReportForm
+              enrollmentId={session.id}
+              workshopId={session.workshopId}
+              onClose={() => setShowReportForm(false)}
+            />
+          )}
 
           {/* Control Section - Only for RELATIONS_EVS and not yet validated */}
           {((user?.role ?? user?.user?.role) === "RELATIONS_EVS" ||

@@ -1,16 +1,18 @@
 import {
   epcis, users, organizations, workshopObjectives, workshops,
-  ficheNavettes, auditLogs, comments, emailLogs, workshopEnrollments, idempotencyKeys,
+  ficheNavettes, auditLogs, comments, emailLogs, workshopEnrollments, idempotencyKeys, workshopGlobalReports,
   type Epci, type InsertEpci, type User, type InsertUser, type Organization,
   type InsertOrganization, type WorkshopObjective, type InsertWorkshopObjective, type Workshop, type InsertWorkshop,
   type FicheNavette, type InsertFicheNavette,
   type AuditLog, type InsertAuditLog, type Comment, type InsertComment,
   type EmailLog, type InsertEmailLog, type WorkshopEnrollment, type InsertWorkshopEnrollment,
-  type IdempotencyKey, type InsertIdempotencyKey
+  type IdempotencyKey, type InsertIdempotencyKey,
+  type WorkshopGlobalReport, type InsertWorkshopGlobalReport, type UpdateWorkshopGlobalReport, type UpdateWorkshopEnrollmentReport
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, asc, like, ilike, count, sql, inArray, lt  } from "drizzle-orm";
 import * as DrizzlePg from "drizzle-orm/pg-core";
+import crypto from "crypto";
 
 // Type for CAP document stored in fiche
 export interface CapDocument {
@@ -131,9 +133,17 @@ export interface IStorage {
   getIdempotencyKey(key: string, ficheId: string): Promise<IdempotencyKey | null>;
   createIdempotencyKey(data: InsertIdempotencyKey): Promise<IdempotencyKey>;
   purgeOldIdempotencyKeys(hoursOld: number): Promise<number>;
-  
+
   // Document attachment
   attachDocumentToFiche(ficheId: string, doc: CapDocument): Promise<void>;
+
+  // Workshop Global Reports (Bilan Global Atelier)
+  getWorkshopGlobalReport(workshopId: string): Promise<WorkshopGlobalReport | undefined>;
+  createWorkshopGlobalReport(data: InsertWorkshopGlobalReport): Promise<WorkshopGlobalReport>;
+  upsertWorkshopGlobalReport(workshopId: string, updates: Partial<UpdateWorkshopGlobalReport>): Promise<WorkshopGlobalReport>;
+
+  // Workshop Family Reports (Bilan Famille)
+  updateEnrollmentFamilyReport(enrollmentId: string, updates: Partial<UpdateWorkshopEnrollmentReport>): Promise<WorkshopEnrollment>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1105,7 +1115,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     const currentDocs: CapDocument[] = (fiche.capDocuments as CapDocument[]) || [];
-    
+
     // Dedup by URL: avoid duplicates
     const alreadyExists = currentDocs.some(d => d.url === doc.url);
     if (alreadyExists) {
@@ -1113,11 +1123,107 @@ export class DatabaseStorage implements IStorage {
     }
 
     await db.update(ficheNavettes)
-      .set({ 
+      .set({
         capDocuments: [...currentDocs, doc],
         updatedAt: new Date()
       })
       .where(eq(ficheNavettes.id, ficheId));
+  }
+
+  // ============================================
+  // WORKSHOP GLOBAL REPORTS (Bilan Global Atelier)
+  // ============================================
+
+  /**
+   * Récupère le bilan global pour un atelier
+   * @param workshopId - ID de l'atelier
+   * @returns Le bilan global ou undefined si n'existe pas
+   */
+  async getWorkshopGlobalReport(workshopId: string): Promise<WorkshopGlobalReport | undefined> {
+    const [report] = await db
+      .select()
+      .from(workshopGlobalReports)
+      .where(eq(workshopGlobalReports.workshopId, workshopId))
+      .limit(1);
+    return report || undefined;
+  }
+
+  /**
+   * Crée un nouveau bilan global pour un atelier
+   * @param data - Données du bilan global
+   * @returns Le bilan global créé
+   */
+  async createWorkshopGlobalReport(data: InsertWorkshopGlobalReport): Promise<WorkshopGlobalReport> {
+    const [report] = await db
+      .insert(workshopGlobalReports)
+      .values({
+        ...data,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return report;
+  }
+
+  /**
+   * Met à jour ou crée un bilan global (Upsert)
+   * @param workshopId - ID de l'atelier
+   * @param updates - Données à mettre à jour
+   * @returns Le bilan global mis à jour ou créé
+   */
+  async upsertWorkshopGlobalReport(
+    workshopId: string,
+    updates: Partial<UpdateWorkshopGlobalReport>
+  ): Promise<WorkshopGlobalReport> {
+    // Vérifier si un bilan existe déjà pour cet atelier
+    const existing = await this.getWorkshopGlobalReport(workshopId);
+
+    if (existing) {
+      // Update : modifier le bilan existant
+      const [report] = await db
+        .update(workshopGlobalReports)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(eq(workshopGlobalReports.id, existing.id))
+        .returning();
+      return report;
+    } else {
+      // Insert : créer un nouveau bilan
+      return this.createWorkshopGlobalReport({
+        ...updates,
+        workshopId,
+      } as InsertWorkshopGlobalReport);
+    }
+  }
+
+  // ============================================
+  // WORKSHOP FAMILY REPORTS (Bilan Famille)
+  // ============================================
+
+  /**
+   * Met à jour le bilan famille pour une inscription
+   * @param enrollmentId - ID de l'inscription
+   * @param updates - Données à mettre à jour
+   * @returns L'inscription mise à jour
+   */
+  async updateEnrollmentFamilyReport(
+    enrollmentId: string,
+    updates: Partial<UpdateWorkshopEnrollmentReport>
+  ): Promise<WorkshopEnrollment> {
+    const [enrollment] = await db
+      .update(workshopEnrollments)
+      .set(updates)
+      .where(eq(workshopEnrollments.id, enrollmentId))
+      .returning();
+
+    if (!enrollment) {
+      throw new Error("Enrollment not found");
+    }
+
+    return enrollment;
   }
 }
 

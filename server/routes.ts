@@ -127,6 +127,29 @@ const contractUpdateSchema = z.object({
   contractCommunePdfUrl: z.string().nullable().optional(),
 });
 
+// Validation schemas for workshop reports (Bilan Global et Famille)
+const workshopGlobalReportUpdateSchema = z.object({
+  intervenantsText: z.string().optional(),
+  effectiveStartDate: z.string().optional(),
+  sessionsRealized: z.number().int().min(0).optional(),
+  modalitesDeploiement: z.string().optional(),
+  modalitesFonctionnement: z.string().optional(),
+  syntheseObjectifs: z.string().optional(),
+  leviersFreins: z.string().optional(),
+  perspectives: z.string().optional(),
+  transmissionSavoirs: z.string().optional(),
+  isCompleted: z.boolean().optional(),
+  isDraft: z.boolean().optional(),
+});
+
+const workshopFamilyReportUpdateSchema = z.object({
+  reportParticipantsPresences: z.number().int().min(0).optional(),
+  reportImplication: z.string().optional(),
+  reportObjectifs: z.enum(["REACHED", "IN_PROGRESS", "NOT_REACHED"]).optional(),
+  reportSatisfaction: z.number().int().min(1).max(5).optional(),
+  reportCommentaireLibre: z.string().optional(),
+});
+
 // Ensure uploads directories exist
 const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
@@ -2819,6 +2842,223 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(500).json({ message: "Erreur lors de l'upload du bilan" });
       }
     },
+  );
+
+  // ============================================
+  // WORKSHOP GLOBAL REPORT - GET / UPSERT (Bilan Global Atelier)
+  // ============================================
+
+  // GET /api/workshops/:workshopId/global-report
+  // Récupère ou crée le bilan global pour un atelier
+  app.get(
+    "/api/workshops/:workshopId/global-report",
+    requireAuth,
+    requireRole("ADMIN", "RELATIONS_EVS", "EVS_CS", "CD"),
+    async (req, res) => {
+      try {
+        const { workshopId } = req.params;
+
+        // Récupérer ou créer le bilan global
+        let report = await storage.getWorkshopGlobalReport(workshopId);
+
+        if (!report) {
+          // Créer un nouveau bilan draft
+          report = await storage.createWorkshopGlobalReport({
+            workshopId,
+            lastModifiedBy: req.user.userId,
+          });
+        }
+
+        res.json(report);
+      } catch (error) {
+        console.error("Get global report error:", error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+      }
+    }
+  );
+
+  // PATCH /api/workshops/:workshopId/global-report
+  // Sauvegarde partielle (auto-save) du bilan global
+  app.patch(
+    "/api/workshops/:workshopId/global-report",
+    requireAuth,
+    requireRole("ADMIN", "RELATIONS_EVS", "EVS_CS", "CD"),
+    validateRequest(workshopGlobalReportUpdateSchema),
+    async (req, res) => {
+      try {
+        const { workshopId } = req.params;
+        const updates = req.validatedData;
+
+        // Vérifier que l'atelier existe
+        const workshop = await storage.getWorkshop(workshopId);
+        if (!workshop) {
+          return res.status(404).json({ message: "Atelier non trouvé" });
+        }
+
+        // Upsert (crée si n'existe pas, met à jour si existe)
+        const report = await storage.upsertWorkshopGlobalReport(workshopId, {
+          ...updates,
+          lastModifiedBy: req.user.userId,
+          updatedAt: new Date(),
+        });
+
+        res.json(report);
+      } catch (error) {
+        console.error("Update global report error:", error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+      }
+    }
+  );
+
+  // ============================================
+  // ENROLLMENT FAMILY REPORT - GET / UPDATE (Bilan Famille)
+  // ============================================
+
+  // GET /api/enrollments/:enrollmentId/family-report
+  // Récupère le bilan famille pour une inscription
+  app.get(
+    "/api/enrollments/:enrollmentId/family-report",
+    requireAuth,
+    requireRole("ADMIN", "RELATIONS_EVS", "EVS_CS", "CD"),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: "Inscription non trouvée" });
+        }
+
+        // Vérifier les permissions
+        if (req.user.role === "EVS_CS" && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: "Accès non autorisé" });
+        }
+
+        // ✅ CORRECTIF 2 : Upsert automatique du global report s'il n'existe pas
+        // Créer un draft global automatiquement pour garantir la cohérence
+        let globalReport = await storage.getWorkshopGlobalReport(enrollment.workshopId);
+        if (!globalReport) {
+          console.log(`📝 Creating auto-draft global report for workshop ${enrollment.workshopId}`);
+          globalReport = await storage.createWorkshopGlobalReport({
+            workshopId: enrollment.workshopId,
+            lastModifiedBy: req.user.userId,
+          });
+        }
+
+        // Renvoyer les données de bilan famille de l'enrollment
+        res.json({
+          enrollmentId: enrollment.id,
+          workshopId: enrollment.workshopId,
+          globalReport: globalReport, // 💡 Inclure le global report pour cohérence
+          reportParticipantsPresences: enrollment.reportParticipantsPresences,
+          reportImplication: enrollment.reportImplication,
+          reportObjectifs: enrollment.reportObjectifs,
+          reportSatisfaction: enrollment.reportSatisfaction,
+          reportCommentaireLibre: enrollment.reportCommentaireLibre,
+          reportCompletedAt: enrollment.reportCompletedAt,
+        });
+      } catch (error) {
+        console.error("Get family report error:", error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+      }
+    }
+  );
+
+  // PATCH /api/enrollments/:enrollmentId/family-report
+  // Sauvegarde partielle (auto-save) du bilan famille
+  app.patch(
+    "/api/enrollments/:enrollmentId/family-report",
+    requireAuth,
+    requireRole("ADMIN", "RELATIONS_EVS", "EVS_CS", "CD"),
+    validateRequest(workshopFamilyReportUpdateSchema),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+        const updates = req.validatedData;
+
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: "Inscription non trouvée" });
+        }
+
+        // Vérifier les permissions
+        if (req.user.role === "EVS_CS" && req.user.orgId !== enrollment.evsId) {
+          return res.status(403).json({ message: "Accès non autorisé" });
+        }
+
+        // Vérifier que l'activité est terminée
+        if (!enrollment.activityDone) {
+          return res.status(400).json({
+            message: "L'activité doit être terminée avant de remplir le bilan",
+          });
+        }
+
+        // ✅ CORRECTIF 2 : Upsert automatique du global report s'il n'existe pas
+        // Créer un draft global automatiquement pour garantir la cohérence
+        let globalReport = await storage.getWorkshopGlobalReport(enrollment.workshopId);
+        if (!globalReport) {
+          console.log(`📝 Creating auto-draft global report for workshop ${enrollment.workshopId}`);
+          globalReport = await storage.createWorkshopGlobalReport({
+            workshopId: enrollment.workshopId,
+            lastModifiedBy: req.user.userId,
+          });
+        }
+
+        // Mettre à jour l'enrollment avec les données du bilan famille
+        const updated = await storage.updateEnrollmentFamilyReport(enrollmentId, {
+          ...updates,
+          reportCompletedAt: updates.reportCompletedAt || new Date(),
+        });
+
+        res.json({
+          enrollment: updated,
+          globalReport: globalReport, // 💡 Inclure le global report pour cohérence
+        });
+      } catch (error) {
+        console.error("Update family report error:", error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+      }
+    }
+  );
+
+  // ============================================
+  // WORKSHOP REPORT PDF EXPORT (À implémenter plus tard)
+  // ============================================
+
+  // GET /api/workshops/:workshopId/export-report-pdf
+  // Génère le PDF à la volée (on-demand)
+  app.get(
+    "/api/workshops/:workshopId/export-report-pdf",
+    requireAuth,
+    requireRole("ADMIN", "RELATIONS_EVS", "EVS_CS", "CD"),
+    async (req, res) => {
+      try {
+        const { workshopId } = req.params;
+
+        // Récupérer toutes les données nécessaires
+        const globalReport = await storage.getWorkshopGlobalReport(workshopId);
+        const workshop = await storage.getWorkshop(workshopId);
+        const enrollments = await storage.getWorkshopEnrollments({ workshopId });
+
+        if (!globalReport || !workshop) {
+          return res.status(404).json({ message: "Données manquantes pour générer le PDF" });
+        }
+
+        // TODO: Implémenter la génération PDF avec jsPDF ou PDFKit
+        // Pour l'instant, renvoyer les données pour validation
+        res.json({
+          message: "Génération PDF à implémenter avec jsPDF/PDFKit (V2)",
+          data: {
+            globalReport,
+            workshop,
+            enrollmentsCount: enrollments.length,
+          },
+        });
+      } catch (error) {
+        console.error("Export PDF error:", error);
+        res.status(500).json({ message: "Erreur lors de la génération du PDF" });
+      }
+    }
   );
 
   // Admin Dashboard stats (including email logs count)
