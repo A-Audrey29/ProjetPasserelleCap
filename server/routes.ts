@@ -2975,8 +2975,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { enrollmentId } = req.params;
         const updates = req.validatedData;
+        console.log('📝 PATCH family-report - enrollmentId:', enrollmentId);
+        console.log('📝 Updates received:', JSON.stringify(updates, null, 2));
 
         const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        console.log('📝 Enrollment found:', enrollment ? 'YES' : 'NO');
         if (!enrollment) {
           return res.status(404).json({ message: "Inscription non trouvée" });
         }
@@ -3005,10 +3008,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Mettre à jour l'enrollment avec les données du bilan famille
+        console.log('📝 About to call updateEnrollmentFamilyReport...');
         const updated = await storage.updateEnrollmentFamilyReport(enrollmentId, {
           ...updates,
           reportCompletedAt: updates.reportCompletedAt || new Date(),
         });
+        console.log('📝 Update successful:', updated.id);
 
         res.json({
           enrollment: updated,
@@ -3314,9 +3319,9 @@ app.get("/api/export/fiches", requireAuth, requireRole("ADMIN", "RELATIONS_EVS",
 
 // Fonction utilitaire pour calculer le statut d'une session d'atelier
 function getSessionState(session: any): string {
-  if (session.activityDone) return 'TERMINÉE';
+  if (session.activityDone) return 'TERMINÉ';
   if (session.contractSignedByEVS || session.contractSignedByCommune) return 'EN COURS';
-  if (session.participantCount >= session.workshop?.minCapacity) return 'PRÊTE';
+  if (session.participantCount >= session.workshop?.minCapacity) return 'PRÊT';
   return 'EN ATTENTE';
 }
 
