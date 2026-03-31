@@ -1,12 +1,5 @@
 CREATE TYPE "public"."report_objective" AS ENUM('REACHED', 'IN_PROGRESS', 'NOT_REACHED');--> statement-breakpoint
-CREATE TABLE "idempotency_keys" (
-	"key" varchar(255) NOT NULL,
-	"fiche_id" varchar(255) NOT NULL,
-	"file_hash" varchar(64) NOT NULL,
-	"response_json" jsonb NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "idempotency_keys_key_fiche_id_pk" PRIMARY KEY("key","fiche_id")
-);
+-- Note: idempotency_keys table is created by migration 002_create_idempotency_keys.sql
 --> statement-breakpoint
 CREATE TABLE "schema_migrations" (
 	"version" varchar(255) PRIMARY KEY NOT NULL,
@@ -63,7 +56,8 @@ ALTER TABLE "fiche_navettes" ADD COLUMN "external_id" varchar(255);--> statement
 ALTER TABLE "fiche_navettes" ADD COLUMN "referent_validation" boolean DEFAULT false NOT NULL;--> statement-breakpoint
 ALTER TABLE "fiche_navettes" ADD COLUMN "last_modified_by" varchar;--> statement-breakpoint
 ALTER TABLE "fiche_navettes" ADD COLUMN "last_modified_at" timestamp;--> statement-breakpoint
-CREATE INDEX "idx_idempotency_keys_created_at" ON "idempotency_keys" USING btree ("created_at");--> statement-breakpoint
+-- Note: idx_idempotency_keys_created_at is created by migration 002_create_idempotency_keys.sql
+--> statement-breakpoint
 CREATE INDEX "workshop_global_reports_workshop_idx" ON "workshop_global_reports" USING btree ("workshop_id");--> statement-breakpoint
 CREATE INDEX "audit_logs_actor_idx" ON "audit_logs" USING btree ("actor_id");--> statement-breakpoint
 CREATE INDEX "audit_logs_created_at_idx" ON "audit_logs" USING btree ("created_at");--> statement-breakpoint
