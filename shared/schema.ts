@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, pgEnum, json, jsonb, index, unique, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, pgEnum, json, jsonb, index, unique, primaryKey, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -15,6 +15,7 @@ export const ficheStateEnum = pgEnum("fiche_state", [
   "FIELD_CHECK_DONE", "FINAL_REPORT_RECEIVED", "CLOSED", "ARCHIVED"
 ]);
 export const emailStatusEnum = pgEnum("email_status", ["intercepted", "sent", "viewed", "archived", "error"]);
+export const reportObjectiveEnum = pgEnum("report_objective", ["REACHED", "IN_PROGRESS", "NOT_REACHED"]);
 
 // Tables
 export const epcis = pgTable("epcis", {
@@ -106,11 +107,19 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
   controlScheduled: boolean("control_scheduled").notNull().default(false), // Contrôle programmé
   controlValidatedAt: timestamp("control_validated_at"), // Date de validation du contrôle
   
-  // Bilan d'atelier par famille
+  // Bilan d'atelier par famille (PDF uploadé - Legacy)
   reportUrl: text("report_url"), // URL du bilan uploadé pour cette famille
   reportUploadedAt: timestamp("report_uploaded_at"), // Date d'upload du bilan
   reportUploadedBy: varchar("report_uploaded_by"), // User ID qui a uploadé le bilan
-  
+
+  // Bilan d'atelier par famille (Formulaire structuré - Section 9)
+  reportParticipantsPresences: integer("report_participants_presences"), // Présences effectives
+  reportImplication: text("report_implication"), // Niveau d'implication
+  reportObjectifs: reportObjectiveEnum("report_objectifs"), // Objectifs atteints (REACHED, IN_PROGRESS, NOT_REACHED)
+  reportSatisfaction: integer("report_satisfaction"), // Satisfaction 1-5
+  reportCommentaireLibre: text("report_commentaire_libre"), // Commentaire libre
+  reportCompletedAt: timestamp("report_completed_at"), // Date de complétion du bilan famille
+
   // Timestamp pour audit
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -121,6 +130,42 @@ export const workshopEnrollments = pgTable("workshop_enrollments", {
   sessionIdx: index("workshop_enrollments_session_idx").on(table.workshopId, table.evsId, table.sessionNumber),
   // Protection anti-doublon: une fiche ne peut être inscrite qu'une seule fois à un atelier
   uniqueFicheWorkshop: unique("unique_fiche_workshop").on(table.ficheId, table.workshopId),
+}));
+
+// Table pour le bilan global des ateliers (commun à toutes les familles inscrites au même atelier)
+export const workshopGlobalReports = pgTable("workshop_global_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  workshopId: varchar("workshop_id").notNull(), // Référence vers workshops (même type que workshops.id = varchar)
+
+  // Section 1: Intervenants
+  intervenantsText: text("intervenants_text"),
+
+  // Section 2: Date effective et nombre de séances
+  effectiveStartDate: date("effective_start_date"), // ✅ TYPE DATE (pas timestamp) - Correctif 3 validé
+  sessionsRealized: integer("sessions_realized"),
+
+  // Section 3: Modalités
+  modalitesDeploiement: text("modalites_deploiement"),
+  modalitesFonctionnement: text("modalites_fonctionnement"),
+
+  // Section 4-5: Synthèse et leviers
+  syntheseObjectifs: text("synthese_objectifs"),
+  leviersFreins: text("leviers_freins"),
+
+  // Section 6-8: Perspectives et transmission
+  perspectives: text("perspectives"),
+  transmissionSavoirs: text("transmission_savoirs"),
+
+  // Métadonnées
+  isCompleted: boolean("is_completed").notNull().default(false),
+  isDraft: boolean("is_draft").notNull().default(true), // 💡 Distinguer brouillon vs finalisé
+  lastModifiedBy: varchar("last_modified_by"), // 💡 Pour audit (user ID)
+
+  // Timestamp pour audit
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  workshopIdx: index("workshop_global_reports_workshop_idx").on(table.workshopId),
 }));
 
 export const ficheNavettes = pgTable("fiche_navettes", {
@@ -296,6 +341,12 @@ export const workshopObjectivesRelations = relations(workshopObjectives, ({ many
 export const workshopsRelations = relations(workshops, ({ one, many }) => ({
   objective: one(workshopObjectives, { fields: [workshops.objectiveId], references: [workshopObjectives.id] }),
   enrollments: many(workshopEnrollments),
+  globalReport: many(workshopGlobalReports), // 💡 Relation avec les bilans globaux
+}));
+
+// Relations pour workshop_global_reports
+export const workshopGlobalReportsRelations = relations(workshopGlobalReports, ({ one }) => ({
+  workshop: one(workshops, { fields: [workshopGlobalReports.workshopId], references: [workshops.id] }),
 }));
 
 export const ficheNavettesRelations = relations(ficheNavettes, ({ one, many }) => ({
@@ -305,11 +356,15 @@ export const ficheNavettesRelations = relations(ficheNavettes, ({ one, many }) =
   enrollments: many(workshopEnrollments),
 }));
 
-// Relations pour workshop_enrollments  
+// Relations pour workshop_enrollments
 export const workshopEnrollmentsRelations = relations(workshopEnrollments, ({ one }) => ({
   fiche: one(ficheNavettes, { fields: [workshopEnrollments.ficheId], references: [ficheNavettes.id] }),
   workshop: one(workshops, { fields: [workshopEnrollments.workshopId], references: [workshops.id] }),
   evsOrganization: one(organizations, { fields: [workshopEnrollments.evsId], references: [organizations.orgId] }),
+  globalReport: one(workshopGlobalReports, { // 💡 Relation vers le bilan global (via workshopId)
+    fields: [workshopEnrollments.workshopId],
+    references: [workshopGlobalReports.workshopId],
+  }),
 }));
 
 
@@ -399,6 +454,34 @@ export const insertWorkshopEnrollmentSchema = createInsertSchema(workshopEnrollm
   sessionNumber: z.number().int().min(1, "Le numéro de session doit être au moins 1"),
 });
 
+// Schema pour workshop_global_reports
+export const insertWorkshopGlobalReportSchema = createInsertSchema(workshopGlobalReports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  effectiveStartDate: z.string().optional(), // Date string YYYY-MM-DD
+  sessionsRealized: z.number().int().min(0).optional(),
+});
+
+export const updateWorkshopGlobalReportSchema = insertWorkshopGlobalReportSchema.partial();
+
+// Schema pour la mise à jour du bilan famille dans workshop_enrollments
+export const updateWorkshopEnrollmentReportSchema = createInsertSchema(workshopEnrollments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).pick({
+  reportParticipantsPresences: true,
+  reportImplication: true,
+  reportObjectifs: true,
+  reportSatisfaction: true,
+  reportCommentaireLibre: true,
+}).extend({
+  reportSatisfaction: z.number().int().min(1).max(5).optional(),
+  reportParticipantsPresences: z.number().int().min(0).optional(),
+});
+
 // Types
 export type Epci = typeof epcis.$inferSelect;
 export type InsertEpci = z.infer<typeof insertEpciSchema>;
@@ -424,3 +507,9 @@ export type WorkshopEnrollment = typeof workshopEnrollments.$inferSelect;
 export type InsertWorkshopEnrollment = z.infer<typeof insertWorkshopEnrollmentSchema>;
 export type IdempotencyKey = typeof idempotencyKeys.$inferSelect;
 export type InsertIdempotencyKey = z.infer<typeof insertIdempotencyKeySchema>;
+
+// Types pour workshop_global_reports
+export type WorkshopGlobalReport = typeof workshopGlobalReports.$inferSelect;
+export type InsertWorkshopGlobalReport = z.infer<typeof insertWorkshopGlobalReportSchema>;
+export type UpdateWorkshopGlobalReport = z.infer<typeof updateWorkshopGlobalReportSchema>;
+export type UpdateWorkshopEnrollmentReport = z.infer<typeof updateWorkshopEnrollmentReportSchema>;

@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import WorkshopReportForm from "@/components/WorkshopReport/WorkshopReportForm";
 import styles from "./WorkshopSessionCard.module.css";
 
 export default function WorkshopSessionCard({ session }) {
@@ -36,6 +37,9 @@ export default function WorkshopSessionCard({ session }) {
   const [isSchedulingControl, setIsSchedulingControl] = useState(false);
   const [isValidatingControl, setIsValidatingControl] = useState(false);
 
+  // État pour le formulaire de bilan d'atelier
+  const [showReportForm, setShowReportForm] = useState(false);
+
   // Sync local state with server data when it changes
   useEffect(() => {
     setContractEvs(session?.contractSignedByEVS || false);
@@ -64,21 +68,21 @@ export default function WorkshopSessionCard({ session }) {
 
   // Calculate session state based on SERVER data, not local state
   const getSessionState = () => {
-    // TERMINÉE if activity is done
-    if (session?.activityDone) return "TERMINÉE";
+    // TERMINÉ if activity is done
+    if (session?.activityDone) return "TERMINÉ";
     // EN COURS if EITHER contract is signed (EVS/CS OR Commune, not both)
     if (session?.contractSignedByEVS || session?.contractSignedByCommune)
       return "EN COURS";
-    // PRÊTE if minimum capacity reached
+    // PRÊT if minimum capacity reached
     if (session?.participantCount >= session?.workshop?.minCapacity)
-      return "PRÊTE";
+      return "PRÊT";
     return "EN ATTENTE";
   };
 
   const sessionState = getSessionState();
-  const isReady = sessionState === "PRÊTE";
+  const isReady = sessionState === "PRÊT";
   const isInProgress = sessionState === "EN COURS";
-  const isDone = sessionState === "TERMINÉE";
+  const isDone = sessionState === "TERMINÉ";
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -424,7 +428,7 @@ export default function WorkshopSessionCard({ session }) {
         </div>
       )}
 
-      {/* Contracts Section - Only visible if PRÊTE */}
+      {/* Contracts Section - Only visible if PRÊT */}
       {isReady && (
         <div className={styles.contractsSection}>
           <h4 className={styles.contractsTitle}>Contrats :</h4>
@@ -524,12 +528,38 @@ export default function WorkshopSessionCard({ session }) {
         </div>
       )}
 
-      {/* Completed state for TERMINÉE */}
+      {/* Completed state for TERMINÉ */}
       {isDone && (
         <>
           <div className={styles.completedNote}>
-            <p>✓ Activité terminée - Bilans à uploader dans les fiches</p>
+            <p>✓ Activité terminée - Formulaire de bilan disponible</p>
+
+            {/* Boutons pour ouvrir le formulaire de bilan pour chaque fiche */}
+            {session?.fiches && session.fiches.length > 0 && (
+              <div className={styles.reportButtons}>
+                {session.fiches.map((fiche) => (
+                  <button
+                    key={fiche.id}
+                    onClick={() => setShowReportForm(true)}
+                    className={styles.reportButton}
+                    data-testid={`button-report-${fiche.id}`}
+                  >
+                    📝 Remplir le bilan pour {fiche.ref}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Modal de formulaire de bilan */}
+          {showReportForm && session && (
+            <WorkshopReportForm
+              key={session.id}
+              enrollmentId={session.id}
+              workshopId={session.workshopId}
+              onClose={() => setShowReportForm(false)}
+            />
+          )}
 
           {/* Control Section - Only for RELATIONS_EVS and not yet validated */}
           {((user?.role ?? user?.user?.role) === "RELATIONS_EVS" ||
