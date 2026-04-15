@@ -24,9 +24,9 @@ export default function Ateliers() {
 
   // Calculate session state (same logic as WorkshopSessionCard)
   const getSessionState = (session) => {
-    if (session?.activityDone) return 'TERMINÉE';
+    if (session?.activityDone) return 'TERMINÉ';
     if (session?.contractSignedByEVS || session?.contractSignedByCommune) return 'EN COURS';
-    if (session?.participantCount >= session?.workshop?.minCapacity) return 'PRÊTE';
+    if (session?.participantCount >= session?.workshop?.minCapacity) return 'PRÊT';
     return 'EN ATTENTE';
   };
 
@@ -133,9 +133,9 @@ export default function Ateliers() {
               >
                 <option value="TOUS">Tous</option>
                 <option value="EN ATTENTE">En attente</option>
-                <option value="PRÊTE">Prête</option>
+                <option value="PRÊT">Prêt</option>
                 <option value="EN COURS">En cours</option>
-                <option value="TERMINÉE">Terminée</option>
+                <option value="TERMINÉ">Terminé</option>
               </select>
             </div>
 

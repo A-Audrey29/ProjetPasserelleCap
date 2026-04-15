@@ -3074,9 +3074,9 @@ app.get("/api/export/fiches", requireAuth, requireRole("ADMIN", "RELATIONS_EVS",
 
 // Fonction utilitaire pour calculer le statut d'une session d'atelier
 function getSessionState(session: any): string {
-  if (session.activityDone) return 'TERMINÉE';
+  if (session.activityDone) return 'TERMINÉ';
   if (session.contractSignedByEVS || session.contractSignedByCommune) return 'EN COURS';
-  if (session.participantCount >= session.workshop?.minCapacity) return 'PRÊTE';
+  if (session.participantCount >= session.workshop?.minCapacity) return 'PRÊT';
   return 'EN ATTENTE';
 }
 

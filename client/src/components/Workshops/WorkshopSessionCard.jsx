@@ -64,21 +64,21 @@ export default function WorkshopSessionCard({ session }) {
 
   // Calculate session state based on SERVER data, not local state
   const getSessionState = () => {
-    // TERMINÉE if activity is done
-    if (session?.activityDone) return "TERMINÉE";
+    // TERMINÉ if activity is done
+    if (session?.activityDone) return "TERMINÉ";
     // EN COURS if EITHER contract is signed (EVS/CS OR Commune, not both)
     if (session?.contractSignedByEVS || session?.contractSignedByCommune)
       return "EN COURS";
-    // PRÊTE if minimum capacity reached
+    // PRÊT if minimum capacity reached
     if (session?.participantCount >= session?.workshop?.minCapacity)
-      return "PRÊTE";
+      return "PRÊT";
     return "EN ATTENTE";
   };
 
   const sessionState = getSessionState();
-  const isReady = sessionState === "PRÊTE";
+  const isReady = sessionState === "PRÊT";
   const isInProgress = sessionState === "EN COURS";
-  const isDone = sessionState === "TERMINÉE";
+  const isDone = sessionState === "TERMINÉ";
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -424,7 +424,7 @@ export default function WorkshopSessionCard({ session }) {
         </div>
       )}
 
-      {/* Contracts Section - Only visible if PRÊTE */}
+      {/* Contracts Section - Only visible if PRÊT */}
       {isReady && (
         <div className={styles.contractsSection}>
           <h4 className={styles.contractsTitle}>Contrats :</h4>
@@ -524,7 +524,7 @@ export default function WorkshopSessionCard({ session }) {
         </div>
       )}
 
-      {/* Completed state for TERMINÉE */}
+      {/* Completed state for TERMINÉ */}
       {isDone && (
         <>
           <div className={styles.completedNote}>
