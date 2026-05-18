@@ -26,7 +26,7 @@ async function getMigrationFiles(): Promise<MigrationFile[]> {
   const files = await fs.readdir(MIGRATIONS_DIR);
   
   return files
-    .filter(f => f.endsWith(".sql") && !f.includes("rollback") && !f.startsWith("0000"))
+    .filter(f => f.endsWith(".sql") && !f.includes("rollback") && /^0\d{2}_/.test(f))
     .sort()
     .map(name => ({
       name,
