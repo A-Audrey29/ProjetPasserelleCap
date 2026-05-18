@@ -32,6 +32,7 @@ import { logError } from "./utils/errorLogger";
 import { getErrorMessage, getErrorCode, ErrorCodes } from "./utils/errorCodes";
 import { requireAuth } from "./middleware/rbac.js";
 import { protectUploadAccess } from "./middleware/uploadSecurity";
+import { maintenanceMiddleware } from "./middleware/maintenance";
 import { storage } from "./storage";
 import { downloadFile, type UploadKind } from "./utils/ftpsUpload";
 
@@ -92,6 +93,10 @@ app.use(cors(corsOptions));
 
 // Cookie parser - MUST be before any route that uses req.cookies
 app.use(cookieParser());
+
+// Maintenance mode - blocks all requests when MAINTENANCE_MODE=true
+// Bypass: ?bypass=TOKEN (where TOKEN = MAINTENANCE_BYPASS_TOKEN env var)
+app.use(maintenanceMiddleware);
 
 // FTPS Proxy for uploaded files - streams files from o2switch via FTPS
 // Regex to validate filename: UUID.pdf or similar safe patterns
@@ -294,9 +299,8 @@ app.use((req, res, next) => {
   server.listen(
     {
       port,
-      host: "0.0.0.0", // changement d'adresse pour le faire tourner en local
-      // host: "127.0.0.1",
-      reusePort: true,
+      host: "127.0.0.1",
+      reusePort: false,
     },
     () => {
       log(`serving on port ${port}`);
