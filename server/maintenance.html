@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Maintenance en cours - Passerelle CAP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: 59 75 97;
+      --primary-foreground: 255 255 255;
+      --background: 245 246 247;
+      --foreground: 59 75 97;
+      --card: 255 255 255;
+      --border: 209 213 219;
+      --muted-foreground: 107 114 128;
+      --warning: 217 160 102;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: rgb(var(--background));
+      color: rgb(var(--foreground));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .maintenance-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    .maintenance-card {
+      background-color: rgb(var(--card));
+      border: 1px solid rgb(var(--border));
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .maintenance-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      background-color: rgba(var(--warning), 0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .maintenance-icon svg {
+      width: 40px;
+      height: 40px;
+      color: rgb(var(--warning));
+    }
+
+    .maintenance-title {
+      font-family: 'Source Sans Pro', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: rgb(var(--foreground));
+      margin-bottom: 1rem;
+      line-height: 1.3;
+    }
+
+    .maintenance-message {
+      font-size: 1.125rem;
+      color: rgb(var(--muted-foreground));
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .maintenance-notice {
+      background-color: rgb(var(--background));
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.875rem;
+      color: rgb(var(--muted-foreground));
+    }
+
+    .maintenance-notice strong {
+      color: rgb(var(--foreground));
+    }
+
+    .maintenance-footer {
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: rgb(var(--muted-foreground));
+      border-top: 1px solid rgb(var(--border));
+      background-color: rgb(var(--card));
+    }
+
+    .maintenance-footer a {
+      color: rgb(var(--primary));
+      text-decoration: none;
+    }
+
+    .maintenance-footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (min-width: 640px) {
+      .maintenance-card {
+        padding: 4rem 3rem;
+      }
+
+      .maintenance-title {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="maintenance-container">
+    <div class="maintenance-card">
+      <div class="maintenance-icon">
+        <!-- Wrench/Tool icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
+        </svg>
+      </div>
+
+      <h1 class="maintenance-title">Maintenance en cours</h1>
+
+      <p class="maintenance-message">
+        Nous effectuons des améliorations sur Passerelle CAP.<br>
+        Revenez dans quelques instants.
+      </p>
+
+      <div class="maintenance-notice">
+        <strong>Merci de votre patience.</strong><br>
+        Le service sera de nouveau disponible très prochainement.
+      </div>
+    </div>
+  </main>
+
+  <footer class="maintenance-footer">
+    Passerelle CAP &mdash; <a href="mailto:contact@passerellecap.fr">contact@passerellecap.fr</a>
+  </footer>
+</body>
+</html>
