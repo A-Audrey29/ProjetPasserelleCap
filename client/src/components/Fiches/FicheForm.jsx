@@ -732,7 +732,15 @@ export default function FicheForm({
       String(v ?? "")
         .replace(/[^a-z0-9]/gi, "")
         .toLowerCase();
+    // Ateliers visibles dans le formulaire de sélection.
+    // Pour réactiver un atelier : ajouter son ID ici.
+    // Pour en désactiver un : retirer son ID.
+    // Les ateliers absents de cette liste restent en base et dans les enrollments existants.
+    const ACTIVE_WORKSHOPS = ['ATL1', 'ATL2', 'ATL8'];
+
     const filteredWorkshops = workshopsList.filter((w) => {
+      // Masquer les ateliers non actifs pour cette campagne
+      if (!ACTIVE_WORKSHOPS.includes(w.id)) return false;
       const wo = norm(w.objectiveId);
       return (
         wo === norm(objective.id) ||
