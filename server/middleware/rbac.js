@@ -54,27 +54,26 @@ export function requireOrgAccess(req, res, next) {
 }
 
 export function requireMaintenanceBlock(req, res, next) {
-  const maintenanceMode = process.env.MAINTENANCE_MODE;
-  console.log('[MAINTENANCE] MAINTENANCE_MODE=', JSON.stringify(maintenanceMode));
-
-  if (maintenanceMode !== 'true') {
+  if (process.env.MAINTENANCE_MODE !== 'true') {
     return next();
   }
 
   const token = extractTokenFromCookies(req);
-  console.log('[MAINTENANCE] token exists=', !!token);
-
   if (!token) {
     return next();
   }
 
   const payload = verifyToken(token);
-  console.log('[MAINTENANCE] payload role=', payload?.role);
+  if (!payload) {
+    return next();
+  }
 
-  if (payload && ['EVS_CS', 'CD'].includes(payload.role)) {
-    console.log('[MAINTENANCE] BLOCKING user with role', payload.role);
+  // Roles autorisés pendant la maintenance (équipe FEVES)
+  const allowedRoles = ['ADMIN', 'SUIVI_PROJETS', 'EMETTEUR', 'RELATIONS_EVS'];
+
+  if (!allowedRoles.includes(payload.role)) {
     return res.status(503).json({
-      message: 'Maintenance en cours, revenez dans quelques instants'
+      message: 'La plateforme Passerelle CAP est temporairement en maintenance. Merci de réessayer dans quelques instants.'
     });
   }
 
