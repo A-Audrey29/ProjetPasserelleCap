@@ -58,7 +58,13 @@ export function requireMaintenanceBlock(req, res, next) {
     return next();
   }
 
-  if (req.user && ['EVS_CS', 'CD'].includes(req.user.role)) {
+  const token = extractTokenFromCookies(req);
+  if (!token) {
+    return next();
+  }
+
+  const payload = verifyToken(token);
+  if (payload && ['EVS_CS', 'CD'].includes(payload.role)) {
     return res.status(503).json({
       message: 'Maintenance en cours, revenez dans quelques instants'
     });
