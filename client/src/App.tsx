@@ -2,7 +2,7 @@
 // @ts-nocheck
 import { Switch, Route, useLocation } from "wouter";
 import { useEffect, useState, createContext, useCallback, useMemo } from "react";
-import { queryClient } from "./lib/queryClient";
+import { queryClient, setMaintenanceCallback } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/Login";
@@ -237,11 +237,55 @@ function StreamChatClient({ user, isChatOpen, setIsChatOpen, unreadCount, setUnr
   );
 }
 
+// Overlay de maintenance
+function MaintenanceOverlay({ message }: { message: string }) {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(59, 75, 97, 0.95)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999,
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '3rem',
+        borderRadius: '12px',
+        maxWidth: '500px',
+        textAlign: 'center',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+      }}>
+        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔧</div>
+        <h1 style={{ color: '#3B4B61', marginBottom: '1rem', fontSize: '1.5rem' }}>
+          Maintenance en cours
+        </h1>
+        <p style={{ color: '#6B7280', lineHeight: 1.6 }}>
+          {message}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [maintenanceMessage, setMaintenanceMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMaintenanceCallback((message) => {
+      setMaintenanceMessage(message);
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AppContent />
+        {maintenanceMessage && <MaintenanceOverlay message={maintenanceMessage} />}
       </AuthProvider>
     </QueryClientProvider>
   );

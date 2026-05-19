@@ -1,7 +1,29 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Global maintenance state
+let maintenanceCallback: ((message: string) => void) | null = null;
+
+export function setMaintenanceCallback(callback: (message: string) => void) {
+  maintenanceCallback = callback;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    // Handle maintenance mode (503)
+    if (res.status === 503) {
+      try {
+        const data = await res.json();
+        if (maintenanceCallback && data.message) {
+          maintenanceCallback(data.message);
+        }
+      } catch {
+        if (maintenanceCallback) {
+          maintenanceCallback('La plateforme est temporairement en maintenance.');
+        }
+      }
+      throw new Error('Maintenance en cours');
+    }
+
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
