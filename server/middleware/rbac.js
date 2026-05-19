@@ -53,6 +53,20 @@ export function requireOrgAccess(req, res, next) {
   return res.status(403).json({ message: 'Accès interdit' });
 }
 
+export function requireMaintenanceBlock(req, res, next) {
+  if (process.env.MAINTENANCE_MODE !== 'true') {
+    return next();
+  }
+
+  if (req.user && ['EVS_CS', 'CD'].includes(req.user.role)) {
+    return res.status(503).json({
+      message: 'Maintenance en cours, revenez dans quelques instants'
+    });
+  }
+
+  next();
+}
+
 export function requireFicheAccess(req, res, next) {
   if (!req.user) {
     return res.status(401).json({ message: 'Non autorisé' });

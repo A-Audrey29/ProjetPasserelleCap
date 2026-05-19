@@ -30,9 +30,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { logError } from "./utils/errorLogger";
 import { getErrorMessage, getErrorCode, ErrorCodes } from "./utils/errorCodes";
-import { requireAuth } from "./middleware/rbac.js";
+import { requireAuth, requireMaintenanceBlock } from "./middleware/rbac.js";
 import { protectUploadAccess } from "./middleware/uploadSecurity";
-import { maintenanceMiddleware } from "./middleware/maintenance";
 import { storage } from "./storage";
 import { downloadFile, type UploadKind } from "./utils/ftpsUpload";
 
@@ -94,9 +93,8 @@ app.use(cors(corsOptions));
 // Cookie parser - MUST be before any route that uses req.cookies
 app.use(cookieParser());
 
-// Maintenance mode - blocks all requests when MAINTENANCE_MODE=true
-// Bypass: ?bypass=TOKEN (where TOKEN = MAINTENANCE_BYPASS_TOKEN env var)
-app.use(maintenanceMiddleware);
+// Maintenance mode - blocks EVS_CS and CD roles when MAINTENANCE_MODE=true
+app.use('/api', requireMaintenanceBlock);
 
 // FTPS Proxy for uploaded files - streams files from o2switch via FTPS
 // Regex to validate filename: UUID.pdf or similar safe patterns
