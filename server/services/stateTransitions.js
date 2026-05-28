@@ -85,9 +85,9 @@ async function findOrCreateSessionNumber(workshopId, evsId, newParticipantCount)
   console.log(`🆕 All sessions full or locked, creating session ${newSessionNumber}`);
   return newSessionNumber;
 }
+export async function createWorkshopEnrollments(fiche, options = {}) {
+  const { suppressNotifications = false } = options;
 
-// Helper function to create workshop enrollments when fiche transitions to ACCEPTED_EVS
-async function createWorkshopEnrollments(fiche) {
   if (!fiche.selectedWorkshops || !fiche.assignedOrgId) {
     console.log(`No selected workshops or assigned org for fiche ${fiche.id}, skipping enrollment creation`);
     return;
@@ -156,7 +156,9 @@ async function createWorkshopEnrollments(fiche) {
       await checkAndLockWorkshopSessions(workshopId, fiche.assignedOrgId);
       
       // ÉTAPE 5: Vérifier si minCapacity atteint et envoyer notification "prêt"
-      await checkAndNotifyWorkshopReady(workshopId, fiche.assignedOrgId, sessionNumber);
+      if (!suppressNotifications) {
+        await checkAndNotifyWorkshopReady(workshopId, fiche.assignedOrgId, sessionNumber);
+      }
       
     } catch (error) {
       console.error(`❌ Failed to create enrollment for workshop ${workshopId}:`, error);
