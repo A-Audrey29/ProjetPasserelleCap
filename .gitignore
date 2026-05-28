@@ -58,3 +58,6 @@ coverage/
 *.seed
 *.pid.lock
 .cache/
+.claude/
+docs/*.numbers
+docs/*.pdf
