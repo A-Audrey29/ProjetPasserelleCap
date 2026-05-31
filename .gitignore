@@ -58,6 +58,15 @@ coverage/
 *.seed
 *.pid.lock
 .cache/
-.claude/
 docs/*.numbers
 docs/*.pdf
+
+# ========================================
+# CLAUDE CODE
+# ========================================
+# Exclude local-only Claude Code files
+.claude/worktrees/
+.claude/settings.local.json
+
+# Exclude generated graphify artifacts
+graphify-out/
