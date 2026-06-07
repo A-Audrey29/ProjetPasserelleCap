@@ -4,8 +4,37 @@
 | ID | Status | Domaine | Résumé |
 |----|--------|---------|--------|
 | BLK-001 | ✓ resolved | DB/migrations | Bug enrollments - colonnes manquantes |
+| BLK-002 | ⏸ workaround | Frontend/feature | Formulaire bilan atelier in-app masqué (en construction) |
 
 ---
+
+## BLK-002
+**Date:** 2026-06-07
+**Status:** ⏸ workaround (formulaire masqué, à finaliser avant réexposition)
+**Domaine:** Frontend / feature workshop report
+
+### Problème
+Signalement support (Centre Social Les Bras Ouverts) sur la fiche bilan atelier CAP:
+1. Données saisies non conservées malgré "Sauvegarde automatique" — fiche réapparaît vide.
+2. PDF téléchargé impossible à remplir/ouvrir.
+
+### Cause racine
+Feature `WorkshopReportForm` **non finie mais exposée en prod** (mergée dans main via commit 95e543c):
+- Autosave fragile: debounce 1000ms; `handleClose()` ne flushe que `familyData`, jamais `globalData` (WorkshopReportForm.jsx:139-145); filet `beforeunload` commenté/inactif (useDebouncedSave.ts:53).
+- Blocage 400 silencieux si `enrollment.activityDone` faux (routes.ts:2993-2997), erreur avalée côté front.
+- Export PDF = endpoint TODO renvoyant du JSON en `.pdf` (routes.ts:3052-3061); aucune lib PDF installée.
+- Template `FicheDeSuiviAtelier.pdf` = PDF plat, 0 champ AcroForm.
+
+### Fix appliqué (workaround)
+- Feature flag `WORKSHOP_REPORT_FORM_ENABLED = false` dans WorkshopSessionCard.jsx → bouton "Remplir le bilan" + modal non rendus.
+- Branche: `fix/masquer-bilan-atelier-en-construction`.
+- Composant + routes backend conservés intacts (juste non exposés).
+- Repli structures: template PDF vierge `/templates/FicheDeSuiviAtelier.pdf` + upload via `POST /api/enrollments/:id/upload-report`.
+
+### Reste à faire avant de repasser le flag à true
+- Flush `globalData` + `familyData` à la fermeture; retirer blocage `activityDone`.
+- Filet `beforeunload` réel (`sendBeacon`); toast d'erreur visible sur échec autosave.
+- Vraie génération PDF (`pdf-lib`, from scratch — template officiel sans champs AcroForm).
 
 ## BLK-001
 **Date:** 2026-05-28
