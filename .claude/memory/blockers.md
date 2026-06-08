@@ -31,6 +31,11 @@ Feature `WorkshopReportForm` **non finie mais exposée en prod** (mergée dans m
 - Composant + routes backend conservés intacts (juste non exposés).
 - Repli structures: template PDF vierge `/templates/FicheDeSuiviAtelier.pdf` + upload via `POST /api/enrollments/:id/upload-report`.
 
+### ⚠️ Important — fix non encore mergé dans `main`
+Le flag `WORKSHOP_REPORT_FORM_ENABLED = false` n'existe QUE sur `fix/masquer-bilan-atelier-en-construction` (commit 364169f), pas sur `main`. Toute branche créée depuis `main` aura encore le bouton "Remplir le bilan pour FN-..." visible (WorkshopSessionCard.jsx:560).
+→ Vu en pratique sur `feature/faq-tuto-bilan-atelier` (créée depuis main le 2026-06-08) : bouton toujours là, résolu en mergeant `fix/masquer-bilan-atelier-en-construction` dedans.
+→ **Ouvrir la PR de `fix/masquer-bilan-atelier-en-construction` vers `main` au plus vite** pour éviter que ce problème se reproduise sur chaque nouvelle branche.
+
 ### Reste à faire avant de repasser le flag à true
 - Flush `globalData` + `familyData` à la fermeture; retirer blocage `activityDone`.
 - Filet `beforeunload` réel (`sendBeacon`); toast d'erreur visible sur échec autosave.
