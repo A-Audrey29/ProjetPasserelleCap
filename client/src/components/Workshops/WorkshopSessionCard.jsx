@@ -7,6 +7,15 @@ import { useAuth } from "@/hooks/useAuth";
 import WorkshopReportForm from "@/components/WorkshopReport/WorkshopReportForm";
 import styles from "./WorkshopSessionCard.module.css";
 
+// Feature flag — formulaire de bilan d'atelier in-app.
+// Désactivé : la feature est encore en construction (autosave non fiable,
+// export PDF non implémenté) et avait été exposée en prod par erreur, ce qui
+// a généré des signalements support (données non sauvegardées, PDF illisible).
+// En attendant, les structures utilisent le template PDF vierge
+// (/templates/FicheDeSuiviAtelier.pdf) + upload du bilan rempli.
+// Repasser à true une fois le formulaire finalisé et testé.
+const WORKSHOP_REPORT_FORM_ENABLED = false;
+
 export default function WorkshopSessionCard({ session }) {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -532,27 +541,31 @@ export default function WorkshopSessionCard({ session }) {
       {isDone && (
         <>
           <div className={styles.completedNote}>
-            <p>✓ Activité terminée - Formulaire de bilan disponible</p>
+            <p>✓ Activité terminée</p>
 
-            {/* Boutons pour ouvrir le formulaire de bilan pour chaque fiche */}
-            {session?.fiches && session.fiches.length > 0 && (
-              <div className={styles.reportButtons}>
-                {session.fiches.map((fiche) => (
-                  <button
-                    key={fiche.id}
-                    onClick={() => setShowReportForm(true)}
-                    className={styles.reportButton}
-                    data-testid={`button-report-${fiche.id}`}
-                  >
-                    📝 Remplir le bilan pour {fiche.ref}
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Formulaire de bilan in-app masqué tant que la feature est en
+                construction (voir WORKSHOP_REPORT_FORM_ENABLED en haut du fichier).
+                Le bouton et le modal ne sont rendus que si le flag est activé. */}
+            {WORKSHOP_REPORT_FORM_ENABLED &&
+              session?.fiches &&
+              session.fiches.length > 0 && (
+                <div className={styles.reportButtons}>
+                  {session.fiches.map((fiche) => (
+                    <button
+                      key={fiche.id}
+                      onClick={() => setShowReportForm(true)}
+                      className={styles.reportButton}
+                      data-testid={`button-report-${fiche.id}`}
+                    >
+                      📝 Remplir le bilan pour {fiche.ref}
+                    </button>
+                  ))}
+                </div>
+              )}
           </div>
 
-          {/* Modal de formulaire de bilan */}
-          {showReportForm && session && (
+          {/* Modal de formulaire de bilan (masqué via feature flag) */}
+          {WORKSHOP_REPORT_FORM_ENABLED && showReportForm && session && (
             <WorkshopReportForm
               key={session.id}
               enrollmentId={session.id}

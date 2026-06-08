@@ -1,0 +1,129 @@
+.section {
+  margin-top: 2.5rem;
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.header {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: background-color 0.15s ease;
+}
+
+.header:hover {
+  background: rgb(var(--muted) / 0.5);
+}
+
+.headerIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: rgb(var(--primary));
+  flex-shrink: 0;
+}
+
+.headerText {
+  flex: 1;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin: 0 0 0.25rem 0;
+}
+
+.subtitle {
+  font-size: 0.9375rem;
+  color: rgb(var(--muted-foreground));
+  margin: 0;
+}
+
+.chevron {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: rgb(var(--muted-foreground));
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 1.5rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: rgb(var(--primary) / 0.15);
+  color: rgb(var(--primary));
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.stepTitle {
+  font-weight: 500;
+  font-size: 0.9375rem;
+  color: rgb(var(--foreground));
+}
+
+.stepText {
+  margin: 0 0 0 2.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgb(var(--foreground));
+}
+
+.figure {
+  margin: 0 0 0 2.5rem;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  max-width: 36rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+}
+
+.caption {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: rgb(var(--muted-foreground));
+  font-style: italic;
+}

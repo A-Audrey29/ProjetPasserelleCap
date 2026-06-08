@@ -6,6 +6,7 @@ import { videoFAQs } from '@/data/videoFaqs';
 import { filterVideosByRole, groupVideosByCategory } from '@/utils/videoHelpers';
 import { VideoModal } from '@/components/VideoFAQ/VideoModal';
 import { VideoCard } from '@/components/VideoFAQ/VideoCard';
+import { GuideBilanSection } from '@/components/VideoFAQ/GuideBilanSection';
 import styles from './VideoFAQ.module.css';
 
 /**
@@ -194,6 +195,9 @@ export default function VideoFAQ() {
             )}
           </div>
         )}
+
+        {/* Tuto bilan d'atelier — section autonome, indépendante du système vidéo */}
+        <GuideBilanSection />
 
         {/* Video Modal */}
         {selectedVideo && (

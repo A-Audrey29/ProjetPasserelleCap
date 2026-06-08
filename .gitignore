@@ -70,3 +70,4 @@ docs/*.pdf
 
 # Exclude generated graphify artifacts
 graphify-out/
+.gstack/
