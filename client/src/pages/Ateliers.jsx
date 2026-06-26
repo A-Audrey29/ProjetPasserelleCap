@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Download } from 'lucide-react';
+import { Download, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import WorkshopSessionCard from '@/components/Workshops/WorkshopSessionCard';
 import styles from './Ateliers.module.css';
@@ -98,9 +98,26 @@ export default function Ateliers() {
               </h1>
             </div>
 
-            {/* Actions - Export button for ADMIN, RELATIONS_EVS, CD */}
-            {(user?.role === 'ADMIN' || user?.role === 'RELATIONS_EVS' || user?.role === 'CD') && (
-              <div className={styles.headerActions}>
+            {/* Actions */}
+            <div className={styles.headerActions}>
+              <div className={styles.resaPrestaGroup}>
+                <a
+                  href="https://resapresta.fr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.resaPrestaButton}
+                  data-testid="link-resapresta"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  ResaPresta
+                </a>
+                <span className={styles.resaPrestaNote}>
+                  Plateforme de réservation avec les prestataires
+                </span>
+              </div>
+
+              {/* Export button for ADMIN, RELATIONS_EVS, CD */}
+              {(user?.role === 'ADMIN' || user?.role === 'RELATIONS_EVS' || user?.role === 'CD') && (
                 <button
                   className={styles.exportButton}
                   onClick={handleExport}
@@ -109,8 +126,8 @@ export default function Ateliers() {
                   <Download className="w-4 h-4" />
                   Exporter
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Description */}
