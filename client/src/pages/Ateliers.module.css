@@ -166,6 +166,40 @@
   background-color: rgb(var(--accent));
 }
 
+/* ResaPresta link button */
+.resaPrestaButton {
+  background-color: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+  border: 1px solid rgb(var(--primary));
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.resaPrestaButton:hover {
+  background-color: rgb(var(--primary) / 0.9);
+  transform: translateY(-1px);
+}
+
+.resaPrestaGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.resaPrestaNote {
+  font-size: 0.75rem;
+  color: rgb(var(--muted-foreground));
+}
+
 @media (max-width: 768px) {
   .sessionsGrid {
     grid-template-columns: 1fr;
