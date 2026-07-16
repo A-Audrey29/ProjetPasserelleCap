@@ -1335,7 +1335,7 @@ export default function FicheDetail({ ficheId }) {
                     const workshop = workshopsList?.find(w => String(w.id) === String(enrollment.workshopId));
                     const workshopName = workshop?.name || `Atelier ${enrollment.workshopId}`;
                     const userRole = user?.role ?? user?.user?.role;
-                    const canUpload = userRole === 'EVS_CS' && enrollment.activityDone;
+                    const canUpload = ['EVS_CS', 'RELATIONS_EVS', 'ADMIN'].includes(userRole) && enrollment.activityDone;
                     const isUploading = uploadingReportFor === enrollment.id;
 
                     return (

@@ -2762,7 +2762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/enrollments/:enrollmentId/upload-report",
     requireAuth,
-    requireRole("ADMIN", "EVS_CS"),
+    requireRole("ADMIN", "EVS_CS", "RELATIONS_EVS"),
     uploadReportPDF.single("reportFile"),
     validateUploadedFileMimeType,
     async (req, res) => {
