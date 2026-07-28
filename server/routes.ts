@@ -2039,7 +2039,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ficheReference = (log.meta as any).ficheRef;
             }
 
-            return { ...log, actor, ficheReference };
+            // Rattrapage des logs écrits avant l'enregistrement des noms:
+            // sans ça l'atelier reste affiché "ALT2" et la structure en UUID.
+            // Les logs récents portent déjà les noms, aucune requête n'est faite.
+            let meta = log.meta as any;
+            if (meta?.workshopId && !meta.workshopName) {
+              try {
+                const workshop = await storage.getWorkshop(meta.workshopId);
+                if (workshop?.name) {
+                  meta = { ...meta, workshopName: workshop.name };
+                }
+              } catch (error) {
+                console.warn(`Cannot fetch workshop name for ${meta.workshopId}:`, error);
+              }
+            }
+            if (meta?.evsId && !meta.evsName) {
+              try {
+                const org = await storage.getOrganization(meta.evsId);
+                if (org?.name) {
+                  meta = { ...meta, evsName: org.name };
+                }
+              } catch (error) {
+                console.warn(`Cannot fetch organization name for ${meta.evsId}:`, error);
+              }
+            }
+
+            return { ...log, meta, actor, ficheReference };
           }),
         );
 

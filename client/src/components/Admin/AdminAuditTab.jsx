@@ -305,7 +305,9 @@ export default function AdminAuditTab() {
             </div>
           )}
 
-          {/* Métadonnées additionnelles */}
+          {/* Métadonnées additionnelles.
+              Note: workshopName/evsName peuvent avoir été résolus à la lecture
+              pour les logs anciens, ils ne sont donc pas tous stockés tels quels. */}
           {selectedLog.meta && Object.keys(selectedLog.meta).length > 0 && (
             <div className={styles.detailSection}>
               <h4 className={styles.sectionTitle}>Métadonnées</h4>
