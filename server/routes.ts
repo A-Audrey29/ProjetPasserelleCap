@@ -31,12 +31,25 @@ import { promises as fsPromises } from "fs";
 import {
   transitionFicheState,
   getValidTransitions,
+  checkAndLockWorkshopSessions,
 } from "./services/stateTransitions.js";
+import { logAction } from "./services/auditLogger.js";
 import emailService from "./services/emailService.js";
 import notificationService from "./services/notificationService.js";
 import { uploadNavette, uploadBilan, uploadFile, healthCheck } from "./utils/ftpsUpload.js";
 // import { syncUserToStream, generateStreamToken, createSupportChannel } from './services/streamService.js';
 import { syncUserToStream, generateStreamToken, createSupportChannel } from './services/streamService.js';
+
+// Déplacement d'une fiche entre sessions d'atelier.
+// Ouvert à RELATIONS_EVS plus tard: pour l'instant ADMIN uniquement, le temps
+// de valider l'usage en réel. Un seul endroit à modifier le jour où on ouvre.
+const MOVE_ENROLLMENT_ROLES = ["ADMIN"]; // TODO: ajouter "RELATIONS_EVS"
+
+const moveEnrollmentSchema = z.object({
+  targetSessionNumber: z.number().int().positive(),
+  acknowledgeOverCapacity: z.boolean().optional().default(false),
+  reason: z.string().trim().min(3).max(500),
+});
 
 // Configuration des chemins de stockage pour les uploads
 const uploadsRoot = path.resolve("uploads");
@@ -2019,9 +2032,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   error,
                 );
               }
+            } else if ((log.meta as any)?.ficheRef) {
+              // Entités rattachées à une fiche (ex: workshop_enrollment lors d'un
+              // déplacement): la ref est déjà dans les métadonnées, pas de
+              // requête supplémentaire. Évite d'afficher un UUID illisible.
+              ficheReference = (log.meta as any).ficheRef;
             }
 
-            return { ...log, actor, ficheReference };
+            // Rattrapage des logs écrits avant l'enregistrement des noms:
+            // sans ça l'atelier reste affiché "ALT2" et la structure en UUID.
+            // Les logs récents portent déjà les noms, aucune requête n'est faite.
+            let meta = log.meta as any;
+            if (meta?.workshopId && !meta.workshopName) {
+              try {
+                const workshop = await storage.getWorkshop(meta.workshopId);
+                if (workshop?.name) {
+                  meta = { ...meta, workshopName: workshop.name };
+                }
+              } catch (error) {
+                console.warn(`Cannot fetch workshop name for ${meta.workshopId}:`, error);
+              }
+            }
+            if (meta?.evsId && !meta.evsName) {
+              try {
+                const org = await storage.getOrganization(meta.evsId);
+                if (org?.name) {
+                  meta = { ...meta, evsName: org.name };
+                }
+              } catch (error) {
+                console.warn(`Cannot fetch organization name for ${meta.evsId}:`, error);
+              }
+            }
+
+            return { ...log, meta, actor, ficheReference };
           }),
         );
 
@@ -2757,6 +2800,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .json({ message: "Erreur lors de la récupération des inscriptions" });
     }
   });
+
+  // Sessions candidates pour déplacer une fiche
+  app.get(
+    "/api/enrollments/:enrollmentId/move-targets",
+    requireAuth,
+    requireRole(...MOVE_ENROLLMENT_ROLES),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+
+        const enrollment = await storage.getWorkshopEnrollment(enrollmentId);
+        if (!enrollment) {
+          return res.status(404).json({ message: "Inscription introuvable" });
+        }
+
+        const [summaries, workshop] = await Promise.all([
+          storage.getWorkshopSessionSummaries(enrollment.workshopId, enrollment.evsId),
+          storage.getWorkshop(enrollment.workshopId),
+        ]);
+
+        const maxCapacity = workshop?.maxCapacity ?? null;
+
+        // On expose toutes les sessions (y compris non éligibles) pour que
+        // l'admin comprenne pourquoi une destination lui est refusée.
+        const targets = summaries
+          .filter((s) => s.sessionNumber !== enrollment.sessionNumber)
+          .map((s) => {
+            const projectedTotal = s.totalParticipants + enrollment.participantCount;
+            let blockedReason: string | null = null;
+
+            if (s.activityDone) {
+              blockedReason = "Activité déjà terminée";
+            } else if (s.contractSigned) {
+              blockedReason = s.contractSignedAt
+                ? `Contrat signé le ${new Date(s.contractSignedAt).toLocaleDateString("fr-FR")}`
+                : "Contrat déjà signé";
+            }
+
+            return {
+              sessionNumber: s.sessionNumber,
+              totalParticipants: s.totalParticipants,
+              isLocked: s.isLocked,
+              fiches: s.fiches,
+              eligible: blockedReason === null,
+              blockedReason,
+              projectedTotal,
+              wouldExceedCapacity: maxCapacity ? projectedTotal > maxCapacity : false,
+            };
+          });
+
+        res.json({
+          enrollment: {
+            id: enrollment.id,
+            ficheId: enrollment.ficheId,
+            workshopId: enrollment.workshopId,
+            sessionNumber: enrollment.sessionNumber,
+            participantCount: enrollment.participantCount,
+          },
+          workshop: {
+            id: enrollment.workshopId,
+            name: workshop?.name ?? null,
+            minCapacity: workshop?.minCapacity ?? null,
+            maxCapacity,
+          },
+          targets,
+        });
+      } catch (error) {
+        console.error("Error fetching move targets:", error);
+        res
+          .status(500)
+          .json({ message: "Erreur lors de la récupération des sessions de destination" });
+      }
+    },
+  );
+
+  // Déplacer une fiche vers une autre session du même atelier
+  app.patch(
+    "/api/enrollments/:enrollmentId/session",
+    requireAuth,
+    requireRole(...MOVE_ENROLLMENT_ROLES),
+    async (req, res) => {
+      try {
+        const { enrollmentId } = req.params;
+
+        const parsed = moveEnrollmentSchema.safeParse(req.body);
+        if (!parsed.success) {
+          return res.status(400).json({
+            message: "Données invalides",
+            errors: parsed.error.errors,
+          });
+        }
+
+        const { targetSessionNumber, acknowledgeOverCapacity, reason } = parsed.data;
+
+        const result = await storage.moveEnrollmentToSession(
+          enrollmentId,
+          targetSessionNumber,
+          acknowledgeOverCapacity,
+        );
+
+        if (!result.ok) {
+          if (result.code === "ENROLLMENT_NOT_FOUND") {
+            return res.status(404).json({ message: result.message });
+          }
+          if (result.code === "OVER_CAPACITY") {
+            return res.status(409).json({
+              code: result.code,
+              message: `Cette session passerait à ${result.projectedTotal} participants pour une capacité de ${result.maxCapacity}.`,
+              projectedTotal: result.projectedTotal,
+              maxCapacity: result.maxCapacity,
+            });
+          }
+          if (result.code === "SAME_SESSION" || result.code === "TARGET_SESSION_NOT_FOUND") {
+            return res.status(400).json({ code: result.code, message: result.message });
+          }
+          return res.status(409).json({ code: result.code, message: result.message });
+        }
+
+        // Audit AVANT le recalcul du verrouillage: la trace doit survivre même
+        // si le recalcul échoue.
+        // Noms résolus à l'écriture: un log doit rester lisible même si
+        // l'atelier ou la structure est renommé/supprimé plus tard.
+        const [fiche, workshop, evs] = await Promise.all([
+          storage.getFiche(result.enrollment!.ficheId),
+          storage.getWorkshop(result.workshopId!),
+          storage.getOrganization(result.evsId!),
+        ]);
+        await logAction(
+          req.user.userId,
+          "MOVE_ENROLLMENT_SESSION",
+          "workshop_enrollment",
+          enrollmentId,
+          {
+            ficheRef: fiche?.ref ?? null,
+            workshopId: result.workshopId,
+            workshopName: workshop?.name ?? null,
+            evsId: result.evsId,
+            evsName: evs?.name ?? null,
+            fromSession: result.fromSession,
+            toSession: result.toSession,
+            participantCount: result.participantCount,
+            reason,
+            overCapacityAcknowledged: acknowledgeOverCapacity,
+          },
+        );
+
+        // Recalcule le verrouillage des sessions source ET cible en une passe
+        // (la fonction traite tout le couple atelier/EVS). Elle gère ses propres
+        // erreurs: un échec ici ne perd pas le déplacement déjà écrit.
+        await checkAndLockWorkshopSessions(result.workshopId, result.evsId);
+
+        res.json({
+          message: `Fiche déplacée de la session ${result.fromSession} vers la session ${result.toSession}`,
+          enrollment: result.enrollment,
+          fromSession: result.fromSession,
+          toSession: result.toSession,
+        });
+      } catch (error) {
+        console.error("Error moving enrollment to session:", error);
+        res.status(500).json({ message: "Erreur lors du déplacement de la fiche" });
+      }
+    },
+  );
 
   // Upload workshop report for an enrollment
   app.post(

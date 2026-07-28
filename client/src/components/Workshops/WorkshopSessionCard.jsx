@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ArrowRightLeft } from "lucide-react";
 import { Link } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import WorkshopReportForm from "@/components/WorkshopReport/WorkshopReportForm";
+import MoveEnrollmentDialog from "./MoveEnrollmentDialog";
 import styles from "./WorkshopSessionCard.module.css";
 
 // Feature flag — formulaire de bilan d'atelier in-app.
@@ -49,6 +50,9 @@ export default function WorkshopSessionCard({ session }) {
   // État pour le formulaire de bilan d'atelier
   const [showReportForm, setShowReportForm] = useState(false);
 
+  // Fiche en cours de déplacement vers une autre session (null = modal fermé)
+  const [ficheToMove, setFicheToMove] = useState(null);
+
   // Sync local state with server data when it changes
   useEffect(() => {
     setContractEvs(session?.contractSignedByEVS || false);
@@ -92,6 +96,12 @@ export default function WorkshopSessionCard({ session }) {
   const isReady = sessionState === "PRÊT";
   const isInProgress = sessionState === "EN COURS";
   const isDone = sessionState === "TERMINÉ";
+
+  // Déplacement d'une fiche entre sessions: correction administrative.
+  // Masqué dès qu'un contrat est signé ou l'activité terminée, en miroir du
+  // garde-fou serveur — inutile de proposer une action qui échouerait.
+  const currentRole = user?.role ?? user?.user?.role;
+  const canMoveFiche = currentRole === "ADMIN" && !isInProgress && !isDone;
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -357,6 +367,17 @@ export default function WorkshopSessionCard({ session }) {
                 >
                   <ExternalLink size={14} />
                 </Link>
+                {canMoveFiche && fiche.enrollmentId && !fiche.contractSigned && (
+                  <button
+                    onClick={() => setFicheToMove(fiche)}
+                    className={styles.moveButton}
+                    title="Déplacer cette fiche vers une autre session"
+                    data-testid={`button-move-fiche-${fiche.id}`}
+                  >
+                    <ArrowRightLeft size={14} />
+                    <span>Déplacer</span>
+                  </button>
+                )}
               </div>
             ))
           ) : (
@@ -659,6 +680,14 @@ export default function WorkshopSessionCard({ session }) {
               </div>
             )}
         </>
+      )}
+
+      {ficheToMove && (
+        <MoveEnrollmentDialog
+          enrollmentId={ficheToMove.enrollmentId}
+          ficheRef={ficheToMove.ref}
+          onClose={() => setFicheToMove(null)}
+        />
       )}
     </div>
   );

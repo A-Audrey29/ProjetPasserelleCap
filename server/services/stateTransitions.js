@@ -180,7 +180,7 @@ export async function createWorkshopEnrollments(fiche, options = {}) {
  * @param {string} workshopId - ID de l'atelier
  * @param {string} evsId - ID de l'organisation EVS
  */
-async function checkAndLockWorkshopSessions(workshopId, evsId) {
+export async function checkAndLockWorkshopSessions(workshopId, evsId) {
   console.log(`🔍 ENTERING checkAndLockWorkshopSessions for workshop ${workshopId}, EVS ${evsId}`);
   
   try {
@@ -247,6 +247,26 @@ async function checkAndLockWorkshopSessions(workshopId, evsId) {
         }
       } else {
         console.log(`⏳ Session ${sessionNum} below capacity (${session.total}/${workshop.maxCapacity})`);
+
+        // Session repassée SOUS maxCapacity → déverrouiller.
+        // Cas réel: une fiche a été déplacée hors de cette session par un admin.
+        // Sans ce déverrouillage la session resterait bloquée à tort et
+        // n'accepterait plus aucune nouvelle inscription.
+        // Dans le flux de création d'enrollment le total ne fait que croître,
+        // donc ce bloc y est un no-op (aucun enrollment n'y est verrouillé).
+        const lockedEnrollments = session.enrollments.filter(e => e.isLocked);
+
+        if (lockedEnrollments.length > 0) {
+          console.log(`🔓 Session ${sessionNum} back below capacity! Unlocking ${lockedEnrollments.length} enrollments`);
+
+          await Promise.all(
+            lockedEnrollments.map(enrollment =>
+              storage.updateWorkshopEnrollment(enrollment.id, { isLocked: false })
+            )
+          );
+
+          console.log(`✅ Unlocked session ${sessionNum} for workshop ${workshopId}, EVS ${evsId} (${session.total} < ${workshop.maxCapacity} max)`);
+        }
       }
     }
     

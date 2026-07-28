@@ -22,6 +22,42 @@ export interface CapDocument {
   mime: string;
 }
 
+// Résumé d'une session d'atelier.
+// Une "session" n'est pas une table: c'est le groupe des workshop_enrollments
+// partageant (workshopId, evsId, sessionNumber).
+export interface WorkshopSessionSummary {
+  sessionNumber: number;
+  totalParticipants: number;
+  isLocked: boolean;
+  contractSigned: boolean;
+  activityDone: boolean;
+  contractSignedAt: Date | null;
+  activityCompletedAt: Date | null;
+  fiches: Array<{ id: string; ref: string; participantCount: number }>;
+}
+
+export type MoveEnrollmentErrorCode =
+  | "ENROLLMENT_NOT_FOUND"
+  | "ENROLLMENT_ALREADY_ENGAGED"
+  | "SAME_SESSION"
+  | "TARGET_SESSION_NOT_FOUND"
+  | "TARGET_SESSION_LOCKED"
+  | "OVER_CAPACITY";
+
+export interface MoveEnrollmentResult {
+  ok: boolean;
+  code?: MoveEnrollmentErrorCode;
+  message?: string;
+  projectedTotal?: number;
+  maxCapacity?: number | null;
+  enrollment?: WorkshopEnrollment;
+  fromSession?: number;
+  toSession?: number;
+  workshopId?: string;
+  evsId?: string;
+  participantCount?: number;
+}
+
 export interface IStorage {
   // EPCIs
   getAllEpcis(): Promise<Epci[]>;
@@ -128,6 +164,8 @@ export interface IStorage {
   uploadEnrollmentReport(enrollmentId: string, reportUrl: string, userId: string): Promise<WorkshopEnrollment>;
   scheduleSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
   validateSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
+  getWorkshopSessionSummaries(workshopId: string, evsId: string): Promise<WorkshopSessionSummary[]>;
+  moveEnrollmentToSession(enrollmentId: string, targetSessionNumber: number, acknowledgeOverCapacity: boolean): Promise<MoveEnrollmentResult>;
 
   // Idempotency Keys (Make API)
   getIdempotencyKey(key: string, ficheId: string): Promise<IdempotencyKey | null>;
@@ -904,12 +942,23 @@ export class DatabaseStorage implements IStorage {
             id: baseEnrollment.evsId,
             name: evsName
           },
-          fiches: fiches.map(f => ({
-            id: f.id,
-            ref: f.ref,
-            familyName: this.extractGuardianName(f.familyDetailedData),
-            participantsCount: f.participantsCount
-          }))
+          fiches: fiches.map(f => {
+            // enrollmentId: identifiant réel de la ligne, nécessaire pour agir
+            // sur UNE fiche (déplacement). Ne pas utiliser session.id, qui est
+            // l'id du premier enrollment du groupe et change si celui-ci part.
+            const ficheEnrollment = sessionEnrollments.find(e => e.ficheId === f.id);
+            return {
+              id: f.id,
+              enrollmentId: ficheEnrollment?.id ?? null,
+              ref: f.ref,
+              familyName: this.extractGuardianName(f.familyDetailedData),
+              participantsCount: f.participantsCount,
+              contractSigned: Boolean(
+                ficheEnrollment?.contractSignedByEVS || ficheEnrollment?.contractSignedByCommune
+              ),
+              activityDone: Boolean(ficheEnrollment?.activityDone)
+            };
+          })
         };
       })
     );
@@ -979,6 +1028,162 @@ export class DatabaseStorage implements IStorage {
         eq(workshopEnrollments.evsId, evsId)
       ))
       .orderBy(asc(workshopEnrollments.sessionNumber));
+  }
+
+  /**
+   * Résume toutes les sessions d'un couple (atelier, EVS).
+   *
+   * Sert à proposer les destinations possibles lors du déplacement d'une fiche.
+   * Une session est le groupe des enrollments partageant le même sessionNumber.
+   */
+  async getWorkshopSessionSummaries(workshopId: string, evsId: string): Promise<WorkshopSessionSummary[]> {
+    const enrollments = await this.getEnrollmentsByWorkshopAndEvs(workshopId, evsId);
+
+    if (enrollments.length === 0) {
+      return [];
+    }
+
+    // Charger les refs des fiches concernées en une seule requête
+    const ficheIds = Array.from(new Set(enrollments.map(e => e.ficheId).filter(Boolean)));
+    const fiches = ficheIds.length > 0
+      ? await db
+          .select({ id: ficheNavettes.id, ref: ficheNavettes.ref })
+          .from(ficheNavettes)
+          .where(inArray(ficheNavettes.id, ficheIds))
+      : [];
+    const ficheRefById = new Map(fiches.map(f => [f.id, f.ref]));
+
+    // Grouper par sessionNumber
+    const groups = new Map<number, WorkshopEnrollment[]>();
+    for (const enrollment of enrollments) {
+      const existing = groups.get(enrollment.sessionNumber);
+      if (existing) {
+        existing.push(enrollment);
+      } else {
+        groups.set(enrollment.sessionNumber, [enrollment]);
+      }
+    }
+
+    const mostRecent = (dates: Array<Date | null>): Date | null =>
+      dates.reduce<Date | null>((latest, current) => {
+        if (!current) return latest;
+        if (!latest) return current;
+        return new Date(current) > new Date(latest) ? current : latest;
+      }, null);
+
+    // Même sémantique d'agrégation que getWorkshopSessions (.some)
+    return Array.from(groups.entries())
+      .map(([sessionNumber, sessionEnrollments]) => ({
+        sessionNumber,
+        totalParticipants: sessionEnrollments.reduce((sum, e) => sum + (e.participantCount || 0), 0),
+        isLocked: sessionEnrollments.some(e => e.isLocked),
+        contractSigned: sessionEnrollments.some(e => e.contractSignedByEVS || e.contractSignedByCommune),
+        activityDone: sessionEnrollments.some(e => e.activityDone),
+        contractSignedAt: mostRecent(sessionEnrollments.map(e => e.contractSignedAt)),
+        activityCompletedAt: mostRecent(sessionEnrollments.map(e => e.activityCompletedAt)),
+        fiches: sessionEnrollments.map(e => ({
+          id: e.ficheId,
+          ref: ficheRefById.get(e.ficheId) || e.ficheId,
+          participantCount: e.participantCount,
+        })),
+      }))
+      .sort((a, b) => a.sessionNumber - b.sessionNumber);
+  }
+
+  /**
+   * Déplace une fiche (un enrollment) vers une autre session du même atelier/EVS.
+   *
+   * Corrige les cas où le terrain a regroupé les familles autrement que
+   * l'affectation automatique faite à la validation de la fiche.
+   *
+   * Pas de transaction: le driver neon-http n'en supporte pas. L'opération
+   * décisive est un UPDATE sur une seule ligne, donc atomique par nature.
+   * Le recalcul du verrouillage est fait par l'appelant après coup.
+   *
+   * Ne renvoie jamais d'exception métier: retourne { ok: false, code } pour
+   * que la route traduise en code HTTP.
+   */
+  async moveEnrollmentToSession(
+    enrollmentId: string,
+    targetSessionNumber: number,
+    acknowledgeOverCapacity: boolean
+  ): Promise<MoveEnrollmentResult> {
+    const enrollment = await this.getWorkshopEnrollment(enrollmentId);
+    if (!enrollment) {
+      return { ok: false, code: "ENROLLMENT_NOT_FOUND", message: "Inscription introuvable" };
+    }
+
+    // Une fiche déjà engagée ne se déplace pas: son contrat ou son activité
+    // sont rattachés à la session actuelle.
+    if (enrollment.contractSignedByEVS || enrollment.contractSignedByCommune || enrollment.activityDone) {
+      return {
+        ok: false,
+        code: "ENROLLMENT_ALREADY_ENGAGED",
+        message: "Cette fiche est déjà engagée (contrat signé ou activité réalisée) et ne peut plus être déplacée.",
+      };
+    }
+
+    if (enrollment.sessionNumber === targetSessionNumber) {
+      return { ok: false, code: "SAME_SESSION", message: "La fiche est déjà dans cette session." };
+    }
+
+    const summaries = await this.getWorkshopSessionSummaries(enrollment.workshopId, enrollment.evsId);
+    const target = summaries.find(s => s.sessionNumber === targetSessionNumber);
+
+    // On ne déplace que vers une session réelle: évite de créer des sessions fantômes.
+    if (!target) {
+      return { ok: false, code: "TARGET_SESSION_NOT_FOUND", message: "La session de destination n'existe pas." };
+    }
+
+    // Garde-fou principal: l'état de session est agrégé en .some(), donc une
+    // fiche arrivant dans une session déjà contractualisée hériterait
+    // visuellement d'un contrat qu'elle n'a jamais signé.
+    if (target.contractSigned || target.activityDone) {
+      return {
+        ok: false,
+        code: "TARGET_SESSION_LOCKED",
+        message: target.activityDone
+          ? "La session de destination a déjà une activité terminée."
+          : "La session de destination a déjà un contrat signé.",
+      };
+    }
+
+    const workshop = await this.getWorkshop(enrollment.workshopId);
+    const maxCapacity = workshop?.maxCapacity ?? null;
+    const projectedTotal = target.totalParticipants + enrollment.participantCount;
+
+    // Dépassement autorisé mais jamais silencieux: le réel prime, l'admin confirme.
+    if (maxCapacity && projectedTotal > maxCapacity && !acknowledgeOverCapacity) {
+      return { ok: false, code: "OVER_CAPACITY", projectedTotal, maxCapacity };
+    }
+
+    const fromSession = enrollment.sessionNumber;
+
+    // isLocked: recalculé juste après par checkAndLockWorkshopSessions.
+    // minCapacityNotificationSent: remis à false, sinon le flag voyagerait avec
+    // la fiche et supprimerait à tort la notification "atelier prêt" de la
+    // session d'accueil (lue avec .some() dans checkAndNotifyWorkshopReady).
+    const [updated] = await db.update(workshopEnrollments)
+      .set({
+        sessionNumber: targetSessionNumber,
+        isLocked: false,
+        minCapacityNotificationSent: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(workshopEnrollments.id, enrollmentId))
+      .returning();
+
+    return {
+      ok: true,
+      enrollment: updated,
+      fromSession,
+      toSession: targetSessionNumber,
+      workshopId: enrollment.workshopId,
+      evsId: enrollment.evsId,
+      participantCount: enrollment.participantCount,
+      projectedTotal,
+      maxCapacity,
+    };
   }
 
   // Mark all enrollments of a session as activity done
