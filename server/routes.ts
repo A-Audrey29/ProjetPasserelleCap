@@ -2770,6 +2770,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Validate control for all enrollments of this session
         const result = await storage.validateSessionControl(enrollmentId);
 
+        // Get org details for notification
+        const org = await storage.getOrganization(enrollment.evsId);
+        const evsOrgName = org ? org.name : "Organisation";
+
+        // Send one notification per distinct fiche covered by this session
+        const ficheIds = Array.from(
+          new Set(result.enrollments.map((e) => e.ficheId)),
+        );
+        await Promise.all(
+          ficheIds.map(async (ficheId) => {
+            const fiche = await storage.getFiche(ficheId);
+            if (!fiche) return;
+            await notificationService
+              .notifyFieldCheckDone(fiche, evsOrgName)
+              .catch((err) => {
+                console.error("Failed to send notification:", err);
+                // Don't fail the request if notification fails
+              });
+          }),
+        );
+
         res.json({
           success: true,
           message: `Contrôle validé pour ${result.updatedCount} inscription(s)`,
