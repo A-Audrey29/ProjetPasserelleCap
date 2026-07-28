@@ -261,6 +261,20 @@ export default function AdminAuditTab() {
                     {selectedLog.meta.ficheRef || '—'}
                   </span>
                 </div>
+                {/* Repli sur l'identifiant technique pour les logs écrits avant
+                    l'enregistrement des noms. */}
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Atelier :</span>
+                  <span className={styles.detailValue}>
+                    {selectedLog.meta.workshopName || selectedLog.meta.workshopId || '—'}
+                  </span>
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Structure :</span>
+                  <span className={styles.detailValue}>
+                    {selectedLog.meta.evsName || selectedLog.meta.evsId || '—'}
+                  </span>
+                </div>
                 <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Sessions :</span>
                   <span className={styles.detailValue}>
@@ -482,6 +496,16 @@ export default function AdminAuditTab() {
                       <code className={styles.entityIdCode}>
                         {log.ficheReference || log.entityId}
                       </code>
+                      {/* Atelier + sessions visibles sans ouvrir le détail:
+                          c'est l'information qui identifie un déplacement. */}
+                      {log.action === 'MOVE_ENROLLMENT_SESSION' && log.meta && (
+                        <span className={styles.entitySubLabel}>
+                          {log.meta.workshopName || log.meta.workshopId}
+                          {log.meta.fromSession != null && log.meta.toSession != null
+                            ? ` · session ${log.meta.fromSession} → ${log.meta.toSession}`
+                            : ''}
+                        </span>
+                      )}
                     </div>
                     
                     <div className={styles.columnActor}>

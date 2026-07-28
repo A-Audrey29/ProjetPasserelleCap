@@ -2895,7 +2895,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Audit AVANT le recalcul du verrouillage: la trace doit survivre même
         // si le recalcul échoue.
-        const fiche = await storage.getFiche(result.enrollment!.ficheId);
+        // Noms résolus à l'écriture: un log doit rester lisible même si
+        // l'atelier ou la structure est renommé/supprimé plus tard.
+        const [fiche, workshop, evs] = await Promise.all([
+          storage.getFiche(result.enrollment!.ficheId),
+          storage.getWorkshop(result.workshopId!),
+          storage.getOrganization(result.evsId!),
+        ]);
         await logAction(
           req.user.userId,
           "MOVE_ENROLLMENT_SESSION",
@@ -2904,7 +2910,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             ficheRef: fiche?.ref ?? null,
             workshopId: result.workshopId,
+            workshopName: workshop?.name ?? null,
             evsId: result.evsId,
+            evsName: evs?.name ?? null,
             fromSession: result.fromSession,
             toSession: result.toSession,
             participantCount: result.participantCount,
