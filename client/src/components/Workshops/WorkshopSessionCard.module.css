@@ -123,6 +123,28 @@
   color: rgb(var(--accent-foreground));
 }
 
+/* Déplacer une fiche vers une autre session (ADMIN) */
+.moveButton {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: 1px solid rgb(var(--border));
+  border-radius: 4px;
+  color: rgb(var(--muted-foreground));
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.moveButton:hover {
+  background: rgb(var(--accent));
+  color: rgb(var(--accent-foreground));
+  border-color: rgb(var(--primary));
+}
+
 .noFiches {
   color: rgb(var(--muted-foreground));
   font-style: italic;

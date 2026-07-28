@@ -27,7 +27,9 @@ const ACTION_LABELS = {
   // Actions historiques (majuscules - septembre 2025)
   'CREATE': 'Création',
   'UPDATE': 'Modification',
-  'STATE_CHANGE': 'Changement d\'état'
+  'STATE_CHANGE': 'Changement d\'état',
+  // Correction administrative: fiche déplacée d'une session d'atelier à une autre
+  'MOVE_ENROLLMENT_SESSION': 'Déplacement de fiche'
 };
 
 /**
@@ -38,7 +40,8 @@ const ENTITY_LABELS = {
   'FicheNavette': 'Fiche navette',
   'User': 'Utilisateur',
   'UserProfile': 'Profil utilisateur',
-  'EmailLog': 'Log email'
+  'EmailLog': 'Log email',
+  'workshop_enrollment': 'Inscription atelier'
 };
 
 /**
@@ -62,7 +65,8 @@ const ACTION_COLORS = {
   // Actions historiques (majuscules)
   'CREATE': 'success',
   'UPDATE': 'info',
-  'STATE_CHANGE': 'primary'
+  'STATE_CHANGE': 'primary',
+  'MOVE_ENROLLMENT_SESSION': 'warning'
 };
 
 /**
@@ -243,6 +247,49 @@ export default function AdminAuditTab() {
               )}
             </div>
           </div>
+
+          {/* Résumé lisible d'un déplacement de fiche.
+              Le motif est saisi par l'admin au moment du déplacement: il doit
+              être lisible directement, pas seulement dans le JSON brut. */}
+          {selectedLog.action === 'MOVE_ENROLLMENT_SESSION' && selectedLog.meta && (
+            <div className={styles.detailSection}>
+              <h4 className={styles.sectionTitle}>Déplacement</h4>
+              <div className={styles.detailGrid}>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Fiche :</span>
+                  <span className={styles.detailValue}>
+                    {selectedLog.meta.ficheRef || '—'}
+                  </span>
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Sessions :</span>
+                  <span className={styles.detailValue}>
+                    Session {selectedLog.meta.fromSession} → Session {selectedLog.meta.toSession}
+                  </span>
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Participants :</span>
+                  <span className={styles.detailValue}>
+                    {selectedLog.meta.participantCount ?? '—'}
+                  </span>
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Motif :</span>
+                  <span className={styles.detailValue}>
+                    {selectedLog.meta.reason || '—'}
+                  </span>
+                </div>
+                {selectedLog.meta.overCapacityAcknowledged && (
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Capacité :</span>
+                    <span className={styles.detailValue}>
+                      ⚠️ Dépassement confirmé par l'administrateur
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Métadonnées additionnelles */}
           {selectedLog.meta && Object.keys(selectedLog.meta).length > 0 && (
