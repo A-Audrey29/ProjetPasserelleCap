@@ -98,10 +98,10 @@ export default function WorkshopSessionCard({ session }) {
   const isDone = sessionState === "TERMINÉ";
 
   // Déplacement d'une fiche entre sessions: correction administrative.
-  // Masqué dès qu'un contrat est signé ou l'activité terminée, en miroir du
-  // garde-fou serveur — inutile de proposer une action qui échouerait.
+  // Contrat signé: déplaçable en forçant (double validation dans le dialogue).
+  // Masqué seulement si l'activité est terminée, en miroir du serveur.
   const currentRole = user?.role ?? user?.user?.role;
-  const canMoveFiche = currentRole === "ADMIN" && !isInProgress && !isDone;
+  const canMoveFiche = currentRole === "ADMIN" && !isDone;
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -367,7 +367,7 @@ export default function WorkshopSessionCard({ session }) {
                 >
                   <ExternalLink size={14} />
                 </Link>
-                {canMoveFiche && fiche.enrollmentId && !fiche.contractSigned && (
+                {canMoveFiche && fiche.enrollmentId && (
                   <button
                     onClick={() => setFicheToMove(fiche)}
                     className={styles.moveButton}

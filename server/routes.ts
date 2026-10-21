@@ -48,6 +48,8 @@ const MOVE_ENROLLMENT_ROLES = ["ADMIN"]; // TODO: ajouter "RELATIONS_EVS"
 const moveEnrollmentSchema = z.object({
   targetSessionNumber: z.number().int().positive(),
   acknowledgeOverCapacity: z.boolean().optional().default(false),
+  forceEngaged: z.boolean().optional().default(false),
+  confirmFicheRef: z.string().trim().max(50).optional(),
   reason: z.string().trim().min(3).max(500),
 });
 
@@ -2853,10 +2855,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             if (s.activityDone) {
               blockedReason = "Activité déjà terminée";
-            } else if (s.contractSigned) {
-              blockedReason = s.contractSignedAt
-                ? `Contrat signé le ${new Date(s.contractSignedAt).toLocaleDateString("fr-FR")}`
-                : "Contrat déjà signé";
             }
 
             return {
@@ -2878,6 +2876,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             workshopId: enrollment.workshopId,
             sessionNumber: enrollment.sessionNumber,
             participantCount: enrollment.participantCount,
+            contractSigned: enrollment.contractSignedByEVS || enrollment.contractSignedByCommune,
+            activityDone: enrollment.activityDone,
           },
           workshop: {
             id: enrollment.workshopId,
@@ -2913,13 +2913,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        const { targetSessionNumber, acknowledgeOverCapacity, reason } = parsed.data;
+        const { targetSessionNumber, acknowledgeOverCapacity, forceEngaged, confirmFicheRef, reason } =
+          parsed.data;
 
-        const result = await storage.moveEnrollmentToSession(
-          enrollmentId,
-          targetSessionNumber,
+        const result = await storage.moveEnrollmentToSession(enrollmentId, targetSessionNumber, {
           acknowledgeOverCapacity,
-        );
+          forceEngaged,
+          confirmFicheRef,
+        });
 
         if (!result.ok) {
           if (result.code === "ENROLLMENT_NOT_FOUND") {
@@ -2964,6 +2965,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             participantCount: result.participantCount,
             reason,
             overCapacityAcknowledged: acknowledgeOverCapacity,
+            forcedWithContract: result.resetContract != null,
+            resetContract: result.resetContract ?? null,
           },
         );
 
