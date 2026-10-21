@@ -62,6 +62,7 @@ export interface MoveEnrollmentResult {
     signedByEVS: boolean;
     signedByCommune: boolean;
     signedAt: Date | null;
+    communePdfUrl: string | null;
   } | null;
 }
 
@@ -1230,6 +1231,7 @@ export class DatabaseStorage implements IStorage {
             signedByEVS: enrollment.contractSignedByEVS,
             signedByCommune: enrollment.contractSignedByCommune,
             signedAt: enrollment.contractSignedAt,
+            communePdfUrl: enrollment.contractCommunePdfUrl,
           }
         : null,
     };
