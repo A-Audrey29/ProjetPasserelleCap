@@ -39,6 +39,7 @@ export interface WorkshopSessionSummary {
 export type MoveEnrollmentErrorCode =
   | "ENROLLMENT_NOT_FOUND"
   | "ENROLLMENT_ALREADY_ENGAGED"
+  | "FORCE_CONFIRMATION_MISMATCH"
   | "SAME_SESSION"
   | "TARGET_SESSION_NOT_FOUND"
   | "TARGET_SESSION_LOCKED"
@@ -56,6 +57,21 @@ export interface MoveEnrollmentResult {
   workshopId?: string;
   evsId?: string;
   participantCount?: number;
+  // Contrat effacé par un déplacement forcé: gardé pour l'audit.
+  resetContract?: {
+    signedByEVS: boolean;
+    signedByCommune: boolean;
+    signedAt: Date | null;
+    communePdfUrl: string | null;
+  } | null;
+}
+
+export interface MoveEnrollmentOptions {
+  acknowledgeOverCapacity: boolean;
+  // Autorise le déplacement d'une fiche dont le contrat est signé.
+  forceEngaged?: boolean;
+  // Seconde validation: l'admin doit retaper la référence de la fiche.
+  confirmFicheRef?: string;
 }
 
 export interface IStorage {
@@ -165,7 +181,7 @@ export interface IStorage {
   scheduleSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
   validateSessionControl(sessionId: string): Promise<{ updatedCount: number, enrollments: WorkshopEnrollment[] }>;
   getWorkshopSessionSummaries(workshopId: string, evsId: string): Promise<WorkshopSessionSummary[]>;
-  moveEnrollmentToSession(enrollmentId: string, targetSessionNumber: number, acknowledgeOverCapacity: boolean): Promise<MoveEnrollmentResult>;
+  moveEnrollmentToSession(enrollmentId: string, targetSessionNumber: number, options: MoveEnrollmentOptions): Promise<MoveEnrollmentResult>;
 
   // Idempotency Keys (Make API)
   getIdempotencyKey(key: string, ficheId: string): Promise<IdempotencyKey | null>;
@@ -1106,21 +1122,42 @@ export class DatabaseStorage implements IStorage {
   async moveEnrollmentToSession(
     enrollmentId: string,
     targetSessionNumber: number,
-    acknowledgeOverCapacity: boolean
+    { acknowledgeOverCapacity, forceEngaged = false, confirmFicheRef }: MoveEnrollmentOptions
   ): Promise<MoveEnrollmentResult> {
     const enrollment = await this.getWorkshopEnrollment(enrollmentId);
     if (!enrollment) {
       return { ok: false, code: "ENROLLMENT_NOT_FOUND", message: "Inscription introuvable" };
     }
 
-    // Une fiche déjà engagée ne se déplace pas: son contrat ou son activité
-    // sont rattachés à la session actuelle.
-    if (enrollment.contractSignedByEVS || enrollment.contractSignedByCommune || enrollment.activityDone) {
+    // Activité réalisée = fait réel, jamais déplaçable, même en forçant.
+    if (enrollment.activityDone) {
       return {
         ok: false,
         code: "ENROLLMENT_ALREADY_ENGAGED",
-        message: "Cette fiche est déjà engagée (contrat signé ou activité réalisée) et ne peut plus être déplacée.",
+        message: "Cette fiche a une activité réalisée et ne peut plus être déplacée.",
       };
+    }
+
+    // Contrat signé: déplaçable seulement en forçant, avec double validation.
+    // Le contrat déclenche les subventions (traitées à la main): l'admin doit
+    // le vouloir explicitement, puis retaper la référence de la fiche.
+    const hasContract = enrollment.contractSignedByEVS || enrollment.contractSignedByCommune;
+    if (hasContract) {
+      if (!forceEngaged) {
+        return {
+          ok: false,
+          code: "ENROLLMENT_ALREADY_ENGAGED",
+          message: "Cette fiche a un contrat signé. Un déplacement forcé avec double validation est nécessaire.",
+        };
+      }
+      const fiche = await this.getFiche(enrollment.ficheId);
+      if (!fiche?.ref || confirmFicheRef?.trim().replace(/^#/, "") !== fiche.ref) {
+        return {
+          ok: false,
+          code: "FORCE_CONFIRMATION_MISMATCH",
+          message: "La référence saisie ne correspond pas à la fiche.",
+        };
+      }
     }
 
     if (enrollment.sessionNumber === targetSessionNumber) {
@@ -1135,16 +1172,13 @@ export class DatabaseStorage implements IStorage {
       return { ok: false, code: "TARGET_SESSION_NOT_FOUND", message: "La session de destination n'existe pas." };
     }
 
-    // Garde-fou principal: l'état de session est agrégé en .some(), donc une
-    // fiche arrivant dans une session déjà contractualisée hériterait
-    // visuellement d'un contrat qu'elle n'a jamais signé.
-    if (target.contractSigned || target.activityDone) {
+    // Session cible avec contrat signé: autorisée (correction admin). Seule une
+    // activité déjà terminée bloque, c'est un fait réel qu'on ne réécrit pas.
+    if (target.activityDone) {
       return {
         ok: false,
         code: "TARGET_SESSION_LOCKED",
-        message: target.activityDone
-          ? "La session de destination a déjà une activité terminée."
-          : "La session de destination a déjà un contrat signé.",
+        message: "La session de destination a déjà une activité terminée.",
       };
     }
 
@@ -1168,6 +1202,15 @@ export class DatabaseStorage implements IStorage {
         sessionNumber: targetSessionNumber,
         isLocked: false,
         minCapacityNotificationSent: false,
+        // Déplacement forcé: le contrat était rattaché à l'ancienne session,
+        // il est effacé pour ne pas "contractualiser" la session d'accueil.
+        // La structure le signera à nouveau quand la session sera confirmée.
+        ...(hasContract && {
+          contractSignedByEVS: false,
+          contractSignedByCommune: false,
+          contractCommunePdfUrl: null,
+          contractSignedAt: null,
+        }),
         updatedAt: new Date(),
       })
       .where(eq(workshopEnrollments.id, enrollmentId))
@@ -1183,6 +1226,14 @@ export class DatabaseStorage implements IStorage {
       participantCount: enrollment.participantCount,
       projectedTotal,
       maxCapacity,
+      resetContract: hasContract
+        ? {
+            signedByEVS: enrollment.contractSignedByEVS,
+            signedByCommune: enrollment.contractSignedByCommune,
+            signedAt: enrollment.contractSignedAt,
+            communePdfUrl: enrollment.contractCommunePdfUrl,
+          }
+        : null,
     };
   }
 

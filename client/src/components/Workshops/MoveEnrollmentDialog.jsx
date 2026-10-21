@@ -25,6 +25,8 @@ export default function MoveEnrollmentDialog({ enrollmentId, ficheRef, onClose }
   const [selectedSession, setSelectedSession] = useState(null);
   const [reason, setReason] = useState("");
   const [acknowledgeOverCapacity, setAcknowledgeOverCapacity] = useState(false);
+  const [acknowledgeContractReset, setAcknowledgeContractReset] = useState(false);
+  const [confirmFicheRef, setConfirmFicheRef] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
@@ -69,11 +71,19 @@ export default function MoveEnrollmentDialog({ enrollmentId, ficheRef, onClose }
   // La case de confirmation n'apparaît que si la cible dépasse la capacité.
   const needsCapacityAck = selectedTarget?.wouldExceedCapacity === true;
 
+  // Contrat signé: déplacement forcé, double validation (case + retaper la réf).
+  const needsForce = data?.enrollment?.contractSigned === true;
+  const normalizedRef = (ficheRef || "").replace(/^#/, "");
+  const forceConfirmed =
+    !needsForce ||
+    (acknowledgeContractReset && confirmFicheRef.trim().replace(/^#/, "") === normalizedRef);
+
   const canSubmit =
     selectedTarget !== null &&
     selectedTarget.eligible &&
     reason.trim().length >= 3 &&
     (!needsCapacityAck || acknowledgeOverCapacity) &&
+    forceConfirmed &&
     !isSubmitting;
 
   const handleSelect = (target) => {
@@ -98,6 +108,8 @@ export default function MoveEnrollmentDialog({ enrollmentId, ficheRef, onClose }
           targetSessionNumber: selectedTarget.sessionNumber,
           reason: reason.trim(),
           acknowledgeOverCapacity,
+          forceEngaged: needsForce,
+          confirmFicheRef: needsForce ? confirmFicheRef.trim() : undefined,
         }),
       });
 
@@ -236,6 +248,37 @@ export default function MoveEnrollmentDialog({ enrollmentId, ficheRef, onClose }
                   />
                   <span>Je confirme le dépassement, cela reflète la situation réelle.</span>
                 </label>
+              </div>
+            )}
+
+            {needsForce && (
+              <div className={styles.capacityWarning} data-testid="force-contract-warning">
+                <p className={styles.capacityWarningText}>
+                  ⚠️ Cette fiche a un <strong>contrat signé</strong>. Le déplacer efface ce contrat
+                  (la structure devra le signer à nouveau) et ne renvoie aucun mail. Les
+                  subventions déjà déclenchées restent à corriger à la main.
+                </p>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={acknowledgeContractReset}
+                    onChange={(e) => setAcknowledgeContractReset(e.target.checked)}
+                    data-testid="checkbox-acknowledge-contract-reset"
+                  />
+                  <span>Je comprends que le contrat de cette fiche sera effacé.</span>
+                </label>
+                <label className={styles.label} htmlFor="confirm-fiche-ref">
+                  Pour confirmer, retape la référence <strong>{ficheRef}</strong>
+                </label>
+                <input
+                  id="confirm-fiche-ref"
+                  type="text"
+                  className={styles.textarea}
+                  value={confirmFicheRef}
+                  onChange={(e) => setConfirmFicheRef(e.target.value)}
+                  autoComplete="off"
+                  data-testid="input-confirm-fiche-ref"
+                />
               </div>
             )}
 
