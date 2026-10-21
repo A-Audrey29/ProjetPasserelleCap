@@ -49,4 +49,4 @@ L'admin peut déplacer une fiche entre sessions d'un même atelier même si son 
 
 ### Conséquences
 - Session cible contractualisée: la fiche arrivée n'a pas de contrat propre mais la session s'affiche "EN COURS" (agrégat `.some()`).
-- Non testé en conditions réelles au moment de la décision (pas de branche Neon de test).
+- Testé sur branche Neon de test (21 tests logique + 13 tests HTTP): `scripts/tests/move-enrollment-*.test.ts`. Ils refusent de tourner sur la base de `.env` (prod).
