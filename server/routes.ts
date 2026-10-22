@@ -2371,6 +2371,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // Re-send an email that failed (status "error") using the content stored in the log
+  app.post(
+    "/api/admin/email-logs/:id/resend",
+    requireAuth,
+    requireRole("ADMIN"),
+    auditMiddleware("resend", "EmailLog"),
+    async (req, res) => {
+      try {
+        const parsed = z.object({ id: z.string().min(1) }).safeParse(req.params);
+        if (!parsed.success) {
+          return res.status(400).json({ message: "Identifiant invalide" });
+        }
+        const { id } = parsed.data;
+
+        // Atomic claim: only one request can move the log from "error" to "archived",
+        // so the same email cannot be re-sent twice (double click, two admins).
+        // If the new attempt fails, deliver() logs a fresh "error" row, so nothing is lost.
+        const emailLog = await storage.claimErrorEmailLog(id);
+        if (!emailLog) {
+          const existing = await storage.getEmailLog(id);
+          return existing
+            ? res.status(409).json({
+                message: "Seuls les emails en erreur peuvent être renvoyés",
+              })
+            : res.status(404).json({ message: "Email log introuvable" });
+        }
+
+        let result;
+        try {
+          result = await emailService.resendFromLog(emailLog);
+        } catch (sendError) {
+          await storage.updateEmailLog(id, { status: "error" });
+          throw sendError;
+        }
+
+        if (result.intercepted) {
+          // Interception mode: nothing was actually sent, keep the original retryable
+          await storage.updateEmailLog(id, { status: "error" });
+          return res.status(409).json({
+            message:
+              "Mode interception actif (EMAIL_INTERCEPT) : l'email n'a pas été envoyé",
+          });
+        }
+
+        if (!result.success) {
+          return res.status(502).json({
+            message: `Échec du renvoi : ${result.error}`,
+          });
+        }
+
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Resend email log error:", error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+      }
+    },
+  );
+
   app.delete(
     "/api/admin/email-logs/:id",
     requireAuth,

@@ -161,6 +161,7 @@ export interface IStorage {
   getEmailLog(id: string): Promise<EmailLog | undefined>;
   createEmailLog(emailLog: InsertEmailLog): Promise<EmailLog>;
   updateEmailLog(id: string, emailLog: Partial<InsertEmailLog>): Promise<EmailLog>;
+  claimErrorEmailLog(id: string): Promise<EmailLog | undefined>;
   deleteEmailLog(id: string): Promise<void>;
   deleteAllEmailLogs(): Promise<void>;
 
@@ -705,6 +706,16 @@ export class DatabaseStorage implements IStorage {
       .where(eq(emailLogs.id, id))
       .returning();
     return log;
+  }
+
+  // Atomically archive an "error" email log and return it. Returns undefined if the log
+  // does not exist or is no longer in "error" (e.g. another request already claimed it).
+  async claimErrorEmailLog(id: string): Promise<EmailLog | undefined> {
+    const [log] = await db.update(emailLogs)
+      .set({ status: 'archived', updatedAt: new Date() })
+      .where(and(eq(emailLogs.id, id), eq(emailLogs.status, 'error')))
+      .returning();
+    return log || undefined;
   }
 
   async deleteEmailLog(id: string): Promise<void> {
