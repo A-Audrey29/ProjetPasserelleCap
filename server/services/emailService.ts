@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { storage } from '../storage.js';
-import type { InsertEmailLog } from '@shared/schema';
+import type { InsertEmailLog, EmailLog } from '@shared/schema';
 
 class EmailService {
   private isInterceptMode: boolean;
@@ -1192,6 +1192,35 @@ Email envoyé automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${
     };
 
     await this.deliver(mailOptions, meta);
+  }
+
+  /**
+   * Re-send an email that previously failed, using the content stored in email_logs.
+   * Sender comes from the current env config; recipients/subject/body come from the log.
+   */
+  async resendFromLog(log: EmailLog) {
+    const toArray = (value: unknown): string[] | undefined =>
+      Array.isArray(value) && value.length > 0 ? (value as string[]) : undefined;
+
+    const mailOptions = {
+      from: {
+        name: process.env.EMAIL_FROM_NAME || 'Passerelle CAP',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@passerelle-cap.fr'
+      },
+      to: toArray(log.to),
+      cc: toArray(log.cc),
+      bcc: toArray(log.bcc),
+      subject: log.subject,
+      text: log.text || undefined,
+      html: log.html
+    };
+
+    const meta = {
+      ...((log.meta as Record<string, unknown> | null) ?? {}),
+      resentFromLogId: log.id
+    };
+
+    return await this.deliver(mailOptions, meta);
   }
 }
 

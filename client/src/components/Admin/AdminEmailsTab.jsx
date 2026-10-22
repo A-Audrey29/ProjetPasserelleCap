@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import styles from './AdminEmailsTab.module.css';
-import { Search, Eye, EyeOff, Trash2, Mail, Calendar, User, AlertCircle } from 'lucide-react';
+import { Search, Eye, EyeOff, Trash2, Mail, Calendar, User, AlertCircle, RotateCw } from 'lucide-react';
 import DOMPurify from 'dompurify';
 
 // Statuts d'email avec traductions
@@ -18,6 +18,7 @@ export default function AdminEmailsTab() {
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleting, setIsDeleting] = useState(null);
+  const [resendError, setResendError] = useState('');
   const queryClient = useQueryClient();
 
   const itemsPerPage = 10;
@@ -66,6 +67,28 @@ export default function AdminEmailsTab() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/email-logs'] });
       setSelectedEmail(null);
       setIsDeleting(null);
+    }
+  });
+
+  // Mutation pour renvoyer un email en erreur
+  const resendEmail = useMutation({
+    mutationFn: async (emailId) => {
+      const { apiFetch } = await import('@/lib/apiFetch');
+      const response = await apiFetch(`/api/admin/email-logs/${emailId}/resend`, { method: 'POST' });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(body.message || `Erreur ${response.status}`);
+      }
+      return body;
+    },
+    onSuccess: () => {
+      setResendError('');
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/email-logs'] });
+      setSelectedEmail(null);
+    },
+    onError: (err) => {
+      setResendError(err.message);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/email-logs'] });
     }
   });
 
@@ -132,6 +155,23 @@ export default function AdminEmailsTab() {
               </button>
             )}
             
+            {selectedEmail.status === 'error' && (
+              <button
+                onClick={() => {
+                  if (window.confirm('Renvoyer cet email aux destinataires ?')) {
+                    setResendError('');
+                    resendEmail.mutate(selectedEmail.id);
+                  }
+                }}
+                className={styles.actionButton}
+                disabled={resendEmail.isPending}
+                data-testid="button-resend-email"
+              >
+                <RotateCw size={16} />
+                {resendEmail.isPending ? 'Envoi...' : 'Renvoyer'}
+              </button>
+            )}
+
             <button
               onClick={() => setIsDeleting(selectedEmail.id)}
               className={styles.deleteButton}
@@ -142,6 +182,13 @@ export default function AdminEmailsTab() {
             </button>
           </div>
         </div>
+
+        {resendError && (
+          <div className={styles.emailError} data-testid="text-resend-error">
+            <AlertCircle size={14} />
+            {resendError}
+          </div>
+        )}
 
         <div className={styles.emailMeta}>
           <div className={styles.metaRow}>
@@ -334,7 +381,7 @@ export default function AdminEmailsTab() {
               <div 
                 key={email.id} 
                 className={`${styles.emailCard} ${!email.viewedAt ? styles.unread : ''}`}
-                onClick={() => setSelectedEmail(email)}
+                onClick={() => { setResendError(''); setSelectedEmail(email); }}
                 data-testid={`card-email-${email.id}`}
               >
                 <div className={styles.emailCardHeader}>
