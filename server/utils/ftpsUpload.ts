@@ -2,6 +2,7 @@
 import { Client, AccessOptions } from "basic-ftp";
 import fs from "fs/promises";
 import path from "path";
+import tls from "tls";
 
 export type UploadKind = "navettes" | "bilans";
 
@@ -56,13 +57,26 @@ function getFTPSConfig(): FTPSConfig | null {
     user: required("FTP_USER", process.env.FTP_USER),
     password: required("FTP_PASSWORD", process.env.FTP_PASSWORD),
     secure: (process.env.FTP_SECURE || "true").toLowerCase() === "true",
-    // O2Switch a des certificats valides ; on laisse rejectUnauthorized à true par défaut.
-    // Si besoin de débug, tu peux temporairement mettre { rejectUnauthorized: false }
-    secureOptions: undefined,
+    // Certificate verification stays ON (never use rejectUnauthorized: false).
+    // FTP_CA_CERT lets us add a missing intermediate cert if the server sends an incomplete chain.
+    secureOptions: buildSecureOptions(process.env.FTP_CA_CERT),
     verbose: (process.env.FTP_VERBOSE || "false").toLowerCase() === "true",
     baseDir: normalizedBase, // ex: "/uploads"
     connTimeoutMs: Number(process.env.FTP_CONN_TIMEOUT_MS || 15000),
   };
+}
+
+/**
+ * Adds extra CA certs (PEM) on top of Node's default trusted roots.
+ * Setting `ca` alone would REPLACE the default roots, so we concatenate them.
+ */
+export function buildSecureOptions(extraCaPem: string | undefined): { ca: string[] } | undefined {
+  const pem = extraCaPem?.replace(/\\n/g, "\n").trim();
+  if (!pem) return undefined;
+  if (!pem.includes("-----BEGIN CERTIFICATE-----")) {
+    throw new Error("FTP_CA_CERT must be a PEM certificate (-----BEGIN CERTIFICATE-----)");
+  }
+  return { ca: [...tls.rootCertificates, pem] };
 }
 
 /** Normalise un répertoire remote en POSIX, sans doublons ni trailing slashes (sauf racine). */
