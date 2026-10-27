@@ -14,3 +14,7 @@ and Node.js does not trust `Root YR` yet (only ISRG Root X1/X2).
 
 **To revisit:** remove `FTP_CA_CERT` once O2Switch serves the full chain or Node trusts Root YR.
 Intermediates expire 2028-09-02 (YR2).
+
+**Update 2026-10-27:** O2Switch fixed the server (full chain now sent, verified with OpenSSL and Node
+without `FTP_CA_CERT`). `FTP_CA_CERT` removed from Render. Code kept as a dormant fallback:
+re-add the env var if the issue comes back.
